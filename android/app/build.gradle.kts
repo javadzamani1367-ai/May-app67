@@ -17,6 +17,12 @@ android {
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += listOf("fa")
+
+        // SQLCipher ships a native library per ABI. Field phones are ARM, so the
+        // x86 variants are dead weight in the package the experts install.
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
     }
 
     buildTypes {
