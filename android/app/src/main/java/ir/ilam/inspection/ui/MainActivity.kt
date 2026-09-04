@@ -9,6 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.FragmentActivity
@@ -32,8 +33,12 @@ class MainActivity : FragmentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val vault = remember { container.vault }
-                    var unlocked by remember { mutableStateOf(false) }
-                    var crashToShow by remember { mutableStateOf(lastCrash) }
+                    // Saveable, not remembered: Android recreates the activity
+                    // when it comes back from a permission dialog or another
+                    // app's screen, and a plain remember would drop the expert
+                    // back at the PIN screen as if the app had closed.
+                    var unlocked by rememberSaveable { mutableStateOf(false) }
+                    var crashToShow by rememberSaveable { mutableStateOf(lastCrash) }
 
                     val report = crashToShow
                     when {

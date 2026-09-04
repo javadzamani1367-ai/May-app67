@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,10 +48,10 @@ fun DevicesStep(detail: ReportDetail, viewModel: VisitViewModel) {
 
 @Composable
 private fun DeviceSection(detail: ReportDetail, viewModel: VisitViewModel) {
-    var model by remember { mutableStateOf("") }
-    var serial by remember { mutableStateOf("") }
-    var power by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
+    var model by rememberSaveable { mutableStateOf("") }
+    var serial by rememberSaveable { mutableStateOf("") }
+    var power by rememberSaveable { mutableStateOf("") }
+    var note by rememberSaveable { mutableStateOf("") }
     var method by remember { mutableStateOf(EntryMethod.MANUAL) }
     val duplicate by viewModel.deviceError.collectAsStateWithLifecycle()
 
@@ -164,9 +165,9 @@ private fun DeviceSection(detail: ReportDetail, viewModel: VisitViewModel) {
 @Composable
 private fun AttendeeSection(detail: ReportDetail, viewModel: VisitViewModel) {
     var org by remember { mutableStateOf(AttendeeOrg.POWER_COMPANY) }
-    var name by remember { mutableStateOf("") }
-    var position by remember { mutableStateOf("") }
-    var orgName by remember { mutableStateOf("") }
+    var name by rememberSaveable { mutableStateOf("") }
+    var position by rememberSaveable { mutableStateOf("") }
+    var orgName by rememberSaveable { mutableStateOf("") }
 
     SectionCard(title = stringResource(R.string.attendees_title)) {
         Column {

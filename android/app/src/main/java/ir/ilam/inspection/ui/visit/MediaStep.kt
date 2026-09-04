@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -52,7 +53,8 @@ fun MediaStep(detail: ReportDetail, viewModel: VisitViewModel) {
     val appContainer = context.container
     val scope = rememberCoroutineScope()
     val report = detail.report
-    var capturing by remember { mutableStateOf(false) }
+    // Survives the recreation that follows the camera permission dialog.
+    var capturing by rememberSaveable { mutableStateOf(false) }
     var permissionMessage by remember { mutableStateOf<Int?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
