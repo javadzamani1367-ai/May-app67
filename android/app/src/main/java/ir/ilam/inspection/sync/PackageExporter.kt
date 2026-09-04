@@ -1,6 +1,7 @@
 package ir.ilam.inspection.sync
 
 import ir.ilam.inspection.data.db.AppDatabase
+import ir.ilam.inspection.data.db.SCHEMA_VERSION
 import ir.ilam.inspection.data.repo.ReportRepository
 import ir.ilam.inspection.util.CryptoBox
 import ir.ilam.inspection.util.FileStore
@@ -39,7 +40,7 @@ class PackageExporter(
         val manifest = JSONObject()
             .put("device_id", deviceId)
             .put("expert_code", expertCode)
-            .put("schema_version", AppDatabase.SCHEMA_VERSION)
+            .put("schema_version", SCHEMA_VERSION)
             .put("exported_at", System.currentTimeMillis())
             .put("reports", payload)
 

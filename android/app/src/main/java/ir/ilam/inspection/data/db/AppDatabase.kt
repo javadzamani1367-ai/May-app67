@@ -37,7 +37,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun settingDao(): SettingDao
 
     companion object {
-        const val SCHEMA_VERSION = ir.ilam.inspection.data.db.SCHEMA_VERSION
         private const val DB_NAME = "inspection.db"
 
         @Volatile
