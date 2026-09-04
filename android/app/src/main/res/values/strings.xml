@@ -239,6 +239,27 @@
     <string name="stats_by_county">تفکیک بر اساس شهرستان</string>
     <string name="stats_total_power">مجموع توان کشف‌شده</string>
     <string name="stats_watt">%1$s وات</string>
+    <string-array name="excel_headers">
+        <item>کد رهگیری</item>
+        <item>نوع گزارش</item>
+        <item>تاریخ گزارش</item>
+        <item>تاریخ بازدید</item>
+        <item>شهرستان</item>
+        <item>بخش</item>
+        <item>آدرس</item>
+        <item>شماره اشتراک</item>
+        <item>شماره پرونده</item>
+        <item>شماره قبض</item>
+        <item>نام مالک</item>
+        <item>آمپراژ کنتور</item>
+        <item>آمپراژ مصرفی</item>
+        <item>تعداد دستگاه</item>
+        <item>مجموع توان</item>
+        <item>وضعیت</item>
+        <item>کارشناس</item>
+        <item>مختصات</item>
+    </string-array>
+    <string name="excel_sheet_name">گزارش بازدیدها</string>
     <string name="filter_from_date">از تاریخ</string>
     <string name="filter_to_date">تا تاریخ</string>
     <string name="filter_expert">کارشناس</string>
@@ -306,6 +327,7 @@
     <string name="form_expert">کارشناس</string>
     <string name="form_status">وضعیت پرونده</string>
     <string name="form_row">ردیف</string>
+    <string name="form_entry_method">روش ثبت</string>
     <string name="form_signature">امضا و مهر کارشناس</string>
     <string name="form_attachments">مستندات پیوست</string>
     <string name="form_page">صفحه</string>
