@@ -25,12 +25,14 @@ object PersianNumbers {
     /** Trims a trailing `.0` so amperage reads `۶۳` rather than `۶۳٫۰`. */
     fun toPersian(value: Double?): String {
         if (value == null) return ""
-        val text = if (value == value.toLong().toDouble()) {
-            value.toLong().toString()
-        } else {
-            value.toString()
-        }
-        return toPersian(text).replace('.', '٫')
+        return toPersian(plain(value)).replace('.', '٫')
+    }
+
+    /** Latin form of a stored number, ready to be edited in a text field. */
+    fun plain(value: Double?): String = when {
+        value == null -> ""
+        value == value.toLong().toDouble() -> value.toLong().toString()
+        else -> value.toString()
     }
 
     /** Accepts persian or arabic-indic digits typed by the user. */

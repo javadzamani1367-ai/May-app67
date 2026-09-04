@@ -31,6 +31,9 @@ class SettingsRepository(private val dao: SettingDao) {
 
     suspend fun defaultAreaCode(): String = dao.value(KEY_DEFAULT_AREA) ?: DEFAULT_AREA
 
+    suspend fun mediaQuality(): Int =
+        dao.value(KEY_MEDIA_QUALITY)?.toIntOrNull() ?: DEFAULT_QUALITY
+
     suspend fun setExpert(code: String, name: String) {
         put(KEY_EXPERT_CODE, code)
         put(KEY_EXPERT_NAME, name)
