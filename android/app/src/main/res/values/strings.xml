@@ -230,6 +230,7 @@
     <string name="export_excel">خروجی اکسل</string>
     <string name="export_running">در حال ساخت فایل…</string>
     <string name="export_failed">ساخت فایل ناموفق بود</string>
+    <string name="export_via_print_dialog">در پنجره چاپ، گزینه «ذخیره به صورت PDF» را انتخاب کنید</string>
     <string name="stats_title">آمار</string>
     <string name="stats_total">تعداد کل پرونده‌ها</string>
     <string name="stats_pending">در دست اقدام</string>

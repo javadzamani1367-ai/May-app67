@@ -30,7 +30,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.ilam.inspection.R
 import ir.ilam.inspection.container
-import ir.ilam.inspection.data.model.County
 import ir.ilam.inspection.data.model.ReportType
 import ir.ilam.inspection.ui.common.AppTextField
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
@@ -97,7 +96,7 @@ fun IntakeScreen(onBack: () -> Unit, onCreated: (String) -> Unit) {
                 label = stringResource(R.string.intake_county),
                 options = state.counties,
                 selected = state.county,
-                optionLabel = County::name,
+                optionLabel = { it.name },
                 onSelect = viewModel::setCounty,
                 error = state.countyError?.let { stringResource(it) }
             )

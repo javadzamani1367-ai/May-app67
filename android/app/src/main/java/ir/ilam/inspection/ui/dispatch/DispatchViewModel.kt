@@ -8,6 +8,7 @@ import ir.ilam.inspection.data.AppContainer
 import ir.ilam.inspection.data.model.DispatchUnit
 import ir.ilam.inspection.data.model.OutputFormat
 import ir.ilam.inspection.data.model.ReportDetail
+import ir.ilam.inspection.export.PdfOutcome
 import ir.ilam.inspection.export.ShareUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,17 +80,18 @@ class DispatchViewModel(
             val expertName = container.settingsRepository.settings.first().expertName
             val baseName = (report.report.displayCode ?: reportId.take(8)) + "-" +
                 current.unit.code.toString()
-            val file = runCatching {
-                if (current.format == OutputFormat.PDF) {
-                    val html = container.htmlReportBuilder.build(
-                        detail = report,
-                        expertName = expertName,
-                        selectedMediaIds = current.mediaIds,
-                        selectedAttachmentIds = current.attachmentIds,
-                        dispatchNote = current.note
-                    )
-                    container.pdfExporter.export(html, baseName)
-                } else {
+            val outcome = if (current.format == OutputFormat.PDF) {
+                val html = container.htmlReportBuilder.build(
+                    detail = report,
+                    expertName = expertName,
+                    selectedMediaIds = current.mediaIds,
+                    selectedAttachmentIds = current.attachmentIds,
+                    dispatchNote = current.note
+                )
+                runCatching { container.pdfExporter.export(html, baseName, context) }
+                    .getOrDefault(PdfOutcome.Failed)
+            } else {
+                val file = runCatching {
                     withContext(Dispatchers.IO) {
                         container.wordExporter.export(
                             detail = report,
@@ -100,13 +102,17 @@ class DispatchViewModel(
                             dispatchNote = current.note
                         )
                     }
-                }
-            }.getOrNull()
+                }.getOrNull()
+                if (file == null) PdfOutcome.Failed else PdfOutcome.Saved(file)
+            }
 
-            if (file == null) {
+            if (outcome == PdfOutcome.Failed) {
                 _state.update { it.copy(busy = false, message = R.string.export_failed) }
                 return@launch
             }
+
+            // The document exists either way, so the dispatch is on the record
+            // even when the expert saved it through the print sheet.
             container.contentRepository.logDispatch(
                 reportId = reportId,
                 unit = current.unit,
@@ -114,8 +120,15 @@ class DispatchViewModel(
                 note = current.note,
                 format = current.format
             )
-            _state.update { it.copy(busy = false, message = R.string.dispatch_done) }
-            ShareUtil.share(context, file)
+            when (outcome) {
+                is PdfOutcome.Saved -> {
+                    _state.update { it.copy(busy = false, message = R.string.dispatch_done) }
+                    ShareUtil.share(context, outcome.file)
+                }
+                else -> _state.update {
+                    it.copy(busy = false, message = R.string.export_via_print_dialog)
+                }
+            }
         }
     }
 

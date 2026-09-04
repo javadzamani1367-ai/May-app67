@@ -9,6 +9,8 @@ import ir.ilam.inspection.data.db.AttachmentEntity
 import ir.ilam.inspection.data.db.DispatchEntity
 import ir.ilam.inspection.data.model.AttachmentCategory
 import ir.ilam.inspection.data.model.ReportDetail
+import ir.ilam.inspection.R
+import ir.ilam.inspection.export.PdfOutcome
 import ir.ilam.inspection.export.ShareUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -84,18 +86,31 @@ class CaseDetailViewModel(
         viewModelScope.launch { container.contentRepository.removeAttachment(attachment) }
     }
 
-    fun exportPdf(context: Context) = export(context) { detail, expertName ->
-        val html = container.htmlReportBuilder.build(detail, expertName)
-        container.pdfExporter.export(html, fileNameFor(detail))
+    fun exportPdf(context: Context) {
+        viewModelScope.launch {
+            val current = detail.value ?: container.reportRepository.detail(reportId) ?: return@launch
+            _busy.value = true
+            val expertName = container.settingsRepository.settings.first().expertName
+            val html = container.htmlReportBuilder.build(current, expertName)
+            val outcome = runCatching {
+                container.pdfExporter.export(html, fileNameFor(current), context)
+            }.getOrDefault(PdfOutcome.Failed)
+            _busy.value = false
+            when (outcome) {
+                is PdfOutcome.Saved -> ShareUtil.share(context, outcome.file)
+                PdfOutcome.HandedToPrinter -> _message.value = R.string.export_via_print_dialog
+                PdfOutcome.Failed -> _message.value = R.string.export_failed
+            }
+        }
     }
 
-    fun exportWord(context: Context) = export(context) { detail, expertName ->
+    fun exportWord(context: Context) = exportFile(context) { detail, expertName ->
         withContext(Dispatchers.IO) {
             container.wordExporter.export(detail, fileNameFor(detail), expertName)
         }
     }
 
-    private fun export(context: Context, block: suspend (ReportDetail, String) -> File?) {
+    private fun exportFile(context: Context, block: suspend (ReportDetail, String) -> File?) {
         viewModelScope.launch {
             val current = detail.value ?: container.reportRepository.detail(reportId) ?: return@launch
             _busy.value = true
@@ -103,7 +118,7 @@ class CaseDetailViewModel(
             val file = runCatching { block(current, expertName) }.getOrNull()
             _busy.value = false
             if (file == null) {
-                _message.value = ir.ilam.inspection.R.string.export_failed
+                _message.value = R.string.export_failed
             } else {
                 ShareUtil.share(context, file)
             }
