@@ -4,6 +4,11 @@ name: Android APK
 # attaches it to the run. The container this project is developed in has no
 # Android SDK, so this workflow is where the app actually gets compiled.
 
+# One build per branch; a new push supersedes the run it replaces.
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
@@ -29,8 +34,11 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Cache Gradle
-        uses: actions/cache@v4
+      # Restore and save are split so a failed build still leaves a warm cache;
+      # otherwise every fix-and-retry round re-downloads the whole toolchain.
+      - name: Restore Gradle cache
+        id: gradle-cache
+        uses: actions/cache/restore@v4
         with:
           path: |
             ~/.gradle/caches
@@ -69,6 +77,15 @@ jobs:
           name: crypto-inspection-debug-apk
           path: android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+      - name: Save Gradle cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/libs.versions.toml') }}
 
       - name: Upload test report on failure
         if: failure()

@@ -48,7 +48,7 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
 
     LaunchedEffect(settingUp) {
         if (!settingUp) {
-            tryBiometric(context as? FragmentActivity, onUnlocked)
+            tryBiometric(context.findFragmentActivity(), onUnlocked)
         }
     }
 
@@ -98,11 +98,24 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
             Text(stringResource(R.string.action_confirm))
         }
         if (!settingUp && canUseBiometric(context)) {
-            TextButton(onClick = { tryBiometric(context as? FragmentActivity, onUnlocked) }) {
+            TextButton(onClick = { tryBiometric(context.findFragmentActivity(), onUnlocked) }) {
                 Text(stringResource(R.string.lock_biometric))
             }
         }
     }
+}
+
+/**
+ * `LocalContext.current` is often a theme wrapper rather than the activity, so
+ * the host is found by walking the wrapper chain.
+ */
+private fun android.content.Context.findFragmentActivity(): FragmentActivity? {
+    var current: android.content.Context? = this
+    while (current is android.content.ContextWrapper) {
+        if (current is FragmentActivity) return current
+        current = current.baseContext
+    }
+    return null
 }
 
 private fun canUseBiometric(context: android.content.Context): Boolean =

@@ -1,7 +1,6 @@
 package ir.ilam.inspection.sync
 
 import android.content.Context
-import android.net.wifi.WifiManager
 import android.provider.Settings
 import ir.ilam.inspection.data.KeyStoreVault
 import ir.ilam.inspection.data.db.AppDatabase
@@ -83,12 +82,8 @@ class SyncService(
         Settings.Secure.ANDROID_ID
     ) ?: "unknown"
 
+    /** Works for Wi-Fi and for the loopback route `adb forward` sets up. */
     private fun localAddress(): String? {
-        runCatching {
-            val wifi = context.applicationContext
-                .getSystemService(Context.WIFI_SERVICE) as? WifiManager
-            if (wifi?.isWifiEnabled != true) return@runCatching
-        }
         return runCatching {
             NetworkInterface.getNetworkInterfaces().toList()
                 .asSequence()
