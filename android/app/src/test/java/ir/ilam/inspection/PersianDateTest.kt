@@ -53,8 +53,10 @@ class PersianDateTest {
 
     @Test
     fun `formats dates with persian digits`() {
-        val millis = PersianDate.toEpochMillis(1404, 6, 14)
-        assertEquals("۱۴۰۴/۰۶/۱۴", PersianDate.format(millis))
+        // 1405/06/14 is the date behind the tracking code documented in
+        // CLAUDE.md: M-۰۱-۰۵۰۶۱۴-۴۸۲۹۱۷.
+        val millis = PersianDate.toEpochMillis(1405, 6, 14)
+        assertEquals("۱۴۰۵/۰۶/۱۴", PersianDate.format(millis))
         assertEquals("050614", PersianDate.trackingStamp(millis))
     }
 

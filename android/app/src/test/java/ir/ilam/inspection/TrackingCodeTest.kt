@@ -12,7 +12,8 @@ import org.junit.Test
 
 class TrackingCodeTest {
 
-    private val reportDate = PersianDate.toEpochMillis(1404, 6, 14)
+    // The date segment of the documented example code, 050614.
+    private val reportDate = PersianDate.toEpochMillis(1405, 6, 14)
 
     @Test
     fun `builds the documented code shape`() {

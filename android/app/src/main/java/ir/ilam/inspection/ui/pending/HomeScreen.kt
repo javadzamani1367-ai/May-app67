@@ -8,7 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Settings
@@ -138,7 +138,7 @@ private enum class HomeTab(val status: ReportStatus, val label: Int) {
 
     @Composable
     fun icon() = when (this) {
-        PENDING -> Icons.Filled.Assignment
+        PENDING -> Icons.AutoMirrored.Filled.Assignment
         VISITED -> Icons.Filled.CheckCircle
         ARCHIVE -> Icons.Filled.Inventory
     }
