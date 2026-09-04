@@ -26,10 +26,41 @@ git tag v1.0.0-test1 && git push origin v1.0.0-test1
 | debug | حدود ۲۹ مگابایت | بدون R8، همراه ابزارهای اشکال‌زدایی Compose — همین است که نصب می‌کنید |
 | release (بدون امضا) | حدود ۷ مگابایت | با R8 و حذف منابع بلااستفاده — هدف مستند زیر ۲۰ مگابایت است |
 
-نسخه release در هر بیلد ساخته و به عنوان `crypto-inspection-release-unsigned`
-پیوست می‌شود، اما بدون امضا قابل نصب نیست. برای ساخت نسخه release قابل نصب،
-یک keystore بسازید و آن را به صورت GitHub Secret اضافه کنید؛ آن‌وقت همین
-workflow می‌تواند خروجی امضاشده بدهد.
+نسخه release در هر بیلد ساخته، امضا و پیوست می‌شود:
+
+- اگر کلید امضای واقعی تنظیم شده باشد → `crypto-inspection-release-signed-apk`
+- در غیر این صورت → `crypto-inspection-release-testkey-apk`، امضاشده با یک کلید
+  یک‌بارمصرف که هر بیلد عوض می‌شود. قابل نصب و تست است، اما برای توزیع رسمی نیست
+  و با آن نمی‌توان نسخه قبلی را به‌روزرسانی کرد.
+
+## کلید امضای رسمی
+
+کلید هرگز داخل مخزن نگهداری نمی‌شود. یک بار روی سیستم خودتان بسازید:
+
+```bash
+# لینوکس یا مک
+tools/make-release-keystore.sh
+```
+```powershell
+# ویندوز
+powershell -ExecutionPolicy Bypass -File tools\make-release-keystore.ps1
+```
+
+سپس در **Settings ← Secrets and variables ← Actions** این چهار مورد را اضافه کنید:
+
+| نام Secret | مقدار |
+|---|---|
+| `RELEASE_KEYSTORE_BASE64` | محتوای فایل `release.keystore.base64.txt` |
+| `RELEASE_KEYSTORE_PASSWORD` | رمزی که انتخاب کردید |
+| `RELEASE_KEY_ALIAS` | `inspection` |
+| `RELEASE_KEY_PASSWORD` | همان رمز |
+
+از بیلد بعد، خروجی با کلید شما امضا می‌شود و تگ زدن (`v*`) آن را به صورت
+Release منتشر می‌کند. صحت امضا در هر بیلد با `apksigner verify` بررسی می‌شود.
+
+> **فایل `release.keystore` را جای امن نگه دارید و پشتیبان بگیرید.** اگر گم شود،
+> هیچ نسخه بعدی نمی‌تواند اپ نصب‌شده روی گوشی‌ها را به‌روزرسانی کند و کاربران
+> باید اپ را حذف و دوباره نصب کنند.
 
 ## ساخت
 

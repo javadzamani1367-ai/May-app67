@@ -20,3 +20,8 @@ windows/**/obj/
 windows/.vs/
 windows/packages/
 windows/CryptoInspection.Archive/Assets/fonts/*.ttf
+
+# Signing keys must never be committed
+*.keystore
+*.jks
+*.base64.txt
