@@ -96,16 +96,18 @@ fun <T> DropdownField(
     label: String,
     options: List<T>,
     selected: T?,
-    optionLabel: (T) -> String,
+    // Composable: call sites resolve their labels from string resources.
+    optionLabel: @Composable (T) -> String,
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
     error: String? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val selectedText = if (selected == null) "" else optionLabel(selected)
     Box(modifier = modifier.fillMaxWidth().padding(vertical = 6.dp)) {
         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
             OutlinedTextField(
-                value = selected?.let(optionLabel).orEmpty(),
+                value = selectedText,
                 onValueChange = {},
                 readOnly = true,
                 label = { Text(label) },
