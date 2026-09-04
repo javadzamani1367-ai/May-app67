@@ -70,8 +70,17 @@ jobs:
         working-directory: android
         run: ./gradlew --no-daemon assembleDebug
 
-      - name: Report APK size
-        run: ls -lh android/app/build/outputs/apk/debug/*.apk
+      # Unsigned, so it cannot be installed, but it is the honest answer to
+      # "how big is the app": R8 and resource shrinking run here, the debug
+      # tooling is gone, and the size is what a signed release would weigh.
+      - name: Build release APK (unsigned, for size and R8 checks)
+        working-directory: android
+        run: ./gradlew --no-daemon assembleRelease
+
+      - name: Report APK sizes
+        run: |
+          ls -lh android/app/build/outputs/apk/debug/*.apk
+          ls -lh android/app/build/outputs/apk/release/*.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -79,6 +88,13 @@ jobs:
           name: crypto-inspection-debug-apk
           path: android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+      - name: Upload unsigned release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: crypto-inspection-release-unsigned
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
 
       # A tag turns the build into a release, so the APK can be downloaded
       # straight onto a phone instead of unzipping a CI artifact.
