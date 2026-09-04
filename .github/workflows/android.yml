@@ -1,0 +1,81 @@
+name: Android APK
+
+# Builds an installable debug APK on every push to the development branch and
+# attaches it to the run. The container this project is developed in has no
+# Android SDK, so this workflow is where the app actually gets compiled.
+
+on:
+  push:
+    branches:
+      - "claude/**"
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      # The font is not kept in the repository (SIL OFL, and it is a binary);
+      # the app builds without it and falls back to the system font.
+      - name: Fetch Vazirmatn
+        continue-on-error: true
+        run: |
+          set -x
+          mkdir -p android/app/src/main/assets/fonts
+          curl -fsSL -o /tmp/vazirmatn.zip \
+            https://github.com/rastikerdar/vazirmatn/releases/download/v33.003/vazirmatn-v33.003.zip
+          unzip -q -o /tmp/vazirmatn.zip -d /tmp/vazirmatn
+          find /tmp/vazirmatn -name 'Vazirmatn-Regular.ttf' -exec cp {} android/app/src/main/assets/fonts/ \;
+          find /tmp/vazirmatn -name 'Vazirmatn-Bold.ttf' -exec cp {} android/app/src/main/assets/fonts/ \;
+          ls -la android/app/src/main/assets/fonts/
+
+      - name: Unit tests
+        working-directory: android
+        run: ./gradlew --no-daemon testDebugUnitTest
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+
+      - name: Report APK size
+        run: ls -lh android/app/build/outputs/apk/debug/*.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: crypto-inspection-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Upload test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-and-build-reports
+          path: |
+            android/app/build/reports/
+            android/app/build/outputs/logs/
+          if-no-files-found: ignore
