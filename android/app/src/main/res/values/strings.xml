@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">بازدید رمزارز</string>
+
+    <!-- ناوبری اصلی -->
+    <string name="tab_pending">در دست اقدام</string>
+    <string name="tab_visited">بازدید شده</string>
+    <string name="tab_archive">بایگانی</string>
+    <string name="nav_settings">تنظیمات</string>
+    <string name="nav_stats">آمار</string>
+    <string name="action_new_report">ثبت گزارش جدید</string>
+    <string name="action_back">بازگشت</string>
+    <string name="action_save">ذخیره</string>
+    <string name="action_next">مرحله بعد</string>
+    <string name="action_previous">مرحله قبل</string>
+    <string name="action_finish">پایان بازدید</string>
+    <string name="action_add">افزودن</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_edit">ویرایش</string>
+    <string name="action_cancel">انصراف</string>
+    <string name="action_confirm">تأیید</string>
+    <string name="action_share">اشتراک‌گذاری</string>
+    <string name="action_retry">تلاش دوباره</string>
+    <string name="action_search">جستجو</string>
+    <string name="action_filter">فیلتر</string>
+    <string name="action_clear_filter">حذف فیلترها</string>
+
+    <!-- انواع گزارش -->
+    <string name="report_type_soragh">سامانه سراغ</string>
+    <string name="report_type_121">سامانه ۱۲۱</string>
+    <string name="report_type_public">گزارش مردمی</string>
+    <string name="report_type_colleague">گزارش همکار</string>
+    <string name="report_type_tavanir">گزارش توانیر</string>
+    <string name="report_type_field">بازدید میدانی</string>
+
+    <!-- وضعیت پرونده -->
+    <string name="status_pending">در دست اقدام</string>
+    <string name="status_visited">بازدید شده</string>
+    <string name="status_archived">بایگانی</string>
+
+    <!-- شهرستان‌ها -->
+    <string-array name="county_names">
+        <item>ایلام</item>
+        <item>ایوان</item>
+        <item>آبدانان</item>
+        <item>بدره</item>
+        <item>دره‌شهر</item>
+        <item>دهلران</item>
+        <item>سیروان</item>
+        <item>چرداول</item>
+        <item>چوار</item>
+        <item>ملکشاهی</item>
+        <item>مهران</item>
+        <item>هلیلان</item>
+    </string-array>
+    <string-array name="county_codes">
+        <item>01</item>
+        <item>02</item>
+        <item>03</item>
+        <item>04</item>
+        <item>05</item>
+        <item>06</item>
+        <item>07</item>
+        <item>08</item>
+        <item>09</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+    </string-array>
+
+    <!-- ثبت سریع -->
+    <string name="intake_title">ثبت سریع گزارش</string>
+    <string name="intake_report_type">نوع گزارش</string>
+    <string name="intake_county">شهرستان</string>
+    <string name="intake_district">بخش</string>
+    <string name="intake_address">آدرس</string>
+    <string name="intake_subscription">شماره اشتراک (اختیاری)</string>
+    <string name="intake_report_date">تاریخ دریافت گزارش</string>
+    <string name="intake_manual_tracking">کد رهگیری سامانه سراغ</string>
+    <string name="intake_manual_tracking_hint">کد رهگیری را از سامانه سراغ وارد کنید</string>
+    <string name="intake_saved">پرونده ثبت شد</string>
+    <string name="intake_error_type">نوع گزارش را انتخاب کنید</string>
+    <string name="intake_error_county">شهرستان را انتخاب کنید</string>
+    <string name="intake_error_address">آدرس را وارد کنید</string>
+    <string name="intake_error_tracking">کد رهگیری سامانه سراغ الزامی است</string>
+    <string name="intake_error_duplicate_tracking">این کد رهگیری قبلاً ثبت شده است</string>
+
+    <!-- کارت پرونده -->
+    <string name="card_days_elapsed">%1$s روز از ثبت گذشته</string>
+    <string name="card_no_tracking">بدون کد رهگیری</string>
+    <string name="card_temp_code">کد موقت</string>
+    <string name="list_empty_pending">پرونده‌ای در دست اقدام نیست</string>
+    <string name="list_empty_visited">پرونده بازدیدشده‌ای وجود ندارد</string>
+    <string name="list_empty_archive">بایگانی خالی است</string>
+
+    <!-- مراحل بازدید -->
+    <string name="visit_title">تکمیل بازدید</string>
+    <string name="visit_step_of">مرحله %1$s از %2$s</string>
+    <string name="visit_step_location">مکان و مختصات</string>
+    <string name="visit_step_owner">مالک یا متصرف</string>
+    <string name="visit_step_technical">مشخصات فنی</string>
+    <string name="visit_step_devices">دستگاه‌ها و حاضرین</string>
+    <string name="visit_step_media">تصاویر و شرح</string>
+    <string name="visit_autosaved">ذخیره خودکار انجام شد</string>
+
+    <!-- مکان -->
+    <string name="field_county">شهرستان</string>
+    <string name="field_district">بخش</string>
+    <string name="field_address">آدرس کامل</string>
+    <string name="field_postal_code">کد پستی</string>
+    <string name="field_file_number">شماره پرونده</string>
+    <string name="field_bill_number">شماره قبض</string>
+    <string name="field_subscription_number">شماره اشتراک</string>
+    <string name="field_usage_type">نوع کاربری</string>
+    <string name="field_coordinates">مختصات GIS</string>
+    <string name="field_gps_accuracy">دقت موقعیت: %1$s متر</string>
+    <string name="action_capture_gps">ثبت مختصات فعلی</string>
+    <string name="gps_waiting">در حال دریافت موقعیت…</string>
+    <string name="gps_not_captured">مختصات ثبت نشده است</string>
+    <string name="gps_permission_needed">دسترسی به موقعیت مکانی لازم است</string>
+    <string name="gps_failed">دریافت موقعیت ناموفق بود</string>
+
+    <!-- مالک -->
+    <string name="field_owner_name">نام و نام خانوادگی</string>
+    <string name="field_owner_national_id">کد ملی</string>
+    <string name="field_owner_phone">تلفن</string>
+    <string name="field_owner_relation">نسبت با محل</string>
+    <string name="error_national_id">کد ملی معتبر نیست</string>
+
+    <!-- فنی -->
+    <string name="field_meter_amperage">آمپراژ کنتور</string>
+    <string name="field_measured_amperage">آمپراژ مصرفی اندازه‌گیری‌شده</string>
+    <string name="field_connection_type">نوع انشعاب</string>
+    <string name="field_seal_status">وضعیت مهر و موم</string>
+
+    <!-- دستگاه‌ها -->
+    <string name="devices_title">دستگاه‌های استخراج</string>
+    <string name="device_add">افزودن دستگاه</string>
+    <string name="device_scan_barcode">اسکن بارکد</string>
+    <string name="device_model">مدل</string>
+    <string name="device_serial">شماره سریال</string>
+    <string name="device_power">توان (وات)</string>
+    <string name="device_note">توضیح</string>
+    <string name="device_entry_barcode">بارکد</string>
+    <string name="device_entry_manual">دستی</string>
+    <string name="device_count">تعداد دستگاه: %1$s</string>
+    <string name="device_total_power">مجموع توان: %1$s وات</string>
+    <string name="device_duplicate_serial">این شماره سریال قبلاً ثبت شده است</string>
+    <string name="devices_empty">دستگاهی ثبت نشده است</string>
+
+    <!-- حاضرین -->
+    <string name="attendees_title">حاضرین در محل</string>
+    <string name="attendee_add">افزودن حاضر</string>
+    <string name="attendee_name">نام و نام خانوادگی</string>
+    <string name="attendee_position">سمت</string>
+    <string name="attendee_org_name">نام سازمان</string>
+    <string name="attendee_org">سازمان</string>
+    <string name="org_power_company">شرکت برق</string>
+    <string name="org_security_police">پلیس امنیت</string>
+    <string name="org_other">سایر نهاد</string>
+    <string name="attendees_empty">حاضری ثبت نشده است</string>
+
+    <!-- رسانه و شرح -->
+    <string name="media_title">تصاویر و ویدیو</string>
+    <string name="media_take_photo">گرفتن عکس</string>
+    <string name="media_record_video">ضبط ویدیو</string>
+    <string name="media_caption">شرح تصویر</string>
+    <string name="media_empty">تصویری ثبت نشده است</string>
+    <string name="media_count">%1$s فایل</string>
+    <string name="field_description">شرح بازدید</string>
+    <string name="field_actions_taken">اقدامات انجام‌شده</string>
+    <string name="camera_permission_needed">دسترسی به دوربین لازم است</string>
+    <string name="camera_failed">ثبت تصویر ناموفق بود</string>
+    <string name="video_too_long">حداکثر مدت هر کلیپ ۹۰ ثانیه است</string>
+
+    <!-- شرط تکمیل -->
+    <string name="complete_title">تبدیل به «بازدید شده»</string>
+    <string name="complete_missing_title">موارد ناقص</string>
+    <string name="missing_gps">مختصات GIS ثبت نشده است</string>
+    <string name="missing_photo">حداقل یک تصویر لازم است</string>
+    <string name="missing_meter_amperage">آمپراژ کنتور وارد نشده است</string>
+    <string name="missing_description">شرح بازدید خالی است</string>
+    <string name="complete_done">پرونده به بازدید شده تغییر یافت</string>
+    <string name="action_archive">انتقال به بایگانی</string>
+    <string name="archive_done">پرونده بایگانی شد</string>
+
+    <!-- پیوست‌ها -->
+    <string name="attachments_title">مدارک پیوست</string>
+    <string name="attachment_add">افزودن مدرک</string>
+    <string name="attachment_category">دسته مدرک</string>
+    <string name="attachment_title_field">عنوان</string>
+    <string name="attachment_note">توضیح</string>
+    <string name="attachments_empty">مدرکی پیوست نشده است</string>
+    <string-array name="attachment_categories">
+        <item>لاگ ماینرها</item>
+        <item>نتایج تحلیل ماینرها</item>
+        <item>صورتجلسه کمیسیون رمزارز</item>
+        <item>صورتحساب انرژی</item>
+        <item>صورتحساب خسارت</item>
+        <item>نامه اقدام به واحد فروش</item>
+        <item>نامه اقدام به واحد حقوقی</item>
+        <item>نامه به برق شهرستان جهت تعویض</item>
+        <item>سایر</item>
+    </string-array>
+
+    <!-- ارسال مدارک -->
+    <string name="dispatch_title">ارسال مدارک</string>
+    <string name="dispatch_unit">واحد مقصد</string>
+    <string name="dispatch_items">موارد ارسالی</string>
+    <string name="dispatch_report_form">فرم گزارش بازدید</string>
+    <string name="dispatch_note">توضیح این ارسال</string>
+    <string name="dispatch_format">قالب خروجی</string>
+    <string name="dispatch_generate">تولید و اشتراک‌گذاری</string>
+    <string name="dispatch_history">سوابق ارسال</string>
+    <string name="dispatch_history_empty">ارسالی ثبت نشده است</string>
+    <string name="dispatch_done">فایل ساخته شد</string>
+    <string name="dispatch_nothing_selected">حداقل یک مورد را انتخاب کنید</string>
+    <string-array name="dispatch_units">
+        <item>واحد فروش</item>
+        <item>حراست</item>
+        <item>واحد حقوقی</item>
+        <item>برق شهرستان</item>
+    </string-array>
+    <string name="format_pdf">PDF</string>
+    <string name="format_word">Word</string>
+
+    <!-- گزارش و آمار -->
+    <string name="export_pdf">خروجی PDF</string>
+    <string name="export_word">خروجی Word</string>
+    <string name="export_excel">خروجی اکسل</string>
+    <string name="export_running">در حال ساخت فایل…</string>
+    <string name="export_failed">ساخت فایل ناموفق بود</string>
+    <string name="stats_title">آمار</string>
+    <string name="stats_total">تعداد کل پرونده‌ها</string>
+    <string name="stats_pending">در دست اقدام</string>
+    <string name="stats_visited">بازدید شده</string>
+    <string name="stats_archived">بایگانی</string>
+    <string name="stats_by_type">تفکیک بر اساس نوع گزارش</string>
+    <string name="stats_by_county">تفکیک بر اساس شهرستان</string>
+    <string name="stats_total_power">مجموع توان کشف‌شده</string>
+    <string name="stats_watt">%1$s وات</string>
+    <string name="filter_from_date">از تاریخ</string>
+    <string name="filter_to_date">تا تاریخ</string>
+    <string name="filter_expert">کارشناس</string>
+    <string name="filter_all">همه</string>
+    <string name="search_hint">کد رهگیری، آدرس، شماره اشتراک، نام مالک</string>
+
+    <!-- تنظیمات و همگام‌سازی -->
+    <string name="settings_title">تنظیمات</string>
+    <string name="settings_expert_code">کد کارشناس</string>
+    <string name="settings_expert_name">نام کارشناس</string>
+    <string name="settings_default_area">کد ناحیه پیش‌فرض</string>
+    <string name="settings_county_codes">ویرایش کد ناحیه شهرستان‌ها</string>
+    <string name="settings_sync_target">آدرس مقصد همگام‌سازی</string>
+    <string name="settings_media_quality">کیفیت رسانه</string>
+    <string name="settings_pin">تغییر رمز ورود</string>
+    <string name="settings_saved">تنظیمات ذخیره شد</string>
+    <string name="sync_title">همگام‌سازی</string>
+    <string name="sync_start_server">شروع همگام‌سازی وای‌فای</string>
+    <string name="sync_stop_server">توقف همگام‌سازی</string>
+    <string name="sync_server_running">سرور فعال است</string>
+    <string name="sync_address">آدرس: %1$s</string>
+    <string name="sync_pair_code">کد اتصال: %1$s</string>
+    <string name="sync_pending_count">%1$s پرونده آماده ارسال</string>
+    <string name="sync_export_package">ساخت بسته آفلاین</string>
+    <string name="sync_package_done">بسته ساخته شد</string>
+    <string name="sync_usb_hint">برای انتقال با کابل، روی ویندوز دستور adb forward tcp:8765 tcp:8765 را اجرا کنید</string>
+    <string name="sync_no_wifi">به شبکه وای‌فای متصل نیستید</string>
+
+    <!-- قفل برنامه -->
+    <string name="lock_title">ورود به برنامه</string>
+    <string name="lock_enter_pin">رمز عبور را وارد کنید</string>
+    <string name="lock_set_pin">یک رمز عبور شش‌رقمی تعیین کنید</string>
+    <string name="lock_confirm_pin">رمز عبور را دوباره وارد کنید</string>
+    <string name="lock_wrong_pin">رمز عبور نادرست است</string>
+    <string name="lock_mismatch">دو رمز یکسان نیستند</string>
+    <string name="lock_biometric">ورود با اثر انگشت</string>
+    <string name="lock_biometric_title">احراز هویت</string>
+
+    <!-- عمومی -->
+    <string name="date_year">سال</string>
+    <string name="date_month">ماه</string>
+    <string name="date_day">روز</string>
+    <string name="date_pick">انتخاب تاریخ</string>
+    <string name="value_empty">—</string>
+    <string name="error_required">این فیلد الزامی است</string>
+    <string name="error_number">مقدار عددی وارد کنید</string>
+    <string name="confirm_delete_title">حذف مورد</string>
+    <string name="confirm_delete_message">این مورد حذف شود؟</string>
+
+    <!-- عناوین فرم گزارش -->
+    <string name="form_title">فرم گزارش بازدید مراکز استخراج رمزارز</string>
+    <string name="form_org">شرکت توزیع نیروی برق استان ایلام</string>
+    <string name="form_section_1">۱ — مشخصات پرونده</string>
+    <string name="form_section_2">۲ — مشخصات مکان</string>
+    <string name="form_section_3">۳ — مشخصات مالک یا متصرف</string>
+    <string name="form_section_4">۴ — مشخصات فنی</string>
+    <string name="form_section_5">۵ — فهرست دستگاه‌ها</string>
+    <string name="form_section_6">۶ — حاضرین در محل</string>
+    <string name="form_section_7">۷ — شرح بازدید و اقدامات</string>
+    <string name="form_media_appendix">پیوست تصاویر</string>
+    <string name="form_tracking_code">کد رهگیری</string>
+    <string name="form_report_type">نوع گزارش</string>
+    <string name="form_report_date">تاریخ گزارش</string>
+    <string name="form_visit_date">تاریخ بازدید</string>
+    <string name="form_expert">کارشناس</string>
+    <string name="form_status">وضعیت پرونده</string>
+    <string name="form_row">ردیف</string>
+    <string name="form_signature">امضا و مهر کارشناس</string>
+    <string name="form_attachments">مستندات پیوست</string>
+    <string name="form_page">صفحه</string>
+</resources>

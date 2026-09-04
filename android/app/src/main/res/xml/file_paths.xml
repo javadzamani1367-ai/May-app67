@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Everything the app shares lives inside its private storage; nothing is
+         written to the public gallery. -->
+    <files-path name="media" path="media/" />
+    <files-path name="exports" path="exports/" />
+    <cache-path name="cache" path="." />
+</paths>
