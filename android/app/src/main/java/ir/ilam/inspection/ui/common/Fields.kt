@@ -16,8 +16,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import ir.ilam.inspection.util.PersianNumbers
@@ -32,8 +35,12 @@ fun AppTextField(
     singleLine: Boolean = true,
     minLines: Int = 1,
     error: String? = null,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    imeAction: ImeAction = ImeAction.Next
 ) {
+    // The keyboard's action key has to actually do something: without these
+    // handlers "next" looks broken, because nothing moves.
+    val focusManager = LocalFocusManager.current
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -43,7 +50,11 @@ fun AppTextField(
         minLines = minLines,
         isError = error != null,
         supportingText = error?.let { { Text(it) } },
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Next)
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
+        keyboardActions = KeyboardActions(
+            onNext = { focusManager.moveFocus(FocusDirection.Next) },
+            onDone = { focusManager.clearFocus() }
+        )
     )
 }
 
@@ -58,7 +69,8 @@ fun NumberField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     decimal: Boolean = false,
-    error: String? = null
+    error: String? = null,
+    imeAction: ImeAction = ImeAction.Next
 ) {
     AppTextField(
         label = label,
@@ -66,7 +78,8 @@ fun NumberField(
         onValueChange = { onValueChange(PersianNumbers.toLatin(it).filter { ch -> ch.isDigit() || (decimal && ch == '.') }) },
         modifier = modifier,
         error = error,
-        keyboardType = if (decimal) KeyboardType.Decimal else KeyboardType.Number
+        keyboardType = if (decimal) KeyboardType.Decimal else KeyboardType.Number,
+        imeAction = imeAction
     )
 }
 
@@ -86,7 +99,8 @@ fun MultilineField(
         modifier = modifier.heightIn(min = 120.dp),
         singleLine = false,
         minLines = 4,
-        error = error
+        error = error,
+        imeAction = ImeAction.Default
     )
 }
 

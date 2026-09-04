@@ -273,7 +273,8 @@
     <string name="settings_expert_name">نام کارشناس</string>
     <string name="settings_default_area">کد ناحیه پیش‌فرض</string>
     <string name="settings_county_codes">ویرایش کد ناحیه شهرستان‌ها</string>
-    <string name="settings_sync_target">آدرس مقصد همگام‌سازی</string>
+    <string name="settings_sync_target">آدرس مقصد همگام‌سازی (اختیاری)</string>
+    <string name="settings_optional_hint">پر کردن این فرم اجباری نیست و مرحله بعدی ندارد. «آدرس مقصد» را خالی بگذارید؛ هنگام همگام‌سازی، ویندوز به گوشی وصل می‌شود نه برعکس. برای بازگشت، فلش بالای صفحه را بزنید.</string>
     <string name="settings_media_quality">کیفیت رسانه</string>
     <string name="settings_pin">تغییر رمز ورود</string>
     <string name="settings_saved">تنظیمات ذخیره شد</string>

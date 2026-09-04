@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -70,7 +71,7 @@ fun SettingsScreen(onBack: () -> Unit) {
 
     LaunchedEffect(message) {
         if (message != null) {
-            kotlinx.coroutines.delay(2_000)
+            kotlinx.coroutines.delay(4_000)
             viewModel.clearMessage()
         }
     }
@@ -128,9 +129,10 @@ fun SettingsScreen(onBack: () -> Unit) {
                         { syncTarget = it }
                     )
                     NumberField(
-                        stringResource(R.string.settings_media_quality),
-                        quality,
-                        { quality = it.take(3) }
+                        label = stringResource(R.string.settings_media_quality),
+                        value = quality,
+                        onValueChange = { quality = it.take(3) },
+                        imeAction = ImeAction.Done
                     )
                     Button(
                         onClick = {
@@ -143,6 +145,22 @@ fun SettingsScreen(onBack: () -> Unit) {
                     ) {
                         Text(stringResource(R.string.action_save))
                     }
+                    // Confirmation belongs next to the button that caused it;
+                    // at the top of a scrolling page nobody sees it.
+                    message?.let {
+                        Text(
+                            text = stringResource(it),
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.settings_optional_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
                 }
             }
 
@@ -235,7 +253,8 @@ fun SettingsScreen(onBack: () -> Unit) {
                     NumberField(
                         label = stringResource(R.string.lock_set_pin),
                         value = pin,
-                        onValueChange = { if (it.length <= PIN_LENGTH) pin = it }
+                        onValueChange = { if (it.length <= PIN_LENGTH) pin = it },
+                        imeAction = ImeAction.Done
                     )
                     Button(
                         onClick = {
