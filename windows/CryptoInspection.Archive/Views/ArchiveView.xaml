@@ -1,0 +1,45 @@
+<UserControl x:Class="CryptoInspection.Archive.Views.ArchiveView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FlowDirection="RightToLeft">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Column="0"
+                     Text="{Binding Search, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                     ToolTip="{StaticResource search_hint}" />
+            <Button Grid.Column="1"
+                    Content="{StaticResource action_refresh}"
+                    Command="{Binding RefreshCommand}" />
+        </Grid>
+
+        <DataGrid Grid.Row="1" Margin="0,8"
+                  ItemsSource="{Binding Rows}"
+                  SelectedItem="{Binding Selected}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="{StaticResource column_tracking_code}" Binding="{Binding TrackingCode}" Width="160" />
+                <DataGridTextColumn Header="{StaticResource column_report_type}" Binding="{Binding ReportType}" Width="110" />
+                <DataGridTextColumn Header="{StaticResource column_status}" Binding="{Binding Status}" Width="100" />
+                <DataGridTextColumn Header="{StaticResource column_report_date}" Binding="{Binding ReportDate}" Width="100" />
+                <DataGridTextColumn Header="{StaticResource column_visit_date}" Binding="{Binding VisitDate}" Width="100" />
+                <DataGridTextColumn Header="{StaticResource column_county}" Binding="{Binding County}" Width="90" />
+                <DataGridTextColumn Header="{StaticResource column_address}" Binding="{Binding Address}" Width="*" />
+                <DataGridTextColumn Header="{StaticResource column_subscription}" Binding="{Binding Subscription}" Width="120" />
+                <DataGridTextColumn Header="{StaticResource column_owner}" Binding="{Binding Owner}" Width="140" />
+                <DataGridTextColumn Header="{StaticResource column_expert}" Binding="{Binding Expert}" Width="90" />
+                <DataGridTextColumn Header="{StaticResource column_last_sync}" Binding="{Binding LastSync}" Width="100" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <TextBlock Grid.Row="2" Text="{Binding Summary}" />
+    </Grid>
+</UserControl>

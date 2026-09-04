@@ -39,6 +39,10 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
     private val _message = MutableStateFlow<Int?>(null)
     val message: StateFlow<Int?> = _message.asStateFlow()
 
+    /** Shown after a package is built: the archive operator has to type it. */
+    private val _packagePassword = MutableStateFlow<String?>(null)
+    val packagePassword: StateFlow<String?> = _packagePassword.asStateFlow()
+
     fun clearMessage() {
         _message.value = null
     }
@@ -80,6 +84,7 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
                 return@launch
             }
             container.syncService.acknowledgeExported(ids)
+            _packagePassword.value = container.vault.packagePassword()
             _message.value = R.string.sync_package_done
             ShareUtil.share(context, file)
         }

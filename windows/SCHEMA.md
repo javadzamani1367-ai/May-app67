@@ -112,6 +112,13 @@ CREATE TABLE settings (
 `expert_code`، `expert_name`، `default_area_code`، `sync_target`، `media_quality`،
 و `county_code_<index>` برای کد ناحیه هر شهرستان (index از صفر، به ترتیب فهرست بخش ۶).
 
+## پیاده‌سازی
+
+سمت اندروید: `android/app/src/main/java/ir/ilam/inspection/data/db/`
+(`SCHEMA_VERSION` در `AppDatabase.kt`).
+سمت ویندوز: `CryptoInspection.Archive/Data/Schema.cs` (`Schema.Version`) و
+`Data/Models.cs`. هر دو باید همزمان تغییر کنند.
+
 ## دریافت از گوشی
 
 پروتکل و ساختار JSON در `docs/SYNC.md` توضیح داده شده است. نام میدان‌های JSON دقیقاً

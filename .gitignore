@@ -13,3 +13,10 @@ android/app/release/
 android/app/src/main/assets/fonts/*.ttf
 
 .DS_Store
+
+# Visual Studio / MSBuild output
+windows/**/bin/
+windows/**/obj/
+windows/.vs/
+windows/packages/
+windows/CryptoInspection.Archive/Assets/fonts/*.ttf

@@ -36,7 +36,7 @@ android/app/src/main/assets/fonts/Vazirmatn-Bold.ttf
 | خروجی: PDF، Word، اکسل، اشتراک‌گذاری | ✅ |
 | مدارک: پیوست پس از بازدید، ارسال گزینشی به واحدها، جستجو و آمار | ✅ |
 | همگام‌سازی: وب‌سرور روی گوشی، بسته `.cvz` | ✅ |
-| نرم‌افزار ویندوز (WPF) | ⬜ ساخته نشده — اسکیما و پروتکل آماده است |
+| نرم‌افزار ویندوز (WPF): دریافت‌کننده، آرشیو مرکزی، گزارش‌گیری تجمیعی | ✅ |
 
 ## نقشه کد
 
@@ -62,8 +62,18 @@ cd android && ./gradlew test
 تست‌های واحد روی منطق خالص: تبدیل تاریخ شمسی (رفت و برگشت کامل ۱۳۵۰ تا ۱۴۵۰)،
 ساخت کد رهگیری و کد موقت، اعتبارسنجی کد ملی و شکل‌دهی ارقام.
 
+## نرم‌افزار ویندوز
+
+```cmd
+cd windows
+nuget restore CryptoInspection.sln
+msbuild CryptoInspection.sln /p:Configuration=Release
+```
+جزئیات نیازمندی‌ها، بسته‌ها و نکته حجم نصاب: [`windows/README.md`](windows/README.md).
+
 ## اسناد
 
 - [`CLAUDE.md`](CLAUDE.md) — مستند فنی و مرجع توسعه
-- [`windows/SCHEMA.md`](windows/SCHEMA.md) — آینه اسکیما برای نرم‌افزار ویندوز
+- [`windows/README.md`](windows/README.md) — ساخت و اجرای نرم‌افزار ویندوز
+- [`windows/SCHEMA.md`](windows/SCHEMA.md) — آینه اسکیما، مشترک بین دو نرم‌افزار
 - [`docs/SYNC.md`](docs/SYNC.md) — پروتکل همگام‌سازی برای پیاده‌ساز سمت ویندوز

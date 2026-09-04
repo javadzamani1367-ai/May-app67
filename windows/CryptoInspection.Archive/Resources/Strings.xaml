@@ -1,0 +1,162 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- Every visible word lives here, exactly as strings.xml does on Android. -->
+
+    <sys:String x:Key="app_title">آرشیو مرکزی بازدید مراکز رمزارز</sys:String>
+    <sys:String x:Key="tab_archive">بایگانی</sys:String>
+    <sys:String x:Key="tab_receive">دریافت از گوشی</sys:String>
+    <sys:String x:Key="tab_reports">گزارش‌گیری</sys:String>
+    <sys:String x:Key="tab_settings">تنظیمات</sys:String>
+
+    <sys:String x:Key="action_search">جستجو</sys:String>
+    <sys:String x:Key="action_refresh">به‌روزرسانی</sys:String>
+    <sys:String x:Key="action_open_folder">باز کردن پوشه خروجی</sys:String>
+    <sys:String x:Key="action_save">ذخیره</sys:String>
+    <sys:String x:Key="action_browse">انتخاب فایل</sys:String>
+    <sys:String x:Key="action_clear_filter">حذف فیلترها</sys:String>
+
+    <sys:String x:Key="search_hint">کد رهگیری، آدرس، شماره اشتراک، نام مالک</sys:String>
+    <sys:String x:Key="archive_empty">پرونده‌ای در آرشیو نیست</sys:String>
+    <sys:String x:Key="archive_count">تعداد پرونده: {0}</sys:String>
+
+    <sys:String x:Key="column_tracking_code">کد رهگیری</sys:String>
+    <sys:String x:Key="column_report_type">نوع گزارش</sys:String>
+    <sys:String x:Key="column_report_date">تاریخ گزارش</sys:String>
+    <sys:String x:Key="column_visit_date">تاریخ بازدید</sys:String>
+    <sys:String x:Key="column_county">شهرستان</sys:String>
+    <sys:String x:Key="column_district">بخش</sys:String>
+    <sys:String x:Key="column_address">آدرس</sys:String>
+    <sys:String x:Key="column_subscription">شماره اشتراک</sys:String>
+    <sys:String x:Key="column_file_number">شماره پرونده</sys:String>
+    <sys:String x:Key="column_bill_number">شماره قبض</sys:String>
+    <sys:String x:Key="column_owner">نام مالک</sys:String>
+    <sys:String x:Key="column_meter_amperage">آمپراژ کنتور</sys:String>
+    <sys:String x:Key="column_measured_amperage">آمپراژ مصرفی</sys:String>
+    <sys:String x:Key="column_device_count">تعداد دستگاه</sys:String>
+    <sys:String x:Key="column_total_power">مجموع توان</sys:String>
+    <sys:String x:Key="column_status">وضعیت</sys:String>
+    <sys:String x:Key="column_expert">کارشناس</sys:String>
+    <sys:String x:Key="column_coordinates">مختصات</sys:String>
+    <sys:String x:Key="column_row">ردیف</sys:String>
+    <sys:String x:Key="column_entry_method">روش ثبت</sys:String>
+    <sys:String x:Key="column_device_model">مدل</sys:String>
+    <sys:String x:Key="column_device_serial">شماره سریال</sys:String>
+    <sys:String x:Key="column_device_power">توان (وات)</sys:String>
+    <sys:String x:Key="column_attendee_name">نام و نام خانوادگی</sys:String>
+    <sys:String x:Key="column_attendee_position">سمت</sys:String>
+    <sys:String x:Key="column_attendee_org">سازمان</sys:String>
+    <sys:String x:Key="column_last_sync">آخرین دریافت</sys:String>
+
+    <sys:String x:Key="report_type_1">سامانه سراغ</sys:String>
+    <sys:String x:Key="report_type_2">سامانه ۱۲۱</sys:String>
+    <sys:String x:Key="report_type_3">گزارش مردمی</sys:String>
+    <sys:String x:Key="report_type_4">گزارش همکار</sys:String>
+    <sys:String x:Key="report_type_5">گزارش توانیر</sys:String>
+    <sys:String x:Key="report_type_6">بازدید میدانی</sys:String>
+
+    <sys:String x:Key="status_0">در دست اقدام</sys:String>
+    <sys:String x:Key="status_1">بازدید شده</sys:String>
+    <sys:String x:Key="status_2">بایگانی</sys:String>
+
+    <sys:String x:Key="entry_method_0">بارکد</sys:String>
+    <sys:String x:Key="entry_method_1">دستی</sys:String>
+
+    <sys:String x:Key="org_0">شرکت برق</sys:String>
+    <sys:String x:Key="org_1">پلیس امنیت</sys:String>
+    <sys:String x:Key="org_2">سایر نهاد</sys:String>
+
+    <sys:String x:Key="unit_0">واحد فروش</sys:String>
+    <sys:String x:Key="unit_1">حراست</sys:String>
+    <sys:String x:Key="unit_2">واحد حقوقی</sys:String>
+    <sys:String x:Key="unit_3">برق شهرستان</sys:String>
+
+    <sys:String x:Key="attachment_0">لاگ ماینرها</sys:String>
+    <sys:String x:Key="attachment_1">نتایج تحلیل ماینرها</sys:String>
+    <sys:String x:Key="attachment_2">صورتجلسه کمیسیون رمزارز</sys:String>
+    <sys:String x:Key="attachment_3">صورتحساب انرژی</sys:String>
+    <sys:String x:Key="attachment_4">صورتحساب خسارت</sys:String>
+    <sys:String x:Key="attachment_5">نامه اقدام به واحد فروش</sys:String>
+    <sys:String x:Key="attachment_6">نامه اقدام به واحد حقوقی</sys:String>
+    <sys:String x:Key="attachment_7">نامه به برق شهرستان جهت تعویض</sys:String>
+    <sys:String x:Key="attachment_8">سایر</sys:String>
+
+    <!-- دریافت -->
+    <sys:String x:Key="receive_wifi_title">دریافت با وای‌فای یا کابل</sys:String>
+    <sys:String x:Key="receive_address">آدرس گوشی</sys:String>
+    <sys:String x:Key="receive_pair_code">کد اتصال شش‌رقمی</sys:String>
+    <sys:String x:Key="receive_connect">اتصال و دریافت</sys:String>
+    <sys:String x:Key="receive_usb_hint">برای کابل USB ابتدا دستور adb forward tcp:8765 tcp:8765 را اجرا و آدرس http://127.0.0.1:8765 را وارد کنید</sys:String>
+    <sys:String x:Key="receive_package_title">دریافت بسته آفلاین</sys:String>
+    <sys:String x:Key="receive_package_password">رمز بسته</sys:String>
+    <sys:String x:Key="receive_package_import">وارد کردن بسته</sys:String>
+    <sys:String x:Key="receive_log">شرح عملیات</sys:String>
+
+    <sys:String x:Key="msg_connecting">در حال اتصال به گوشی…</sys:String>
+    <sys:String x:Key="msg_connected">اتصال برقرار شد — دستگاه {0} / کارشناس {1}</sys:String>
+    <sys:String x:Key="msg_schema_mismatch">نسخه اسکیمای گوشی ({0}) با آرشیو ({1}) یکی نیست؛ ادغام انجام نشد</sys:String>
+    <sys:String x:Key="msg_manifest">{0} پرونده تغییر کرده است</sys:String>
+    <sys:String x:Key="msg_importing_report">در حال دریافت پرونده {0}</sys:String>
+    <sys:String x:Key="msg_media_saved">{0} فایل رسانه ذخیره شد</sys:String>
+    <sys:String x:Key="msg_acked">{0} پرونده تأیید و ثبت شد</sys:String>
+    <sys:String x:Key="msg_nothing_new">پرونده تازه‌ای برای دریافت نیست</sys:String>
+    <sys:String x:Key="msg_failed">خطا: {0}</sys:String>
+    <sys:String x:Key="msg_package_imported">بسته وارد شد — {0} پرونده</sys:String>
+    <sys:String x:Key="msg_wrong_password">رمز بسته نادرست است یا فایل آسیب دیده</sys:String>
+    <sys:String x:Key="msg_saved">ذخیره شد</sys:String>
+    <sys:String x:Key="msg_export_done">فایل ساخته شد: {0}</sys:String>
+
+    <!-- گزارش‌گیری -->
+    <sys:String x:Key="reports_filters">فیلترها</sys:String>
+    <sys:String x:Key="filter_from_date">از تاریخ شمسی</sys:String>
+    <sys:String x:Key="filter_to_date">تا تاریخ شمسی</sys:String>
+    <sys:String x:Key="filter_date_hint">مثال: ۱۴۰۴/۰۶/۰۱</sys:String>
+    <sys:String x:Key="filter_all">همه</sys:String>
+    <sys:String x:Key="export_excel">خروجی اکسل</sys:String>
+    <sys:String x:Key="export_pdf">خروجی PDF پرونده انتخاب‌شده</sys:String>
+    <sys:String x:Key="export_word">خروجی Word پرونده انتخاب‌شده</sys:String>
+    <sys:String x:Key="stats_title">آمار تجمیعی</sys:String>
+    <sys:String x:Key="stats_total">تعداد کل</sys:String>
+    <sys:String x:Key="stats_pending">در دست اقدام</sys:String>
+    <sys:String x:Key="stats_visited">بازدید شده</sys:String>
+    <sys:String x:Key="stats_archived">بایگانی</sys:String>
+    <sys:String x:Key="stats_total_power">مجموع توان کشف‌شده (وات)</sys:String>
+    <sys:String x:Key="stats_by_type">تفکیک بر اساس نوع گزارش</sys:String>
+    <sys:String x:Key="stats_by_county">تفکیک بر اساس شهرستان</sys:String>
+    <sys:String x:Key="stats_sheet_name">آمار</sys:String>
+    <sys:String x:Key="excel_sheet_name">گزارش بازدیدها</sys:String>
+
+    <!-- تنظیمات -->
+    <sys:String x:Key="settings_database">مسیر پایگاه داده</sys:String>
+    <sys:String x:Key="settings_media_root">مسیر نگهداری رسانه</sys:String>
+    <sys:String x:Key="settings_export_root">مسیر خروجی‌ها</sys:String>
+    <sys:String x:Key="settings_password">رمز پایگاه داده</sys:String>
+    <sys:String x:Key="settings_password_hint">این رمز برای رمزگشایی SQLCipher استفاده می‌شود و در پروفایل کاربر ویندوز محافظت‌شده ذخیره می‌شود</sys:String>
+    <sys:String x:Key="settings_restart_hint">تغییر مسیر یا رمز پس از راه‌اندازی دوباره برنامه اعمال می‌شود</sys:String>
+
+    <!-- فرم گزارش -->
+    <sys:String x:Key="form_org">شرکت توزیع نیروی برق استان ایلام</sys:String>
+    <sys:String x:Key="form_title">فرم گزارش بازدید مراکز استخراج رمزارز</sys:String>
+    <sys:String x:Key="form_section_1">۱ — مشخصات پرونده</sys:String>
+    <sys:String x:Key="form_section_2">۲ — مشخصات مکان</sys:String>
+    <sys:String x:Key="form_section_3">۳ — مشخصات مالک یا متصرف</sys:String>
+    <sys:String x:Key="form_section_4">۴ — مشخصات فنی</sys:String>
+    <sys:String x:Key="form_section_5">۵ — فهرست دستگاه‌ها</sys:String>
+    <sys:String x:Key="form_section_6">۶ — حاضرین در محل</sys:String>
+    <sys:String x:Key="form_section_7">۷ — شرح بازدید و اقدامات</sys:String>
+    <sys:String x:Key="form_media_appendix">پیوست تصاویر</sys:String>
+    <sys:String x:Key="form_attachments">مستندات پیوست</sys:String>
+    <sys:String x:Key="form_actions_taken">اقدامات انجام‌شده</sys:String>
+    <sys:String x:Key="form_signature">امضا و مهر کارشناس</sys:String>
+    <sys:String x:Key="form_page">صفحه</sys:String>
+    <sys:String x:Key="form_postal_code">کد پستی</sys:String>
+    <sys:String x:Key="form_usage_type">نوع کاربری</sys:String>
+    <sys:String x:Key="form_owner_national_id">کد ملی</sys:String>
+    <sys:String x:Key="form_owner_phone">تلفن</sys:String>
+    <sys:String x:Key="form_owner_relation">نسبت با محل</sys:String>
+    <sys:String x:Key="form_connection_type">نوع انشعاب</sys:String>
+    <sys:String x:Key="form_seal_status">وضعیت مهر و موم</sys:String>
+    <sys:String x:Key="form_description">شرح بازدید</sys:String>
+    <sys:String x:Key="value_empty">—</sys:String>
+</ResourceDictionary>

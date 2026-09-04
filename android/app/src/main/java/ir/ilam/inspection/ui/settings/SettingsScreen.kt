@@ -58,6 +58,7 @@ fun SettingsScreen(onBack: () -> Unit) {
     val pairingCode by viewModel.pairingCode.collectAsStateWithLifecycle()
     val address by viewModel.address.collectAsStateWithLifecycle()
     val pendingSync by viewModel.pendingSync.collectAsStateWithLifecycle()
+    val packagePassword by viewModel.packagePassword.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
 
     var expertCode by remember(settings.expertCode) { mutableStateOf(settings.expertCode) }
@@ -213,6 +214,18 @@ fun SettingsScreen(onBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                     ) {
                         Text(stringResource(R.string.sync_export_package))
+                    }
+                    packagePassword?.let { password ->
+                        Text(
+                            text = stringResource(R.string.sync_package_password, password),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.sync_package_password_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }

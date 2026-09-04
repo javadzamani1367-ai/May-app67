@@ -1,0 +1,26 @@
+<UserControl x:Class="CryptoInspection.Archive.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FlowDirection="RightToLeft">
+    <StackPanel Margin="10" MaxWidth="640" HorizontalAlignment="Right">
+        <Border Style="{StaticResource Card}">
+            <StackPanel>
+                <TextBlock Text="{StaticResource settings_database}" Style="{StaticResource FieldLabel}" />
+                <TextBox Text="{Binding DatabasePath}" />
+                <TextBlock Text="{StaticResource settings_media_root}" Style="{StaticResource FieldLabel}" />
+                <TextBox Text="{Binding MediaRoot}" />
+                <TextBlock Text="{StaticResource settings_export_root}" Style="{StaticResource FieldLabel}" />
+                <TextBox Text="{Binding ExportRoot}" />
+                <TextBlock Text="{StaticResource settings_password}" Style="{StaticResource FieldLabel}" />
+                <TextBox Text="{Binding DatabasePassword}" />
+                <TextBlock Text="{StaticResource settings_password_hint}"
+                           Foreground="{StaticResource MutedTextBrush}" FontSize="12" Margin="0,4,0,0" />
+                <TextBlock Text="{StaticResource settings_restart_hint}"
+                           Foreground="{StaticResource MutedTextBrush}" FontSize="12" Margin="0,4,0,0" />
+                <Button Content="{StaticResource action_save}" Command="{Binding SaveCommand}"
+                        HorizontalAlignment="Stretch" Margin="0,12,0,0" />
+                <TextBlock Text="{Binding Message}" Foreground="{StaticResource PrimaryDarkBrush}" Margin="0,8,0,0" />
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

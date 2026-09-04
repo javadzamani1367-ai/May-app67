@@ -285,6 +285,8 @@
     <string name="sync_pending_count">%1$s پرونده آماده ارسال</string>
     <string name="sync_export_package">ساخت بسته آفلاین</string>
     <string name="sync_package_done">بسته ساخته شد</string>
+    <string name="sync_package_password">رمز بسته: %1$s</string>
+    <string name="sync_package_password_hint">این رمز را در نرم‌افزار ویندوز هنگام وارد کردن بسته وارد کنید</string>
     <string name="sync_usb_hint">برای انتقال با کابل، روی ویندوز دستور adb forward tcp:8765 tcp:8765 را اجرا کنید</string>
     <string name="sync_no_wifi">به شبکه وای‌فای متصل نیستید</string>
 
