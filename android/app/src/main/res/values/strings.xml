@@ -307,6 +307,10 @@
     <string name="date_month">ماه</string>
     <string name="date_day">روز</string>
     <string name="date_pick">انتخاب تاریخ</string>
+    <string name="crash_title">برنامه در اجرای قبلی بسته شد</string>
+    <string name="crash_hint">متن زیر علت دقیق را نشان می‌دهد. آن را برای توسعه‌دهنده بفرستید تا همین خطا رفع شود. اطلاعات پرونده‌های شما پاک نشده است.</string>
+    <string name="crash_share">ارسال گزارش خطا</string>
+    <string name="crash_dismiss">بستن و ادامه</string>
     <string name="value_empty">—</string>
     <string name="error_required">این فیلد الزامی است</string>
     <string name="error_number">مقدار عددی وارد کنید</string>

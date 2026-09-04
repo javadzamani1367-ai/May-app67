@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.fragment.app.FragmentActivity
 import ir.ilam.inspection.container
 import ir.ilam.inspection.ui.lock.LockScreen
+import ir.ilam.inspection.util.CrashReporter
 import ir.ilam.inspection.ui.theme.InspectionTheme
 
 // FragmentActivity, not ComponentActivity: BiometricPrompt needs a fragment host.
@@ -21,6 +22,8 @@ class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val crashReporter = CrashReporter(applicationContext).apply { install() }
+        val lastCrash = crashReporter.pending()
         enableEdgeToEdge()
         setContent {
             InspectionTheme {
@@ -30,10 +33,19 @@ class MainActivity : FragmentActivity() {
                 ) {
                     val vault = remember { container.vault }
                     var unlocked by remember { mutableStateOf(false) }
-                    if (unlocked) {
-                        AppNavigation()
-                    } else {
-                        LockScreen(vault = vault, onUnlocked = { unlocked = true })
+                    var crashToShow by remember { mutableStateOf(lastCrash) }
+
+                    val report = crashToShow
+                    when {
+                        report != null -> CrashScreen(
+                            report = report,
+                            onDismiss = {
+                                crashReporter.clear()
+                                crashToShow = null
+                            }
+                        )
+                        unlocked -> AppNavigation()
+                        else -> LockScreen(vault = vault, onUnlocked = { unlocked = true })
                     }
                 }
             }

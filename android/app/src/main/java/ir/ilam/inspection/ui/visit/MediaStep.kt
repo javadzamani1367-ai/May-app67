@@ -27,6 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import ir.ilam.inspection.R
 import ir.ilam.inspection.container
@@ -63,38 +65,45 @@ fun MediaStep(detail: ReportDetail, viewModel: VisitViewModel) {
         }
     }
 
+    // The camera fills the screen, and a component that fills its height cannot
+    // live inside a scrolling column: Compose measures it with unbounded height
+    // and throws. Its own window gives it real bounds.
     if (capturing) {
-        CameraCapture(
-            photoTarget = { appContainer.fileStore.newMediaFile(report.id, "raw.jpg") },
-            videoTarget = { appContainer.fileStore.newMediaFile(report.id, "mp4") },
-            onPhoto = { raw ->
-                scope.launch {
-                    val stored = appContainer.fileStore.newMediaFile(report.id, "jpg")
-                    val capturedAt = System.currentTimeMillis()
-                    val quality = appContainer.settingsRepository.mediaQuality()
-                    val ok = withContext(Dispatchers.IO) {
-                        appContainer.mediaProcessor.processPhoto(
-                            source = raw,
-                            target = stored,
-                            stamp = PhotoStamp(
-                                trackingCode = report.displayCode.orEmpty(),
-                                expertCode = report.expertCode.orEmpty(),
-                                capturedAt = capturedAt,
-                                latitude = report.latitude,
-                                longitude = report.longitude
-                            ),
-                            quality = quality
-                        ).also { raw.delete() }
+        Dialog(
+            onDismissRequest = { capturing = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            CameraCapture(
+                photoTarget = { appContainer.fileStore.newMediaFile(report.id, "raw.jpg") },
+                videoTarget = { appContainer.fileStore.newMediaFile(report.id, "mp4") },
+                onPhoto = { raw ->
+                    scope.launch {
+                        val stored = appContainer.fileStore.newMediaFile(report.id, "jpg")
+                        val capturedAt = System.currentTimeMillis()
+                        val quality = appContainer.settingsRepository.mediaQuality()
+                        val ok = withContext(Dispatchers.IO) {
+                            appContainer.mediaProcessor.processPhoto(
+                                source = raw,
+                                target = stored,
+                                stamp = PhotoStamp(
+                                    trackingCode = report.displayCode.orEmpty(),
+                                    expertCode = report.expertCode.orEmpty(),
+                                    capturedAt = capturedAt,
+                                    latitude = report.latitude,
+                                    longitude = report.longitude
+                                ),
+                                quality = quality
+                            ).also { raw.delete() }
+                        }
+                        if (ok) viewModel.addMedia(stored, MediaType.IMAGE, capturedAt)
                     }
-                    if (ok) viewModel.addMedia(stored, MediaType.IMAGE, capturedAt)
-                }
-            },
-            onVideo = { file ->
-                viewModel.addMedia(file, MediaType.VIDEO, System.currentTimeMillis())
-            },
-            onClose = { capturing = false }
-        )
-        return
+                },
+                onVideo = { file ->
+                    viewModel.addMedia(file, MediaType.VIDEO, System.currentTimeMillis())
+                },
+                onClose = { capturing = false }
+            )
+        }
     }
 
     SectionCard(title = stringResource(R.string.media_title)) {
