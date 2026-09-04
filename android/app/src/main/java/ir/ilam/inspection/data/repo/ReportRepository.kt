@@ -10,7 +10,6 @@ import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.TrackingCode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 /** The case lifecycle: intake, field completion, status changes, search. */
@@ -192,8 +191,6 @@ class ReportRepository(private val db: AppDatabase, private val settings: Settin
     /** How long a pending case has been waiting, in whole days. */
     fun daysWaiting(report: ReportEntity): Int =
         PersianDate.daysBetween(report.reportDate, System.currentTimeMillis()).coerceAtLeast(0)
-
-    fun noDetail(): Flow<ReportDetail?> = flowOf(null)
 
     private suspend fun nextTempSequence(): Int {
         val now = System.currentTimeMillis()

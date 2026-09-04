@@ -27,7 +27,6 @@ class HtmlReportBuilder(private val context: Context, private val files: FileSto
         selectedAttachmentIds: Set<String>? = null,
         dispatchNote: String? = null
     ): String {
-        val report = detail.report
         val photos = detail.photos.filter { selectedMediaIds == null || it.id in selectedMediaIds }
         val attachments = detail.attachments
             .filter { selectedAttachmentIds == null || it.id in selectedAttachmentIds }

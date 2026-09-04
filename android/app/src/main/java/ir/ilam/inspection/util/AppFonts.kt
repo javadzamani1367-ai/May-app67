@@ -3,7 +3,6 @@ package ir.ilam.inspection.util
 import android.content.Context
 import android.graphics.Typeface
 import android.util.Base64
-import java.io.File
 
 /**
  * Vazirmatn is loaded from `assets/fonts` rather than a font resource so the
@@ -48,8 +47,4 @@ object AppFonts {
 
     private fun android.content.res.AssetManager.exists(path: String): Boolean =
         runCatching { open(path).close(); true }.getOrDefault(false)
-
-    /** Used by the build documentation to explain where the file belongs. */
-    fun expectedLocation(context: Context): String =
-        File(context.applicationInfo.sourceDir).name + "/assets/" + ASSET_PATH
 }

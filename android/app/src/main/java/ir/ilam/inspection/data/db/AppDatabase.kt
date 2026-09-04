@@ -7,6 +7,12 @@ import androidx.room.RoomDatabase
 import ir.ilam.inspection.data.KeyStoreVault
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
+/**
+ * Bumped only together with `windows/SCHEMA.md`; the sync handshake refuses to
+ * talk to an archive built against a different version.
+ */
+const val SCHEMA_VERSION = 1
+
 @Database(
     entities = [
         ReportEntity::class,
@@ -17,7 +23,7 @@ import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
         DispatchEntity::class,
         SettingEntity::class
     ],
-    version = AppDatabase.SCHEMA_VERSION,
+    version = SCHEMA_VERSION,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -31,11 +37,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun settingDao(): SettingDao
 
     companion object {
-        /**
-         * Bumped only together with `windows/SCHEMA.md`; the sync handshake
-         * refuses to talk to an archive built against a different version.
-         */
-        const val SCHEMA_VERSION = 1
+        const val SCHEMA_VERSION = ir.ilam.inspection.data.db.SCHEMA_VERSION
         private const val DB_NAME = "inspection.db"
 
         @Volatile

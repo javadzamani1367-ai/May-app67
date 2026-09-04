@@ -10,9 +10,9 @@ import ir.ilam.inspection.data.AppContainer
  */
 class ContainerViewModelFactory(
     private val container: AppContainer,
-    private val create: (AppContainer) -> ViewModel
+    private val build: (AppContainer) -> ViewModel
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T = create(container) as T
+    override fun <T : ViewModel> create(modelClass: Class<T>): T = build(container) as T
 }

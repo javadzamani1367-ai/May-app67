@@ -126,8 +126,6 @@ class VisitViewModel(private val container: AppContainer, private val reportId: 
         )
     }
 
-    fun clearMeterAmperage() = edit { it.copy(meterAmperage = null) }
-
     // ---- step 4: devices and attendees ------------------------------------
 
     private val _deviceError = MutableStateFlow(false)

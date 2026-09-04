@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.AppContainer
-import ir.ilam.inspection.data.model.ReportDetail
 import ir.ilam.inspection.data.model.ReportStatus
 import ir.ilam.inspection.data.model.ReportType
 import ir.ilam.inspection.export.ShareUtil
@@ -83,7 +82,7 @@ class StatsViewModel(private val container: AppContainer) : ViewModel() {
                 val details = reports.mapNotNull { repository.detail(it.id) }
                 runCatching {
                     container.excelExporter.export(
-                        details = details.ifEmpty { emptyList<ReportDetail>() },
+                        details = details,
                         fileName = "reports-" + PersianDate.trackingStamp(System.currentTimeMillis()),
                         expertName = settings.expertName
                     )

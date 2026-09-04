@@ -1,0 +1,15 @@
+# Gradle / Android build output
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/app/release/
+*.apk
+*.aab
+*.iml
+
+# Vazirmatn is fetched at build time; see README
+android/app/src/main/assets/fonts/*.ttf
+
+.DS_Store

@@ -40,9 +40,10 @@ android {
     packaging {
         resources.excludes += setOf("/META-INF/{AL2.0,LGPL2.1}")
     }
-    ksp {
-        arg("room.schemaLocation", "$projectDir/schemas")
-    }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {
