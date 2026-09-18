@@ -39,6 +39,7 @@ import ir.ilam.inspection.ui.common.JalaliDatePickerDialog
 import ir.ilam.inspection.ui.common.NumberField
 import ir.ilam.inspection.ui.common.reportTypeLabel
 import ir.ilam.inspection.util.PersianDate
+import ir.ilam.inspection.util.PersianNumbers
 
 /** Quick intake: the short form that puts a case into the pending queue. */
 @OptIn(ExperimentalMaterial3Api::class)
