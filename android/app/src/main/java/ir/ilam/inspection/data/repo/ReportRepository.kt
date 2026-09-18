@@ -6,6 +6,7 @@ import ir.ilam.inspection.data.model.Completion
 import ir.ilam.inspection.data.model.ReportDetail
 import ir.ilam.inspection.data.model.ReportStatus
 import ir.ilam.inspection.data.model.ReportType
+import ir.ilam.inspection.util.FileStore
 import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.TrackingCode
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +14,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
 /** The case lifecycle: intake, field completion, status changes, search. */
-class ReportRepository(private val db: AppDatabase, private val settings: SettingsRepository) {
+class ReportRepository(
+    private val db: AppDatabase,
+    private val settings: SettingsRepository,
+    private val files: FileStore
+) {
 
     private val reports = db.reportDao()
 
@@ -163,7 +168,26 @@ class ReportRepository(private val db: AppDatabase, private val settings: Settin
         edit(id) { it.copy(status = ReportStatus.PENDING.code) }
     }
 
-    suspend fun delete(id: String) = reports.delete(id)
+    /**
+     * A pending case can always be dropped — it is the expert's own draft. A
+     * visited or archived one may only be dropped once the Windows archive has
+     * acknowledged it, so deleting on the phone can never be the moment the
+     * only copy disappears.
+     */
+    fun canDelete(report: ReportEntity): Boolean = when (ReportStatus.of(report.status)) {
+        ReportStatus.PENDING -> true
+        else -> report.syncedAt != null && report.updatedAt <= report.syncedAt
+    }
+
+    /** Removes the case, its children by cascade, and every file it owned. */
+    suspend fun delete(id: String): Boolean {
+        val detail = detail(id) ?: return false
+        if (!canDelete(detail.report)) return false
+        detail.media.forEach { files.deleteQuietly(it.filePath) }
+        detail.attachments.forEach { files.deleteQuietly(it.filePath) }
+        reports.delete(id)
+        return true
+    }
 
     suspend fun filter(
         status: ReportStatus?,

@@ -8,6 +8,7 @@ import ir.ilam.inspection.data.AppContainer
 import ir.ilam.inspection.data.model.DispatchUnit
 import ir.ilam.inspection.data.model.OutputFormat
 import ir.ilam.inspection.data.model.ReportDetail
+import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.export.PdfOutcome
 import ir.ilam.inspection.export.ShareUtil
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -44,6 +46,14 @@ class DispatchViewModel(
 
     val detail: StateFlow<ReportDetail?> = container.reportRepository.observeDetail(reportId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** The file store the item list needs to render its previews. */
+    val files = container.fileStore
+
+    /** A manager is offered every document category, an expert only what exists. */
+    val isManager: StateFlow<Boolean> = container.settingsRepository.settings
+        .map { it.role == UserRole.MANAGER }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     private val _state = MutableStateFlow(DispatchState())
     val state: StateFlow<DispatchState> = _state.asStateFlow()

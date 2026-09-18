@@ -3,6 +3,7 @@ package ir.ilam.inspection
 import android.app.Application
 import android.content.Context
 import ir.ilam.inspection.data.AppContainer
+import ir.ilam.inspection.util.MapConfig
 
 /**
  * Manual dependency container. The app is small and offline; a DI framework
@@ -16,6 +17,7 @@ class InspectionApp : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        MapConfig.ensure(this)
     }
 }
 

@@ -24,7 +24,7 @@ class AppContainer(private val context: Context) {
     val counties: CountyCatalog by lazy { CountyCatalog(context) }
 
     val settingsRepository: SettingsRepository by lazy { SettingsRepository(database.settingDao()) }
-    val reportRepository: ReportRepository by lazy { ReportRepository(database, settingsRepository) }
+    val reportRepository: ReportRepository by lazy { ReportRepository(database, settingsRepository, fileStore) }
     val contentRepository: CaseContentRepository by lazy {
         CaseContentRepository(database, reportRepository, fileStore)
     }

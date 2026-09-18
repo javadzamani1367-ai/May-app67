@@ -1,7 +1,8 @@
 package ir.ilam.inspection.ui.pending
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
@@ -41,18 +42,20 @@ private const val LATE_DAYS = 15
  * One case as a card: the tracking code large, the report type as a fixed
  * colour, and how long it has been waiting — amber past a week, red past two.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CaseCard(
     report: ReportEntity,
     daysWaiting: Int,
     onClick: () -> Unit,
+    onDeleteRequest: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 6.dp)
-            .clickable(onClick = onClick),
+            .combinedClickable(onClick = onClick, onLongClick = onDeleteRequest),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {

@@ -39,7 +39,8 @@
 پایگاه داده:      Room روی SQLite + SQLCipher
 دوربین:          CameraX
 بارکدخوان:       ZXing Android Embedded  (حدود ۴ مگابایت سبک‌تر از ML Kit)
-موقعیت:          FusedLocationProviderClient
+موقعیت:          FusedLocationProviderClient با جایگزین LocationManager بومی (بدون وابستگی به گوگل)
+نقشه:            osmdroid  (OpenStreetMap، بدون کلید API و بدون Play Services — برای ثبت مختصات از روی نقشه)
 وب‌سرور:          NanoHTTPD  (حدود ۵۰ کیلوبایت)
 تاریخ شمسی:      پیاده‌سازی داخلی PersianDate  (بدون وابستگی خارجی)
 تولید PDF:       WebView + PrintDocumentAdapter  (بومی اندروید، حجم صفر، RTL بی‌نقص)
@@ -200,7 +201,7 @@ crypto-inspection/
 | `dispatched_at` | INTEGER |
 
 ### جدول `settings`
-کلید-مقدار ساده: کد کارشناس، کد ناحیه پیش‌فرض، آدرس مقصد همگام‌سازی، کیفیت رسانه.
+کلید-مقدار ساده: کد کارشناس، نقش کاربر (کارشناس یا مدیر)، کد ناحیه پیش‌فرض، آدرس مقصد همگام‌سازی، کیفیت رسانه.
 
 ---
 

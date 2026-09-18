@@ -95,6 +95,16 @@ class VisitViewModel(private val container: AppContainer, private val reportId: 
         it.copy(latitude = fix.latitude, longitude = fix.longitude, gpsAccuracy = fix.accuracy)
     }
 
+    /**
+     * A coordinate the expert did not read off the sensor — picked on the map,
+     * or typed in from a figure recorded elsewhere. No accuracy is written,
+     * because inventing a metre figure would put a false precision into an
+     * official report.
+     */
+    fun setCoordinates(latitude: Double, longitude: Double) = edit {
+        it.copy(latitude = latitude, longitude = longitude, gpsAccuracy = null)
+    }
+
     // ---- step 2: owner ----------------------------------------------------
 
     fun setOwner(

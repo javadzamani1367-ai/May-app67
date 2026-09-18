@@ -11,6 +11,7 @@ import ir.ilam.inspection.data.model.EntryMethod
 import ir.ilam.inspection.data.model.OutputFormat
 import ir.ilam.inspection.data.model.ReportStatus
 import ir.ilam.inspection.data.model.ReportType
+import ir.ilam.inspection.data.model.UserRole
 
 /** All user visible names for coded values, resolved from resources. */
 
@@ -71,5 +72,13 @@ fun outputFormatLabel(format: OutputFormat): String = stringResource(
     when (format) {
         OutputFormat.PDF -> R.string.format_pdf
         OutputFormat.WORD -> R.string.format_word
+    }
+)
+
+@Composable
+fun userRoleLabel(role: UserRole): String = stringResource(
+    when (role) {
+        UserRole.EXPERT -> R.string.role_expert
+        UserRole.MANAGER -> R.string.role_manager
     }
 )

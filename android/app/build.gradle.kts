@@ -109,6 +109,7 @@ dependencies {
     implementation(libs.zxing.android.embedded)
     implementation(libs.play.services.location)
     implementation(libs.nanohttpd)
+    implementation(libs.osmdroid)
     implementation(libs.androidx.security.crypto)
 
     testImplementation(libs.junit)

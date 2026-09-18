@@ -86,6 +86,7 @@
     <string name="intake_error_duplicate_tracking">این کد رهگیری قبلاً ثبت شده است</string>
 
     <!-- کارت پرونده -->
+    <string name="card_long_press_hint">برای حذف پرونده، روی کارت آن نگه دارید</string>
     <string name="card_days_elapsed">%1$s روز از ثبت گذشته</string>
     <string name="card_no_tracking">بدون کد رهگیری</string>
     <string name="card_temp_code">کد موقت</string>
@@ -119,6 +120,20 @@
     <string name="gps_not_captured">مختصات ثبت نشده است</string>
     <string name="gps_permission_needed">دسترسی به موقعیت مکانی لازم است</string>
     <string name="gps_failed">دریافت موقعیت ناموفق بود</string>
+    <string name="gps_source_google">منبع: سرویس مکان گوگل</string>
+    <string name="gps_source_device">منبع: جی‌پی‌اس دستگاه</string>
+    <string name="gps_source_map">منبع: انتخاب از نقشه</string>
+    <string name="gps_source_manual">منبع: ورود دستی</string>
+    <string name="action_pick_on_map">انتخاب از نقشه</string>
+    <string name="action_manual_coordinates">ورود دستی مختصات</string>
+    <string name="map_picker_title">مکان را روی نقشه انتخاب کنید</string>
+    <string name="map_picker_hint">نقشه را جابه‌جا کنید تا نشانگر روی محل مورد نظر قرار بگیرد</string>
+    <string name="map_picker_confirm">ثبت این مختصات</string>
+    <string name="map_offline_hint">در نبود اینترنت فقط نقشه‌های دیده‌شده قبلی نمایش داده می‌شوند</string>
+    <string name="manual_latitude">عرض جغرافیایی</string>
+    <string name="manual_longitude">طول جغرافیایی</string>
+    <string name="manual_coordinates_invalid">مختصات وارد شده معتبر نیست</string>
+    <string name="manual_coordinates_save">ثبت مختصات دستی</string>
 
     <!-- مالک -->
     <string name="field_owner_name">نام و نام خانوادگی</string>
@@ -310,6 +325,12 @@
     <string name="settings_default_area">کد ناحیه پیش‌فرض</string>
     <string name="settings_county_codes">ویرایش کد ناحیه شهرستان‌ها</string>
     <string name="settings_sync_target">آدرس مقصد همگام‌سازی (اختیاری)</string>
+    <string name="settings_role">نقش کاربر</string>
+    <string name="role_expert">کارشناس</string>
+    <string name="role_manager">مدیر</string>
+    <string name="dispatch_all_categories">همه دسته‌های مدارک (دسترسی مدیر)</string>
+    <string name="dispatch_category_empty">مدرکی در این دسته ثبت نشده است</string>
+    <string name="dispatch_photo_unnamed">تصویر بدون شرح</string>
     <string name="settings_optional_hint">پر کردن این فرم اجباری نیست و مرحله بعدی ندارد. «آدرس مقصد» را خالی بگذارید؛ هنگام همگام‌سازی، ویندوز به گوشی وصل می‌شود نه برعکس. برای بازگشت، فلش بالای صفحه را بزنید.</string>
     <string name="settings_media_quality">کیفیت رسانه</string>
     <string name="settings_pin">تغییر رمز ورود</string>
@@ -352,6 +373,11 @@
     <string name="error_number">مقدار عددی وارد کنید</string>
     <string name="confirm_delete_title">حذف مورد</string>
     <string name="confirm_delete_message">این مورد حذف شود؟</string>
+    <string name="case_delete">حذف پرونده</string>
+    <string name="case_delete_confirm_title">حذف کامل پرونده</string>
+    <string name="case_delete_confirm_message">پرونده %1$s با همه تصاویر، فیلم‌ها و مدارکش برای همیشه حذف می‌شود. این کار برگشت‌پذیر نیست.</string>
+    <string name="case_delete_blocked">این پرونده هنوز به آرشیو ویندوز فرستاده نشده است. تا وقتی نسخه مرکزی ثبت نشود، حذف آن مجاز نیست.</string>
+    <string name="case_deleted">پرونده حذف شد</string>
 
     <!-- عناوین فرم گزارش -->
     <string name="form_title">فرم گزارش بازدید مراکز استخراج رمزارز</string>

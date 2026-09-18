@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.AppContainer
 import ir.ilam.inspection.data.model.County
+import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.data.repo.AppSettings
 import ir.ilam.inspection.export.ShareUtil
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,6 +57,8 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
     fun setSyncTarget(target: String) = launchSaving { repository.setSyncTarget(target.trim()) }
 
     fun setMediaQuality(quality: Int) = launchSaving { repository.setMediaQuality(quality) }
+
+    fun setRole(role: UserRole) = launchSaving { repository.setRole(role) }
 
     fun setCountyCode(county: County, code: String) = launchSaving {
         repository.setCountyCode(county.index, code.trim())

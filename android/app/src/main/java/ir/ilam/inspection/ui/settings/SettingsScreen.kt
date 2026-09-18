@@ -37,10 +37,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.ilam.inspection.R
 import ir.ilam.inspection.container
 import ir.ilam.inspection.ui.common.AppTextField
+import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
+import ir.ilam.inspection.ui.common.DropdownField
 import ir.ilam.inspection.ui.common.NumberField
 import ir.ilam.inspection.ui.common.SectionCard
 import ir.ilam.inspection.ui.common.ValueRow
+import ir.ilam.inspection.ui.common.userRoleLabel
 import ir.ilam.inspection.util.PersianNumbers
 
 private const val PIN_LENGTH = 6
@@ -119,6 +122,13 @@ fun SettingsScreen(onBack: () -> Unit) {
                         stringResource(R.string.settings_expert_code),
                         expertCode,
                         { expertCode = it }
+                    )
+                    DropdownField(
+                        label = stringResource(R.string.settings_role),
+                        options = UserRole.entries.toList(),
+                        selected = settings.role,
+                        optionLabel = { userRoleLabel(it) },
+                        onSelect = viewModel::setRole
                     )
                     NumberField(
                         stringResource(R.string.settings_default_area),
