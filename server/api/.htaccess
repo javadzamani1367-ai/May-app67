@@ -1,0 +1,20 @@
+# همه درخواست‌ها به index.php می‌روند. اگر هاست mod_rewrite نداشته باشد،
+# کلاینت می‌تواند مستقیم index.php?route=auth/login را صدا بزند و کار کند.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php?route=$1 [QSA,L]
+
+    # سربرگ Authorization روی بعضی هاست‌ها به PHP نمی‌رسد مگر دستی رد شود.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+</IfModule>
+
+# فایل تنظیمات و کتابخانه هرگز نباید از وب خوانده شوند.
+<FilesMatch "^config\.php$">
+    Require all denied
+</FilesMatch>
+
+Options -Indexes
