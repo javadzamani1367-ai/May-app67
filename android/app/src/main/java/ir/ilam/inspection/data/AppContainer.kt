@@ -4,6 +4,7 @@ import android.content.Context
 import ir.ilam.inspection.data.db.AppDatabase
 import ir.ilam.inspection.data.repo.CaseContentRepository
 import ir.ilam.inspection.data.repo.ReportRepository
+import ir.ilam.inspection.data.repo.AccountRepository
 import ir.ilam.inspection.data.repo.SettingsRepository
 import ir.ilam.inspection.data.repo.SnippetRepository
 import ir.ilam.inspection.data.repo.UserRepository
@@ -28,6 +29,7 @@ class AppContainer(private val context: Context) {
     val settingsRepository: SettingsRepository by lazy { SettingsRepository(database.settingDao()) }
     val snippetRepository: SnippetRepository by lazy { SnippetRepository(database.snippetDao()) }
     val userRepository: UserRepository by lazy { UserRepository(database.userDao()) }
+    val accountRepository: AccountRepository by lazy { AccountRepository(vault, settingsRepository) }
     val reportRepository: ReportRepository by lazy { ReportRepository(database, settingsRepository, fileStore) }
     val contentRepository: CaseContentRepository by lazy {
         CaseContentRepository(database, reportRepository, fileStore)

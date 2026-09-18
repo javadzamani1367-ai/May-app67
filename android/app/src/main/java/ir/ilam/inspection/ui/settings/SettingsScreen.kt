@@ -241,23 +241,34 @@ fun SettingsScreen(onBack: () -> Unit, onUsers: () -> Unit) {
 
             SectionCard(title = stringResource(R.string.settings_pin)) {
                 Column {
-                    AppTextField(
-                        label = stringResource(R.string.lock_set_password),
-                        value = pin,
-                        onValueChange = { pin = it },
-                        imeAction = ImeAction.Done
-                    )
-                    Button(
-                        onClick = {
-                            if (pin.length >= MIN_PASSWORD) {
-                                viewModel.changePin(pin)
-                                pin = ""
-                            }
-                        },
-                        enabled = pin.length >= MIN_PASSWORD,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
-                    ) {
-                        Text(stringResource(R.string.action_save))
+                    if (settings.syncTarget.isBlank()) {
+                        AppTextField(
+                            label = stringResource(R.string.lock_set_password),
+                            value = pin,
+                            onValueChange = { pin = it },
+                            imeAction = ImeAction.Done
+                        )
+                        Button(
+                            onClick = {
+                                if (pin.length >= MIN_PASSWORD) {
+                                    viewModel.changePin(pin)
+                                    pin = ""
+                                }
+                            },
+                            enabled = pin.length >= MIN_PASSWORD,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                        ) {
+                            Text(stringResource(R.string.action_save))
+                        }
+                    } else {
+                        // With a server configured the password lives there and
+                        // the next online sign-in would overwrite anything set
+                        // here, so offering the field would be a lie.
+                        Text(
+                            text = stringResource(R.string.settings_password_on_server),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }

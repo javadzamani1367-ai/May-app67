@@ -62,6 +62,25 @@ class KeyStoreVault(context: Context) {
         prefs.edit().putString(KEY_USER_CODE, code.trim()).apply()
     }
 
+    /**
+     * Whether the server has ever confirmed this installation belongs to this
+     * user. Field work happens with no signal, so the check runs once, at
+     * activation; afterwards the phone unlocks on its own. Without it, an
+     * unregistered install could be used all day simply by staying offline.
+     */
+    fun isActivated(): Boolean = prefs.getBoolean(KEY_ACTIVATED, false)
+
+    fun markActivated(token: String) {
+        prefs.edit().putBoolean(KEY_ACTIVATED, true).putString(KEY_SERVER_TOKEN, token).apply()
+    }
+
+    fun serverToken(): String? = prefs.getString(KEY_SERVER_TOKEN, null)
+
+    /** Undone when the server rejects the pairing, so the next entry is online. */
+    fun clearActivation() {
+        prefs.edit().remove(KEY_ACTIVATED).remove(KEY_SERVER_TOKEN).apply()
+    }
+
     fun hasPin(): Boolean = prefs.contains(KEY_PIN_HASH)
 
     fun setPin(pin: String) {
@@ -113,5 +132,7 @@ class KeyStoreVault(context: Context) {
         const val KEY_PACKAGE_PASSWORD = "package_password"
         const val KEY_DEVICE_CODE = "device_code"
         const val KEY_USER_CODE = "user_code"
+        const val KEY_ACTIVATED = "activated"
+        const val KEY_SERVER_TOKEN = "server_token"
     }
 }

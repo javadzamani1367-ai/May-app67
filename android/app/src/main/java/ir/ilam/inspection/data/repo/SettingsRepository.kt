@@ -3,6 +3,7 @@ package ir.ilam.inspection.data.repo
 import ir.ilam.inspection.data.db.SettingDao
 import ir.ilam.inspection.data.db.SettingEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 /** Key-value settings: expert identity, default area code, sync target, media quality. */
@@ -18,6 +19,9 @@ class SettingsRepository(private val dao: SettingDao) {
             mediaQuality = map[KEY_MEDIA_QUALITY]?.toIntOrNull() ?: DEFAULT_QUALITY
         )
     }
+
+    /** A one-shot read, for the places that need the values once, not a stream. */
+    suspend fun current(): AppSettings = settings.first()
 
     suspend fun put(key: String, value: String) = dao.put(SettingEntity(key, value))
 

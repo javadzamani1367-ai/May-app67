@@ -138,7 +138,13 @@ private fun PhotoRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = photo.caption?.takeIf { it.isNotBlank() }
-                    ?: stringResource(R.string.dispatch_photo_unnamed),
+                    ?: stringResource(
+                        if (photo.type == MediaType.VIDEO.code) {
+                            R.string.dispatch_video_unnamed
+                        } else {
+                            R.string.dispatch_photo_unnamed
+                        }
+                    ),
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(

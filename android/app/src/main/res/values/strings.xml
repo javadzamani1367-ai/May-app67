@@ -399,6 +399,7 @@
     <string name="dispatch_photo_unnamed">تصویر بدون شرح</string>
     <string name="settings_optional_hint">پر کردن این فرم اجباری نیست و مرحله بعدی ندارد. «آدرس مقصد» را خالی بگذارید؛ هنگام همگام‌سازی، ویندوز به گوشی وصل می‌شود نه برعکس. برای بازگشت، فلش بالای صفحه را بزنید.</string>
     <string name="settings_media_quality">کیفیت رسانه</string>
+    <string name="settings_password_on_server">رمز عبور شما را مدیر سامانه روی سرور تعیین می‌کند. برای تغییر آن با مدیر تماس بگیرید.</string>
     <string name="settings_pin">تغییر رمز عبور</string>
     <string name="settings_saved">تنظیمات ذخیره شد</string>
     <string name="sync_title">همگام‌سازی</string>
@@ -425,7 +426,13 @@
     <string name="lock_short_password">رمز عبور باید حداقل شش نویسه باشد</string>
     <string name="lock_missing_user_code">کد کاربری را وارد کنید</string>
     <string name="lock_device_code">کد این دستگاه</string>
-    <string name="lock_device_code_hint">این کد و شماره همراه خود را برای مدیر سامانه بفرستید تا کد کاربری شما ثبت شود. با حذف و نصب دوباره برنامه یا تعویض گوشی، این کد عوض می‌شود و باید دوباره ثبت شود.</string>
+    <string name="lock_needs_activation">این دستگاه هنوز فعال نشده است. برای اولین ورود باید به اینترنت وصل باشید تا سرور دستگاه شما را تأیید کند.</string>
+    <string name="lock_server_unreachable">سرور در دسترس نیست. اتصال اینترنت و آدرس سرور را بررسی کنید.</string>
+    <string name="lock_registration_sent">درخواست شما برای مدیر ارسال شد. پس از تأیید مدیر، کد کاربری و رمز عبور به شما داده می‌شود.</string>
+    <string name="lock_request_registration">ارسال درخواست ثبت این دستگاه</string>
+    <string name="lock_registration_title">درخواست ثبت دستگاه</string>
+    <string name="lock_registration_hint">مشخصات خود را وارد کنید. کد این دستگاه به‌طور خودکار همراه درخواست فرستاده می‌شود.</string>
+    <string name="lock_device_code_hint">این کد مخصوص همین نصب برنامه است. با دکمه زیر آن را برای مدیر بفرستید، یا اگر اینترنت ندارید کد را به مدیر بگویید. با حذف و نصب دوباره برنامه یا تعویض گوشی، این کد عوض می‌شود و باید دوباره ثبت شود.</string>
     <string name="lock_mismatch">دو رمز یکسان نیستند</string>
     <string name="lock_biometric">ورود با اثر انگشت</string>
     <string name="lock_biometric_title">احراز هویت</string>

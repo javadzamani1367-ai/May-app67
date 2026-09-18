@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -27,48 +29,53 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.ilam.inspection.R
+import ir.ilam.inspection.container
 import ir.ilam.inspection.data.KeyStoreVault
 import ir.ilam.inspection.ui.common.AppTextField
+import ir.ilam.inspection.ui.common.ContainerViewModelFactory
 import ir.ilam.inspection.util.BiometricGate
 import ir.ilam.inspection.util.PersianNumbers
-
-private const val MIN_PASSWORD = 6
 
 /**
  * Entry gate. Owner names, national ids and the names of security and police
  * personnel are in this database, so there is no way past this screen.
  *
- * First run shows this installation's own code. The expert reads it to the
- * manager along with their mobile number; the manager records it against a
- * user code in the register, and that user code is what the expert enters
- * here and what every report they file carries. Removing the app destroys the
- * code, so a reinstall or a new phone has to go back to the manager.
+ * The installation shows the code it generated for itself. The manager
+ * registers that code against a user, and from then on this phone is the only
+ * one that user can sign in from. The first sign-in has to reach the server,
+ * because that is where the pairing lives; afterwards the phone unlocks on its
+ * own, since field work happens where there is no signal.
  */
 @Composable
 fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
     val context = LocalContext.current
+    val appContainer = context.container
+    val viewModel: LockViewModel = viewModel(
+        factory = remember { ContainerViewModelFactory(appContainer) { LockViewModel(it) } }
+    )
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
     var userCode by remember { mutableStateOf(vault.userCode().orEmpty()) }
     var password by remember { mutableStateOf("") }
-    var confirm by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf<String?>(null) }
-    val settingUp = remember { !vault.hasPin() }
 
-    val wrongPassword = stringResource(R.string.lock_wrong_password)
-    val shortPassword = stringResource(R.string.lock_short_password)
-    val mismatch = stringResource(R.string.lock_mismatch)
-    val missingCode = stringResource(R.string.lock_missing_user_code)
     val promptTitle = stringResource(R.string.lock_biometric_title)
     val cancelLabel = stringResource(R.string.action_cancel)
 
-    fun askFingerprint() {
-        context.findActivity()?.let { activity ->
-            BiometricGate.prompt(activity, promptTitle, cancelLabel, onUnlocked)
-        }
+    LaunchedEffect(state.unlocked) {
+        if (state.unlocked) onUnlocked()
     }
 
-    LaunchedEffect(settingUp) {
-        if (!settingUp) askFingerprint()
+    // Fingerprint stands in for the password, never for the activation: it can
+    // only be offered once this phone has already been paired.
+    LaunchedEffect(Unit) {
+        if (vault.isActivated() && BiometricGate.isAvailable(context)) {
+            context.findActivity()?.let { activity ->
+                BiometricGate.prompt(activity, promptTitle, cancelLabel, onUnlocked)
+            }
+        }
     }
 
     Column(
@@ -85,65 +92,64 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
             style = MaterialTheme.typography.headlineMedium
         )
 
-        DeviceCodeCard(vault = vault, firstRun = settingUp)
+        DeviceCodeCard(code = viewModel.deviceCode, showHint = !vault.isActivated())
+
+        if (state.busy) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
+        }
+        state.serverMessage?.let { Message(it, error = true) }
+        state.errorRes?.let { Message(stringResource(it), error = true) }
+        state.noticeRes?.let { Message(stringResource(it), error = false) }
 
         AppTextField(
             label = stringResource(R.string.lock_user_code),
             value = userCode,
-            onValueChange = { userCode = it },
+            onValueChange = { userCode = it; viewModel.dismissMessages() },
             imeAction = ImeAction.Next
         )
         AppTextField(
-            label = stringResource(
-                if (settingUp) R.string.lock_set_password else R.string.lock_enter_password
-            ),
+            label = stringResource(R.string.lock_enter_password),
             value = password,
-            onValueChange = { password = it },
-            error = error,
-            imeAction = if (settingUp) ImeAction.Next else ImeAction.Done
+            onValueChange = { password = it; viewModel.dismissMessages() },
+            imeAction = ImeAction.Done
         )
-        if (settingUp) {
-            AppTextField(
-                label = stringResource(R.string.lock_confirm_password),
-                value = confirm,
-                onValueChange = { confirm = it },
-                imeAction = ImeAction.Done
-            )
-        }
         Button(
-            onClick = {
-                error = null
-                when {
-                    userCode.isBlank() -> error = missingCode
-                    settingUp && password.length < MIN_PASSWORD -> error = shortPassword
-                    settingUp && password != confirm -> error = mismatch
-                    settingUp -> {
-                        vault.setUserCode(userCode)
-                        vault.setPin(password)
-                        onUnlocked()
-                    }
-                    vault.verifyPin(password) -> {
-                        vault.setUserCode(userCode)
-                        onUnlocked()
-                    }
-                    else -> error = wrongPassword
-                }
-            },
+            onClick = { viewModel.signIn(userCode, password) },
+            enabled = !state.busy,
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
         ) {
             Text(stringResource(R.string.action_confirm))
         }
-        if (!settingUp && BiometricGate.isAvailable(context)) {
-            TextButton(onClick = { askFingerprint() }) {
-                Text(stringResource(R.string.lock_biometric))
+
+        if (!vault.isActivated()) {
+            TextButton(onClick = viewModel::openRegistration, enabled = !state.busy) {
+                Text(stringResource(R.string.lock_request_registration))
             }
         }
     }
+
+    if (state.askingRegistration) {
+        RegistrationDialog(
+            busy = state.busy,
+            onDismiss = viewModel::closeRegistration,
+            onSend = viewModel::requestRegistration
+        )
+    }
+}
+
+@Composable
+private fun Message(text: String, error: Boolean) {
+    Text(
+        text = text,
+        color = if (error) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+    )
 }
 
 /** The installation's code, with the instruction that goes with it. */
 @Composable
-private fun DeviceCodeCard(vault: KeyStoreVault, firstRun: Boolean) {
+private fun DeviceCodeCard(code: String, showHint: Boolean) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -153,11 +159,11 @@ private fun DeviceCodeCard(vault: KeyStoreVault, firstRun: Boolean) {
             style = MaterialTheme.typography.bodyMedium
         )
         Text(
-            text = PersianNumbers.toPersian(vault.deviceCodeForDisplay()),
+            text = PersianNumbers.toPersian(code),
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(vertical = 6.dp)
         )
-        if (firstRun) {
+        if (showHint) {
             Text(
                 text = stringResource(R.string.lock_device_code_hint),
                 style = MaterialTheme.typography.bodySmall,
