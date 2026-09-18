@@ -12,6 +12,7 @@ import ir.ilam.inspection.export.WordExporter
 import ir.ilam.inspection.sync.SyncService
 import ir.ilam.inspection.util.AppFonts
 import ir.ilam.inspection.util.FileStore
+import ir.ilam.inspection.util.MediaImporter
 import ir.ilam.inspection.util.MediaProcessor
 
 /** Single place where every long lived object is built, in dependency order. */
@@ -29,6 +30,7 @@ class AppContainer(private val context: Context) {
     }
 
     val mediaProcessor: MediaProcessor by lazy { MediaProcessor(AppFonts.typeface(context)) }
+    val mediaImporter: MediaImporter by lazy { MediaImporter(context, fileStore, mediaProcessor) }
     val htmlReportBuilder: HtmlReportBuilder by lazy { HtmlReportBuilder(context, fileStore) }
     val pdfExporter: PdfExporter by lazy { PdfExporter(context, fileStore) }
     val wordExporter: WordExporter by lazy { WordExporter(context, fileStore) }

@@ -64,7 +64,6 @@ class WordExporter(private val context: Context, private val files: FileStore) {
             body.append(WordDocumentXml.heading(label(R.string.dispatch_note)))
             body.append(WordDocumentXml.paragraph(escape(dispatchNote)))
         }
-        body.append(WordDocumentXml.paragraph(label(R.string.form_signature)))
 
         val pack = OoxmlPackage(target)
         if (photos.isNotEmpty()) {

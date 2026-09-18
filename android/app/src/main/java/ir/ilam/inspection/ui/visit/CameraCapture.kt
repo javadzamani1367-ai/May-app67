@@ -17,6 +17,7 @@ import androidx.camera.video.Recording
 import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,16 +25,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
@@ -41,6 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import ir.ilam.inspection.R
+import ir.ilam.inspection.util.PersianNumbers
+import kotlinx.coroutines.delay
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -55,6 +63,8 @@ private const val MAX_VIDEO_BYTES = 60L * 1024 * 1024
 @SuppressLint("MissingPermission")
 @Composable
 fun CameraCapture(
+    canTakePhoto: Boolean,
+    canRecordVideo: Boolean,
     photoTarget: () -> File,
     videoTarget: () -> File,
     onPhoto: (File) -> Unit,
@@ -78,6 +88,19 @@ fun CameraCapture(
     val videoCapture = remember { VideoCapture.withOutput(recorder) }
     var recording by remember { mutableStateOf<Recording?>(null) }
     var recordingActive by remember { mutableStateOf(false) }
+    // Without a visible confirmation the expert cannot tell a taken photo from
+    // a missed tap: the frame flashes white and the counter goes up.
+    var flashes by remember { mutableIntStateOf(0) }
+    var taken by remember { mutableIntStateOf(0) }
+    var flashing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(flashes) {
+        if (flashes > 0) {
+            flashing = true
+            delay(180)
+            flashing = false
+        }
+    }
 
     DisposableEffect(Unit) {
         val future = ProcessCameraProvider.getInstance(context)
@@ -108,6 +131,38 @@ fun CameraCapture(
     Column(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
+            if (flashing) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.White.copy(alpha = 0.7f))
+                )
+            }
+            if (taken > 0) {
+                Text(
+                    text = stringResource(
+                        R.string.media_shutter_count,
+                        PersianNumbers.toPersian(taken)
+                    ),
+                    color = Color.White,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(12.dp)
+                        .background(Color.Black.copy(alpha = 0.45f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                )
+            }
+            if (recordingActive) {
+                Text(
+                    text = stringResource(R.string.media_recording),
+                    color = Color.White,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(12.dp)
+                        .background(Color.Red.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                )
+            }
         }
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -122,6 +177,10 @@ fun CameraCapture(
                         object : ImageCapture.OnImageSavedCallback {
                             override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                                 onPhoto(target)
+                                previewView.post {
+                                    taken += 1
+                                    flashes += 1
+                                }
                             }
 
                             override fun onError(exception: ImageCaptureException) {
@@ -130,7 +189,7 @@ fun CameraCapture(
                         }
                     )
                 },
-                enabled = !recordingActive,
+                enabled = !recordingActive && canTakePhoto,
                 modifier = Modifier.weight(1f)
             ) {
                 Text(stringResource(R.string.media_take_photo))
@@ -150,6 +209,7 @@ fun CameraCapture(
                         recordingActive = true
                     }
                 },
+                enabled = recordingActive || canRecordVideo,
                 modifier = Modifier.weight(1f)
             ) {
                 Text(stringResource(R.string.media_record_video))

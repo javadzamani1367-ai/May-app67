@@ -12,14 +12,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.fragment.app.FragmentActivity
+import androidx.activity.ComponentActivity
 import ir.ilam.inspection.container
 import ir.ilam.inspection.ui.lock.LockScreen
 import ir.ilam.inspection.util.CrashReporter
 import ir.ilam.inspection.ui.theme.InspectionTheme
 
-// FragmentActivity, not ComponentActivity: BiometricPrompt needs a fragment host.
-class MainActivity : FragmentActivity() {
+/**
+ * ComponentActivity, never FragmentActivity: FragmentActivity refuses the
+ * request codes the AndroidX result registry generates, which crashed every
+ * file picker, barcode scan and permission dialog the app opens.
+ */
+class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

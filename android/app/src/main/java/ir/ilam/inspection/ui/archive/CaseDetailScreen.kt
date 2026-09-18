@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -89,6 +90,7 @@ fun CaseDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
         ) {
@@ -163,21 +165,9 @@ fun CaseDetailScreen(
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = { viewModel.exportPdf(context) },
-                    enabled = !busy,
-                    modifier = Modifier.weight(1f)
-                ) { Text(stringResource(R.string.export_pdf)) }
-                OutlinedButton(
-                    onClick = { viewModel.exportWord(context) },
-                    enabled = !busy,
-                    modifier = Modifier.weight(1f)
-                ) { Text(stringResource(R.string.export_word)) }
-            }
+            // PDF and Word live in the dispatch screen, where the expert picks
+            // what goes into them; a second pair of buttons here only invited
+            // sending a report nobody had chosen the contents of.
             Row(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)

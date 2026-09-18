@@ -9,6 +9,8 @@ import ir.ilam.inspection.data.db.MediaEntity
 import ir.ilam.inspection.data.db.ReportEntity
 import ir.ilam.inspection.data.model.AttendeeOrg
 import ir.ilam.inspection.data.model.EntryMethod
+import android.net.Uri
+import ir.ilam.inspection.data.model.MediaCaptions
 import ir.ilam.inspection.data.model.MediaType
 import ir.ilam.inspection.data.model.ReportDetail
 import ir.ilam.inspection.util.Fix
@@ -31,6 +33,7 @@ class VisitViewModel(private val container: AppContainer, private val reportId: 
 
     private val reports = container.reportRepository
     private val content = container.contentRepository
+    private val media = VisitMediaHandler(container, reportId, viewModelScope)
 
     val detail: StateFlow<ReportDetail?> = reports.observeDetail(reportId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
@@ -162,6 +165,19 @@ class VisitViewModel(private val container: AppContainer, private val reportId: 
     }
 
     // ---- step 5: media and narrative --------------------------------------
+
+    /** Capture and import problems are reported by the media handler. */
+    val mediaNotice: StateFlow<Int?> = media.notice
+
+    fun clearMediaNotice() = media.clearNotice()
+
+    fun reportPermissionRefused() = media.reportPermissionRefused()
+
+    /** Capture and gallery import live in [VisitMediaHandler]. */
+    fun storeCapturedPhoto(raw: File) = media.storeCapturedPhoto(raw)
+
+    fun importFromGallery(uris: List<Uri>, onDone: (added: Int, rejected: Int) -> Unit) =
+        media.importFromGallery(uris, onDone)
 
     fun addMedia(file: File, type: MediaType, capturedAt: Long) {
         viewModelScope.launch {

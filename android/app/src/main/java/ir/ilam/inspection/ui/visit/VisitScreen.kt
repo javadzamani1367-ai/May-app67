@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -107,6 +108,7 @@ fun VisitScreen(reportId: String, onBack: () -> Unit, onFinished: (String) -> Un
                 Column(
                     modifier = Modifier
                         .weight(1f)
+                        .imePadding()
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp)
                 ) {

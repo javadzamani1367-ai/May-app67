@@ -1,11 +1,13 @@
 package ir.ilam.inspection.ui.lock
 
-import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricPrompt
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -21,12 +23,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.FragmentActivity
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.KeyStoreVault
 import ir.ilam.inspection.ui.common.NumberField
+import ir.ilam.inspection.util.BiometricGate
 
 private const val PIN_LENGTH = 6
 
@@ -45,15 +47,24 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
 
     val wrongPin = stringResource(R.string.lock_wrong_pin)
     val mismatch = stringResource(R.string.lock_mismatch)
+    val promptTitle = stringResource(R.string.lock_biometric_title)
+    val cancelLabel = stringResource(R.string.action_cancel)
 
-    LaunchedEffect(settingUp) {
-        if (!settingUp) {
-            tryBiometric(context.findFragmentActivity(), onUnlocked)
+    fun askFingerprint() {
+        context.findActivity()?.let { activity ->
+            BiometricGate.prompt(activity, promptTitle, cancelLabel, onUnlocked)
         }
     }
 
+    LaunchedEffect(settingUp) {
+        if (!settingUp) askFingerprint()
+    }
+
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding()
+            .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -70,13 +81,15 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
             label = stringResource(R.string.lock_enter_pin),
             value = pin,
             onValueChange = { if (it.length <= PIN_LENGTH) pin = it },
-            error = error
+            error = error,
+            imeAction = if (settingUp) ImeAction.Next else ImeAction.Done
         )
         if (settingUp) {
             NumberField(
                 label = stringResource(R.string.lock_confirm_pin),
                 value = confirm,
-                onValueChange = { if (it.length <= PIN_LENGTH) confirm = it }
+                onValueChange = { if (it.length <= PIN_LENGTH) confirm = it },
+                imeAction = ImeAction.Done
             )
         }
         Button(
@@ -97,48 +110,20 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
         ) {
             Text(stringResource(R.string.action_confirm))
         }
-        if (!settingUp && canUseBiometric(context)) {
-            TextButton(onClick = { tryBiometric(context.findFragmentActivity(), onUnlocked) }) {
+        if (!settingUp && BiometricGate.isAvailable(context)) {
+            TextButton(onClick = { askFingerprint() }) {
                 Text(stringResource(R.string.lock_biometric))
             }
         }
     }
 }
 
-/**
- * `LocalContext.current` is often a theme wrapper rather than the activity, so
- * the host is found by walking the wrapper chain.
- */
-private fun android.content.Context.findFragmentActivity(): FragmentActivity? {
-    var current: android.content.Context? = this
-    while (current is android.content.ContextWrapper) {
-        if (current is FragmentActivity) return current
+/** `LocalContext.current` is usually a theme wrapper rather than the activity. */
+private fun Context.findActivity(): Activity? {
+    var current: Context? = this
+    while (current is ContextWrapper) {
+        if (current is Activity) return current
         current = current.baseContext
     }
     return null
-}
-
-private fun canUseBiometric(context: android.content.Context): Boolean =
-    BiometricManager.from(context)
-        .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) ==
-        BiometricManager.BIOMETRIC_SUCCESS
-
-private fun tryBiometric(activity: FragmentActivity?, onUnlocked: () -> Unit) {
-    if (activity == null || !canUseBiometric(activity)) return
-    val prompt = BiometricPrompt(
-        activity,
-        androidx.core.content.ContextCompat.getMainExecutor(activity),
-        object : BiometricPrompt.AuthenticationCallback() {
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                onUnlocked()
-            }
-        }
-    )
-    prompt.authenticate(
-        BiometricPrompt.PromptInfo.Builder()
-            .setTitle(activity.getString(R.string.lock_biometric_title))
-            .setNegativeButtonText(activity.getString(R.string.action_cancel))
-            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_WEAK)
-            .build()
-    )
 }

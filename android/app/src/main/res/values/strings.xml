@@ -162,6 +162,42 @@
 
     <!-- رسانه و شرح -->
     <string name="media_title">تصاویر و ویدیو</string>
+    <string name="media_pick_gallery">افزودن از گالری</string>
+    <string name="media_caption_named">شرح استاندارد</string>
+    <string name="media_caption_custom">شرح دلخواه</string>
+    <string name="media_caption_pick">انتخاب شرح تصویر</string>
+    <string name="media_photo_saved">تصویر ثبت شد (%1$s)</string>
+    <string name="media_photo_saved_generic">تصویر ثبت شد</string>
+    <string name="media_video_saved">فیلم ثبت شد (%1$s)</string>
+    <string name="media_photo_limit">سقف تصاویر %1$s عدد است</string>
+    <string name="media_video_limit">سقف فیلم‌ها %1$s عدد است</string>
+    <string name="media_photos_count">تصاویر: %1$s از %2$s</string>
+    <string name="media_videos_count">فیلم‌ها: %1$s از %2$s</string>
+    <string name="media_importing">در حال افزودن…</string>
+    <string name="media_import_failed">افزودن برخی فایل‌ها ناموفق بود</string>
+    <string name="media_no_caption">بدون شرح</string>
+    <string name="media_shutter_count">%1$s تصویر گرفته شد</string>
+    <string name="media_recording">در حال ضبط…</string>
+    <string-array name="photo_captions">
+        <item>تصویر کلی ملک</item>
+        <item>تصویر پلاک پایه انشعاب</item>
+        <item>تصویر انشعاب غیرمجاز ۱</item>
+        <item>تصویر انشعاب غیرمجاز ۲</item>
+        <item>تصویر آمپراژ مصرفی</item>
+        <item>تصویر ترموویژن</item>
+        <item>تصویر کلی ماینرها ۱</item>
+        <item>تصویر کلی ماینرها ۲</item>
+        <item>تصویر محل ماینرها</item>
+        <item>تصویر صورتجلسه انتظامی</item>
+    </string-array>
+    <string-array name="video_captions">
+        <item>فیلم مسیر انشعاب غیرمجاز</item>
+        <item>فیلم آمپراژ مصرفی</item>
+        <item>فیلم ترموویژن</item>
+        <item>فیلم درگیری یا ممانعت مشترک با عوامل</item>
+        <item>فیلم جمع‌آوری ماینرها</item>
+        <item>فیلم جمع‌آوری انشعاب</item>
+    </string-array>
     <string name="media_take_photo">گرفتن عکس</string>
     <string name="media_record_video">ضبط ویدیو</string>
     <string name="media_caption">شرح تصویر</string>
@@ -336,7 +372,6 @@
     <string name="form_status">وضعیت پرونده</string>
     <string name="form_row">ردیف</string>
     <string name="form_entry_method">روش ثبت</string>
-    <string name="form_signature">امضا و مهر کارشناس</string>
     <string name="form_attachments">مستندات پیوست</string>
     <string name="form_page">صفحه</string>
 </resources>

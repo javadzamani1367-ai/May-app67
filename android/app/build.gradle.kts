@@ -110,7 +110,6 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.nanohttpd)
     implementation(libs.androidx.security.crypto)
-    implementation(libs.androidx.biometric)
 
     testImplementation(libs.junit)
 }

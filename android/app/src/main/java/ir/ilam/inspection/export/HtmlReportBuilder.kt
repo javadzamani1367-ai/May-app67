@@ -216,7 +216,6 @@ class HtmlReportBuilder(private val context: Context, private val files: FileSto
             append("<h3>${text(R.string.dispatch_note)}</h3>")
             append("<p class=\"narrative\">${escape(dispatchNote)}</p>")
         }
-        append("<div class=\"sign\">${text(R.string.form_signature)}</div>")
     }
 
     private fun photoAppendix(

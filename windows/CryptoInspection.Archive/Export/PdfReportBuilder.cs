@@ -99,8 +99,6 @@ namespace CryptoInspection.Archive.Export
                     }
                 }
 
-                column.Item().PaddingTop(20).AlignLeft().Text(Strings.Get("form_signature"));
-
                 List<MediaItem> photos = detail.Photos;
                 if (photos.Count > 0)
                 {

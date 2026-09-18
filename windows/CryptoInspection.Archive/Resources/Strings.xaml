@@ -148,7 +148,6 @@
     <sys:String x:Key="form_media_appendix">پیوست تصاویر</sys:String>
     <sys:String x:Key="form_attachments">مستندات پیوست</sys:String>
     <sys:String x:Key="form_actions_taken">اقدامات انجام‌شده</sys:String>
-    <sys:String x:Key="form_signature">امضا و مهر کارشناس</sys:String>
     <sys:String x:Key="form_page">صفحه</sys:String>
     <sys:String x:Key="form_postal_code">کد پستی</sys:String>
     <sys:String x:Key="form_usage_type">نوع کاربری</sys:String>

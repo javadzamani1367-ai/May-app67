@@ -69,7 +69,6 @@ namespace CryptoInspection.Archive.Export
                     }
                 }
 
-                body.AppendChild(Paragraph(Strings.Get("form_signature")));
                 AppendPhotos(main, body, detail);
                 body.AppendChild(FinalSection());
                 main.Document.Save();

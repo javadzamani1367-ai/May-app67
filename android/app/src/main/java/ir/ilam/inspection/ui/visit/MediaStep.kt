@@ -3,29 +3,26 @@ package ir.ilam.inspection.ui.visit
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -33,29 +30,49 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import ir.ilam.inspection.R
 import ir.ilam.inspection.container
+import ir.ilam.inspection.data.model.MediaCaptions
 import ir.ilam.inspection.data.model.MediaType
 import ir.ilam.inspection.data.model.ReportDetail
-import ir.ilam.inspection.ui.common.AppTextField
-import ir.ilam.inspection.ui.common.AutoSave
 import ir.ilam.inspection.ui.common.MultilineField
+import ir.ilam.inspection.ui.common.AutoSave
 import ir.ilam.inspection.ui.common.SectionCard
-import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.PersianNumbers
-import ir.ilam.inspection.util.PhotoStamp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /** Step 5 — photos, video and the narrative that closes the visit. */
 @Composable
 fun MediaStep(detail: ReportDetail, viewModel: VisitViewModel) {
     val context = LocalContext.current
     val appContainer = context.container
-    val scope = rememberCoroutineScope()
     val report = detail.report
-    // Survives the recreation that follows the camera permission dialog.
+    val photoCaptions = stringArrayResource(R.array.photo_captions).toList()
+    val videoCaptions = stringArrayResource(R.array.video_captions).toList()
+
     var capturing by rememberSaveable { mutableStateOf(false) }
-    var permissionMessage by remember { mutableStateOf<Int?>(null) }
+    var notice by remember { mutableStateOf<String?>(null) }
+
+    val photos = detail.media.filter { it.type == MediaType.IMAGE.code }
+    val videos = detail.media.filter { it.type == MediaType.VIDEO.code }
+
+    val photoLimit = stringResource(R.string.media_photo_limit, PersianNumbers.toPersian(MediaCaptions.MAX_PHOTOS))
+    val videoLimit = stringResource(R.string.media_video_limit, PersianNumbers.toPersian(MediaCaptions.MAX_VIDEOS))
+    val importing = stringResource(R.string.media_importing)
+    val importFailed = stringResource(R.string.media_import_failed)
+    val photoSaved = stringResource(R.string.media_photo_saved, PersianNumbers.toPersian(photos.size + 1))
+
+    val galleryPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia(MediaCaptions.MAX_PHOTOS)
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            notice = importing
+            viewModel.importFromGallery(uris) { added, rejected ->
+                notice = when {
+                    rejected > 0 -> importFailed
+                    added > 0 -> photoSaved
+                    else -> null
+                }
+            }
+        }
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -63,7 +80,8 @@ fun MediaStep(detail: ReportDetail, viewModel: VisitViewModel) {
         if (grants[Manifest.permission.CAMERA] == true) {
             capturing = true
         } else {
-            permissionMessage = R.string.camera_permission_needed
+            notice = null
+            viewModel.reportPermissionRefused()
         }
     }
 
@@ -76,33 +94,12 @@ fun MediaStep(detail: ReportDetail, viewModel: VisitViewModel) {
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
             CameraCapture(
+                canTakePhoto = photos.size < MediaCaptions.MAX_PHOTOS,
+                canRecordVideo = videos.size < MediaCaptions.MAX_VIDEOS,
                 photoTarget = { appContainer.fileStore.newMediaFile(report.id, "raw.jpg") },
                 videoTarget = { appContainer.fileStore.newMediaFile(report.id, "mp4") },
-                onPhoto = { raw ->
-                    scope.launch {
-                        val stored = appContainer.fileStore.newMediaFile(report.id, "jpg")
-                        val capturedAt = System.currentTimeMillis()
-                        val quality = appContainer.settingsRepository.mediaQuality()
-                        val ok = withContext(Dispatchers.IO) {
-                            appContainer.mediaProcessor.processPhoto(
-                                source = raw,
-                                target = stored,
-                                stamp = PhotoStamp(
-                                    trackingCode = report.displayCode.orEmpty(),
-                                    expertCode = report.expertCode.orEmpty(),
-                                    capturedAt = capturedAt,
-                                    latitude = report.latitude,
-                                    longitude = report.longitude
-                                ),
-                                quality = quality
-                            ).also { raw.delete() }
-                        }
-                        if (ok) viewModel.addMedia(stored, MediaType.IMAGE, capturedAt)
-                    }
-                },
-                onVideo = { file ->
-                    viewModel.addMedia(file, MediaType.VIDEO, System.currentTimeMillis())
-                },
+                onPhoto = { raw -> viewModel.storeCapturedPhoto(raw) },
+                onVideo = { file -> viewModel.addMedia(file, MediaType.VIDEO, System.currentTimeMillis()) },
                 onClose = { capturing = false }
             )
         }
@@ -112,37 +109,53 @@ fun MediaStep(detail: ReportDetail, viewModel: VisitViewModel) {
         Column {
             Text(
                 text = stringResource(
-                    R.string.media_count,
-                    PersianNumbers.toPersian(detail.media.size)
+                    R.string.media_photos_count,
+                    PersianNumbers.toPersian(photos.size),
+                    PersianNumbers.toPersian(MediaCaptions.MAX_PHOTOS)
                 ),
                 style = MaterialTheme.typography.bodyMedium
             )
+            Text(
+                text = stringResource(
+                    R.string.media_videos_count,
+                    PersianNumbers.toPersian(videos.size),
+                    PersianNumbers.toPersian(MediaCaptions.MAX_VIDEOS)
+                ),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            notice?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 6.dp)
+                )
+            }
+            if (photos.size >= MediaCaptions.MAX_PHOTOS) {
+                Text(
+                    text = photoLimit,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            if (videos.size >= MediaCaptions.MAX_VIDEOS) {
+                Text(
+                    text = videoLimit,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
             detail.media.forEach { media ->
-                var caption by remember(media.id) { mutableStateOf(media.caption.orEmpty()) }
-                AutoSave(caption) { viewModel.setCaption(media, caption) }
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = PersianDate.formatWithTime(media.capturedAt),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        AppTextField(
-                            label = stringResource(R.string.media_caption),
-                            value = caption,
-                            onValueChange = { caption = it }
-                        )
-                    }
-                    IconButton(onClick = { viewModel.removeMedia(media) }) {
-                        Icon(
-                            Icons.Filled.Delete,
-                            contentDescription = stringResource(R.string.action_delete)
-                        )
-                    }
-                }
+                val standard = if (media.type == MediaType.VIDEO.code) videoCaptions else photoCaptions
+                val used = detail.media.filter { it.id != media.id }.map { it.caption }
+                MediaRow(
+                    media = media,
+                    files = appContainer.fileStore,
+                    standardCaptions = MediaCaptions.available(standard, used),
+                    onCaptionChange = { viewModel.setCaption(media, it) },
+                    onRemove = { viewModel.removeMedia(media) }
+                )
             }
             if (detail.media.isEmpty()) {
                 Text(
@@ -151,13 +164,7 @@ fun MediaStep(detail: ReportDetail, viewModel: VisitViewModel) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            permissionMessage?.let {
-                Text(
-                    text = stringResource(it),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -173,6 +180,18 @@ fun MediaStep(detail: ReportDetail, viewModel: VisitViewModel) {
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(stringResource(R.string.media_take_photo))
+                }
+                OutlinedButton(
+                    onClick = {
+                        galleryPicker.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageAndVideo
+                            )
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(stringResource(R.string.media_pick_gallery))
                 }
             }
         }
