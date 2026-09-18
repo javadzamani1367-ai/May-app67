@@ -29,6 +29,33 @@ object ShareUtil {
         context.startActivity(chooser)
     }
 
+    /**
+     * Several files in one hand-off: the report plus the documents and videos
+     * that cannot live inside it. The type is narrowed only when every file
+     * agrees, otherwise a chooser would hide apps that can take the rest.
+     */
+    fun shareMany(context: Context, files: List<File>) {
+        if (files.isEmpty()) return
+        if (files.size == 1) {
+            share(context, files.first())
+            return
+        }
+        val uris = ArrayList(
+            files.map {
+                FileProvider.getUriForFile(context, context.packageName + ".fileprovider", it)
+            }
+        )
+        val types = files.map { mimeFor(it) }.distinct()
+        val intent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+            type = types.singleOrNull() ?: "*/*"
+            putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        val chooser = Intent.createChooser(intent, context.getString(R.string.action_share))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(chooser)
+    }
+
     fun mimeFor(file: File): String = when (file.extension.lowercase()) {
         "pdf" -> "application/pdf"
         "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"

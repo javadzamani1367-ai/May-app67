@@ -378,6 +378,8 @@
     <string name="role_manager">مدیر</string>
     <string name="dispatch_all_categories">همه دسته‌های مدارک (دسترسی مدیر)</string>
     <string name="dispatch_category_empty">مدرکی در این دسته ثبت نشده است</string>
+    <string name="dispatch_video_unnamed">فیلم بدون شرح</string>
+    <string name="dispatch_full_bundle">نسخه کامل: گزارش در هر دو قالب PDF و Word به همراه همه مدارک انتخاب‌شده</string>
     <string name="dispatch_photo_unnamed">تصویر بدون شرح</string>
     <string name="settings_optional_hint">پر کردن این فرم اجباری نیست و مرحله بعدی ندارد. «آدرس مقصد» را خالی بگذارید؛ هنگام همگام‌سازی، ویندوز به گوشی وصل می‌شود نه برعکس. برای بازگشت، فلش بالای صفحه را بزنید.</string>
     <string name="settings_media_quality">کیفیت رسانه</string>

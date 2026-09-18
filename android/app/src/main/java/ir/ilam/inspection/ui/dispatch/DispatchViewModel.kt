@@ -9,9 +9,7 @@ import ir.ilam.inspection.data.model.DispatchUnit
 import ir.ilam.inspection.data.model.OutputFormat
 import ir.ilam.inspection.data.model.ReportDetail
 import ir.ilam.inspection.data.model.UserRole
-import ir.ilam.inspection.export.PdfOutcome
 import ir.ilam.inspection.export.ShareUtil
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +19,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 data class DispatchState(
     val unit: DispatchUnit = DispatchUnit.SALES,
@@ -30,6 +27,8 @@ data class DispatchState(
     val attachmentIds: Set<String> = emptySet(),
     val note: String = "",
     val format: OutputFormat = OutputFormat.PDF,
+    /** Manager only: both formats plus every ticked document, in one send. */
+    val fullBundle: Boolean = false,
     val busy: Boolean = false,
     val message: Int? = null
 )
@@ -55,6 +54,8 @@ class DispatchViewModel(
         .map { it.role == UserRole.MANAGER }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
+    private val builder = DispatchBuilder(container)
+
     private val _state = MutableStateFlow(DispatchState())
     val state: StateFlow<DispatchState> = _state.asStateFlow()
 
@@ -62,6 +63,7 @@ class DispatchViewModel(
     fun setFormat(format: OutputFormat) = _state.update { it.copy(format = format) }
     fun setNote(note: String) = _state.update { it.copy(note = note) }
     fun toggleReportForm() = _state.update { it.copy(includeReportForm = !it.includeReportForm) }
+    fun toggleFullBundle() = _state.update { it.copy(fullBundle = !it.fullBundle) }
     fun clearMessage() = _state.update { it.copy(message = null) }
 
     fun toggleMedia(id: String) = _state.update {
@@ -88,41 +90,15 @@ class DispatchViewModel(
                 return@launch
             }
             val expertName = container.settingsRepository.settings.first().expertName
-            val baseName = (report.report.displayCode ?: reportId.take(8)) + "-" +
-                current.unit.code.toString()
-            val outcome = if (current.format == OutputFormat.PDF) {
-                val html = container.htmlReportBuilder.build(
-                    detail = report,
-                    expertName = expertName,
-                    selectedMediaIds = current.mediaIds,
-                    selectedAttachmentIds = current.attachmentIds,
-                    dispatchNote = current.note
-                )
-                runCatching { container.pdfExporter.export(html, baseName, context) }
-                    .getOrDefault(PdfOutcome.Failed)
-            } else {
-                val file = runCatching {
-                    withContext(Dispatchers.IO) {
-                        container.wordExporter.export(
-                            detail = report,
-                            fileName = baseName,
-                            expertName = expertName,
-                            selectedMediaIds = current.mediaIds,
-                            selectedAttachmentIds = current.attachmentIds,
-                            dispatchNote = current.note
-                        )
-                    }
-                }.getOrNull()
-                if (file == null) PdfOutcome.Failed else PdfOutcome.Saved(file)
-            }
+            val bundle = builder.build(report, current, expertName, context)
 
-            if (outcome == PdfOutcome.Failed) {
+            if (bundle.isEmpty && !bundle.viaPrintSheet) {
                 _state.update { it.copy(busy = false, message = R.string.export_failed) }
                 return@launch
             }
 
-            // The document exists either way, so the dispatch is on the record
-            // even when the expert saved it through the print sheet.
+            // The hand-off is on the record even when the report itself went
+            // out through the print sheet: something reached the unit.
             container.contentRepository.logDispatch(
                 reportId = reportId,
                 unit = current.unit,
@@ -130,14 +106,19 @@ class DispatchViewModel(
                 note = current.note,
                 format = current.format
             )
-            when (outcome) {
-                is PdfOutcome.Saved -> {
-                    _state.update { it.copy(busy = false, message = R.string.dispatch_done) }
-                    ShareUtil.share(context, outcome.file)
-                }
-                else -> _state.update {
-                    it.copy(busy = false, message = R.string.export_via_print_dialog)
-                }
+
+            if (bundle.files.isNotEmpty()) {
+                ShareUtil.shareMany(context, bundle.files)
+            }
+            _state.update {
+                it.copy(
+                    busy = false,
+                    message = if (bundle.viaPrintSheet) {
+                        R.string.export_via_print_dialog
+                    } else {
+                        R.string.dispatch_done
+                    }
+                )
             }
         }
     }

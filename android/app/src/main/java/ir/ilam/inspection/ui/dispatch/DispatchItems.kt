@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.db.MediaEntity
 import ir.ilam.inspection.data.model.AttachmentCategory
+import ir.ilam.inspection.data.model.MediaType
 import ir.ilam.inspection.data.model.ReportDetail
 import ir.ilam.inspection.ui.common.MediaThumbnail
 import ir.ilam.inspection.ui.common.SectionCard
@@ -36,6 +37,7 @@ fun DispatchItems(
     files: FileStore,
     isManager: Boolean,
     onToggleReportForm: () -> Unit,
+    onToggleFullBundle: () -> Unit,
     onToggleMedia: (String) -> Unit,
     onToggleAttachment: (String) -> Unit
 ) {
@@ -47,12 +49,31 @@ fun DispatchItems(
                 onToggle = onToggleReportForm
             )
 
+            if (isManager) {
+                CheckRow(
+                    label = stringResource(R.string.dispatch_full_bundle),
+                    checked = state.fullBundle,
+                    onToggle = onToggleFullBundle
+                )
+            }
+
             detail.photos.forEach { photo ->
                 PhotoRow(
                     photo = photo,
                     files = files,
                     checked = photo.id in state.mediaIds,
                     onToggle = { onToggleMedia(photo.id) }
+                )
+            }
+
+            // Videos travel as their own files; a report cannot contain one,
+            // and before this a ticked video simply never left the phone.
+            detail.videos.forEach { video ->
+                PhotoRow(
+                    photo = video,
+                    files = files,
+                    checked = video.id in state.mediaIds,
+                    onToggle = { onToggleMedia(video.id) }
                 )
             }
 

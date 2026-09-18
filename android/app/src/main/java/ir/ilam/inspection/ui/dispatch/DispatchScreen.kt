@@ -100,6 +100,7 @@ fun DispatchScreen(reportId: String, onBack: () -> Unit) {
                     files = viewModel.files,
                     isManager = isManager,
                     onToggleReportForm = viewModel::toggleReportForm,
+                    onToggleFullBundle = viewModel::toggleFullBundle,
                     onToggleMedia = viewModel::toggleMedia,
                     onToggleAttachment = viewModel::toggleAttachment
                 )
