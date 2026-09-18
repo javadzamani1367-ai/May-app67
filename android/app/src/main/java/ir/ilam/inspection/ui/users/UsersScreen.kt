@@ -39,6 +39,9 @@ import ir.ilam.inspection.ui.common.ConfirmDeleteButton
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
 import ir.ilam.inspection.ui.common.SectionCard
 import ir.ilam.inspection.util.PersianNumbers
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.TextButton
+import ir.ilam.inspection.sync.ServerApi
 
 /**
  * Manager only. An expert reads out the code their installation shows and
@@ -54,11 +57,12 @@ fun UsersScreen(onBack: () -> Unit) {
     )
     val users by viewModel.users.collectAsStateWithLifecycle()
     val editing by viewModel.editing.collectAsStateWithLifecycle()
-    val message by viewModel.message.collectAsStateWithLifecycle()
+    val password by viewModel.password.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(message) {
-        if (message != null) {
-            kotlinx.coroutines.delay(4_000)
+    LaunchedEffect(state.messageRes, state.serverMessage) {
+        if (state.messageRes != null || state.serverMessage != null) {
+            kotlinx.coroutines.delay(5_000)
             viewModel.clearMessage()
         }
     }
@@ -91,10 +95,28 @@ fun UsersScreen(onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
         ) {
-            message?.let {
+            if (state.busy) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
+            }
+            state.messageRes?.let {
                 Text(
                     text = stringResource(it),
                     color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            state.serverMessage?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            if (state.offline) {
+                Text(
+                    text = stringResource(R.string.users_offline),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
             }
@@ -102,10 +124,32 @@ fun UsersScreen(onBack: () -> Unit) {
             editing?.let { user ->
                 UserEditor(
                     user = user,
+                    password = password,
                     onChange = viewModel::change,
+                    onPasswordChange = viewModel::setPassword,
                     onSave = viewModel::save,
                     onCancel = viewModel::cancel
                 )
+            }
+
+            // The waiting installations come first: registering one is the
+            // reason the manager opened this screen.
+            SectionCard(title = stringResource(R.string.users_requests)) {
+                Column {
+                    if (state.requests.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.users_requests_empty),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    state.requests.forEach { request ->
+                        DeviceRequestRow(request = request, onAdopt = { viewModel.adopt(request) })
+                    }
+                    TextButton(onClick = viewModel::refresh) {
+                        Text(stringResource(R.string.users_refresh))
+                    }
+                }
             }
 
             SectionCard(title = stringResource(R.string.users_registered)) {
@@ -157,5 +201,38 @@ private fun UserRow(user: UserEntity, onEdit: () -> Unit, onDelete: () -> Unit) 
             }
         }
         ConfirmDeleteButton(itemName = user.fullName, onConfirm = onDelete)
+    }
+}
+
+/** One installation waiting to be registered, and the button that adopts it. */
+@Composable
+private fun DeviceRequestRow(request: ServerApi.DeviceRequest, onAdopt: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = request.fullName.ifBlank { stringResource(R.string.users_full_name) },
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = listOfNotNull(
+                    PersianNumbers.toPersian(request.phone).ifBlank { null },
+                    request.county.ifBlank { null }
+                ).joinToString(" — "),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = stringResource(
+                    R.string.users_device,
+                    PersianNumbers.toPersian(request.deviceCode.chunked(4).joinToString("-"))
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        TextButton(onClick = onAdopt) { Text(stringResource(R.string.users_adopt)) }
     }
 }

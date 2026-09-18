@@ -382,6 +382,14 @@
     <string name="users_editor_hint">کد دستگاه را دقیقاً همان‌طور که روی گوشی کارشناس نمایش داده شده وارد کنید. با حذف و نصب دوباره برنامه یا تعویض گوشی، این کد عوض می‌شود و باید دوباره ثبت شود.</string>
     <string name="users_saved">کاربر ذخیره شد</string>
     <string name="users_deleted">کاربر حذف شد</string>
+    <string name="users_need_server">برای ثبت یا تغییر کاربر باید به سرور وصل باشید. ثبت محلی، ورود را روی هیچ گوشی‌ای محدود نمی‌کند.</string>
+    <string name="users_offline">اتصال به سرور برقرار نیست؛ فهرست زیر آخرین نسخه ذخیره‌شده روی این گوشی است.</string>
+    <string name="users_requests">درخواست‌های ثبت دستگاه</string>
+    <string name="users_requests_empty">درخواستی در انتظار نیست</string>
+    <string name="users_adopt">ثبت این دستگاه</string>
+    <string name="users_password">رمز عبور (برای کاربر جدید یا تغییر رمز)</string>
+    <string name="users_password_hint">اگر خالی بماند، رمز فعلی کاربر تغییر نمی‌کند.</string>
+    <string name="users_refresh">به‌روزرسانی از سرور</string>
     <string name="users_incomplete">نام و کد کاربری الزامی است</string>
     <string name="settings_device_code">کد این دستگاه</string>
     <string name="settings_expert_code">کد کارشناس</string>

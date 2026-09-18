@@ -33,7 +33,9 @@ import ir.ilam.inspection.ui.common.SectionCard
 @Composable
 fun UserEditor(
     user: UserEntity,
+    password: String,
     onChange: (UserEntity) -> Unit,
+    onPasswordChange: (String) -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
@@ -70,6 +72,16 @@ fun UserEditor(
                 label = stringResource(R.string.users_device_code),
                 value = user.deviceCode.orEmpty(),
                 onValueChange = { onChange(user.copy(deviceCode = it.uppercase())) }
+            )
+            AppTextField(
+                label = stringResource(R.string.users_password),
+                value = password,
+                onValueChange = onPasswordChange
+            )
+            Text(
+                text = stringResource(R.string.users_password_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             AppTextField(
                 label = stringResource(R.string.users_note),
