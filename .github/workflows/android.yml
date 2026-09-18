@@ -78,7 +78,7 @@ jobs:
 
       - name: Unit tests
         working-directory: android
-        run: ./gradlew --no-daemon testDebugUnitTest
+        run: ./gradlew --no-daemon testExpertDebugUnitTest
 
       - name: Build debug APK
         working-directory: android
@@ -119,29 +119,39 @@ jobs:
 
       # Proof, not assumption: an APK that only looks signed installs on
       # nobody's phone.
+      # Proof for both apps: an APK that only looks signed installs on
+      # nobody's phone, and the manager build is no less important than the
+      # expert one.
       - name: Verify release signature
         run: |
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
-          "$APKSIGNER" verify --verbose --print-certs \
-            android/app/build/outputs/apk/release/app-release.apk
+          for apk in android/app/build/outputs/apk/*/release/*.apk; do
+            echo "== $apk"
+            "$APKSIGNER" verify --verbose --print-certs "$apk"
+          done
 
       - name: Report APK sizes
-        run: |
-          ls -lh android/app/build/outputs/apk/debug/*.apk
-          ls -lh android/app/build/outputs/apk/release/*.apk
+        run: ls -lh android/app/build/outputs/apk/*/*/*.apk
 
-      - name: Upload APK
+      - name: Upload expert APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: crypto-inspection-expert-${{ steps.signing.outputs.ephemeral == 'true' && 'testkey' || 'signed' }}-apk
+          path: android/app/build/outputs/apk/expert/release/*.apk
+          if-no-files-found: error
+
+      - name: Upload manager APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: crypto-inspection-manager-${{ steps.signing.outputs.ephemeral == 'true' && 'testkey' || 'signed' }}-apk
+          path: android/app/build/outputs/apk/manager/release/*.apk
+          if-no-files-found: error
+
+      - name: Upload debug APKs
         uses: actions/upload-artifact@v4
         with:
           name: crypto-inspection-debug-apk
-          path: android/app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
-
-      - name: Upload release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: crypto-inspection-release-${{ steps.signing.outputs.ephemeral == 'true' && 'testkey' || 'signed' }}-apk
-          path: android/app/build/outputs/apk/release/*.apk
+          path: android/app/build/outputs/apk/*/debug/*.apk
           if-no-files-found: error
 
       # A tag turns the build into a release, so the APK can be downloaded
@@ -151,8 +161,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            android/app/build/outputs/apk/release/app-release.apk
-            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/*/release/*.apk
           name: ${{ github.ref_name }}
           body: |
             نسخه آزمایشی میدانی — امضا شده با کلید debug.
