@@ -33,8 +33,22 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      # The runner image already ships the Android SDK. The setup-android
+      # action mostly re-accepts its licences, and when that sdkmanager call
+      # fails the whole build dies twenty seconds in — which is exactly what
+      # happened. Accepting them here cannot fail the job, and AGP downloads
+      # whatever platform or build-tools version is still missing.
+      - name: Accept Android SDK licences
+        run: |
+          SDK="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          MANAGER="$(find "$SDK/cmdline-tools" -name sdkmanager -type f 2>/dev/null | head -n 1)"
+          if [ -n "$MANAGER" ]; then
+            yes | "$MANAGER" --licenses > /dev/null 2>&1 || true
+          fi
+          ls "$SDK/platforms" || true
+          ls "$SDK/build-tools" || true
 
       # Restore and save are split so a failed build still leaves a warm cache;
       # otherwise every fix-and-retry round re-downloads the whole toolchain.
