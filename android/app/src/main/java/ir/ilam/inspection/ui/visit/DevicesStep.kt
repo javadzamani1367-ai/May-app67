@@ -37,6 +37,8 @@ import ir.ilam.inspection.ui.common.NumberField
 import ir.ilam.inspection.ui.common.SectionCard
 import ir.ilam.inspection.ui.common.attendeeOrgLabel
 import ir.ilam.inspection.util.PersianNumbers
+import ir.ilam.inspection.data.repo.SnippetFields
+import ir.ilam.inspection.ui.common.SnippetField
 
 /** Step 4 — the miners found on site and the people present during the visit. */
 @Composable
@@ -126,7 +128,12 @@ private fun DeviceSection(detail: ReportDetail, viewModel: VisitViewModel) {
                 onValueChange = { power = it },
                 decimal = true
             )
-            AppTextField(stringResource(R.string.device_note), note, { note = it })
+            SnippetField(
+                label = stringResource(R.string.device_note),
+                value = note,
+                onValueChange = { note = it },
+                fieldKey = SnippetFields.DEVICE_NOTE
+            )
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -203,8 +210,18 @@ private fun AttendeeSection(detail: ReportDetail, viewModel: VisitViewModel) {
                 optionLabel = { attendeeOrgLabel(it) },
                 onSelect = { org = it }
             )
-            AppTextField(stringResource(R.string.attendee_name), name, { name = it })
-            AppTextField(stringResource(R.string.attendee_position), position, { position = it })
+            SnippetField(
+                label = stringResource(R.string.attendee_name),
+                value = name,
+                onValueChange = { name = it },
+                fieldKey = SnippetFields.ATTENDEE_NAME
+            )
+            SnippetField(
+                label = stringResource(R.string.attendee_position),
+                value = position,
+                onValueChange = { position = it },
+                fieldKey = SnippetFields.ATTENDEE_POSITION
+            )
             if (org == AttendeeOrg.OTHER) {
                 AppTextField(stringResource(R.string.attendee_org_name), orgName, { orgName = it })
             }

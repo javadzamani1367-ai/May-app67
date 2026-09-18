@@ -33,9 +33,10 @@ import ir.ilam.inspection.data.model.DispatchUnit
 import ir.ilam.inspection.data.model.OutputFormat
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
 import ir.ilam.inspection.ui.common.DropdownField
-import ir.ilam.inspection.ui.common.MultilineField
 import ir.ilam.inspection.ui.common.dispatchUnitLabel
 import ir.ilam.inspection.ui.common.outputFormatLabel
+import ir.ilam.inspection.data.repo.SnippetFields
+import ir.ilam.inspection.ui.common.SnippetField
 
 /** Choose a unit, tick what it receives, pick the format, share the result. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,10 +104,12 @@ fun DispatchScreen(reportId: String, onBack: () -> Unit) {
                     onToggleAttachment = viewModel::toggleAttachment
                 )
             }
-            MultilineField(
+            SnippetField(
                 label = stringResource(R.string.dispatch_note),
                 value = state.note,
-                onValueChange = viewModel::setNote
+                onValueChange = viewModel::setNote,
+                fieldKey = SnippetFields.DISPATCH_NOTE,
+                multiline = true
             )
             DropdownField(
                 label = stringResource(R.string.dispatch_format),

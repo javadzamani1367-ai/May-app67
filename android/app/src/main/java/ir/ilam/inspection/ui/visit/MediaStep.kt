@@ -33,10 +33,11 @@ import ir.ilam.inspection.container
 import ir.ilam.inspection.data.model.MediaCaptions
 import ir.ilam.inspection.data.model.MediaType
 import ir.ilam.inspection.data.model.ReportDetail
-import ir.ilam.inspection.ui.common.MultilineField
 import ir.ilam.inspection.ui.common.AutoSave
 import ir.ilam.inspection.ui.common.SectionCard
 import ir.ilam.inspection.util.PersianNumbers
+import ir.ilam.inspection.data.repo.SnippetFields
+import ir.ilam.inspection.ui.common.SnippetField
 
 /** Step 5 — photos, video and the narrative that closes the visit. */
 @Composable
@@ -212,15 +213,19 @@ private fun NarrativeSection(detail: ReportDetail, viewModel: VisitViewModel) {
 
     SectionCard(title = stringResource(R.string.field_description)) {
         Column {
-            MultilineField(
+            SnippetField(
                 label = stringResource(R.string.field_description),
                 value = description,
-                onValueChange = { description = it }
+                onValueChange = { description = it },
+                fieldKey = SnippetFields.VISIT_DESCRIPTION,
+                multiline = true
             )
-            MultilineField(
+            SnippetField(
                 label = stringResource(R.string.field_actions_taken),
                 value = actions,
-                onValueChange = { actions = it }
+                onValueChange = { actions = it },
+                fieldKey = SnippetFields.VISIT_ACTIONS,
+                multiline = true
             )
         }
     }

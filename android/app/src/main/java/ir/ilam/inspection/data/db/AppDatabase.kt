@@ -10,10 +10,18 @@ import ir.ilam.inspection.data.KeyStoreVault
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
 /**
- * Bumped only together with `windows/SCHEMA.md`; the sync handshake refuses to
- * talk to an archive built against a different version.
+ * The schema the phone and the Windows archive share. Bumped only together
+ * with `windows/SCHEMA.md`; the sync handshake refuses to talk to an archive
+ * built against a different version.
  */
 const val SCHEMA_VERSION = 2
+
+/**
+ * Room's own version. It moves ahead of [SCHEMA_VERSION] whenever the phone
+ * gains a table the archive has no business knowing about — a local typing
+ * convenience must not make an up-to-date archive look incompatible.
+ */
+const val DATABASE_VERSION = 3
 
 @Database(
     entities = [
@@ -23,9 +31,10 @@ const val SCHEMA_VERSION = 2
         MediaEntity::class,
         AttachmentEntity::class,
         DispatchEntity::class,
-        SettingEntity::class
+        SettingEntity::class,
+        SnippetEntity::class
     ],
-    version = SCHEMA_VERSION,
+    version = DATABASE_VERSION,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -37,6 +46,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun attachmentDao(): AttachmentDao
     abstract fun dispatchDao(): DispatchDao
     abstract fun settingDao(): SettingDao
+    abstract fun snippetDao(): SnippetDao
 
     companion object {
         private const val DB_NAME = "inspection.db"
@@ -79,13 +89,31 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** The saved phrases behind the star on a text field: phone only. */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS snippets (" +
+                        "id TEXT NOT NULL PRIMARY KEY, " +
+                        "field_key TEXT NOT NULL, " +
+                        "text TEXT NOT NULL, " +
+                        "created_at INTEGER NOT NULL, " +
+                        "used_at INTEGER NOT NULL)"
+                )
+                db.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_snippets_field_key_text " +
+                        "ON snippets (field_key, text)"
+                )
+            }
+        }
+
         private fun build(context: Context): AppDatabase {
             System.loadLibrary("sqlcipher")
             val passphrase = KeyStoreVault(context).databasePassphrase()
             val factory = SupportOpenHelperFactory(passphrase)
             return Room.databaseBuilder(context, AppDatabase::class.java, DB_NAME)
                 .openHelperFactory(factory)
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
         }
     }

@@ -210,6 +210,17 @@ crypto-inspection/
 | `output_format` | INTEGER — ۰ PDF / ۱ Word |
 | `dispatched_at` | INTEGER |
 
+### جدول `snippets` — متن‌های ذخیره‌شده کاربر (فقط روی گوشی)
+
+| ستون | نوع |
+|---|---|
+| `id` | TEXT PK |
+| `field_key` | TEXT — کدام فیلد |
+| `text` | TEXT |
+| `created_at` / `used_at` | INTEGER |
+
+این جدول همگام‌سازی نمی‌شود؛ یک تسهیل تایپ روی همان گوشی است. به همین دلیل نسخه Room (`DATABASE_VERSION`) از نسخه اسکیمای مشترک (`SCHEMA_VERSION`) جداست.
+
 ### جدول `settings`
 کلید-مقدار ساده: کد کارشناس، نقش کاربر (کارشناس یا مدیر)، کد ناحیه پیش‌فرض، آدرس مقصد همگام‌سازی، کیفیت رسانه.
 

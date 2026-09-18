@@ -29,6 +29,8 @@ import ir.ilam.inspection.ui.common.DropdownField
 import ir.ilam.inspection.ui.common.SectionCard
 import ir.ilam.inspection.ui.common.attachmentCategoryLabel
 import ir.ilam.inspection.util.PersianDate
+import ir.ilam.inspection.data.repo.SnippetFields
+import ir.ilam.inspection.ui.common.SnippetField
 
 /**
  * Documents that arrive after the visit — miner logs, commission minutes,
@@ -92,7 +94,12 @@ fun AttachmentSection(detail: ReportDetail, viewModel: CaseDetailViewModel) {
                 optionLabel = { attachmentCategoryLabel(it) },
                 onSelect = { category = it }
             )
-            AppTextField(stringResource(R.string.attachment_title_field), title, { title = it })
+            SnippetField(
+                label = stringResource(R.string.attachment_title_field),
+                value = title,
+                onValueChange = { title = it },
+                fieldKey = SnippetFields.ATTACHMENT_TITLE
+            )
             AppTextField(stringResource(R.string.attachment_note), note, { note = it })
             Button(
                 onClick = { picker.launch(arrayOf("*/*")) },

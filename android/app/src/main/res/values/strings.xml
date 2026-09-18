@@ -419,6 +419,8 @@
     <string name="value_empty">—</string>
     <string name="error_required">این فیلد الزامی است</string>
     <string name="error_number">مقدار عددی وارد کنید</string>
+    <string name="snippet_save">ذخیره این متن برای استفاده بعدی</string>
+    <string name="snippet_open">متن‌های ذخیره‌شده</string>
     <string name="confirm_delete_title">حذف مورد</string>
     <string name="confirm_delete_message">آیا از حذف این مورد اطمینان دارید؟</string>
     <string name="confirm_delete_named">آیا از حذف «%1$s» اطمینان دارید؟</string>
