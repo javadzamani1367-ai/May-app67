@@ -10,7 +10,6 @@ import ir.ilam.inspection.data.repo.ReportRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -40,10 +39,7 @@ class IntakeViewModel(private val container: AppContainer) : ViewModel() {
     val state: StateFlow<IntakeState> = _state.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            val overrides = container.settingsRepository.settings.first().countyCodeOverrides
-            _state.update { it.copy(counties = container.counties.withOverrides(overrides)) }
-        }
+        _state.update { it.copy(counties = container.counties.defaults) }
     }
 
     fun setType(type: ReportType) = _state.update { it.copy(type = type, typeError = null) }

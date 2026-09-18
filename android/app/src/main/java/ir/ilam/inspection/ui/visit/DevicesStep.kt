@@ -7,11 +7,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -33,6 +31,7 @@ import ir.ilam.inspection.data.model.AttendeeOrg
 import ir.ilam.inspection.data.model.EntryMethod
 import ir.ilam.inspection.data.model.ReportDetail
 import ir.ilam.inspection.ui.common.AppTextField
+import ir.ilam.inspection.ui.common.ConfirmDeleteButton
 import ir.ilam.inspection.ui.common.DropdownField
 import ir.ilam.inspection.ui.common.NumberField
 import ir.ilam.inspection.ui.common.SectionCard
@@ -96,12 +95,10 @@ private fun DeviceSection(detail: ReportDetail, viewModel: VisitViewModel) {
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.weight(1f)
                     )
-                    IconButton(onClick = { viewModel.removeDevice(device) }) {
-                        Icon(
-                            Icons.Filled.Delete,
-                            contentDescription = stringResource(R.string.action_delete)
-                        )
-                    }
+                    ConfirmDeleteButton(
+                        itemName = device.model ?: device.serialNumber,
+                        onConfirm = { viewModel.removeDevice(device) }
+                    )
                 }
             }
             if (detail.devices.isEmpty()) {
@@ -186,12 +183,10 @@ private fun AttendeeSection(detail: ReportDetail, viewModel: VisitViewModel) {
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.weight(1f)
                     )
-                    IconButton(onClick = { viewModel.removeAttendee(attendee) }) {
-                        Icon(
-                            Icons.Filled.Delete,
-                            contentDescription = stringResource(R.string.action_delete)
-                        )
-                    }
+                    ConfirmDeleteButton(
+                        itemName = attendee.fullName,
+                        onConfirm = { viewModel.removeAttendee(attendee) }
+                    )
                 }
             }
             if (detail.attendees.isEmpty()) {
@@ -228,8 +223,10 @@ private fun AttendeeSection(detail: ReportDetail, viewModel: VisitViewModel) {
     }
 }
 
-/** Portrait, single scan, no beep — the phone is often held over a rack. */
+/** Portrait, single scan, no beep, and a windowed preview rather than a
+ * full-screen camera — the phone is often held over a rack. */
 private fun barcodeOptions(): ScanOptions = ScanOptions()
     .setDesiredBarcodeFormats(ScanOptions.ONE_D_CODE_TYPES + ScanOptions.QR_CODE)
     .setBeepEnabled(false)
     .setOrientationLocked(true)
+    .setCaptureActivity(ScanActivity::class.java)

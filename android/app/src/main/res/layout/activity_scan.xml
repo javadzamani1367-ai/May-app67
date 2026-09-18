@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The scanner as a window, not as the whole screen. A full-screen camera hides
+  the form the expert is filling in and gives no clue what is being scanned;
+  a box at the top with the instruction under it does.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?android:attr/colorBackground"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/scan_title"
+        android:textSize="18sp"
+        android:textAlignment="viewStart"
+        android:paddingBottom="12dp" />
+
+    <com.journeyapps.barcodescanner.DecoratedBarcodeView
+        android:id="@+id/zxing_barcode_scanner"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"
+        android:text="@string/scan_hint"
+        android:textSize="16sp"
+        android:paddingTop="16dp" />
+
+</LinearLayout>

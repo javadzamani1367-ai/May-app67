@@ -1,8 +1,6 @@
 package ir.ilam.inspection.ui.settings
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,7 +24,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -58,7 +55,6 @@ fun SettingsScreen(onBack: () -> Unit) {
         factory = remember { ContainerViewModelFactory(appContainer) { SettingsViewModel(it) } }
     )
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    val counties by viewModel.counties.collectAsStateWithLifecycle()
     val running by viewModel.syncRunning.collectAsStateWithLifecycle()
     val pairingCode by viewModel.pairingCode.collectAsStateWithLifecycle()
     val address by viewModel.address.collectAsStateWithLifecycle()
@@ -176,31 +172,6 @@ fun SettingsScreen(onBack: () -> Unit) {
                 }
             }
 
-            SectionCard(title = stringResource(R.string.settings_county_codes)) {
-                Column {
-                    counties.forEach { county ->
-                        var code by remember(county.index, county.code) {
-                            mutableStateOf(county.code)
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(text = county.name, modifier = Modifier.weight(1f))
-                            NumberField(
-                                label = stringResource(R.string.settings_default_area),
-                                value = code,
-                                onValueChange = {
-                                    code = it.take(2)
-                                    viewModel.setCountyCode(county, code)
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-            }
 
             SectionCard(title = stringResource(R.string.sync_title)) {
                 Column {

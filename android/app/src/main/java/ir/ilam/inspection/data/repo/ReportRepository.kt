@@ -76,7 +76,7 @@ class ReportRepository(
         reportDate: Long,
         manualTrackingCode: String? = null
     ): Result<String> {
-        val areaCode = settings.areaCodeFor(countyIndex, fallbackAreaCode)
+        val areaCode = fallbackAreaCode
         var trackingCode: String? = null
         var tempCode: String? = null
 

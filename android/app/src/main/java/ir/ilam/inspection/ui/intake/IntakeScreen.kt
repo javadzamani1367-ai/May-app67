@@ -98,7 +98,15 @@ fun IntakeScreen(onBack: () -> Unit, onCreated: (String) -> Unit) {
                 label = stringResource(R.string.intake_county),
                 options = state.counties,
                 selected = state.county,
-                optionLabel = { it.name },
+                // Two areas of Ilam city share a name and differ only by code,
+                // so the code is part of what the picker shows.
+                optionLabel = {
+                    stringResource(
+                        R.string.county_with_code,
+                        it.name,
+                        PersianNumbers.toPersian(it.code)
+                    )
+                },
                 onSelect = viewModel::setCounty,
                 error = state.countyError?.let { stringResource(it) }
             )

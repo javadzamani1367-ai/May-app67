@@ -41,31 +41,41 @@
     <!-- شهرستان‌ها -->
     <string-array name="county_names">
         <item>ایلام</item>
-        <item>ایوان</item>
-        <item>آبدانان</item>
-        <item>بدره</item>
-        <item>دره‌شهر</item>
-        <item>دهلران</item>
-        <item>سیروان</item>
-        <item>چرداول</item>
-        <item>چوار</item>
+        <item>ایلام</item>
         <item>ملکشاهی</item>
+        <item>چوار</item>
+        <item>ایوان</item>
+        <item>دهلران</item>
+        <item>زرین‌آباد</item>
+        <item>موسیان</item>
+        <item>آبدانان</item>
+        <item>دره‌شهر</item>
+        <item>بدره</item>
         <item>مهران</item>
+        <item>صالح‌آباد</item>
+        <item>سرابله</item>
+        <item>سیروان</item>
         <item>هلیلان</item>
+        <item>مورموری</item>
     </string-array>
     <string-array name="county_codes">
-        <item>01</item>
-        <item>02</item>
-        <item>03</item>
-        <item>04</item>
-        <item>05</item>
-        <item>06</item>
-        <item>07</item>
-        <item>08</item>
-        <item>09</item>
-        <item>10</item>
-        <item>11</item>
-        <item>12</item>
+        <item>401</item>
+        <item>402</item>
+        <item>403</item>
+        <item>404</item>
+        <item>405</item>
+        <item>406</item>
+        <item>407</item>
+        <item>408</item>
+        <item>409</item>
+        <item>410</item>
+        <item>411</item>
+        <item>412</item>
+        <item>413</item>
+        <item>414</item>
+        <item>415</item>
+        <item>416</item>
+        <item>419</item>
     </string-array>
 
     <!-- ثبت سریع -->
@@ -190,6 +200,8 @@
     <string name="device_serial">شماره سریال</string>
     <string name="device_power">توان (وات)</string>
     <string name="device_note">توضیح</string>
+    <string name="scan_title">اسکن بارکد دستگاه</string>
+    <string name="scan_hint">بارکد را داخل کادر بالا بگیرید. با خواندن بارکد، این صفحه بسته می‌شود.</string>
     <string name="device_entry_barcode">بارکد</string>
     <string name="device_entry_manual">دستی</string>
     <string name="device_count">تعداد دستگاه: %1$s</string>
@@ -359,7 +371,7 @@
     <string name="settings_expert_code">کد کارشناس</string>
     <string name="settings_expert_name">نام کارشناس</string>
     <string name="settings_default_area">کد ناحیه پیش‌فرض</string>
-    <string name="settings_county_codes">ویرایش کد ناحیه شهرستان‌ها</string>
+    <string name="county_with_code">%1$s — %2$s</string>
     <string name="settings_sync_target">آدرس مقصد همگام‌سازی (اختیاری)</string>
     <string name="settings_role">نقش کاربر</string>
     <string name="role_expert">کارشناس</string>
@@ -408,7 +420,8 @@
     <string name="error_required">این فیلد الزامی است</string>
     <string name="error_number">مقدار عددی وارد کنید</string>
     <string name="confirm_delete_title">حذف مورد</string>
-    <string name="confirm_delete_message">این مورد حذف شود؟</string>
+    <string name="confirm_delete_message">آیا از حذف این مورد اطمینان دارید؟</string>
+    <string name="confirm_delete_named">آیا از حذف «%1$s» اطمینان دارید؟</string>
     <string name="case_delete">حذف پرونده</string>
     <string name="case_delete_confirm_title">حذف کامل پرونده</string>
     <string name="case_delete_confirm_message">پرونده %1$s با همه تصاویر، فیلم‌ها و مدارکش برای همیشه حذف می‌شود. این کار برگشت‌پذیر نیست.</string>
