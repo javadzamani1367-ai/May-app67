@@ -141,11 +141,4 @@ class VisitMediaHandler(
 
     private suspend fun videoCount(): Int =
         reports.detail(reportId)?.media?.count { it.type == MediaType.VIDEO.code } ?: 0
-
-
-    private suspend fun photoCount(): Int =
-        reports.detail(reportId)?.media?.count { it.type == MediaType.IMAGE.code } ?: 0
-
-    private suspend fun videoCount(): Int =
-        reports.detail(reportId)?.media?.count { it.type == MediaType.VIDEO.code } ?: 0
 }
