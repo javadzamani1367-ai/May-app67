@@ -6,6 +6,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -14,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.activity.ComponentActivity
 import ir.ilam.inspection.container
+import ir.ilam.inspection.data.repo.SettingsRepository
 import ir.ilam.inspection.ui.lock.LockScreen
 import ir.ilam.inspection.util.CrashReporter
 import ir.ilam.inspection.ui.theme.InspectionTheme
@@ -53,7 +55,20 @@ class MainActivity : ComponentActivity() {
                                 crashToShow = null
                             }
                         )
-                        unlocked -> AppNavigation()
+                        unlocked -> {
+                            // Every report carries the code the expert logged
+                            // in with, so the settings copy the exporters read
+                            // is brought in line the moment they are through
+                            // the door — not whenever they next open settings.
+                            val appContainer = container
+                            LaunchedEffect(Unit) {
+                                vault.userCode()?.takeIf { it.isNotBlank() }?.let { code ->
+                                    appContainer.settingsRepository
+                                        .put(SettingsRepository.KEY_EXPERT_CODE, code)
+                                }
+                            }
+                            AppNavigation()
+                        }
                         else -> LockScreen(vault = vault, onUnlocked = { unlocked = true })
                     }
                 }

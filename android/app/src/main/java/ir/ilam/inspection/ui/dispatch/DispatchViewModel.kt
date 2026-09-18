@@ -14,8 +14,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -50,9 +48,7 @@ class DispatchViewModel(
     val files = container.fileStore
 
     /** A manager is offered every document category, an expert only what exists. */
-    val isManager: StateFlow<Boolean> = container.settingsRepository.settings
-        .map { it.role == UserRole.MANAGER }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    val isManager: Boolean = UserRole.isManager
 
     private val builder = DispatchBuilder(container)
 
@@ -89,8 +85,7 @@ class DispatchViewModel(
                 _state.update { it.copy(busy = false, message = R.string.export_failed) }
                 return@launch
             }
-            val expertName = container.settingsRepository.settings.first().expertName
-            val bundle = builder.build(report, current, expertName, context)
+            val bundle = builder.build(report, current, context)
 
             if (bundle.isEmpty && !bundle.viaPrintSheet) {
                 _state.update { it.copy(busy = false, message = R.string.export_failed) }

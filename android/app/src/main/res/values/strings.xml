@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">بازدید رمزارز</string>
 
     <!-- ناوبری اصلی -->
     <string name="tab_pending">در دست اقدام</string>
@@ -368,6 +367,23 @@
 
     <!-- تنظیمات و همگام‌سازی -->
     <string name="settings_title">تنظیمات</string>
+    <string name="users_title">مدیریت کاربران سامانه</string>
+    <string name="users_registered">کاربران ثبت‌شده</string>
+    <string name="users_empty">هنوز کاربری ثبت نشده است</string>
+    <string name="users_add">افزودن کاربر</string>
+    <string name="users_editor">مشخصات کاربر</string>
+    <string name="users_full_name">نام و نام خانوادگی</string>
+    <string name="users_user_code">کد کاربری</string>
+    <string name="users_county">شهرستان محل خدمت</string>
+    <string name="users_phone">شماره همراه</string>
+    <string name="users_device_code">کد دستگاه</string>
+    <string name="users_note">توضیح</string>
+    <string name="users_device">کد دستگاه: %1$s</string>
+    <string name="users_editor_hint">کد دستگاه را دقیقاً همان‌طور که روی گوشی کارشناس نمایش داده شده وارد کنید. با حذف و نصب دوباره برنامه یا تعویض گوشی، این کد عوض می‌شود و باید دوباره ثبت شود.</string>
+    <string name="users_saved">کاربر ذخیره شد</string>
+    <string name="users_deleted">کاربر حذف شد</string>
+    <string name="users_incomplete">نام و کد کاربری الزامی است</string>
+    <string name="settings_device_code">کد این دستگاه</string>
     <string name="settings_expert_code">کد کارشناس</string>
     <string name="settings_expert_name">نام کارشناس</string>
     <string name="settings_default_area">کد ناحیه پیش‌فرض</string>
@@ -383,7 +399,7 @@
     <string name="dispatch_photo_unnamed">تصویر بدون شرح</string>
     <string name="settings_optional_hint">پر کردن این فرم اجباری نیست و مرحله بعدی ندارد. «آدرس مقصد» را خالی بگذارید؛ هنگام همگام‌سازی، ویندوز به گوشی وصل می‌شود نه برعکس. برای بازگشت، فلش بالای صفحه را بزنید.</string>
     <string name="settings_media_quality">کیفیت رسانه</string>
-    <string name="settings_pin">تغییر رمز ورود</string>
+    <string name="settings_pin">تغییر رمز عبور</string>
     <string name="settings_saved">تنظیمات ذخیره شد</string>
     <string name="sync_title">همگام‌سازی</string>
     <string name="sync_start_server">شروع همگام‌سازی وای‌فای</string>
@@ -401,10 +417,15 @@
 
     <!-- قفل برنامه -->
     <string name="lock_title">ورود به برنامه</string>
-    <string name="lock_enter_pin">رمز عبور را وارد کنید</string>
-    <string name="lock_set_pin">یک رمز عبور شش‌رقمی تعیین کنید</string>
-    <string name="lock_confirm_pin">رمز عبور را دوباره وارد کنید</string>
-    <string name="lock_wrong_pin">رمز عبور نادرست است</string>
+    <string name="lock_user_code">کد کاربری</string>
+    <string name="lock_enter_password">رمز عبور</string>
+    <string name="lock_set_password">رمز عبور جدید</string>
+    <string name="lock_confirm_password">تکرار رمز عبور</string>
+    <string name="lock_wrong_password">رمز عبور نادرست است</string>
+    <string name="lock_short_password">رمز عبور باید حداقل شش نویسه باشد</string>
+    <string name="lock_missing_user_code">کد کاربری را وارد کنید</string>
+    <string name="lock_device_code">کد این دستگاه</string>
+    <string name="lock_device_code_hint">این کد و شماره همراه خود را برای مدیر سامانه بفرستید تا کد کاربری شما ثبت شود. با حذف و نصب دوباره برنامه یا تعویض گوشی، این کد عوض می‌شود و باید دوباره ثبت شود.</string>
     <string name="lock_mismatch">دو رمز یکسان نیستند</string>
     <string name="lock_biometric">ورود با اثر انگشت</string>
     <string name="lock_biometric_title">احراز هویت</string>

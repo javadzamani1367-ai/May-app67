@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -90,8 +89,7 @@ class CaseDetailViewModel(
         viewModelScope.launch {
             val current = detail.value ?: container.reportRepository.detail(reportId) ?: return@launch
             _busy.value = true
-            val expertName = container.settingsRepository.settings.first().expertName
-            val html = container.htmlReportBuilder.build(current, expertName)
+            val html = container.htmlReportBuilder.build(current)
             val outcome = runCatching {
                 container.pdfExporter.export(html, fileNameFor(current), context)
             }.getOrDefault(PdfOutcome.Failed)
@@ -104,18 +102,17 @@ class CaseDetailViewModel(
         }
     }
 
-    fun exportWord(context: Context) = exportFile(context) { detail, expertName ->
+    fun exportWord(context: Context) = exportFile(context) { detail ->
         withContext(Dispatchers.IO) {
-            container.wordExporter.export(detail, fileNameFor(detail), expertName)
+            container.wordExporter.export(detail, fileNameFor(detail))
         }
     }
 
-    private fun exportFile(context: Context, block: suspend (ReportDetail, String) -> File?) {
+    private fun exportFile(context: Context, block: suspend (ReportDetail) -> File?) {
         viewModelScope.launch {
             val current = detail.value ?: container.reportRepository.detail(reportId) ?: return@launch
             _busy.value = true
-            val expertName = container.settingsRepository.settings.first().expertName
-            val file = runCatching { block(current, expertName) }.getOrNull()
+            val file = runCatching { block(current) }.getOrNull()
             _busy.value = false
             if (file == null) {
                 _message.value = R.string.export_failed

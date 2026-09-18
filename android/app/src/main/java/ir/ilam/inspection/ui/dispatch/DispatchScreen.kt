@@ -52,7 +52,6 @@ fun DispatchScreen(reportId: String, onBack: () -> Unit) {
     )
     val detail by viewModel.detail.collectAsStateWithLifecycle()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val isManager by viewModel.isManager.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -98,7 +97,7 @@ fun DispatchScreen(reportId: String, onBack: () -> Unit) {
                     detail = current,
                     state = state,
                     files = viewModel.files,
-                    isManager = isManager,
+                    isManager = viewModel.isManager,
                     onToggleReportForm = viewModel::toggleReportForm,
                     onToggleFullBundle = viewModel::toggleFullBundle,
                     onToggleMedia = viewModel::toggleMedia,

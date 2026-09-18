@@ -32,7 +32,6 @@ class DispatchBuilder(private val container: AppContainer) {
     suspend fun build(
         detail: ReportDetail,
         state: DispatchState,
-        expertName: String,
         context: Context
     ): DispatchBundle {
         val baseName = (detail.report.displayCode ?: detail.report.id.take(8)) +
@@ -46,13 +45,13 @@ class DispatchBuilder(private val container: AppContainer) {
         val wantsWord = state.fullBundle || state.format == OutputFormat.WORD
 
         if (state.includeReportForm && wantsPdf) {
-            when (val outcome = pdf(detail, state, expertName, baseName, context)) {
+            when (val outcome = pdf(detail, state, baseName, context)) {
                 is PdfOutcome.Saved -> files += outcome.file
                 else -> viaPrintSheet = true
             }
         }
         if (state.includeReportForm && wantsWord) {
-            word(detail, state, expertName, baseName)?.let { files += it }
+            word(detail, state, baseName)?.let { files += it }
         }
 
         files += selectedFiles(detail, state)
@@ -78,13 +77,11 @@ class DispatchBuilder(private val container: AppContainer) {
     private suspend fun pdf(
         detail: ReportDetail,
         state: DispatchState,
-        expertName: String,
         baseName: String,
         context: Context
     ): PdfOutcome {
         val html = container.htmlReportBuilder.build(
             detail = detail,
-            expertName = expertName,
             selectedMediaIds = state.mediaIds,
             selectedAttachmentIds = state.attachmentIds,
             dispatchNote = state.note
@@ -96,15 +93,13 @@ class DispatchBuilder(private val container: AppContainer) {
     private suspend fun word(
         detail: ReportDetail,
         state: DispatchState,
-        expertName: String,
         baseName: String
     ): File? = runCatching {
         withContext(Dispatchers.IO) {
             container.wordExporter.export(
                 detail = detail,
                 fileName = baseName,
-                expertName = expertName,
-                selectedMediaIds = state.mediaIds,
+                    selectedMediaIds = state.mediaIds,
                 selectedAttachmentIds = state.attachmentIds,
                 dispatchNote = state.note
             )

@@ -22,7 +22,6 @@ class HtmlReportBuilder(private val context: Context, private val files: FileSto
     /** [selectedMediaIds] null means every photo; used by selective dispatch. */
     fun build(
         detail: ReportDetail,
-        expertName: String = "",
         selectedMediaIds: Set<String>? = null,
         selectedAttachmentIds: Set<String>? = null,
         dispatchNote: String? = null
@@ -37,7 +36,7 @@ class HtmlReportBuilder(private val context: Context, private val files: FileSto
             append(style())
             append("</head><body>")
             append(header(detail))
-            append(section(R.string.form_section_1, rows(caseRows(detail, expertName))))
+            append(section(R.string.form_section_1, rows(caseRows(detail))))
             append(section(R.string.form_section_2, rows(locationRows(detail))))
             append(section(R.string.form_section_3, rows(ownerRows(detail))))
             append(section(R.string.form_section_4, rows(technicalRows(detail))))
@@ -93,12 +92,12 @@ class HtmlReportBuilder(private val context: Context, private val files: FileSto
         """.trimIndent()
     }
 
-    private fun caseRows(detail: ReportDetail, expertName: String): List<Pair<String, String?>> {
+    private fun caseRows(detail: ReportDetail): List<Pair<String, String?>> {
         val report = detail.report
-        val expert = listOfNotNull(
-            expertName.ifBlank { null },
-            report.expertCode?.let { PersianNumbers.toPersian(it) }
-        ).joinToString(" - ")
+        // The form carries the expert's code and nothing more: the name
+        // behind it belongs to the manager's register, not to a document
+        // that leaves for another organisation.
+        val expert = report.expertCode?.let { PersianNumbers.toPersian(it) }
         return listOf(
             text(R.string.form_tracking_code) to TrackingCode.forDisplay(report.displayCode),
             text(R.string.form_report_type) to reportTypeName(report.reportType),

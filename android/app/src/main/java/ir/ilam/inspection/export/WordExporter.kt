@@ -26,7 +26,6 @@ class WordExporter(private val context: Context, private val files: FileStore) {
     fun export(
         detail: ReportDetail,
         fileName: String,
-        expertName: String = "",
         selectedMediaIds: Set<String>? = null,
         selectedAttachmentIds: Set<String>? = null,
         dispatchNote: String? = null
@@ -47,7 +46,7 @@ class WordExporter(private val context: Context, private val files: FileStore) {
                 centered = true
             )
         )
-        body.append(section(R.string.form_section_1, caseRows(detail, expertName)))
+        body.append(section(R.string.form_section_1, caseRows(detail)))
         body.append(section(R.string.form_section_2, locationRows(detail)))
         body.append(section(R.string.form_section_3, ownerRows(detail)))
         body.append(section(R.string.form_section_4, technicalRows(detail)))
@@ -103,17 +102,16 @@ class WordExporter(private val context: Context, private val files: FileStore) {
         WordDocumentXml.heading(label(titleRes)) +
             WordDocumentXml.table(rows.map { listOf(it.first, escape(it.second).ifBlank { "—" }) }, false)
 
-    private fun caseRows(detail: ReportDetail, expertName: String): List<Pair<String, String?>> {
+    private fun caseRows(detail: ReportDetail): List<Pair<String, String?>> {
         val report = detail.report
         return listOf(
             label(R.string.form_tracking_code) to TrackingCode.forDisplay(report.displayCode),
             label(R.string.form_report_type) to labels.reportType(report.reportType),
             label(R.string.form_report_date) to PersianDate.format(report.reportDate),
             label(R.string.form_visit_date) to report.visitDate?.let { PersianDate.format(it) },
-            label(R.string.form_expert) to listOfNotNull(
-                expertName.ifBlank { null },
-                PersianNumbers.toPersian(report.expertCode).ifBlank { null }
-            ).joinToString(" - "),
+            // The code and nothing more: the name behind it belongs to the
+            // manager's register, not to a document leaving for another unit.
+            label(R.string.form_expert) to PersianNumbers.toPersian(report.expertCode),
             label(R.string.form_status) to labels.status(report.status)
         )
     }

@@ -6,6 +6,7 @@ import ir.ilam.inspection.data.repo.CaseContentRepository
 import ir.ilam.inspection.data.repo.ReportRepository
 import ir.ilam.inspection.data.repo.SettingsRepository
 import ir.ilam.inspection.data.repo.SnippetRepository
+import ir.ilam.inspection.data.repo.UserRepository
 import ir.ilam.inspection.export.ExcelExporter
 import ir.ilam.inspection.export.HtmlReportBuilder
 import ir.ilam.inspection.export.PdfExporter
@@ -26,6 +27,7 @@ class AppContainer(private val context: Context) {
 
     val settingsRepository: SettingsRepository by lazy { SettingsRepository(database.settingDao()) }
     val snippetRepository: SnippetRepository by lazy { SnippetRepository(database.snippetDao()) }
+    val userRepository: UserRepository by lazy { UserRepository(database.userDao()) }
     val reportRepository: ReportRepository by lazy { ReportRepository(database, settingsRepository, fileStore) }
     val contentRepository: CaseContentRepository by lazy {
         CaseContentRepository(database, reportRepository, fileStore)

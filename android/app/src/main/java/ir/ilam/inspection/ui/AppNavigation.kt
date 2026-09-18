@@ -12,6 +12,7 @@ import ir.ilam.inspection.ui.dispatch.DispatchScreen
 import ir.ilam.inspection.ui.intake.IntakeScreen
 import ir.ilam.inspection.ui.pending.HomeScreen
 import ir.ilam.inspection.ui.settings.SettingsScreen
+import ir.ilam.inspection.ui.users.UsersScreen
 import ir.ilam.inspection.ui.stats.StatsScreen
 import ir.ilam.inspection.ui.visit.VisitScreen
 
@@ -24,6 +25,7 @@ object Routes {
     const val DISPATCH = "dispatch/{id}"
     const val SETTINGS = "settings"
     const val STATS = "stats"
+    const val USERS = "users"
 
     fun visit(id: String) = "visit/$id"
     fun detail(id: String) = "case/$id"
@@ -78,10 +80,16 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             )
         }
         composable(Routes.SETTINGS) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onUsers = { navController.navigate(Routes.USERS) }
+            )
         }
         composable(Routes.STATS) {
             StatsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.USERS) {
+            UsersScreen(onBack = { navController.popBackStack() })
         }
     }
 }

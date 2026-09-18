@@ -48,6 +48,27 @@ android {
         }
     }
 
+    // Two apps from one codebase. The role is decided by which APK was
+    // installed, not by a setting a user could change: an expert must not be
+    // able to give themselves the manager's screens by tapping a dropdown.
+    flavorDimensions += "role"
+    productFlavors {
+        create("expert") {
+            dimension = "role"
+            applicationIdSuffix = ".expert"
+            versionNameSuffix = "-expert"
+            resValue("string", "app_name", "بازدید رمزارز — کارشناس")
+            buildConfigField("boolean", "MANAGER", "false")
+        }
+        create("manager") {
+            dimension = "role"
+            applicationIdSuffix = ".manager"
+            versionNameSuffix = "-manager"
+            resValue("string", "app_name", "بازدید رمزارز — مدیر")
+            buildConfigField("boolean", "MANAGER", "true")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -66,6 +87,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources.excludes += setOf("/META-INF/{AL2.0,LGPL2.1}")

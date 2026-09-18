@@ -36,19 +36,17 @@ import ir.ilam.inspection.container
 import ir.ilam.inspection.ui.common.AppTextField
 import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
-import ir.ilam.inspection.ui.common.DropdownField
 import ir.ilam.inspection.ui.common.NumberField
 import ir.ilam.inspection.ui.common.SectionCard
 import ir.ilam.inspection.ui.common.ValueRow
-import ir.ilam.inspection.ui.common.userRoleLabel
 import ir.ilam.inspection.util.PersianNumbers
 
-private const val PIN_LENGTH = 6
+private const val MIN_PASSWORD = 6
 
 /** Expert identity, county area codes, media quality and synchronisation. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
+fun SettingsScreen(onBack: () -> Unit, onUsers: () -> Unit) {
     val context = LocalContext.current
     val appContainer = context.container
     val viewModel: SettingsViewModel = viewModel(
@@ -62,7 +60,8 @@ fun SettingsScreen(onBack: () -> Unit) {
     val packagePassword by viewModel.packagePassword.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
 
-    var expertCode by remember(settings.expertCode) { mutableStateOf(settings.expertCode) }
+    val expertCode = viewModel.userCode.ifBlank { settings.expertCode }
+    val deviceCode = viewModel.deviceCode
     var expertName by remember(settings.expertName) { mutableStateOf(settings.expertName) }
     var areaCode by remember(settings.defaultAreaCode) { mutableStateOf(settings.defaultAreaCode) }
     var syncTarget by remember(settings.syncTarget) { mutableStateOf(settings.syncTarget) }
@@ -109,22 +108,23 @@ fun SettingsScreen(onBack: () -> Unit) {
 
             SectionCard(title = stringResource(R.string.settings_title)) {
                 Column {
-                    AppTextField(
-                        stringResource(R.string.settings_expert_name),
-                        expertName,
-                        { expertName = it }
-                    )
-                    AppTextField(
+                    // The name behind a code is the manager's record. On an
+                    // expert's phone it is not shown at all, and the reports
+                    // that leave the phone carry only the code.
+                    if (UserRole.isManager) {
+                        AppTextField(
+                            stringResource(R.string.settings_expert_name),
+                            expertName,
+                            { expertName = it }
+                        )
+                    }
+                    ValueRow(
                         stringResource(R.string.settings_expert_code),
-                        expertCode,
-                        { expertCode = it }
+                        PersianNumbers.toPersian(expertCode)
                     )
-                    DropdownField(
-                        label = stringResource(R.string.settings_role),
-                        options = UserRole.entries.toList(),
-                        selected = settings.role,
-                        optionLabel = { userRoleLabel(it) },
-                        onSelect = viewModel::setRole
+                    ValueRow(
+                        stringResource(R.string.settings_device_code),
+                        PersianNumbers.toPersian(deviceCode)
                     )
                     NumberField(
                         stringResource(R.string.settings_default_area),
@@ -162,6 +162,14 @@ fun SettingsScreen(onBack: () -> Unit) {
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(top = 8.dp)
                         )
+                    }
+                    if (UserRole.isManager) {
+                        OutlinedButton(
+                            onClick = onUsers,
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                        ) {
+                            Text(stringResource(R.string.users_title))
+                        }
                     }
                     Text(
                         text = stringResource(R.string.settings_optional_hint),
@@ -233,20 +241,20 @@ fun SettingsScreen(onBack: () -> Unit) {
 
             SectionCard(title = stringResource(R.string.settings_pin)) {
                 Column {
-                    NumberField(
-                        label = stringResource(R.string.lock_set_pin),
+                    AppTextField(
+                        label = stringResource(R.string.lock_set_password),
                         value = pin,
-                        onValueChange = { if (it.length <= PIN_LENGTH) pin = it },
+                        onValueChange = { pin = it },
                         imeAction = ImeAction.Done
                     )
                     Button(
                         onClick = {
-                            if (pin.length == PIN_LENGTH) {
+                            if (pin.length >= MIN_PASSWORD) {
                                 viewModel.changePin(pin)
                                 pin = ""
                             }
                         },
-                        enabled = pin.length == PIN_LENGTH,
+                        enabled = pin.length >= MIN_PASSWORD,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                     ) {
                         Text(stringResource(R.string.action_save))

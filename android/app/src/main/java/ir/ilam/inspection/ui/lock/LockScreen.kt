@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,26 +29,35 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.KeyStoreVault
-import ir.ilam.inspection.ui.common.NumberField
+import ir.ilam.inspection.ui.common.AppTextField
 import ir.ilam.inspection.util.BiometricGate
+import ir.ilam.inspection.util.PersianNumbers
 
-private const val PIN_LENGTH = 6
+private const val MIN_PASSWORD = 6
 
 /**
- * Entry gate. A PIN is mandatory — owner names, national ids and the names of
- * security personnel are in this database. Fingerprint is offered when the
- * device has it enrolled.
+ * Entry gate. Owner names, national ids and the names of security and police
+ * personnel are in this database, so there is no way past this screen.
+ *
+ * First run shows this installation's own code. The expert reads it to the
+ * manager along with their mobile number; the manager records it against a
+ * user code in the register, and that user code is what the expert enters
+ * here and what every report they file carries. Removing the app destroys the
+ * code, so a reinstall or a new phone has to go back to the manager.
  */
 @Composable
 fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
     val context = LocalContext.current
-    var pin by remember { mutableStateOf("") }
+    var userCode by remember { mutableStateOf(vault.userCode().orEmpty()) }
+    var password by remember { mutableStateOf("") }
     var confirm by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     val settingUp = remember { !vault.hasPin() }
 
-    val wrongPin = stringResource(R.string.lock_wrong_pin)
+    val wrongPassword = stringResource(R.string.lock_wrong_password)
+    val shortPassword = stringResource(R.string.lock_short_password)
     val mismatch = stringResource(R.string.lock_mismatch)
+    val missingCode = stringResource(R.string.lock_missing_user_code)
     val promptTitle = stringResource(R.string.lock_biometric_title)
     val cancelLabel = stringResource(R.string.action_cancel)
 
@@ -64,6 +75,7 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .imePadding()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -72,23 +84,29 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
             text = stringResource(R.string.lock_title),
             style = MaterialTheme.typography.headlineMedium
         )
-        Text(
-            text = stringResource(if (settingUp) R.string.lock_set_pin else R.string.lock_enter_pin),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(vertical = 12.dp)
+
+        DeviceCodeCard(vault = vault, firstRun = settingUp)
+
+        AppTextField(
+            label = stringResource(R.string.lock_user_code),
+            value = userCode,
+            onValueChange = { userCode = it },
+            imeAction = ImeAction.Next
         )
-        NumberField(
-            label = stringResource(R.string.lock_enter_pin),
-            value = pin,
-            onValueChange = { if (it.length <= PIN_LENGTH) pin = it },
+        AppTextField(
+            label = stringResource(
+                if (settingUp) R.string.lock_set_password else R.string.lock_enter_password
+            ),
+            value = password,
+            onValueChange = { password = it },
             error = error,
             imeAction = if (settingUp) ImeAction.Next else ImeAction.Done
         )
         if (settingUp) {
-            NumberField(
-                label = stringResource(R.string.lock_confirm_pin),
+            AppTextField(
+                label = stringResource(R.string.lock_confirm_password),
                 value = confirm,
-                onValueChange = { if (it.length <= PIN_LENGTH) confirm = it },
+                onValueChange = { confirm = it },
                 imeAction = ImeAction.Done
             )
         }
@@ -96,14 +114,19 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
             onClick = {
                 error = null
                 when {
-                    pin.length != PIN_LENGTH -> error = wrongPin
-                    settingUp && pin != confirm -> error = mismatch
+                    userCode.isBlank() -> error = missingCode
+                    settingUp && password.length < MIN_PASSWORD -> error = shortPassword
+                    settingUp && password != confirm -> error = mismatch
                     settingUp -> {
-                        vault.setPin(pin)
+                        vault.setUserCode(userCode)
+                        vault.setPin(password)
                         onUnlocked()
                     }
-                    vault.verifyPin(pin) -> onUnlocked()
-                    else -> error = wrongPin
+                    vault.verifyPin(password) -> {
+                        vault.setUserCode(userCode)
+                        onUnlocked()
+                    }
+                    else -> error = wrongPassword
                 }
             },
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
@@ -114,6 +137,32 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
             TextButton(onClick = { askFingerprint() }) {
                 Text(stringResource(R.string.lock_biometric))
             }
+        }
+    }
+}
+
+/** The installation's code, with the instruction that goes with it. */
+@Composable
+private fun DeviceCodeCard(vault: KeyStoreVault, firstRun: Boolean) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.lock_device_code),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = PersianNumbers.toPersian(vault.deviceCodeForDisplay()),
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(vertical = 6.dp)
+        )
+        if (firstRun) {
+            Text(
+                text = stringResource(R.string.lock_device_code_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

@@ -37,6 +37,31 @@ class KeyStoreVault(context: Context) {
         return fresh
     }
 
+    /**
+     * This installation's own code. Generated once from 64 random bits, so a
+     * repeat is not something that happens in practice, and it lives with the
+     * other secrets — uninstalling the app destroys it, which is exactly the
+     * intent: a reinstall or a new phone is a new device and has to be
+     * registered again.
+     */
+    fun deviceCode(): String {
+        val stored = prefs.getString(KEY_DEVICE_CODE, null)
+        if (stored != null) return stored
+        val generated = ByteArray(8).also { SecureRandom().nextBytes(it) }.toHex().uppercase()
+        prefs.edit().putString(KEY_DEVICE_CODE, generated).apply()
+        return generated
+    }
+
+    /** The same code in groups of four, which is what a person reads aloud. */
+    fun deviceCodeForDisplay(): String = deviceCode().chunked(4).joinToString("-")
+
+    /** The user code this phone was activated with, shown on every report. */
+    fun userCode(): String? = prefs.getString(KEY_USER_CODE, null)
+
+    fun setUserCode(code: String) {
+        prefs.edit().putString(KEY_USER_CODE, code.trim()).apply()
+    }
+
     fun hasPin(): Boolean = prefs.contains(KEY_PIN_HASH)
 
     fun setPin(pin: String) {
@@ -86,5 +111,7 @@ class KeyStoreVault(context: Context) {
         const val KEY_PIN_HASH = "pin_hash"
         const val KEY_PIN_SALT = "pin_salt"
         const val KEY_PACKAGE_PASSWORD = "package_password"
+        const val KEY_DEVICE_CODE = "device_code"
+        const val KEY_USER_CODE = "user_code"
     }
 }

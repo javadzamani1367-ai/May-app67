@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.AppContainer
-import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.data.repo.AppSettings
 import ir.ilam.inspection.export.ShareUtil
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +18,12 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(private val container: AppContainer) : ViewModel() {
 
     private val repository = container.settingsRepository
+
+    /** Shown so the manager can be told what to register against this phone. */
+    val deviceCode: String = container.vault.deviceCodeForDisplay()
+
+    /** Set at login and carried by every report this phone files. */
+    val userCode: String = container.vault.userCode().orEmpty()
 
     val settings: StateFlow<AppSettings> = repository.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
@@ -52,7 +57,6 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
 
     fun setMediaQuality(quality: Int) = launchSaving { repository.setMediaQuality(quality) }
 
-    fun setRole(role: UserRole) = launchSaving { repository.setRole(role) }
 
     fun toggleServer() {
         viewModelScope.launch {
