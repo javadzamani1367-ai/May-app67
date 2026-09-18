@@ -65,6 +65,32 @@ namespace CryptoInspection.Archive.Data
 
                 transaction.Commit();
             }
+
+            AddMissingColumns();
+        }
+
+        /// <summary>
+        /// Brings an archive built by an older version up to date. Each column
+        /// is added on its own connection: SQLite fails the statement when the
+        /// column is already there, and that failure must not take the rest of
+        /// the list, or the whole startup, down with it.
+        /// </summary>
+        private void AddMissingColumns()
+        {
+            using (SqliteConnection connection = Open())
+            {
+                foreach (string statement in Schema.AddedColumns)
+                {
+                    try
+                    {
+                        Execute(connection, statement);
+                    }
+                    catch (SqliteException)
+                    {
+                        // Already present.
+                    }
+                }
+            }
         }
 
         public static void Execute(
@@ -128,6 +154,11 @@ namespace CryptoInspection.Archive.Data
         public static int GetInt(IDataRecord record, int index)
         {
             return record.IsDBNull(index) ? 0 : (int)record.GetInt64(index);
+        }
+
+        public static int? GetNullableInt(IDataRecord record, int index)
+        {
+            return record.IsDBNull(index) ? (int?)null : (int)record.GetInt64(index);
         }
 
         public static double? GetNullableDouble(IDataRecord record, int index)

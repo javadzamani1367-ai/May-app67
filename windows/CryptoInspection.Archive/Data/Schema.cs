@@ -7,7 +7,7 @@ namespace CryptoInspection.Archive.Data
     /// </summary>
     public static class Schema
     {
-        public const int Version = 1;
+        public const int Version = 2;
 
         public static readonly string[] Statements =
         {
@@ -28,6 +28,12 @@ namespace CryptoInspection.Archive.Data
                 file_number TEXT, bill_number TEXT, subscription_number TEXT, usage_type TEXT,
                 owner_name TEXT, owner_national_id TEXT, owner_phone TEXT, owner_relation TEXT,
                 meter_amperage REAL, measured_amperage REAL, connection_type TEXT, seal_status TEXT,
+                tap_point INTEGER, phase_type INTEGER,
+                amperage_r REAL, amperage_s REAL, amperage_t REAL,
+                voltage_r REAL, voltage_s REAL, voltage_t REAL,
+                total_watt REAL, tariff_type INTEGER, meter_type INTEGER,
+                seal_external INTEGER, seal_external_serial TEXT, seal_internal INTEGER,
+                meter_appearance_ok INTEGER, meter_tampered INTEGER,
                 description TEXT, actions_taken TEXT)",
 
             @"CREATE UNIQUE INDEX IF NOT EXISTS index_reports_tracking_code
@@ -94,6 +100,32 @@ namespace CryptoInspection.Archive.Data
                 last_updated_at INTEGER NOT NULL,
                 last_received_at INTEGER NOT NULL,
                 report_count INTEGER NOT NULL)"
+        };
+
+        /// <summary>
+        /// Columns added after version 1. An archive created by an older build
+        /// already has its tables, so CREATE TABLE IF NOT EXISTS would skip
+        /// them for ever; these are added one by one and a column that is
+        /// already there simply fails and is ignored.
+        /// </summary>
+        public static readonly string[] AddedColumns =
+        {
+            "ALTER TABLE reports ADD COLUMN tap_point INTEGER",
+            "ALTER TABLE reports ADD COLUMN phase_type INTEGER",
+            "ALTER TABLE reports ADD COLUMN amperage_r REAL",
+            "ALTER TABLE reports ADD COLUMN amperage_s REAL",
+            "ALTER TABLE reports ADD COLUMN amperage_t REAL",
+            "ALTER TABLE reports ADD COLUMN voltage_r REAL",
+            "ALTER TABLE reports ADD COLUMN voltage_s REAL",
+            "ALTER TABLE reports ADD COLUMN voltage_t REAL",
+            "ALTER TABLE reports ADD COLUMN total_watt REAL",
+            "ALTER TABLE reports ADD COLUMN tariff_type INTEGER",
+            "ALTER TABLE reports ADD COLUMN meter_type INTEGER",
+            "ALTER TABLE reports ADD COLUMN seal_external INTEGER",
+            "ALTER TABLE reports ADD COLUMN seal_external_serial TEXT",
+            "ALTER TABLE reports ADD COLUMN seal_internal INTEGER",
+            "ALTER TABLE reports ADD COLUMN meter_appearance_ok INTEGER",
+            "ALTER TABLE reports ADD COLUMN meter_tampered INTEGER"
         };
     }
 }

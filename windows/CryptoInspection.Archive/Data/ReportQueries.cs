@@ -25,7 +25,10 @@ namespace CryptoInspection.Archive.Data
             "created_at, updated_at, synced_at, county, district, address, postal_code, latitude, " +
             "longitude, gps_accuracy, file_number, bill_number, subscription_number, usage_type, " +
             "owner_name, owner_national_id, owner_phone, owner_relation, meter_amperage, " +
-            "measured_amperage, connection_type, seal_status, description, actions_taken";
+            "measured_amperage, connection_type, seal_status, description, actions_taken, " +
+            "tap_point, phase_type, amperage_r, amperage_s, amperage_t, voltage_r, voltage_s, " +
+            "voltage_t, total_watt, tariff_type, meter_type, seal_external, seal_external_serial, " +
+            "seal_internal, meter_appearance_ok, meter_tampered";
 
         private readonly Database _database;
 
@@ -288,7 +291,23 @@ namespace CryptoInspection.Archive.Data
                 ConnectionType = Database.GetString(record, 28),
                 SealStatus = Database.GetString(record, 29),
                 Description = Database.GetString(record, 30),
-                ActionsTaken = Database.GetString(record, 31)
+                ActionsTaken = Database.GetString(record, 31),
+                TapPoint = Database.GetNullableInt(record, 32),
+                PhaseType = Database.GetNullableInt(record, 33),
+                AmperageR = Database.GetNullableDouble(record, 34),
+                AmperageS = Database.GetNullableDouble(record, 35),
+                AmperageT = Database.GetNullableDouble(record, 36),
+                VoltageR = Database.GetNullableDouble(record, 37),
+                VoltageS = Database.GetNullableDouble(record, 38),
+                VoltageT = Database.GetNullableDouble(record, 39),
+                TotalWatt = Database.GetNullableDouble(record, 40),
+                TariffType = Database.GetNullableInt(record, 41),
+                MeterType = Database.GetNullableInt(record, 42),
+                SealExternal = Database.GetNullableInt(record, 43),
+                SealExternalSerial = Database.GetString(record, 44),
+                SealInternal = Database.GetNullableInt(record, 45),
+                MeterAppearanceOk = Database.GetNullableInt(record, 46),
+                MeterTampered = Database.GetNullableInt(record, 47)
             };
         }
     }

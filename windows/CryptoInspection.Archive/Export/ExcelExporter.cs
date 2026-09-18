@@ -48,8 +48,9 @@ namespace CryptoInspection.Archive.Export
             {
                 "column_tracking_code", "column_report_type", "column_report_date", "column_visit_date",
                 "column_county", "column_district", "column_address", "column_subscription",
-                "column_file_number", "column_bill_number", "column_owner", "column_meter_amperage",
-                "column_measured_amperage", "column_device_count", "column_total_power", "column_status",
+                "column_file_number", "column_bill_number", "column_owner", "form_phase_type",
+                "column_measured_amperage", "column_total_watt", "column_device_count",
+                "column_total_power", "column_status",
                 "column_expert", "column_coordinates"
             };
 
@@ -79,8 +80,9 @@ namespace CryptoInspection.Archive.Export
             sheet.Cell(row, column++).Value = PersianNumbers.ToPersian(r.FileNumber);
             sheet.Cell(row, column++).Value = PersianNumbers.ToPersian(r.BillNumber);
             sheet.Cell(row, column++).Value = r.OwnerName ?? string.Empty;
-            sheet.Cell(row, column++).Value = PersianNumbers.ToPersian(r.MeterAmperage);
+            sheet.Cell(row, column++).Value = Labels.PhaseType(r.PhaseType) ?? string.Empty;
             sheet.Cell(row, column++).Value = PersianNumbers.ToPersian(r.MeasuredAmperage);
+            sheet.Cell(row, column++).Value = PersianNumbers.ToPersian(r.TotalWatt);
             sheet.Cell(row, column++).Value = PersianNumbers.ToPersian(detail.DeviceCount);
             sheet.Cell(row, column++).Value = PersianNumbers.ToPersian(detail.TotalPower);
             sheet.Cell(row, column++).Value = Labels.Status(r.Status);

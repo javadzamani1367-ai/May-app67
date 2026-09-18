@@ -148,15 +148,8 @@ class WordExporter(private val context: Context, private val files: FileStore) {
         )
     }
 
-    private fun technicalRows(detail: ReportDetail): List<Pair<String, String?>> {
-        val r = detail.report
-        return listOf(
-            label(R.string.field_meter_amperage) to PersianNumbers.toPersian(r.meterAmperage),
-            label(R.string.field_measured_amperage) to PersianNumbers.toPersian(r.measuredAmperage),
-            label(R.string.field_connection_type) to r.connectionType,
-            label(R.string.field_seal_status) to r.sealStatus
-        )
-    }
+    private fun technicalRows(detail: ReportDetail): List<Pair<String, String?>> =
+        technicalReportRows(detail.report, labels)
 
     private fun deviceRows(detail: ReportDetail): List<List<String>> {
         val header = listOf(

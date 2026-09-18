@@ -143,10 +143,44 @@
     <string name="error_national_id">کد ملی معتبر نیست</string>
 
     <!-- فنی -->
-    <string name="field_meter_amperage">آمپراژ کنتور</string>
-    <string name="field_measured_amperage">آمپراژ مصرفی اندازه‌گیری‌شده</string>
-    <string name="field_connection_type">نوع انشعاب</string>
-    <string name="field_seal_status">وضعیت مهر و موم</string>
+    <string name="field_measured_amperage">مجموع آمپر مصرفی</string>
+    <string-array name="tariff_types">
+        <item>خانگی</item>
+        <item>صنعتی</item>
+        <item>کشاورزی</item>
+        <item>عمومی</item>
+        <item>سایر مصارف</item>
+        <item>بدون انشعاب — غیرمجاز از شبکه</item>
+    </string-array>
+    <string name="field_tap_point">محل برداشت برق</string>
+    <string name="tap_before_meter">قبل از کنتور</string>
+    <string name="tap_after_meter">بعد از کنتور</string>
+    <string name="field_phase_type">نوع انشعاب</string>
+    <string name="phase_single">تکفاز</string>
+    <string name="phase_three">سه فاز</string>
+    <string name="field_amperage">آمپر</string>
+    <string name="field_voltage">ولتاژ</string>
+    <string name="field_amperage_phase">آمپر فاز %1$s</string>
+    <string name="field_voltage_phase">ولتاژ فاز %1$s</string>
+    <string name="field_power_phase">توان فاز %1$s</string>
+    <string name="field_power_total">مجموع توان</string>
+    <string name="field_power_kilowatt">مجموع توان (کیلووات)</string>
+    <string name="power_not_computed">برای محاسبه توان، آمپر و ولتاژ را وارد کنید</string>
+    <string name="unit_watt">%1$s وات</string>
+    <string name="unit_kilowatt">%1$s کیلووات</string>
+    <string name="unit_ampere">%1$s آمپر</string>
+    <string name="field_tariff_type">نوع تعرفه در محل</string>
+    <string name="field_meter_type">نوع کنتور</string>
+    <string name="meter_mechanical">کنتور مکانیکی</string>
+    <string name="meter_digital">کنتور دیجیتال</string>
+    <string name="field_meter_health">وضعیت سلامت کنتور</string>
+    <string name="question_seal_external">آیا کنتور پلمب خارجی دارد؟</string>
+    <string name="field_seal_external_serial">سریال پلمب</string>
+    <string name="question_seal_internal">آیا کنتور پلمب داخلی دارد؟</string>
+    <string name="question_appearance_ok">وضعیت ظاهری کنتور سالم است؟</string>
+    <string name="question_tampered">دستکاری در کنتور وجود دارد؟</string>
+    <string name="answer_yes">بله</string>
+    <string name="answer_no">خیر</string>
 
     <!-- دستگاه‌ها -->
     <string name="devices_title">دستگاه‌های استخراج</string>
@@ -196,6 +230,7 @@
     <string-array name="photo_captions">
         <item>تصویر کلی ملک</item>
         <item>تصویر پلاک پایه انشعاب</item>
+        <item>تصویر پلمب کنتور</item>
         <item>تصویر انشعاب غیرمجاز ۱</item>
         <item>تصویر انشعاب غیرمجاز ۲</item>
         <item>تصویر آمپراژ مصرفی</item>
@@ -229,7 +264,7 @@
     <string name="complete_missing_title">موارد ناقص</string>
     <string name="missing_gps">مختصات GIS ثبت نشده است</string>
     <string name="missing_photo">حداقل یک تصویر لازم است</string>
-    <string name="missing_meter_amperage">آمپراژ کنتور وارد نشده است</string>
+    <string name="missing_measurement">آمپر و ولتاژ اندازه‌گیری‌شده وارد نشده است</string>
     <string name="missing_description">شرح بازدید خالی است</string>
     <string name="complete_done">پرونده به بازدید شده تغییر یافت</string>
     <string name="action_archive">انتقال به بایگانی</string>
@@ -303,10 +338,11 @@
         <item>شماره پرونده</item>
         <item>شماره قبض</item>
         <item>نام مالک</item>
-        <item>آمپراژ کنتور</item>
-        <item>آمپراژ مصرفی</item>
+        <item>نوع انشعاب</item>
+        <item>مجموع آمپر مصرفی</item>
+        <item>توان اندازه‌گیری‌شده (وات)</item>
         <item>تعداد دستگاه</item>
-        <item>مجموع توان</item>
+        <item>مجموع توان دستگاه‌ها (وات)</item>
         <item>وضعیت</item>
         <item>کارشناس</item>
         <item>مختصات</item>

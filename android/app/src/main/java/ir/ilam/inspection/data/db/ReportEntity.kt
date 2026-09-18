@@ -53,10 +53,31 @@ data class ReportEntity(
     @ColumnInfo(name = "owner_relation") val ownerRelation: String? = null,
 
     // technical
+    // meter_amperage and the two free-text columns below are schema version 1
+    // fields. Nothing writes them any more — the measurement is now per phase
+    // and the answers are coded — but they stay so a version 1 archive keeps
+    // reading, and so old cases do not lose what was typed into them.
     @ColumnInfo(name = "meter_amperage") val meterAmperage: Double? = null,
-    @ColumnInfo(name = "measured_amperage") val measuredAmperage: Double? = null,
     @ColumnInfo(name = "connection_type") val connectionType: String? = null,
     @ColumnInfo(name = "seal_status") val sealStatus: String? = null,
+    /** Total measured amperage: the sum of the phases, kept for reporting. */
+    @ColumnInfo(name = "measured_amperage") val measuredAmperage: Double? = null,
+    @ColumnInfo(name = "tap_point") val tapPoint: Int? = null,
+    @ColumnInfo(name = "phase_type") val phaseType: Int? = null,
+    @ColumnInfo(name = "amperage_r") val amperageR: Double? = null,
+    @ColumnInfo(name = "amperage_s") val amperageS: Double? = null,
+    @ColumnInfo(name = "amperage_t") val amperageT: Double? = null,
+    @ColumnInfo(name = "voltage_r") val voltageR: Double? = null,
+    @ColumnInfo(name = "voltage_s") val voltageS: Double? = null,
+    @ColumnInfo(name = "voltage_t") val voltageT: Double? = null,
+    @ColumnInfo(name = "total_watt") val totalWatt: Double? = null,
+    @ColumnInfo(name = "tariff_type") val tariffType: Int? = null,
+    @ColumnInfo(name = "meter_type") val meterType: Int? = null,
+    @ColumnInfo(name = "seal_external") val sealExternal: Int? = null,
+    @ColumnInfo(name = "seal_external_serial") val sealExternalSerial: String? = null,
+    @ColumnInfo(name = "seal_internal") val sealInternal: Int? = null,
+    @ColumnInfo(name = "meter_appearance_ok") val meterAppearanceOk: Int? = null,
+    @ColumnInfo(name = "meter_tampered") val meterTampered: Int? = null,
 
     // narrative
     @ColumnInfo(name = "description") val description: String? = null,

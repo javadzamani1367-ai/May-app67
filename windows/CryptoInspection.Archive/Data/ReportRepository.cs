@@ -99,6 +99,10 @@ namespace CryptoInspection.Archive.Data
                     file_number, bill_number, subscription_number, usage_type,
                     owner_name, owner_national_id, owner_phone, owner_relation,
                     meter_amperage, measured_amperage, connection_type, seal_status,
+                    tap_point, phase_type, amperage_r, amperage_s, amperage_t,
+                    voltage_r, voltage_s, voltage_t, total_watt, tariff_type, meter_type,
+                    seal_external, seal_external_serial, seal_internal,
+                    meter_appearance_ok, meter_tampered,
                     description, actions_taken)
                   VALUES (
                     $id, $tracking_code, $temp_code, $report_type, $status, $expert_code,
@@ -107,6 +111,10 @@ namespace CryptoInspection.Archive.Data
                     $file_number, $bill_number, $subscription_number, $usage_type,
                     $owner_name, $owner_national_id, $owner_phone, $owner_relation,
                     $meter_amperage, $measured_amperage, $connection_type, $seal_status,
+                    $tap_point, $phase_type, $amperage_r, $amperage_s, $amperage_t,
+                    $voltage_r, $voltage_s, $voltage_t, $total_watt, $tariff_type, $meter_type,
+                    $seal_external, $seal_external_serial, $seal_internal,
+                    $meter_appearance_ok, $meter_tampered,
                     $description, $actions_taken)",
                 transaction,
                 command =>
@@ -141,6 +149,22 @@ namespace CryptoInspection.Archive.Data
                     Database.Bind(command, "$measured_amperage", report.MeasuredAmperage);
                     Database.Bind(command, "$connection_type", report.ConnectionType);
                     Database.Bind(command, "$seal_status", report.SealStatus);
+                    Database.Bind(command, "$tap_point", report.TapPoint);
+                    Database.Bind(command, "$phase_type", report.PhaseType);
+                    Database.Bind(command, "$amperage_r", report.AmperageR);
+                    Database.Bind(command, "$amperage_s", report.AmperageS);
+                    Database.Bind(command, "$amperage_t", report.AmperageT);
+                    Database.Bind(command, "$voltage_r", report.VoltageR);
+                    Database.Bind(command, "$voltage_s", report.VoltageS);
+                    Database.Bind(command, "$voltage_t", report.VoltageT);
+                    Database.Bind(command, "$total_watt", report.TotalWatt);
+                    Database.Bind(command, "$tariff_type", report.TariffType);
+                    Database.Bind(command, "$meter_type", report.MeterType);
+                    Database.Bind(command, "$seal_external", report.SealExternal);
+                    Database.Bind(command, "$seal_external_serial", report.SealExternalSerial);
+                    Database.Bind(command, "$seal_internal", report.SealInternal);
+                    Database.Bind(command, "$meter_appearance_ok", report.MeterAppearanceOk);
+                    Database.Bind(command, "$meter_tampered", report.MeterTampered);
                     Database.Bind(command, "$description", report.Description);
                     Database.Bind(command, "$actions_taken", report.ActionsTaken);
                 });

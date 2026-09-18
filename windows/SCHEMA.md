@@ -1,6 +1,6 @@
 # اسکیمای مشترک — مرجع سمت ویندوز
 
-نسخه اسکیما: **۱** (`SCHEMA_VERSION = 1`)
+نسخه اسکیما: **۲** (`SCHEMA_VERSION = 2`)
 
 این فایل آینه اسکیمای اندروید است. هر تغییری در `android/app/src/main/java/ir/ilam/inspection/data/db/`
 باید همین‌جا هم اعمال شود و شماره نسخه بالا برود. دست‌دادن `GET /ping` نسخه را برمی‌گرداند؛
@@ -33,7 +33,22 @@ CREATE TABLE reports (
   latitude REAL, longitude REAL, gps_accuracy REAL,
   file_number TEXT, bill_number TEXT, subscription_number TEXT, usage_type TEXT,
   owner_name TEXT, owner_national_id TEXT, owner_phone TEXT, owner_relation TEXT,
-  meter_amperage REAL, measured_amperage REAL, connection_type TEXT, seal_status TEXT,
+  -- ستون‌های نسخه ۱؛ دیگر نوشته نمی‌شوند ولی برای سازگاری باقی مانده‌اند
+  meter_amperage REAL, connection_type TEXT, seal_status TEXT,
+  -- اندازه‌گیری فاز به فاز (نسخه ۲)
+  measured_amperage REAL,            -- مجموع آمپر فازها، محاسبه‌شده
+  tap_point INTEGER,                 -- ۰ قبل از کنتور / ۱ بعد از کنتور
+  phase_type INTEGER,                -- ۰ تکفاز / ۱ سه فاز
+  amperage_r REAL, amperage_s REAL, amperage_t REAL,
+  voltage_r REAL, voltage_s REAL, voltage_t REAL,
+  total_watt REAL,                   -- مجموع توان، محاسبه‌شده
+  tariff_type INTEGER,               -- ۰ خانگی / ۱ صنعتی / ۲ کشاورزی / ۳ عمومی / ۴ سایر / ۵ بدون انشعاب
+  meter_type INTEGER,                -- ۰ مکانیکی / ۱ دیجیتال
+  seal_external INTEGER,             -- ۰ خیر / ۱ بله / تهی یعنی بی‌پاسخ
+  seal_external_serial TEXT,
+  seal_internal INTEGER,
+  meter_appearance_ok INTEGER,
+  meter_tampered INTEGER,
   description TEXT, actions_taken TEXT
 );
 CREATE UNIQUE INDEX index_reports_tracking_code ON reports (tracking_code);

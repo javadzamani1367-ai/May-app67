@@ -6,6 +6,11 @@ import ir.ilam.inspection.data.model.AttachmentCategory
 import ir.ilam.inspection.data.model.AttendeeOrg
 import ir.ilam.inspection.data.model.DispatchUnit
 import ir.ilam.inspection.data.model.EntryMethod
+import ir.ilam.inspection.data.model.MeterType
+import ir.ilam.inspection.data.model.PhaseType
+import ir.ilam.inspection.data.model.TapPoint
+import ir.ilam.inspection.data.model.TariffType
+import ir.ilam.inspection.data.model.YesNo
 import ir.ilam.inspection.data.model.ReportStatus
 import ir.ilam.inspection.data.model.ReportType
 
@@ -16,6 +21,44 @@ import ir.ilam.inspection.data.model.ReportType
 class ReportLabels(private val context: Context) {
 
     fun text(res: Int): String = context.getString(res)
+
+    fun text(res: Int, argument: String): String = context.getString(res, argument)
+
+    fun tapPoint(code: Int?): String? = TapPoint.of(code)?.let {
+        context.getString(
+            when (it) {
+                TapPoint.BEFORE_METER -> R.string.tap_before_meter
+                TapPoint.AFTER_METER -> R.string.tap_after_meter
+            }
+        )
+    }
+
+    fun phaseType(code: Int?): String? = PhaseType.of(code)?.let {
+        context.getString(
+            when (it) {
+                PhaseType.SINGLE -> R.string.phase_single
+                PhaseType.THREE -> R.string.phase_three
+            }
+        )
+    }
+
+    fun tariffType(code: Int?): String? = TariffType.of(code)?.let {
+        context.resources.getStringArray(R.array.tariff_types).getOrNull(it.code)
+    }
+
+    fun meterType(code: Int?): String? = MeterType.of(code)?.let {
+        context.getString(
+            when (it) {
+                MeterType.MECHANICAL -> R.string.meter_mechanical
+                MeterType.DIGITAL -> R.string.meter_digital
+            }
+        )
+    }
+
+    /** An unanswered question stays blank; it is not turned into a "no". */
+    fun yesNo(code: Int?): String? = YesNo.of(code)?.let {
+        context.getString(if (it) R.string.answer_yes else R.string.answer_no)
+    }
 
     fun reportType(code: Int): String = context.getString(
         when (ReportType.of(code)) {

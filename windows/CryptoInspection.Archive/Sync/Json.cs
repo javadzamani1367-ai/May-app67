@@ -75,6 +75,16 @@ namespace CryptoInspection.Archive.Sync
             return (int)Long(key);
         }
 
+        /// <summary>
+        /// A coded answer that may be absent. Absent is not zero: zero means
+        /// the expert answered "no", absent means nobody answered at all.
+        /// </summary>
+        public int? NullableInt(string key)
+        {
+            long? value = NullableLong(key);
+            return value.HasValue ? (int?)value.Value : null;
+        }
+
         public double? NullableDouble(string key)
         {
             object value;

@@ -42,6 +42,23 @@ namespace CryptoInspection.Archive.Data
         public string ConnectionType { get; set; }
         public string SealStatus { get; set; }
 
+        public int? TapPoint { get; set; }
+        public int? PhaseType { get; set; }
+        public double? AmperageR { get; set; }
+        public double? AmperageS { get; set; }
+        public double? AmperageT { get; set; }
+        public double? VoltageR { get; set; }
+        public double? VoltageS { get; set; }
+        public double? VoltageT { get; set; }
+        public double? TotalWatt { get; set; }
+        public int? TariffType { get; set; }
+        public int? MeterType { get; set; }
+        public int? SealExternal { get; set; }
+        public string SealExternalSerial { get; set; }
+        public int? SealInternal { get; set; }
+        public int? MeterAppearanceOk { get; set; }
+        public int? MeterTampered { get; set; }
+
         public string Description { get; set; }
         public string ActionsTaken { get; set; }
 

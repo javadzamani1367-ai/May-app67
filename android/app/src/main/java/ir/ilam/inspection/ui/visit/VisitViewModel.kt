@@ -13,6 +13,7 @@ import android.net.Uri
 import ir.ilam.inspection.data.model.MediaCaptions
 import ir.ilam.inspection.data.model.MediaType
 import ir.ilam.inspection.data.model.ReportDetail
+import ir.ilam.inspection.data.model.TechnicalInput
 import ir.ilam.inspection.util.Fix
 import ir.ilam.inspection.util.PersianNumbers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -123,21 +124,9 @@ class VisitViewModel(private val container: AppContainer, private val reportId: 
 
     // ---- step 3: technical ------------------------------------------------
 
-    fun setTechnical(
-        meterAmperage: String? = null,
-        measuredAmperage: String? = null,
-        connectionType: String? = null,
-        sealStatus: String? = null
-    ) = edit { current ->
-        current.copy(
-            meterAmperage = meterAmperage?.let { PersianNumbers.parseDoubleOrNull(it) }
-                ?: current.meterAmperage,
-            measuredAmperage = measuredAmperage?.let { PersianNumbers.parseDoubleOrNull(it) }
-                ?: current.measuredAmperage,
-            connectionType = connectionType ?: current.connectionType,
-            sealStatus = sealStatus ?: current.sealStatus
-        )
-    }
+    /** Step three writes as one block; the parsing and arithmetic live in
+     * [TechnicalInput], so a change to the formula never touches this file. */
+    fun setTechnical(input: TechnicalInput) = edit { input.applyTo(it) }
 
     // ---- step 4: devices and attendees ------------------------------------
 

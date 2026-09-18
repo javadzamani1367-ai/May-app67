@@ -8,6 +8,10 @@ import ir.ilam.inspection.data.model.AttachmentCategory
 import ir.ilam.inspection.data.model.AttendeeOrg
 import ir.ilam.inspection.data.model.DispatchUnit
 import ir.ilam.inspection.data.model.EntryMethod
+import ir.ilam.inspection.data.model.MeterType
+import ir.ilam.inspection.data.model.PhaseType
+import ir.ilam.inspection.data.model.TapPoint
+import ir.ilam.inspection.data.model.TariffType
 import ir.ilam.inspection.data.model.OutputFormat
 import ir.ilam.inspection.data.model.ReportStatus
 import ir.ilam.inspection.data.model.ReportType
@@ -80,5 +84,33 @@ fun userRoleLabel(role: UserRole): String = stringResource(
     when (role) {
         UserRole.EXPERT -> R.string.role_expert
         UserRole.MANAGER -> R.string.role_manager
+    }
+)
+
+@Composable
+fun tapPointLabel(point: TapPoint): String = stringResource(
+    when (point) {
+        TapPoint.BEFORE_METER -> R.string.tap_before_meter
+        TapPoint.AFTER_METER -> R.string.tap_after_meter
+    }
+)
+
+@Composable
+fun phaseTypeLabel(type: PhaseType): String = stringResource(
+    when (type) {
+        PhaseType.SINGLE -> R.string.phase_single
+        PhaseType.THREE -> R.string.phase_three
+    }
+)
+
+@Composable
+fun tariffTypeLabel(type: TariffType): String =
+    stringArrayResource(R.array.tariff_types).getOrElse(type.code) { "" }
+
+@Composable
+fun meterTypeLabel(type: MeterType): String = stringResource(
+    when (type) {
+        MeterType.MECHANICAL -> R.string.meter_mechanical
+        MeterType.DIGITAL -> R.string.meter_digital
     }
 )

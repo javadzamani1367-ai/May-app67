@@ -15,7 +15,7 @@ object Completion {
         val problems = mutableListOf<Int>()
         if (report.latitude == null || report.longitude == null) problems += R.string.missing_gps
         if (detail.photos.isEmpty()) problems += R.string.missing_photo
-        if (report.meterAmperage == null) problems += R.string.missing_meter_amperage
+        if (!TechnicalInput.from(report).power().hasReading) problems += R.string.missing_measurement
         if (report.description.isNullOrBlank()) problems += R.string.missing_description
         return problems
     }

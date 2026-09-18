@@ -140,15 +140,8 @@ class HtmlReportBuilder(private val context: Context, private val files: FileSto
         )
     }
 
-    private fun technicalRows(detail: ReportDetail): List<Pair<String, String?>> {
-        val r = detail.report
-        return listOf(
-            text(R.string.field_meter_amperage) to PersianNumbers.toPersian(r.meterAmperage),
-            text(R.string.field_measured_amperage) to PersianNumbers.toPersian(r.measuredAmperage),
-            text(R.string.field_connection_type) to r.connectionType,
-            text(R.string.field_seal_status) to r.sealStatus
-        )
-    }
+    private fun technicalRows(detail: ReportDetail): List<Pair<String, String?>> =
+        technicalReportRows(detail.report, labels)
 
     private fun deviceTable(detail: ReportDetail): String {
         if (detail.devices.isEmpty()) return "<p>${text(R.string.devices_empty)}</p>"
