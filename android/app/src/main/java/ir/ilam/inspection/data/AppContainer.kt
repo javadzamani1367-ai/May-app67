@@ -14,6 +14,7 @@ import ir.ilam.inspection.export.PdfExporter
 import ir.ilam.inspection.export.WordExporter
 import ir.ilam.inspection.sync.SyncService
 import ir.ilam.inspection.util.AppFonts
+import ir.ilam.inspection.sync.ApprovalSync
 import ir.ilam.inspection.util.FileStore
 import ir.ilam.inspection.util.MediaImporter
 import ir.ilam.inspection.util.MediaProcessor
@@ -30,6 +31,7 @@ class AppContainer(private val context: Context) {
     val snippetRepository: SnippetRepository by lazy { SnippetRepository(database.snippetDao()) }
     val userRepository: UserRepository by lazy { UserRepository(database.userDao()) }
     val accountRepository: AccountRepository by lazy { AccountRepository(vault, settingsRepository) }
+    val approvalSync: ApprovalSync by lazy { ApprovalSync(vault, settingsRepository) }
     val reportRepository: ReportRepository by lazy { ReportRepository(database, settingsRepository, fileStore) }
     val contentRepository: CaseContentRepository by lazy {
         CaseContentRepository(database, reportRepository, fileStore)

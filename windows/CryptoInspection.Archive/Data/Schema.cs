@@ -7,7 +7,7 @@ namespace CryptoInspection.Archive.Data
     /// </summary>
     public static class Schema
     {
-        public const int Version = 2;
+        public const int Version = 3;
 
         public static readonly string[] Statements =
         {
@@ -34,6 +34,7 @@ namespace CryptoInspection.Archive.Data
                 total_watt REAL, tariff_type INTEGER, meter_type INTEGER,
                 seal_external INTEGER, seal_external_serial TEXT, seal_internal INTEGER,
                 meter_appearance_ok INTEGER, meter_tampered INTEGER,
+                approval_state INTEGER NOT NULL DEFAULT 0, approval_comment TEXT, approval_at INTEGER,
                 description TEXT, actions_taken TEXT)",
 
             @"CREATE UNIQUE INDEX IF NOT EXISTS index_reports_tracking_code
@@ -86,7 +87,12 @@ namespace CryptoInspection.Archive.Data
                 included_items TEXT NOT NULL,
                 note TEXT,
                 output_format INTEGER NOT NULL,
-                dispatched_at INTEGER NOT NULL)",
+                dispatched_at INTEGER NOT NULL,
+                channel INTEGER NOT NULL DEFAULT 0,
+                deadline_at INTEGER,
+                status INTEGER NOT NULL DEFAULT 0,
+                answered_at INTEGER,
+                answer TEXT)",
             @"CREATE INDEX IF NOT EXISTS index_dispatches_report_id ON dispatches (report_id)",
 
             @"CREATE TABLE IF NOT EXISTS settings (
@@ -125,7 +131,15 @@ namespace CryptoInspection.Archive.Data
             "ALTER TABLE reports ADD COLUMN seal_external_serial TEXT",
             "ALTER TABLE reports ADD COLUMN seal_internal INTEGER",
             "ALTER TABLE reports ADD COLUMN meter_appearance_ok INTEGER",
-            "ALTER TABLE reports ADD COLUMN meter_tampered INTEGER"
+            "ALTER TABLE reports ADD COLUMN meter_tampered INTEGER",
+            "ALTER TABLE reports ADD COLUMN approval_state INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE reports ADD COLUMN approval_comment TEXT",
+            "ALTER TABLE reports ADD COLUMN approval_at INTEGER",
+            "ALTER TABLE dispatches ADD COLUMN channel INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE dispatches ADD COLUMN deadline_at INTEGER",
+            "ALTER TABLE dispatches ADD COLUMN status INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE dispatches ADD COLUMN answered_at INTEGER",
+            "ALTER TABLE dispatches ADD COLUMN answer TEXT"
         };
     }
 }

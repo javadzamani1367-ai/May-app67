@@ -14,14 +14,14 @@ import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
  * with `windows/SCHEMA.md`; the sync handshake refuses to talk to an archive
  * built against a different version.
  */
-const val SCHEMA_VERSION = 2
+const val SCHEMA_VERSION = 3
 
 /**
  * Room's own version. It moves ahead of [SCHEMA_VERSION] whenever the phone
  * gains a table the archive has no business knowing about — a local typing
  * convenience must not make an up-to-date archive look incompatible.
  */
-const val DATABASE_VERSION = 4
+const val DATABASE_VERSION = 5
 
 @Database(
     entities = [
@@ -131,13 +131,34 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Version 3 of the shared schema: a dispatch now records how it left,
+         * by when the unit has to answer, and what came back; and a case
+         * carries the manager's decision, because it cannot be filed for good
+         * until that decision exists.
+         */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                listOf(
+                    "ALTER TABLE dispatches ADD COLUMN channel INTEGER NOT NULL DEFAULT 0",
+                    "ALTER TABLE dispatches ADD COLUMN deadline_at INTEGER",
+                    "ALTER TABLE dispatches ADD COLUMN status INTEGER NOT NULL DEFAULT 0",
+                    "ALTER TABLE dispatches ADD COLUMN answered_at INTEGER",
+                    "ALTER TABLE dispatches ADD COLUMN answer TEXT",
+                    "ALTER TABLE reports ADD COLUMN approval_state INTEGER NOT NULL DEFAULT 0",
+                    "ALTER TABLE reports ADD COLUMN approval_comment TEXT",
+                    "ALTER TABLE reports ADD COLUMN approval_at INTEGER"
+                ).forEach { db.execSQL(it) }
+            }
+        }
+
         private fun build(context: Context): AppDatabase {
             System.loadLibrary("sqlcipher")
             val passphrase = KeyStoreVault(context).databasePassphrase()
             val factory = SupportOpenHelperFactory(passphrase)
             return Room.databaseBuilder(context, AppDatabase::class.java, DB_NAME)
                 .openHelperFactory(factory)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
         }
     }

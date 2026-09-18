@@ -120,6 +120,27 @@ class ServerApi(private val baseUrl: String) {
     suspend fun deactivateUser(token: String, id: String): ApiResult<Boolean> =
         post("users/delete", JSONObject().put("id", id), token) { true }
 
+    // ---- approval cycle --------------------------------------------------
+
+    suspend fun submitApproval(token: String, reportId: String): ApiResult<Boolean> =
+        post("approvals/submit", JSONObject().put("report_id", reportId), token) { true }
+
+    suspend fun decideApproval(
+        token: String,
+        reportId: String,
+        state: ir.ilam.inspection.data.model.ApprovalState,
+        comment: String
+    ): ApiResult<Boolean> = post(
+        path = "approvals/decide",
+        token = token,
+        body = JSONObject()
+            .put("report_id", reportId)
+            // The server speaks of approved and returned only; the phone's
+            // draft and pending have no decision to report.
+            .put("decision", if (state == ir.ilam.inspection.data.model.ApprovalState.APPROVED) 1 else 2)
+            .put("comment", comment)
+    ) { true }
+
     private fun org.json.JSONArray?.toUsers(): List<RemoteUser> =
         (0 until (this?.length() ?: 0)).mapNotNull { index ->
             this?.optJSONObject(index)?.let { row ->

@@ -4,6 +4,7 @@ import ir.ilam.inspection.data.db.AppDatabase
 import ir.ilam.inspection.data.db.ReportEntity
 import ir.ilam.inspection.data.model.Completion
 import ir.ilam.inspection.data.model.ReportDetail
+import ir.ilam.inspection.data.model.ApprovalState
 import ir.ilam.inspection.data.model.ReportStatus
 import ir.ilam.inspection.data.model.ReportType
 import ir.ilam.inspection.util.FileStore
@@ -174,6 +175,40 @@ class ReportRepository(
      * acknowledged it, so deleting on the phone can never be the moment the
      * only copy disappears.
      */
+    /**
+     * Hands the case to the manager. It is frozen from here until a decision
+     * comes back, so the documents the manager is reading cannot change under
+     * them halfway through the review.
+     */
+    suspend fun submitForApproval(id: String) {
+        edit(id) {
+            it.copy(
+                approvalState = ApprovalState.PENDING.code,
+                approvalComment = null,
+                approvalAt = System.currentTimeMillis()
+            )
+        }
+    }
+
+    /** The manager's answer, whether it came from this phone or the server. */
+    suspend fun recordApproval(id: String, state: ApprovalState, comment: String?) {
+        edit(id) {
+            it.copy(
+                approvalState = state.code,
+                approvalComment = comment?.trim()?.ifBlank { null },
+                approvalAt = System.currentTimeMillis()
+            )
+        }
+    }
+
+    /**
+     * A case is filed for good only once the manager has accepted it. Without
+     * this, "final registration" would mean nothing more than the expert
+     * deciding they were finished.
+     */
+    fun canArchive(report: ReportEntity): Boolean =
+        ApprovalState.of(report.approvalState) == ApprovalState.APPROVED
+
     fun canDelete(report: ReportEntity): Boolean = when (ReportStatus.of(report.status)) {
         ReportStatus.PENDING -> true
         else -> report.syncedAt != null && report.updatedAt <= report.syncedAt

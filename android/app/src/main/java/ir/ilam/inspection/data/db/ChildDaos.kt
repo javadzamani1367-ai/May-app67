@@ -117,6 +117,9 @@ interface DispatchDao {
 
     @Query("SELECT * FROM dispatches WHERE report_id = :reportId ORDER BY dispatched_at DESC")
     suspend fun listFor(reportId: String): List<DispatchEntity>
+
+    @Query("SELECT * FROM dispatches WHERE id = :id")
+    suspend fun byId(id: String): DispatchEntity?
 }
 
 @Dao

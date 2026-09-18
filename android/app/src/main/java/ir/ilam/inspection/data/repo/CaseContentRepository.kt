@@ -11,6 +11,8 @@ import ir.ilam.inspection.data.model.AttendeeOrg
 import ir.ilam.inspection.data.model.DispatchUnit
 import ir.ilam.inspection.data.model.EntryMethod
 import ir.ilam.inspection.data.model.MediaType
+import ir.ilam.inspection.data.model.DispatchChannel
+import ir.ilam.inspection.data.model.DispatchStatus
 import ir.ilam.inspection.data.model.OutputFormat
 import ir.ilam.inspection.util.FileStore
 import org.json.JSONArray
@@ -163,19 +165,44 @@ class CaseContentRepository(
         unit: DispatchUnit,
         includedItemIds: List<String>,
         note: String?,
-        format: OutputFormat
-    ) {
+        format: OutputFormat,
+        channel: DispatchChannel = DispatchChannel.SYSTEM,
+        deadlineDays: Int? = null
+    ): String {
         val items = JSONArray().apply { includedItemIds.forEach { put(it) } }
+        val now = System.currentTimeMillis()
+        val entity = DispatchEntity(
+            reportId = reportId,
+            unit = unit.code,
+            includedItems = items.toString(),
+            note = note?.trim()?.ifBlank { null },
+            outputFormat = format.code,
+            dispatchedAt = now,
+            channel = channel.code,
+            // Stored as the moment it falls due, not as a number of days: the
+            // deadline must not move when the row is read on another day.
+            deadlineAt = deadlineDays?.takeIf { it > 0 }?.let { now + it * DAY_MILLIS }
+        )
+        db.dispatchDao().upsert(entity)
+        touch(reportId)
+        return entity.id
+    }
+
+    /** What the unit answered, brought back from the server. */
+    suspend fun recordDispatchAnswer(
+        dispatchId: String,
+        status: DispatchStatus,
+        answeredAt: Long?,
+        answer: String?
+    ) {
+        val existing = db.dispatchDao().byId(dispatchId) ?: return
         db.dispatchDao().upsert(
-            DispatchEntity(
-                reportId = reportId,
-                unit = unit.code,
-                includedItems = items.toString(),
-                note = note?.trim()?.ifBlank { null },
-                outputFormat = format.code
+            existing.copy(
+                status = status.code,
+                answeredAt = answeredAt ?: existing.answeredAt,
+                answer = answer ?: existing.answer
             )
         )
-        touch(reportId)
     }
 
     fun includedItems(dispatch: DispatchEntity): List<String> = runCatching {
@@ -185,5 +212,9 @@ class CaseContentRepository(
 
     private suspend fun touch(reportId: String) {
         reports.edit(reportId) { it }
+    }
+
+    private companion object {
+        const val DAY_MILLIS = 24L * 60 * 60 * 1000
     }
 }

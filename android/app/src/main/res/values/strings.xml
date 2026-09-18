@@ -301,6 +301,35 @@
     </string-array>
 
     <!-- ارسال مدارک -->
+    <string name="approval_state_label">وضعیت تأیید</string>
+    <string name="approval_state_draft">ارسال نشده</string>
+    <string name="approval_state_pending">در انتظار تأیید مدیر</string>
+    <string name="approval_state_approved">تأیید شده</string>
+    <string name="approval_state_returned">برگشت برای اصلاح</string>
+    <string name="approval_submit">ارسال برای تأیید مدیر</string>
+    <string name="approval_submitted">پرونده برای تأیید مدیر ارسال شد</string>
+    <string name="approval_locked">این پرونده در انتظار تأیید مدیر است و تا تعیین تکلیف قابل ویرایش نیست.</string>
+    <string name="approval_needed_to_archive">تا وقتی مدیر پرونده را تأیید نکند، ثبت نهایی و بایگانی انجام نمی‌شود.</string>
+    <string name="approval_comment">نظر مدیر</string>
+    <string name="approval_approve">تأیید پرونده</string>
+    <string name="approval_return">برگشت برای اصلاح</string>
+    <string name="approval_pending_title">پرونده‌های در انتظار تأیید</string>
+    <string name="approval_pending_empty">پرونده‌ای در انتظار تأیید نیست</string>
+    <string name="approval_decided">تصمیم شما ثبت شد</string>
+    <string name="dispatch_history">سوابق ارسال مدارک</string>
+    <string name="dispatch_history_empty">هنوز مدرکی برای هیچ واحدی ارسال نشده است</string>
+    <string name="dispatch_channel_system">از طریق سامانه</string>
+    <string name="dispatch_channel_social">شبکه اجتماعی</string>
+    <string name="dispatch_channel_offline">بسته آفلاین</string>
+    <string name="dispatch_status_sent">ارسال شده</string>
+    <string name="dispatch_status_seen">دیده شده</string>
+    <string name="dispatch_status_answered">پاسخ داده شده</string>
+    <string name="dispatch_status_overdue">مهلت گذشته</string>
+    <string name="dispatch_deadline">مهلت اعلام نتیجه</string>
+    <string name="dispatch_deadline_days">مهلت پاسخ (روز)</string>
+    <string name="dispatch_deadline_none">بدون مهلت</string>
+    <string name="dispatch_answer">پاسخ واحد</string>
+    <string name="dispatch_item_count">%1$s مورد</string>
     <string name="dispatch_title">ارسال مدارک</string>
     <string name="dispatch_unit">واحد مقصد</string>
     <string name="dispatch_items">موارد ارسالی</string>

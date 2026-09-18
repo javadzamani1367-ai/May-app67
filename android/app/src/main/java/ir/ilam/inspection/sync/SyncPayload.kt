@@ -59,6 +59,9 @@ object SyncPayload {
         json.put("seal_internal", r.sealInternal)
         json.put("meter_appearance_ok", r.meterAppearanceOk)
         json.put("meter_tampered", r.meterTampered)
+        json.put("approval_state", r.approvalState)
+        json.put("approval_comment", r.approvalComment)
+        json.put("approval_at", r.approvalAt)
         json.put("description", r.description)
         json.put("actions_taken", r.actionsTaken)
         json.put("devices", devices(detail))
@@ -143,6 +146,11 @@ object SyncPayload {
                     .put("note", dispatch.note)
                     .put("output_format", dispatch.outputFormat)
                     .put("dispatched_at", dispatch.dispatchedAt)
+                    .put("channel", dispatch.channel)
+                    .put("deadline_at", dispatch.deadlineAt)
+                    .put("status", dispatch.status)
+                    .put("answered_at", dispatch.answeredAt)
+                    .put("answer", dispatch.answer)
             )
         }
     }

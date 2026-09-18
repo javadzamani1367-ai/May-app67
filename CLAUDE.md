@@ -155,6 +155,10 @@ crypto-inspection/
 | `meter_appearance_ok` | INTEGER | سلامت ظاهری کنتور |
 | `meter_tampered` | INTEGER | وجود دستکاری |
 | `meter_amperage`, `connection_type`, `seal_status` | — | ستون‌های نسخه ۱، فقط برای سازگاری |
+| **تأیید مدیر** | | |
+| `approval_state` | INTEGER | ۰ پیش‌نویس / ۱ در انتظار / ۲ تأیید / ۳ برگشت برای اصلاح |
+| `approval_comment` | TEXT | نظر مدیر هنگام برگشت |
+| `approval_at` | INTEGER | زمان آخرین تغییر وضعیت |
 | **شرح** | | |
 | `description` | TEXT | شرح بازدید |
 | `actions_taken` | TEXT | اقدامات انجام‌شده |
@@ -220,6 +224,12 @@ crypto-inspection/
 | `note` | TEXT |
 | `output_format` | INTEGER — ۰ PDF / ۱ Word |
 | `dispatched_at` | INTEGER |
+| `channel` | INTEGER — ۰ سامانه / ۱ شبکه اجتماعی / ۲ بسته آفلاین |
+| `deadline_at` | INTEGER — مهلت اعلام نتیجه، تهی یعنی بدون مهلت |
+| `status` | INTEGER — ۰ ارسال‌شده / ۱ دیده‌شده / ۲ پاسخ داده‌شده |
+| `answered_at` / `answer` | INTEGER / TEXT — پاسخ واحد |
+
+«مهلت گذشته» هرگز ذخیره نمی‌شود و از روی `deadline_at` و `status` محاسبه می‌شود: یک ستون ذخیره‌شده به چیزی نیاز دارد که مدام به‌روزش کند و همان لحظه‌ای که کسی این کار را نکند غلط می‌شود.
 
 ### جدول `snippets` — متن‌های ذخیره‌شده کاربر (فقط روی گوشی)
 

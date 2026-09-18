@@ -144,6 +144,12 @@ fun CaseDetailScreen(
                 }
             }
 
+            ApprovalCard(
+                report = current.report,
+                onSubmit = viewModel::submitForApproval,
+                onDecide = viewModel::decide
+            )
+
             AttachmentSection(detail = current, viewModel = viewModel)
 
             SectionCard(title = stringResource(R.string.dispatch_history)) {
@@ -155,12 +161,8 @@ fun CaseDetailScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    dispatches.forEach { dispatch ->
-                        ValueRow(
-                            label = dispatchUnitLabel(DispatchUnit.of(dispatch.unit)) + " - " +
-                                outputFormatLabel(OutputFormat.of(dispatch.outputFormat)),
-                            value = PersianDate.format(dispatch.dispatchedAt)
-                        )
+                    dispatches.forEachIndexed { index, dispatch ->
+                        DispatchHistoryRow(dispatch = dispatch, showDivider = index > 0)
                     }
                 }
             }

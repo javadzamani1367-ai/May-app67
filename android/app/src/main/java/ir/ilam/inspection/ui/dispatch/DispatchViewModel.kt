@@ -10,6 +10,7 @@ import ir.ilam.inspection.data.model.OutputFormat
 import ir.ilam.inspection.data.model.ReportDetail
 import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.export.ShareUtil
+import ir.ilam.inspection.util.PersianNumbers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +28,8 @@ data class DispatchState(
     val format: OutputFormat = OutputFormat.PDF,
     /** Manager only: both formats plus every ticked document, in one send. */
     val fullBundle: Boolean = false,
+    /** Days the unit has to report back. Blank means no deadline is set. */
+    val deadlineDays: String = "",
     val busy: Boolean = false,
     val message: Int? = null
 )
@@ -60,6 +63,7 @@ class DispatchViewModel(
     fun setNote(note: String) = _state.update { it.copy(note = note) }
     fun toggleReportForm() = _state.update { it.copy(includeReportForm = !it.includeReportForm) }
     fun toggleFullBundle() = _state.update { it.copy(fullBundle = !it.fullBundle) }
+    fun setDeadlineDays(days: String) = _state.update { it.copy(deadlineDays = days) }
     fun clearMessage() = _state.update { it.copy(message = null) }
 
     fun toggleMedia(id: String) = _state.update {
@@ -99,7 +103,8 @@ class DispatchViewModel(
                 unit = current.unit,
                 includedItemIds = current.mediaIds.toList() + current.attachmentIds.toList(),
                 note = current.note,
-                format = current.format
+                format = current.format,
+                deadlineDays = PersianNumbers.parseIntOrNull(current.deadlineDays)
             )
 
             if (bundle.files.isNotEmpty()) {

@@ -79,6 +79,11 @@ data class ReportEntity(
     @ColumnInfo(name = "meter_appearance_ok") val meterAppearanceOk: Int? = null,
     @ColumnInfo(name = "meter_tampered") val meterTampered: Int? = null,
 
+    // approval — a case is not finally filed until the manager has said so
+    @ColumnInfo(name = "approval_state") val approvalState: Int = 0,
+    @ColumnInfo(name = "approval_comment") val approvalComment: String? = null,
+    @ColumnInfo(name = "approval_at") val approvalAt: Long? = null,
+
     // narrative
     @ColumnInfo(name = "description") val description: String? = null,
     @ColumnInfo(name = "actions_taken") val actionsTaken: String? = null

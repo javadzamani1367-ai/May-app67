@@ -65,6 +65,9 @@ namespace CryptoInspection.Archive.Sync
                     SealInternal = json.NullableInt("seal_internal"),
                     MeterAppearanceOk = json.NullableInt("meter_appearance_ok"),
                     MeterTampered = json.NullableInt("meter_tampered"),
+                    ApprovalState = json.Int("approval_state"),
+                    ApprovalComment = json.String("approval_comment"),
+                    ApprovalAt = json.NullableLong("approval_at"),
                     Description = json.String("description"),
                     ActionsTaken = json.String("actions_taken")
                 }
@@ -139,7 +142,12 @@ namespace CryptoInspection.Archive.Sync
                     IncludedItems = item.String("included_items"),
                     Note = item.String("note"),
                     OutputFormat = item.Int("output_format"),
-                    DispatchedAt = item.Long("dispatched_at")
+                    DispatchedAt = item.Long("dispatched_at"),
+                    Channel = item.Int("channel"),
+                    DeadlineAt = item.NullableLong("deadline_at"),
+                    Status = item.Int("status"),
+                    AnsweredAt = item.NullableLong("answered_at"),
+                    Answer = item.String("answer")
                 });
             }
 

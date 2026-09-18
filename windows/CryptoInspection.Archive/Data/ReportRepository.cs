@@ -103,6 +103,7 @@ namespace CryptoInspection.Archive.Data
                     voltage_r, voltage_s, voltage_t, total_watt, tariff_type, meter_type,
                     seal_external, seal_external_serial, seal_internal,
                     meter_appearance_ok, meter_tampered,
+                    approval_state, approval_comment, approval_at,
                     description, actions_taken)
                   VALUES (
                     $id, $tracking_code, $temp_code, $report_type, $status, $expert_code,
@@ -115,6 +116,7 @@ namespace CryptoInspection.Archive.Data
                     $voltage_r, $voltage_s, $voltage_t, $total_watt, $tariff_type, $meter_type,
                     $seal_external, $seal_external_serial, $seal_internal,
                     $meter_appearance_ok, $meter_tampered,
+                    $approval_state, $approval_comment, $approval_at,
                     $description, $actions_taken)",
                 transaction,
                 command =>
@@ -165,6 +167,9 @@ namespace CryptoInspection.Archive.Data
                     Database.Bind(command, "$seal_internal", report.SealInternal);
                     Database.Bind(command, "$meter_appearance_ok", report.MeterAppearanceOk);
                     Database.Bind(command, "$meter_tampered", report.MeterTampered);
+                    Database.Bind(command, "$approval_state", report.ApprovalState);
+                    Database.Bind(command, "$approval_comment", report.ApprovalComment);
+                    Database.Bind(command, "$approval_at", report.ApprovalAt);
                     Database.Bind(command, "$description", report.Description);
                     Database.Bind(command, "$actions_taken", report.ActionsTaken);
                 });
@@ -276,8 +281,9 @@ namespace CryptoInspection.Archive.Data
                 Database.Execute(
                     connection,
                     @"INSERT OR REPLACE INTO dispatches (id, report_id, unit, included_items, note,
-                        output_format, dispatched_at)
-                      VALUES ($id, $report, $unit, $items, $note, $format, $at)",
+                        output_format, dispatched_at, channel, deadline_at, status, answered_at, answer)
+                      VALUES ($id, $report, $unit, $items, $note, $format, $at, $channel,
+                              $deadline, $status, $answered, $answer)",
                     transaction,
                     command =>
                     {
@@ -288,6 +294,11 @@ namespace CryptoInspection.Archive.Data
                         Database.Bind(command, "$note", dispatch.Note);
                         Database.Bind(command, "$format", dispatch.OutputFormat);
                         Database.Bind(command, "$at", dispatch.DispatchedAt);
+                        Database.Bind(command, "$channel", dispatch.Channel);
+                        Database.Bind(command, "$deadline", dispatch.DeadlineAt);
+                        Database.Bind(command, "$status", dispatch.Status);
+                        Database.Bind(command, "$answered", dispatch.AnsweredAt);
+                        Database.Bind(command, "$answer", dispatch.Answer);
                     });
             }
         }

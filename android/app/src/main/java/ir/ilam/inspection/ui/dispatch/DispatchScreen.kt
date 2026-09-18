@@ -33,6 +33,7 @@ import ir.ilam.inspection.data.model.DispatchUnit
 import ir.ilam.inspection.data.model.OutputFormat
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
 import ir.ilam.inspection.ui.common.DropdownField
+import ir.ilam.inspection.ui.common.NumberField
 import ir.ilam.inspection.ui.common.dispatchUnitLabel
 import ir.ilam.inspection.ui.common.outputFormatLabel
 import ir.ilam.inspection.data.repo.SnippetFields
@@ -110,6 +111,11 @@ fun DispatchScreen(reportId: String, onBack: () -> Unit) {
                 onValueChange = viewModel::setNote,
                 fieldKey = SnippetFields.DISPATCH_NOTE,
                 multiline = true
+            )
+            NumberField(
+                label = stringResource(R.string.dispatch_deadline_days),
+                value = state.deadlineDays,
+                onValueChange = viewModel::setDeadlineDays
             )
             DropdownField(
                 label = stringResource(R.string.dispatch_format),

@@ -8,6 +8,7 @@ import ir.ilam.inspection.data.AppContainer
 import ir.ilam.inspection.data.db.AttachmentEntity
 import ir.ilam.inspection.data.db.DispatchEntity
 import ir.ilam.inspection.data.model.AttachmentCategory
+import ir.ilam.inspection.data.model.ApprovalState
 import ir.ilam.inspection.data.model.ReportDetail
 import ir.ilam.inspection.R
 import ir.ilam.inspection.export.PdfOutcome
@@ -45,8 +46,39 @@ class CaseDetailViewModel(
         _message.value = null
     }
 
+    /**
+     * Final filing. Refused until the manager has accepted the case: without
+     * that gate "final registration" would mean nothing more than the expert
+     * deciding they were finished.
+     */
     fun archive() {
-        viewModelScope.launch { container.reportRepository.archive(reportId) }
+        viewModelScope.launch {
+            val report = detail.value?.report ?: container.reportRepository.detail(reportId)?.report
+            if (report == null) return@launch
+            if (!container.reportRepository.canArchive(report)) {
+                _message.value = R.string.approval_needed_to_archive
+                return@launch
+            }
+            container.reportRepository.archive(reportId)
+        }
+    }
+
+    /** The expert hands the case to the manager, and the server is told too. */
+    fun submitForApproval() {
+        viewModelScope.launch {
+            container.reportRepository.submitForApproval(reportId)
+            _message.value = R.string.approval_submitted
+            runCatching { container.approvalSync.submit(reportId) }
+        }
+    }
+
+    /** The manager's decision, recorded here and pushed on when possible. */
+    fun decide(state: ApprovalState, comment: String) {
+        viewModelScope.launch {
+            container.reportRepository.recordApproval(reportId, state, comment)
+            _message.value = R.string.approval_decided
+            runCatching { container.approvalSync.decide(reportId, state, comment) }
+        }
     }
 
     fun reopen() {

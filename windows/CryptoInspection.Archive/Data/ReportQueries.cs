@@ -28,7 +28,8 @@ namespace CryptoInspection.Archive.Data
             "measured_amperage, connection_type, seal_status, description, actions_taken, " +
             "tap_point, phase_type, amperage_r, amperage_s, amperage_t, voltage_r, voltage_s, " +
             "voltage_t, total_watt, tariff_type, meter_type, seal_external, seal_external_serial, " +
-            "seal_internal, meter_appearance_ok, meter_tampered";
+            "seal_internal, meter_appearance_ok, meter_tampered, " +
+            "approval_state, approval_comment, approval_at";
 
         private readonly Database _database;
 
@@ -154,7 +155,8 @@ namespace CryptoInspection.Archive.Data
                     }));
 
                 Read(connection, "SELECT id, report_id, unit, included_items, note, output_format, " +
-                    "dispatched_at FROM dispatches WHERE report_id = $id ORDER BY dispatched_at DESC", id,
+                    "dispatched_at, channel, deadline_at, status, answered_at, answer " +
+                    "FROM dispatches WHERE report_id = $id ORDER BY dispatched_at DESC", id,
                     record => detail.Dispatches.Add(new Dispatch
                     {
                         Id = Database.GetString(record, 0),
@@ -163,7 +165,12 @@ namespace CryptoInspection.Archive.Data
                         IncludedItems = Database.GetString(record, 3),
                         Note = Database.GetString(record, 4),
                         OutputFormat = Database.GetInt(record, 5),
-                        DispatchedAt = Database.GetLong(record, 6)
+                        DispatchedAt = Database.GetLong(record, 6),
+                        Channel = Database.GetInt(record, 7),
+                        DeadlineAt = Database.GetNullableLong(record, 8),
+                        Status = Database.GetInt(record, 9),
+                        AnsweredAt = Database.GetNullableLong(record, 10),
+                        Answer = Database.GetString(record, 11)
                     }));
             }
 
@@ -307,7 +314,10 @@ namespace CryptoInspection.Archive.Data
                 SealExternalSerial = Database.GetString(record, 44),
                 SealInternal = Database.GetNullableInt(record, 45),
                 MeterAppearanceOk = Database.GetNullableInt(record, 46),
-                MeterTampered = Database.GetNullableInt(record, 47)
+                MeterTampered = Database.GetNullableInt(record, 47),
+                ApprovalState = Database.GetInt(record, 48),
+                ApprovalComment = Database.GetString(record, 49),
+                ApprovalAt = Database.GetNullableLong(record, 50)
             };
         }
     }

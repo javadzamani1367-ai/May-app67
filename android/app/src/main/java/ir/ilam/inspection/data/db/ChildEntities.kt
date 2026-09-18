@@ -114,7 +114,15 @@ data class DispatchEntity(
     @ColumnInfo(name = "included_items") val includedItems: String,
     @ColumnInfo(name = "note") val note: String? = null,
     @ColumnInfo(name = "output_format") val outputFormat: Int,
-    @ColumnInfo(name = "dispatched_at") val dispatchedAt: Long = System.currentTimeMillis()
+    @ColumnInfo(name = "dispatched_at") val dispatchedAt: Long = System.currentTimeMillis(),
+    /** How it left: 0 through the system, 1 a social network, 2 an offline package. */
+    @ColumnInfo(name = "channel") val channel: Int = 0,
+    /** When the unit has to have reported back by. Null means no deadline set. */
+    @ColumnInfo(name = "deadline_at") val deadlineAt: Long? = null,
+    /** 0 sent, 1 seen, 2 answered. */
+    @ColumnInfo(name = "status") val status: Int = 0,
+    @ColumnInfo(name = "answered_at") val answeredAt: Long? = null,
+    @ColumnInfo(name = "answer") val answer: String? = null
 )
 
 @Entity(tableName = "settings")

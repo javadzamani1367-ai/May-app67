@@ -1,6 +1,6 @@
 # اسکیمای مشترک — مرجع سمت ویندوز
 
-نسخه اسکیما: **۲** (`SCHEMA_VERSION = 2`)
+نسخه اسکیما: **۳** (`SCHEMA_VERSION = 3`)
 
 > `SCHEMA_VERSION` فقط برای جدول‌های مشترک گوشی و ویندوز است و در دست‌دادن همگام‌سازی بررسی می‌شود.
 > نسخه پایگاه داده Room جداست (`DATABASE_VERSION`) و وقتی گوشی جدولی می‌گیرد که به آرشیو ربطی ندارد
@@ -53,6 +53,10 @@ CREATE TABLE reports (
   seal_internal INTEGER,
   meter_appearance_ok INTEGER,
   meter_tampered INTEGER,
+  -- گردش تأیید مدیر (نسخه ۳)
+  approval_state INTEGER NOT NULL DEFAULT 0,  -- ۰ پیش‌نویس / ۱ در انتظار / ۲ تأیید / ۳ برگشت
+  approval_comment TEXT,
+  approval_at INTEGER,
   description TEXT, actions_taken TEXT
 );
 CREATE UNIQUE INDEX index_reports_tracking_code ON reports (tracking_code);

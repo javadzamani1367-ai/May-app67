@@ -59,6 +59,10 @@ namespace CryptoInspection.Archive.Data
         public int? MeterAppearanceOk { get; set; }
         public int? MeterTampered { get; set; }
 
+        public int ApprovalState { get; set; }
+        public string ApprovalComment { get; set; }
+        public long? ApprovalAt { get; set; }
+
         public string Description { get; set; }
         public string ActionsTaken { get; set; }
 
@@ -130,6 +134,20 @@ namespace CryptoInspection.Archive.Data
         public string Note { get; set; }
         public int OutputFormat { get; set; }
         public long DispatchedAt { get; set; }
+        public int Channel { get; set; }
+        public long? DeadlineAt { get; set; }
+        public int Status { get; set; }
+        public long? AnsweredAt { get; set; }
+        public string Answer { get; set; }
+
+        /// <summary>
+        /// Worked out, never stored: a saved flag would need something to keep
+        /// it current and would be wrong the moment nobody did.
+        /// </summary>
+        public bool IsOverdue(long now)
+        {
+            return DeadlineAt.HasValue && Status != 2 && DeadlineAt.Value < now;
+        }
     }
 
     /// <summary>A whole case with its children — what the exporters consume.</summary>
