@@ -17,12 +17,25 @@ on:
     tags:
       - "v*"
   pull_request:
+  # Pushing a tag from some networks is blocked, and a release is the only way
+  # to get the app onto a phone without signing in to GitHub. Running the
+  # workflow by hand with a version here publishes one, and GitHub creates the
+  # tag itself from the commit that was built.
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "نسخه برای انتشار، مثل v1.0.0 — خالی بگذارید تا فقط بیلد شود"
+        required: false
+        default: ""
 
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 40
+
+    # Needed to create the release; everything else here only reads.
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -196,12 +209,16 @@ jobs:
       # the app with nowhere to download it from; the body says plainly which
       # key signed it, and what that costs.
       - name: Publish release
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        if: >-
+          ${{ startsWith(github.ref, 'refs/tags/v')
+              || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '') }}
         uses: softprops/action-gh-release@v2
         with:
           files: |
             android/app/build/outputs/apk/*/release/*.apk
-          name: ${{ github.ref_name }}
+          tag_name: ${{ inputs.release_tag || github.ref_name }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ inputs.release_tag || github.ref_name }}
           body: |
             دو فایل: `app-expert-release.apk` برای کارشناس و
             `app-manager-release.apk` برای مدیر. هر دو روی یک گوشی هم نصب می‌شوند.
