@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.AppContainer
+import ir.ilam.inspection.data.CountyCatalog
 import ir.ilam.inspection.data.model.County
 import ir.ilam.inspection.data.model.ReportType
 import ir.ilam.inspection.data.repo.ReportRepository
@@ -77,7 +78,7 @@ class IntakeViewModel(private val container: AppContainer) : ViewModel() {
                 type = current.type!!,
                 countyIndex = current.county?.index,
                 countyName = current.county?.name,
-                fallbackAreaCode = current.county?.code ?: "01",
+                fallbackAreaCode = current.county?.code ?: CountyCatalog.FALLBACK_CODE,
                 district = current.district,
                 address = current.address,
                 subscription = current.subscription,

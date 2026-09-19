@@ -4,7 +4,7 @@ import ir.ilam.inspection.data.model.ReportType
 
 /**
  * Tracking codes: `[type letter]-[area code]-[YYMMDD jalali]-[last 6 of the
- * subscription number]`, e.g. `M-01-050614-482917`.
+ * subscription number]`, e.g. `M-401-050614-482917`.
  *
  * Codes are stored in latin digits — they travel to the Windows archive and
  * into file names — and are only shaped to Persian digits for display.
@@ -13,6 +13,15 @@ object TrackingCode {
 
     const val SEPARATOR = "-"
     private const val SUBSCRIPTION_DIGITS = 6
+
+    /**
+     * The distribution company's area codes are three digits (401 to 419). The
+     * two digit code in the original example was from before those numbers
+     * were fixed, and truncating to two collapsed nine counties onto `40` and
+     * eight onto `41` — which is exactly the collision the fixed codes exist
+     * to prevent.
+     */
+    private const val AREA_DIGITS = 3
 
     /**
      * Final code. Returns null when the type carries an externally issued code
@@ -27,7 +36,7 @@ object TrackingCode {
 
     /**
      * Placeholder used while the subscription number is unknown:
-     * `M-01-050614-T0003`, where 3 is that day's sequence number.
+     * `M-401-050614-T0003`, where 3 is that day's sequence number.
      */
     fun temporary(type: ReportType, areaCode: String, reportDate: Long, dailySequence: Int): String? {
         val letter = type.letter ?: return null
@@ -55,7 +64,7 @@ object TrackingCode {
         return when {
             digits.isEmpty() -> "00"
             digits.length == 1 -> "0$digits"
-            else -> digits.take(2)
+            else -> digits.take(AREA_DIGITS)
         }
     }
 

@@ -101,7 +101,7 @@ interface ReportDao {
     @Query("SELECT COUNT(*) FROM reports WHERE tracking_code = :code")
     suspend fun countByTrackingCode(code: String): Int
 
-    /** Daily counter behind temporary codes such as `M-01-050614-T0003`. */
+    /** Daily counter behind temporary codes such as `M-401-050614-T0003`. */
     @Query("SELECT COUNT(*) FROM reports WHERE temp_code IS NOT NULL AND created_at BETWEEN :from AND :to")
     suspend fun countTempCodesInRange(from: Long, to: Long): Int
 
