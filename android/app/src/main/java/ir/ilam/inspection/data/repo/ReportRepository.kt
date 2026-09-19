@@ -175,6 +175,10 @@ class ReportRepository(
      * acknowledged it, so deleting on the phone can never be the moment the
      * only copy disappears.
      */
+    /** Cases this phone holds that are waiting on the manager. */
+    fun observePendingApproval(): Flow<List<ReportEntity>> =
+        db.reportDao().observeByApproval(ApprovalState.PENDING.code)
+
     /**
      * Hands the case to the manager. It is frozen from here until a decision
      * comes back, so the documents the manager is reading cannot change under

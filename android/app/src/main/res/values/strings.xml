@@ -314,6 +314,10 @@
     <string name="approval_approve">تأیید پرونده</string>
     <string name="approval_return">برگشت برای اصلاح</string>
     <string name="approval_pending_title">پرونده‌های در انتظار تأیید</string>
+    <string name="approval_on_this_phone">روی این گوشی</string>
+    <string name="approval_on_server">روی سرور</string>
+    <string name="approval_server_offline">اتصال به سرور برقرار نیست؛ فقط پرونده‌های همین گوشی نمایش داده می‌شوند.</string>
+    <string name="approval_not_synced_hint">این پرونده‌ها هنوز روی این گوشی نیستند. پس از همگام‌سازی، قابل بررسی و تأیید می‌شوند.</string>
     <string name="approval_pending_empty">پرونده‌ای در انتظار تأیید نیست</string>
     <string name="approval_decided">تصمیم شما ثبت شد</string>
     <string name="dispatch_channel_system">از طریق سامانه</string>

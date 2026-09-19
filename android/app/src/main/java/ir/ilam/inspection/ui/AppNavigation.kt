@@ -12,6 +12,7 @@ import ir.ilam.inspection.ui.dispatch.DispatchScreen
 import ir.ilam.inspection.ui.intake.IntakeScreen
 import ir.ilam.inspection.ui.pending.HomeScreen
 import ir.ilam.inspection.ui.settings.SettingsScreen
+import ir.ilam.inspection.ui.approvals.ApprovalsScreen
 import ir.ilam.inspection.ui.users.UsersScreen
 import ir.ilam.inspection.ui.stats.StatsScreen
 import ir.ilam.inspection.ui.visit.VisitScreen
@@ -26,6 +27,7 @@ object Routes {
     const val SETTINGS = "settings"
     const val STATS = "stats"
     const val USERS = "users"
+    const val APPROVALS = "approvals"
 
     fun visit(id: String) = "visit/$id"
     fun detail(id: String) = "case/$id"
@@ -43,6 +45,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                 onOpenCase = { navController.navigate(Routes.detail(it)) },
                 onContinueVisit = { navController.navigate(Routes.visit(it)) },
                 onSettings = { navController.navigate(Routes.SETTINGS) },
+                onApprovals = { navController.navigate(Routes.APPROVALS) },
                 onStats = { navController.navigate(Routes.STATS) }
             )
         }
@@ -90,6 +93,12 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
         }
         composable(Routes.USERS) {
             UsersScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.APPROVALS) {
+            ApprovalsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenCase = { navController.navigate(Routes.detail(it)) }
+            )
         }
     }
 }

@@ -122,6 +122,23 @@ class ServerApi(private val baseUrl: String) {
 
     // ---- approval cycle --------------------------------------------------
 
+    /** Everything waiting on the manager, across every expert's phone. */
+    suspend fun pendingApprovals(token: String): ApiResult<List<PendingApproval>> =
+        get("approvals", token) { data ->
+            val array = data.optJSONArray("pending")
+            (0 until (array?.length() ?: 0)).mapNotNull { index ->
+                array?.optJSONObject(index)?.let { row ->
+                    PendingApproval(
+                        reportId = row.optString("report_id"),
+                        trackingCode = row.optString("tracking_code"),
+                        county = row.optString("county"),
+                        expertCode = row.optString("expert_code"),
+                        submittedAt = row.optLong("submitted_at")
+                    )
+                }
+            }
+        }
+
     suspend fun submitApproval(token: String, reportId: String): ApiResult<Boolean> =
         post("approvals/submit", JSONObject().put("report_id", reportId), token) { true }
 
@@ -246,6 +263,14 @@ class ServerApi(private val baseUrl: String) {
         val deviceCode: String = "",
         val active: Boolean = true,
         val note: String = ""
+    )
+
+    data class PendingApproval(
+        val reportId: String,
+        val trackingCode: String,
+        val county: String,
+        val expertCode: String,
+        val submittedAt: Long
     )
 
     data class DeviceRequest(

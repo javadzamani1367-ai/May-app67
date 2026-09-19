@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.FactCheck
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,6 +45,7 @@ import ir.ilam.inspection.data.model.ReportStatus
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
 import ir.ilam.inspection.ui.common.EmptyState
 import ir.ilam.inspection.util.TrackingCode
+import ir.ilam.inspection.data.model.UserRole
 
 /**
  * The three tabs of the app: pending, visited, archived. The floating button
@@ -56,7 +58,8 @@ fun HomeScreen(
     onOpenCase: (String) -> Unit,
     onContinueVisit: (String) -> Unit,
     onSettings: () -> Unit,
-    onStats: () -> Unit
+    onStats: () -> Unit,
+    onApprovals: () -> Unit
 ) {
     val container = LocalContext.current.container
     val viewModel: CaseListViewModel = viewModel(
@@ -75,6 +78,16 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
+                    // Manager only: the queue of cases waiting on a decision is
+                    // the first thing a manager opens the app for.
+                    if (UserRole.isManager) {
+                        IconButton(onClick = onApprovals) {
+                            Icon(
+                                Icons.Filled.FactCheck,
+                                contentDescription = stringResource(R.string.approval_pending_title)
+                            )
+                        }
+                    }
                     IconButton(onClick = onStats) {
                         Icon(Icons.Filled.QueryStats, contentDescription = stringResource(R.string.nav_stats))
                     }

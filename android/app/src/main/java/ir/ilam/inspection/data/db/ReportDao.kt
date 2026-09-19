@@ -32,6 +32,13 @@ interface ReportDao {
     @Query("SELECT * FROM reports WHERE status = :status ORDER BY report_date ASC, created_at ASC")
     fun observeByStatusOldestFirst(status: Int): Flow<List<ReportEntity>>
 
+    /** Cases waiting on the manager, longest waiting first. */
+    @Query(
+        "SELECT * FROM reports WHERE approval_state = :state " +
+            "ORDER BY approval_at ASC, updated_at ASC"
+    )
+    fun observeByApproval(state: Int): Flow<List<ReportEntity>>
+
     @Query("SELECT * FROM reports WHERE status = :status ORDER BY visit_date DESC, updated_at DESC")
     fun observeByStatusNewestFirst(status: Int): Flow<List<ReportEntity>>
 
