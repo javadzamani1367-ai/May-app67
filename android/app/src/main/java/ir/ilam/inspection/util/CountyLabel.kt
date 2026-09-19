@@ -18,8 +18,13 @@ object CountyLabel {
      * Null when there is no county to name. A case filed before the area was
      * recorded has no area code, and is written as the plain county name
      * rather than with an empty area beside it.
+     *
+     * `inline` on purpose: Compose resolves its wording with `stringResource`,
+     * which is `@Composable` and so may only be called from a lambda the
+     * compiler inlines. A plain function parameter is rejected outright — do
+     * not make [format] `crossinline`, and do not store it.
      */
-    fun of(county: String?, areaCode: String?, format: (String, String) -> String): String? {
+    inline fun of(county: String?, areaCode: String?, format: (String, String) -> String): String? {
         val name = county?.trim().orEmpty()
         if (name.isEmpty()) return null
 
