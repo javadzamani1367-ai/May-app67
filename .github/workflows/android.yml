@@ -191,16 +191,24 @@ jobs:
 
       # A tag turns the build into a release, so the APK can be downloaded
       # straight onto a phone instead of unzipping a CI artifact.
+      # Published whatever the key situation is. Withholding the release
+      # until an official key exists left the one person who needs to install
+      # the app with nowhere to download it from; the body says plainly which
+      # key signed it, and what that costs.
       - name: Publish release
-        if: ${{ startsWith(github.ref, 'refs/tags/v') && steps.signing.outputs.ephemeral == 'false' }}
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         uses: softprops/action-gh-release@v2
         with:
           files: |
             android/app/build/outputs/apk/*/release/*.apk
           name: ${{ github.ref_name }}
           body: |
-            نسخه آزمایشی میدانی — امضا شده با کلید debug.
+            دو فایل: `app-expert-release.apk` برای کارشناس و
+            `app-manager-release.apk` برای مدیر. هر دو روی یک گوشی هم نصب می‌شوند.
+
             برای نصب، «نصب از منابع ناشناس» را برای مرورگر یا مدیر فایل فعال کنید.
+
+            ${{ steps.signing.outputs.ephemeral == 'true' && '**هشدار درباره امضا:** این نسخه با یک کلید یک‌بارمصرف امضا شده که هر بیلد عوض می‌شود. یعنی روی نسخه قبلی نصب نمی‌شود و باید اول نسخه قبلی را حذف کنید — با حذف آن، داده‌های داخل اپ هم پاک می‌شود. برای اینکه نسخه‌های بعدی روی هم به‌روزرسانی شوند، کلید امضای رسمی را یک بار در Secrets مخزن بگذارید؛ راهنمایش در README است.' || 'با کلید رسمی مخزن امضا شده؛ روی نسخه قبلی به‌روزرسانی می‌شود.' }}
           generate_release_notes: false
 
       - name: Save Gradle cache

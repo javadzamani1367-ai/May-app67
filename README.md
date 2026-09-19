@@ -13,7 +13,8 @@
 اجرا پیوست می‌شود: بخش **Actions** مخزن ← آخرین اجرای «Android APK» ←
 `crypto-inspection-debug-apk`.
 
-برای دریافت مستقیم روی گوشی، یک تگ بزنید تا APK به صورت Release منتشر شود:
+برای دریافت مستقیم روی گوشی، یک تگ بزنید تا هر دو APK به صورت Release منتشر
+شوند — Release بدون نیاز به ورود به گیت‌هاب قابل دانلود است، برخلاف artifact:
 
 ```bash
 git tag v1.0.0-test1 && git push origin v1.0.0-test1
