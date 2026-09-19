@@ -68,16 +68,14 @@ class ReportRepository(
      */
     suspend fun createIntake(
         type: ReportType,
-        countyIndex: Int?,
         countyName: String?,
-        fallbackAreaCode: String,
+        areaCode: String,
         district: String?,
         address: String?,
         subscription: String?,
         reportDate: Long,
         manualTrackingCode: String? = null
     ): Result<String> {
-        val areaCode = fallbackAreaCode
         var trackingCode: String? = null
         var tempCode: String? = null
 

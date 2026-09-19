@@ -55,6 +55,38 @@ for f in list((root / "java").rglob("*.kt")):
     if lines > 300:
         problems.append(f"{f} is {lines} lines, over the 300 line rule")
 
+# 5. the county arrays must line up
+#
+# `county_codes` is read by position: the code of a county is whatever sits at
+# the same index in the other array. If the two ever differ in length, the
+# counties past the end quietly fall back to 401 and every tracking code they
+# produce is wrong, with nothing anywhere saying so.
+strings = (root / "res" / "values" / "strings.xml").read_text(encoding="utf-8")
+
+
+def array_items(name):
+    block = re.search(
+        rf'<string-array name="{name}">(.*?)</string-array>', strings, re.S)
+    return re.findall(r"<item>(.*?)</item>", block.group(1), re.S) if block else None
+
+
+county_names = array_items("county_names")
+county_codes = array_items("county_codes")
+if county_names is None or county_codes is None:
+    problems.append("county_names or county_codes is missing from strings.xml")
+elif len(county_names) != len(county_codes):
+    problems.append(
+        f"county_names has {len(county_names)} entries but county_codes has "
+        f"{len(county_codes)}; codes are matched by position"
+    )
+else:
+    for code, count in collections.Counter(county_codes).items():
+        if count > 1:
+            problems.append(f"area code {code} appears {count} times in county_codes")
+    for code in county_codes:
+        if not re.fullmatch(r"\d{3}", code.strip()):
+            problems.append(f"area code {code!r} is not three digits")
+
 for problem in problems:
     print("FAIL:", problem)
 print(f"{len(problems)} problem(s)")

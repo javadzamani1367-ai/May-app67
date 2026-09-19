@@ -50,7 +50,16 @@ class StatsViewModel(private val container: AppContainer) : ViewModel() {
     private val _message = MutableStateFlow<Int?>(null)
     val message: StateFlow<Int?> = _message.asStateFlow()
 
-    val counties: List<String> = container.counties.defaults.map { it.name }
+    /**
+     * One entry per **stored** county name, not one per area.
+     *
+     * Ilam is two areas, 401 and 402, and the intake picker shows them apart.
+     * But what a case stores is the county name, so both areas are "ایلام" in
+     * the database. Listing the catalog as-is put ایلام in this page twice,
+     * each showing the same total, and gave the Excel filter two entries that
+     * filtered identically.
+     */
+    val counties: List<String> = container.counties.defaults.map { it.name }.distinct()
 
     fun setStatus(status: ReportStatus?) = update { it.copy(status = status) }
     fun setCounty(county: String?) = update { it.copy(county = county) }

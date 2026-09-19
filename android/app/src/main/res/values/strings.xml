@@ -452,7 +452,7 @@
     <string name="settings_expert_code">کد کارشناس</string>
     <string name="settings_expert_name">نام کارشناس</string>
     <string name="settings_default_area">کد ناحیه پیش‌فرض</string>
-    <string name="county_with_code">%1$s — %2$s</string>
+    <string name="county_with_code">%1$s — ناحیه %2$s</string>
     <string name="settings_sync_target">آدرس مقصد همگام‌سازی (اختیاری)</string>
     <string name="settings_role">نقش کاربر</string>
     <string name="role_expert">کارشناس</string>

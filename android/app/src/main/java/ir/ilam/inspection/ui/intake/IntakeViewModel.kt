@@ -76,9 +76,8 @@ class IntakeViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             val result = container.reportRepository.createIntake(
                 type = current.type!!,
-                countyIndex = current.county?.index,
                 countyName = current.county?.name,
-                fallbackAreaCode = current.county?.code ?: CountyCatalog.FALLBACK_CODE,
+                areaCode = current.county?.code ?: CountyCatalog.FALLBACK_CODE,
                 district = current.district,
                 address = current.address,
                 subscription = current.subscription,
