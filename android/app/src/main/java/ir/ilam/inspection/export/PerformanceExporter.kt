@@ -39,7 +39,6 @@ class PerformanceExporter(private val context: Context, private val files: FileS
             append(WordDocumentXml.paragraph(period(report)))
             append(WordDocumentXml.paragraph(sourceNote(report)))
             append(WordDocumentXml.table(listOf(headers()) + report.rows.map { cells(it) } + listOf(totals(report))))
-            append(WordDocumentXml.paragraph(text(R.string.powered_by)))
         }
         return DocxWriter().write(target, WordDocumentXml.document(body))
     }
@@ -68,7 +67,6 @@ class PerformanceExporter(private val context: Context, private val files: FileS
         append("<tr class=\"total\">")
         totals(report).forEach { append("<td>${escape(it)}</td>") }
         append("</tr></tbody></table>")
-        append("<p class=\"credit\">${escape(text(R.string.powered_by))}</p>")
         append("</body></html>")
     }
 
@@ -133,7 +131,6 @@ class PerformanceExporter(private val context: Context, private val files: FileS
           th { background: #eef2f6; }
           tr.total td { background: #f6f8fa; font-weight: bold; }
           td.warn { background: #fde4e4; color: #8a1616; font-weight: bold; }
-          .credit { margin-top: 14px; text-align: center; font-size: 9pt; color: #5b6b7c; }
         </style>
     """.trimIndent()
 

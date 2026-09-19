@@ -272,6 +272,8 @@ fun SettingsScreen(onBack: () -> Unit, onUsers: () -> Unit) {
                     }
                 }
             }
+
+            AboutCard()
         }
     }
 }

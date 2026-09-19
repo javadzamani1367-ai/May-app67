@@ -54,7 +54,6 @@ function portal_header(string $title): void
 function portal_footer(): void
 {
     ?></main>
-<p class="muted" style="text-align:center">قدرت گرفته از کاراکو</p>
 </body></html><?php
 }
 

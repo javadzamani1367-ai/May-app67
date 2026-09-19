@@ -400,7 +400,6 @@
     <string name="performance_word">خروجی ورد</string>
     <string name="performance_pdf">خروجی PDF</string>
     <string name="performance_empty">در این بازه ارسالی ثبت نشده است</string>
-    <string name="powered_by">قدرت گرفته از کاراکو</string>
     <string-array name="performance_headers">
         <item>واحد مقصد</item>
         <item>ارسال‌شده</item>
@@ -419,6 +418,11 @@
     <string name="search_hint">کد رهگیری، آدرس، شماره اشتراک، نام مالک</string>
 
     <!-- تنظیمات و همگام‌سازی -->
+    <string name="about_title">درباره برنامه</string>
+    <string name="about_description">سامانه مدیریت بازدید مراکز رمزارز — ابزار میدانی کارشناسان شرکت توزیع نیروی برق استان ایلام برای ثبت گزارش، تکمیل بازدید، تولید گزارش رسمی و ارسال مدارک به واحدهای سازمانی.</string>
+    <string name="about_version">نسخه %1$s</string>
+    <string name="about_role">نسخه نصب‌شده: %1$s</string>
+    <string name="about_powered_by">قدرت گرفته از کاراکو</string>
     <string name="settings_title">تنظیمات</string>
     <string name="users_title">مدیریت کاربران سامانه</string>
     <string name="users_registered">کاربران ثبت‌شده</string>
