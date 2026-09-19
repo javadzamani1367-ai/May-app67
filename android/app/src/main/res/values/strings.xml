@@ -316,8 +316,6 @@
     <string name="approval_pending_title">پرونده‌های در انتظار تأیید</string>
     <string name="approval_pending_empty">پرونده‌ای در انتظار تأیید نیست</string>
     <string name="approval_decided">تصمیم شما ثبت شد</string>
-    <string name="dispatch_history">سوابق ارسال مدارک</string>
-    <string name="dispatch_history_empty">هنوز مدرکی برای هیچ واحدی ارسال نشده است</string>
     <string name="dispatch_channel_system">از طریق سامانه</string>
     <string name="dispatch_channel_social">شبکه اجتماعی</string>
     <string name="dispatch_channel_offline">بسته آفلاین</string>

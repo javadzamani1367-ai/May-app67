@@ -76,6 +76,12 @@ jobs:
           find /tmp/vazirmatn -name 'Vazirmatn-Bold.ttf' -exec cp {} android/app/src/main/assets/fonts/ \;
           ls -la android/app/src/main/assets/fonts/
 
+      # Catches in a second what the resource merger otherwise reports five
+      # minutes into a build: a duplicate string, a reference to one that does
+      # not exist, a duplicate declaration, a file over the length rule.
+      - name: Static checks
+        run: python3 tools/verify-resources.py
+
       - name: Unit tests
         working-directory: android
         run: ./gradlew --no-daemon testExpertDebugUnitTest
