@@ -103,6 +103,10 @@ CREATE TABLE IF NOT EXISTS reports (
   seal_internal       INT          NULL,
   meter_appearance_ok INT          NULL,
   meter_tampered      INT          NULL,
+  -- گردش تأیید مدیر. ۰ پیش‌نویس / ۱ در انتظار / ۲ تأیید / ۳ برگشت برای اصلاح
+  approval_state      INT          NOT NULL DEFAULT 0,
+  approval_comment    TEXT         NULL,
+  approval_at         BIGINT       NULL,
   description         TEXT         NULL,
   actions_taken       TEXT         NULL,
   UNIQUE KEY uq_reports_tracking (tracking_code),
@@ -193,6 +197,7 @@ CREATE TABLE IF NOT EXISTS dispatches (
   status         TINYINT  NOT NULL DEFAULT 0,-- ۰ ارسال‌شده / ۱ دیده‌شده / ۲ پاسخ داده‌شده
   seen_at        BIGINT   NULL,
   answered_at    BIGINT   NULL,
+  answer         TEXT     NULL,          -- خلاصه پاسخ واحد، برای نمایش در سابقه پرونده
   KEY idx_dispatches_report (report_id),
   KEY idx_dispatches_unit (unit),
   KEY idx_dispatches_status (status),

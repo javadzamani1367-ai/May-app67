@@ -82,6 +82,12 @@ jobs:
       - name: Static checks
         run: python3 tools/verify-resources.py
 
+      # The server tests need no database: Jalali conversion, PHP syntax, and
+      # that the server's schema still matches the phone's. That last one is
+      # how the missing approval columns were found.
+      - name: Server tests
+        run: php server/tests/run.php
+
       - name: Unit tests
         working-directory: android
         run: ./gradlew --no-daemon testExpertDebugUnitTest

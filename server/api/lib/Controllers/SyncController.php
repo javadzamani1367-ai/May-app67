@@ -20,7 +20,8 @@ final class SyncController
         'measured_amperage', 'tap_point', 'phase_type', 'amperage_r', 'amperage_s', 'amperage_t',
         'voltage_r', 'voltage_s', 'voltage_t', 'total_watt', 'tariff_type', 'meter_type',
         'seal_external', 'seal_external_serial', 'seal_internal', 'meter_appearance_ok',
-        'meter_tampered', 'description', 'actions_taken',
+        'meter_tampered', 'approval_state', 'approval_comment', 'approval_at',
+        'description', 'actions_taken',
     ];
 
     public function manifest(Request $request): void
