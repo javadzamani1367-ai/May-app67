@@ -119,7 +119,11 @@ CREATE TABLE IF NOT EXISTS reports (
 CREATE TABLE IF NOT EXISTS devices (
   id            CHAR(36)     NOT NULL PRIMARY KEY,
   report_id     CHAR(36)     NOT NULL,
-  row_number    INT          NOT NULL,
+  -- بک‌کوت لازم است: `row_number` از MariaDB 10.2 و MySQL 8 به بعد کلمه رزرو
+  -- است (تابع پنجره‌ای ROW_NUMBER). بدون آن، وارد کردن همین فایل در
+  -- phpMyAdmin با خطای نحوی متوقف می‌شود. نام ستون در اسکیمای مشترک با
+  -- اندروید و ویندوز است و عوض نمی‌شود؛ SQLite آن را رزرو نکرده.
+  `row_number`  INT          NOT NULL,
   model         VARCHAR(191) NULL,
   serial_number VARCHAR(191) NULL,
   power_watt    DOUBLE       NULL,

@@ -8,8 +8,20 @@ declare(strict_types=1);
  */
 final class Storage
 {
+    /**
+     * پوشه فایل‌ها. پیش‌فرض `api/storage` است که `.htaccess` خودش جلوی
+     * دسترسی مستقیم را می‌گیرد.
+     *
+     * اگر هاست اجازه بدهد، بهتر است `storage_path` را در `config.php` به
+     * پوشه‌ای **بیرون از `public_html`** ببرید: آن وقت حتی یک `.htaccess`
+     * جاافتاده هم تصاویر پرونده‌ها را در دسترس وب نمی‌گذارد.
+     */
     public static function root(): string
     {
+        $configured = Config::get('storage_path', '');
+        if (is_string($configured) && $configured !== '') {
+            return rtrim($configured, '/');
+        }
         return dirname(__DIR__) . '/storage';
     }
 

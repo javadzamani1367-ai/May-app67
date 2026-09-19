@@ -51,6 +51,29 @@ final class Db
     }
 
     /** میلی‌ثانیه یونیکس — همان واحدی که گوشی و ویندوز ذخیره می‌کنند. */
+    /**
+     * نام ستون یا جدول، آماده برای گذاشتن داخل SQL.
+     *
+     * `row_number` از MariaDB 10.2 و MySQL 8 به بعد کلمه رزرو است و بدون
+     * بک‌کوت، پرس‌وجو خطای نحوی می‌دهد. نام‌ها از کد خودمان می‌آیند نه از
+     * کاربر، ولی یک کلمه رزرو تازه در نسخه بعدی پایگاه داده همین بلا را سر
+     * جای دیگری می‌آورد، پس هر جا فهرست ستون به SQL تبدیل می‌شود از این رد
+     * می‌شود.
+     */
+    public static function col(string $name): string
+    {
+        if (preg_match('/^[a-z_][a-z0-9_]*$/i', $name) !== 1) {
+            throw new InvalidArgumentException('bad identifier');
+        }
+        return '`' . $name . '`';
+    }
+
+    /** @param list<string> $names */
+    public static function cols(array $names): string
+    {
+        return implode(', ', array_map([self::class, 'col'], $names));
+    }
+
     public static function now(): int
     {
         return (int) round(microtime(true) * 1000);

@@ -139,6 +139,7 @@ android/app/src/main/java/ir/ilam/inspection/
 ```bash
 python3 tools/verify-resources.py   # منابع تکراری، ارجاع نبوده، قاعده ۳۰۰ خط
 php server/tests/run.php            # تاریخ شمسی، نحو PHP، یکسانی اسکیما
+php server/tests/integration.php    # چرخه کامل روی MySQL و HTTP واقعی
 cd android && ./gradlew test        # منطق خالص روی JVM
 ```
 
@@ -151,6 +152,10 @@ cd android && ./gradlew test        # منطق خالص روی JVM
 
 تست‌های سرور بدون PHPUnit نوشته شده‌اند تا روی خود هاست اشتراکی هم اجرا شوند، و
 یکسانی ستون‌ها و `SCHEMA_VERSION` را بین گوشی و سرور و ویندوز بررسی می‌کنند.
+
+تست یکپارچه سرویس را روی یک پایگاه داده واقعی بالا می‌آورد و چرخه کامل را روی
+HTTP می‌رود: ورود، فرستادن پرونده با تصویرش، صف تأیید مدیر، برگشت برای اصلاح و
+تأیید نهایی. اگر MySQL در دسترس نباشد خودش را رد می‌کند.
 
 ## نرم‌افزار ویندوز
 

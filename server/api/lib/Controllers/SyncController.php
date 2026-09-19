@@ -64,13 +64,13 @@ final class SyncController
         $columns = self::REPORT_COLUMNS;
         $placeholders = implode(', ', array_fill(0, count($columns), '?'));
         $updates = implode(', ', array_map(
-            static fn(string $c): string => "$c = VALUES($c)",
+            static fn(string $c): string => Db::col($c) . ' = VALUES(' . Db::col($c) . ')',
             array_slice($columns, 1)
         ));
         $values = array_map(static fn(string $c) => $report[$c] ?? null, $columns);
 
         Db::run(
-            'INSERT INTO reports (' . implode(', ', $columns) . ", synced_at)
+            'INSERT INTO reports (' . Db::cols($columns) . ", synced_at)
              VALUES ($placeholders, " . Db::now() . ")
              ON DUPLICATE KEY UPDATE $updates, synced_at = " . Db::now(),
             $values
@@ -151,7 +151,10 @@ final class SyncController
         // پرونده‌ای را فرستاده که هرگز نفرستاده.
         unset($report['synced_at']);
 
-        $report['devices'] = Db::all('SELECT * FROM devices WHERE report_id = ? ORDER BY row_number', [$id]);
+        $report['devices'] = Db::all(
+            'SELECT * FROM devices WHERE report_id = ? ORDER BY `row_number`',
+            [$id]
+        );
         $report['attendees'] = Db::all('SELECT * FROM attendees WHERE report_id = ?', [$id]);
         $report['media'] = Db::all('SELECT * FROM media WHERE report_id = ? ORDER BY captured_at', [$id]);
         $report['attachments'] = Db::all('SELECT * FROM attachments WHERE report_id = ? ORDER BY added_at', [$id]);
@@ -170,7 +173,7 @@ final class SyncController
             return;
         }
         $placeholders = implode(', ', array_fill(0, count($columns), '?'));
-        $sql = "INSERT INTO $table (" . implode(', ', $columns) . ") VALUES ($placeholders)";
+        $sql = "INSERT INTO $table (" . Db::cols($columns) . ") VALUES ($placeholders)";
         foreach ($rows as $row) {
             if (!is_array($row)) {
                 continue;

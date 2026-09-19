@@ -88,6 +88,29 @@ jobs:
       - name: Server tests
         run: php server/tests/run.php
 
+      # The runner image ships MySQL but leaves it stopped. Starting it turns
+      # the integration test from "skipped" into a real check of every query
+      # against a real database — which is how the reserved word `row_number`
+      # was found, the one that stopped schema.sql importing at all.
+      - name: Start MySQL
+        run: |
+          sudo systemctl start mysql.service || sudo service mysql start
+          for i in $(seq 1 30); do
+            mysqladmin --host=127.0.0.1 --user=root --password=root ping && break
+            sleep 1
+          done
+
+      - name: Integration tests
+        env:
+          DB_HOST: 127.0.0.1
+          DB_USER: root
+          DB_PASS: root
+          DB_NAME: inspection_ci
+          # Without this, a database that failed to start would make the test
+          # skip itself and report success.
+          DB_REQUIRED: "1"
+        run: php server/tests/integration.php
+
       - name: Unit tests
         working-directory: android
         run: ./gradlew --no-daemon testExpertDebugUnitTest
