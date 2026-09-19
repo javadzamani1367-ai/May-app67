@@ -120,7 +120,37 @@ interface DispatchDao {
 
     @Query("SELECT * FROM dispatches WHERE id = :id")
     suspend fun byId(id: String): DispatchEntity?
+
+    /**
+     * Unit performance from this phone's own rows. The server has the whole
+     * picture; this is what a manager can still produce with no connection.
+     * `now` is passed in rather than read inside the query so the same instant
+     * decides every row — a query that called a clock could put two rows on
+     * opposite sides of a deadline.
+     */
+    @Query(
+        "SELECT unit AS unit, " +
+            "COUNT(*) AS sent, " +
+            "SUM(status >= 1) AS seen, " +
+            "SUM(status = 2) AS answered, " +
+            "SUM(deadline_at IS NOT NULL AND status <> 2 AND deadline_at < :now) AS overdue, " +
+            "SUM(deadline_at IS NOT NULL AND status = 2 AND answered_at <= deadline_at) AS onTime, " +
+            "AVG(CASE WHEN answered_at IS NOT NULL THEN answered_at - dispatched_at END) AS avgMillis " +
+            "FROM dispatches WHERE dispatched_at BETWEEN :from AND :to GROUP BY unit"
+    )
+    suspend fun performance(from: Long, to: Long, now: Long): List<UnitPerformanceRow>
 }
+
+/** The raw aggregate, before it is turned into a [ir.ilam.inspection.data.model.UnitPerformance]. */
+data class UnitPerformanceRow(
+    val unit: Int,
+    val sent: Int,
+    val seen: Int,
+    val answered: Int,
+    val overdue: Int,
+    val onTime: Int,
+    val avgMillis: Double?
+)
 
 @Dao
 interface SettingDao {

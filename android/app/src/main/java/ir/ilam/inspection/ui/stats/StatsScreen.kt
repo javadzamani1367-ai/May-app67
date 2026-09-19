@@ -43,11 +43,12 @@ import ir.ilam.inspection.ui.common.reportTypeLabel
 import ir.ilam.inspection.ui.common.statusLabel
 import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.PersianNumbers
+import ir.ilam.inspection.data.model.UserRole
 
 /** Counters plus the filtered Excel export the office asks for. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StatsScreen(onBack: () -> Unit) {
+fun StatsScreen(onBack: () -> Unit, onPerformance: () -> Unit) {
     val context = LocalContext.current
     val appContainer = context.container
     val viewModel: StatsViewModel = viewModel(
@@ -89,6 +90,16 @@ fun StatsScreen(onBack: () -> Unit) {
                 .padding(horizontal = 16.dp)
         ) {
             if (busy) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+
+            // Manager only: how the units are performing is a different
+            // question from how many cases exist, and it has its own report.
+            if (UserRole.isManager) {
+                Button(
+                    onClick = onPerformance,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                ) { Text(stringResource(R.string.performance_title)) }
+            }
+
             SectionCard(title = stringResource(R.string.stats_title)) {
                 Column {
                     ValueRow(stringResource(R.string.stats_total), PersianNumbers.toPersian(total))

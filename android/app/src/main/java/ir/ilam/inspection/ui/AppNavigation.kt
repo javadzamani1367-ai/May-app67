@@ -13,6 +13,7 @@ import ir.ilam.inspection.ui.intake.IntakeScreen
 import ir.ilam.inspection.ui.pending.HomeScreen
 import ir.ilam.inspection.ui.settings.SettingsScreen
 import ir.ilam.inspection.ui.approvals.ApprovalsScreen
+import ir.ilam.inspection.ui.performance.PerformanceScreen
 import ir.ilam.inspection.ui.users.UsersScreen
 import ir.ilam.inspection.ui.stats.StatsScreen
 import ir.ilam.inspection.ui.visit.VisitScreen
@@ -28,6 +29,7 @@ object Routes {
     const val STATS = "stats"
     const val USERS = "users"
     const val APPROVALS = "approvals"
+    const val PERFORMANCE = "performance"
 
     fun visit(id: String) = "visit/$id"
     fun detail(id: String) = "case/$id"
@@ -89,10 +91,16 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             )
         }
         composable(Routes.STATS) {
-            StatsScreen(onBack = { navController.popBackStack() })
+            StatsScreen(
+                onBack = { navController.popBackStack() },
+                onPerformance = { navController.navigate(Routes.PERFORMANCE) }
+            )
         }
         composable(Routes.USERS) {
             UsersScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.PERFORMANCE) {
+            PerformanceScreen(onBack = { navController.popBackStack() })
         }
         composable(Routes.APPROVALS) {
             ApprovalsScreen(

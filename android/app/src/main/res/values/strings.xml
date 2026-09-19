@@ -389,6 +389,28 @@
         <item>کارشناس</item>
         <item>مختصات</item>
     </string-array>
+    <string name="performance_title">گزارش عملکرد واحدها</string>
+    <string name="performance_period">بازه گزارش: از %1$s تا %2$s</string>
+    <string name="performance_total">مجموع</string>
+    <string name="performance_source_server">منبع داده: سرور مرکزی — شامل ارسال‌های همه کارشناسان</string>
+    <string name="performance_source_local">منبع داده: همین گوشی — سرور در دسترس نبود، پس آمار فقط ارسال‌های این دستگاه است</string>
+    <string name="performance_from">از تاریخ</string>
+    <string name="performance_to">تا تاریخ</string>
+    <string name="performance_excel">خروجی اکسل</string>
+    <string name="performance_word">خروجی ورد</string>
+    <string name="performance_pdf">خروجی PDF</string>
+    <string name="performance_empty">در این بازه ارسالی ثبت نشده است</string>
+    <string name="powered_by">قدرت گرفته از کاراکو</string>
+    <string-array name="performance_headers">
+        <item>واحد مقصد</item>
+        <item>ارسال‌شده</item>
+        <item>دیده‌شده</item>
+        <item>پاسخ داده‌شده</item>
+        <item>مهلت گذشته</item>
+        <item>درصد پاسخ</item>
+        <item>درصد پاسخ در مهلت</item>
+        <item>میانگین زمان پاسخ (ساعت)</item>
+    </string-array>
     <string name="excel_sheet_name">گزارش بازدیدها</string>
     <string name="filter_from_date">از تاریخ</string>
     <string name="filter_to_date">تا تاریخ</string>

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ir.ilam.inspection.sync.pendingApprovals
 
 data class ApprovalsState(
     val busy: Boolean = false,
