@@ -167,6 +167,60 @@ equals('نسخه اسکیمای ویندوز با گوشی یکی است', $phon
 equals('نسخه مستندشده با گوشی یکی است', $phoneVersion, $documentedVersion);
 
 // ---------------------------------------------------------------------------
+echo "\n— مسیر فایل‌های آمده از گوشی —\n";
+
+// مسیر رسانه از گوشی می‌آید و فایل روی همان مسیر نوشته می‌شود، پس یک مسیر
+// ساخته‌شده می‌تواند روی هر فایلی بنویسد. `Storage::safeRelative()` قبل از هر
+// نوشتنی جلوی آن را می‌گیرد، و اینجا تست می‌شود که واقعاً می‌گیرد.
+//
+// در حالت بد، `Response::fail()` صدا زده می‌شود که `exit` دارد — و با کد صفر،
+// پس کد خروج چیزی نمی‌گوید. هر مورد در یک پروسه جدا اجرا می‌شود و نشانه‌ای
+// چاپ می‌کند که مسیر رد‌شده هرگز به آن نمی‌رسد.
+$probe = __DIR__ . '/probe-path.php';
+file_put_contents($probe, <<<'PHP'
+<?php
+declare(strict_types=1);
+foreach (['Response', 'Config', 'Db', 'Storage'] as $class) {
+    require_once __DIR__ . '/../api/lib/' . $class . '.php';
+}
+Storage::safeRelative((string) ($argv[1] ?? ''));
+echo "ACCEPTED";
+PHP);
+
+function pathAccepted(string $candidate): bool
+{
+    $output = [];
+    exec(
+        'php ' . escapeshellarg(__DIR__ . '/probe-path.php') . ' ' . escapeshellarg($candidate) . ' 2>&1',
+        $output
+    );
+    return str_contains(implode("\n", $output), 'ACCEPTED');
+}
+
+$goodPaths = [
+    'media/11111111-1111-1111-1111-111111111111/1757600500000.jpg',
+    'attachments/11111111-1111-1111-1111-111111111111/minutes.pdf',
+    'media/abc/clip.mp4',
+];
+foreach ($goodPaths as $candidate) {
+    check("مسیر درست پذیرفته می‌شود: $candidate", pathAccepted($candidate));
+}
+
+$badPaths = [
+    '../../config.php'           => 'بیرون رفتن از پوشه',
+    'media/../../api/config.php' => 'بیرون رفتن با نقطه‌نقطه',
+    '/etc/passwd'                => 'مسیر مطلق',
+    'exports/report.pdf'         => 'پوشه غیرمجاز',
+    'media/x/script.php'         => 'پسوند اجرایی',
+    'media/x/.htaccess'          => 'بازنویسی تنظیمات وب',
+    ''                           => 'مسیر خالی',
+];
+foreach ($badPaths as $candidate => $why) {
+    check("مسیر بد رد می‌شود ($why)", !pathAccepted($candidate));
+}
+unlink($probe);
+
+// ---------------------------------------------------------------------------
 echo "\n";
 echo "$passed تست موفق";
 if ($failed > 0) {

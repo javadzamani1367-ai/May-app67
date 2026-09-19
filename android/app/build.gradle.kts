@@ -135,4 +135,9 @@ dependencies {
     implementation(libs.androidx.security.crypto)
 
     testImplementation(libs.junit)
+
+    // The wire format shared with the Windows archive and the server is built
+    // on org.json, which android.jar only stubs. Test scope only, so it costs
+    // the APK nothing.
+    testImplementation(libs.json)
 }

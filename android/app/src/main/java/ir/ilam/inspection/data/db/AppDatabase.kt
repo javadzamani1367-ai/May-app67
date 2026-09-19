@@ -21,7 +21,7 @@ const val SCHEMA_VERSION = 3
  * gains a table the archive has no business knowing about — a local typing
  * convenience must not make an up-to-date archive look incompatible.
  */
-const val DATABASE_VERSION = 5
+const val DATABASE_VERSION = 6
 
 @Database(
     entities = [
@@ -33,7 +33,8 @@ const val DATABASE_VERSION = 5
         DispatchEntity::class,
         SettingEntity::class,
         SnippetEntity::class,
-        UserEntity::class
+        UserEntity::class,
+        ServerSyncEntity::class
     ],
     version = DATABASE_VERSION,
     exportSchema = true
@@ -49,6 +50,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun settingDao(): SettingDao
     abstract fun snippetDao(): SnippetDao
     abstract fun userDao(): UserDao
+    abstract fun serverSyncDao(): ServerSyncDao
 
     companion object {
         private const val DB_NAME = "inspection.db"
@@ -152,13 +154,34 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * When this phone last sent each case to the server — which is not the
+         * same thing as `synced_at`, the watermark the Windows archive pulls
+         * against. Phone only, so the shared schema version does not move.
+         */
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS server_sync (" +
+                        "report_id TEXT NOT NULL PRIMARY KEY, " +
+                        "sent_at INTEGER NOT NULL)"
+                )
+            }
+        }
+
         private fun build(context: Context): AppDatabase {
             System.loadLibrary("sqlcipher")
             val passphrase = KeyStoreVault(context).databasePassphrase()
             val factory = SupportOpenHelperFactory(passphrase)
             return Room.databaseBuilder(context, AppDatabase::class.java, DB_NAME)
                 .openHelperFactory(factory)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(
+                    MIGRATION_1_2,
+                    MIGRATION_2_3,
+                    MIGRATION_3_4,
+                    MIGRATION_4_5,
+                    MIGRATION_5_6
+                )
                 .build()
         }
     }

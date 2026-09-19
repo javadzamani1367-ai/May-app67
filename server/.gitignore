@@ -4,3 +4,4 @@ api/config.php
 # فایل‌های بارگذاری‌شده روی هاست می‌مانند، نه در مخزن.
 api/storage/*
 !api/storage/.htaccess
+probe-path.php

@@ -36,6 +36,10 @@ interface DeviceDao {
 
     @Query("SELECT IFNULL(SUM(power_watt), 0) FROM devices WHERE report_id = :reportId")
     suspend fun totalPower(reportId: String): Double
+
+    /** Replacing a pulled case: its children go together, not one by one. */
+    @Query("DELETE FROM devices WHERE report_id = :reportId")
+    suspend fun deleteFor(reportId: String)
 }
 
 @Dao
@@ -54,6 +58,9 @@ interface AttendeeDao {
 
     @Query("SELECT * FROM attendees WHERE report_id = :reportId")
     suspend fun listFor(reportId: String): List<AttendeeEntity>
+
+    @Query("DELETE FROM attendees WHERE report_id = :reportId")
+    suspend fun deleteFor(reportId: String)
 }
 
 @Dao
@@ -81,6 +88,9 @@ interface MediaDao {
 
     @Query("SELECT COUNT(*) FROM media WHERE report_id = :reportId AND type = 0")
     suspend fun photoCount(reportId: String): Int
+
+    @Query("DELETE FROM media WHERE report_id = :reportId")
+    suspend fun deleteFor(reportId: String)
 }
 
 @Dao
@@ -102,6 +112,9 @@ interface AttachmentDao {
 
     @Query("SELECT * FROM attachments WHERE id = :id")
     suspend fun byId(id: String): AttachmentEntity?
+
+    @Query("DELETE FROM attachments WHERE report_id = :reportId")
+    suspend fun deleteFor(reportId: String)
 }
 
 @Dao

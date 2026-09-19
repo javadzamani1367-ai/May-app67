@@ -57,6 +57,10 @@ fun SettingsScreen(onBack: () -> Unit, onUsers: () -> Unit) {
     val pairingCode by viewModel.pairingCode.collectAsStateWithLifecycle()
     val address by viewModel.address.collectAsStateWithLifecycle()
     val pendingSync by viewModel.pendingSync.collectAsStateWithLifecycle()
+    val pendingServer by viewModel.pendingServer.collectAsStateWithLifecycle()
+    val serverBusy by viewModel.serverBusy.collectAsStateWithLifecycle()
+    val serverOutcome by viewModel.serverOutcome.collectAsStateWithLifecycle()
+    val serverLastRun by viewModel.serverLastRun.collectAsStateWithLifecycle()
     val packagePassword by viewModel.packagePassword.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
 
@@ -180,6 +184,15 @@ fun SettingsScreen(onBack: () -> Unit, onUsers: () -> Unit) {
                 }
             }
 
+
+            ServerSyncCard(
+                configured = settings.syncTarget.isNotBlank(),
+                busy = serverBusy,
+                pending = pendingServer,
+                lastRun = serverLastRun,
+                outcome = serverOutcome,
+                onSync = viewModel::syncWithServer
+            )
 
             SectionCard(title = stringResource(R.string.sync_title)) {
                 Column {

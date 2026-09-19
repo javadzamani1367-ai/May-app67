@@ -467,7 +467,23 @@
     <string name="settings_password_on_server">رمز عبور شما را مدیر سامانه روی سرور تعیین می‌کند. برای تغییر آن با مدیر تماس بگیرید.</string>
     <string name="settings_pin">تغییر رمز عبور</string>
     <string name="settings_saved">تنظیمات ذخیره شد</string>
-    <string name="sync_title">همگام‌سازی</string>
+    <!-- همگام‌سازی با سرور مرکزی -->
+    <string name="server_sync_title">ارسال به سرور</string>
+    <string name="server_sync_no_target">آدرس سرور در تنظیمات بالا وارد نشده است. تا وقتی وارد نشود، پرونده‌ها فقط روی همین گوشی می‌مانند و با وای‌فای یا کابل یا بسته آفلاین به ویندوز منتقل می‌شوند.</string>
+    <string name="server_sync_unsent">%1$s پرونده هنوز به سرور نرفته</string>
+    <string name="server_sync_hint_expert">پرونده‌ها و تصاویرشان به سرور می‌روند تا مدیر همان روز ببیند. کار میدانی به این نیاز ندارد و آفلاین کامل انجام می‌شود.</string>
+    <string name="server_sync_hint_manager">پرونده‌های این گوشی فرستاده و پرونده‌های همه کارشناسان گرفته می‌شود. اول پرونده‌ها، بعد تصاویرشان.</string>
+    <string name="server_sync_now">همگام‌سازی با سرور</string>
+    <string name="server_sync_last">آخرین همگام‌سازی: %1$s</string>
+    <string name="server_sync_pushed">%1$s پرونده فرستاده شد</string>
+    <string name="server_sync_files_up">%1$s فایل بالا رفت</string>
+    <string name="server_sync_pulled">%1$s پرونده گرفته شد</string>
+    <string name="server_sync_files_down">%1$s فایل دریافت شد</string>
+    <string name="server_sync_failed">%1$s پرونده ناموفق — دفعه بعد دوباره تلاش می‌شود</string>
+    <string name="server_sync_nothing">چیز تازه‌ای برای ارسال یا دریافت نبود</string>
+    <string name="server_sync_offline">سرور در دسترس نبود. پرونده‌ها روی گوشی محفوظ‌اند و دفعه بعد فرستاده می‌شوند.</string>
+
+    <string name="sync_title">همگام‌سازی مستقیم با ویندوز</string>
     <string name="sync_start_server">شروع همگام‌سازی وای‌فای</string>
     <string name="sync_stop_server">توقف همگام‌سازی</string>
     <string name="sync_server_running">سرور فعال است</string>

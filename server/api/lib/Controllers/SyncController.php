@@ -52,8 +52,13 @@ final class SyncController
         $existing = Db::one('SELECT updated_at FROM reports WHERE id = ?', [$report['id']]);
         if ($existing !== null && (int) $existing['updated_at'] > (int) ($report['updated_at'] ?? 0)) {
             // نسخه سرور تازه‌تر است: نوشتن روی آن یعنی دور ریختن کاری که
-            // جای دیگری انجام شده.
-            Response::json(['skipped' => true, 'reason' => 'server_newer']);
+            // جای دیگری انجام شده. ولی فهرست فایل‌های نرسیده همراهش می‌رود،
+            // وگرنه تصویری که هنوز بالا نرفته هرگز فرصت دیگری پیدا نمی‌کند.
+            Response::json([
+                'skipped' => true,
+                'reason' => 'server_newer',
+                'missing_files' => $this->missingFiles((string) $report['id']),
+            ]);
         }
 
         $columns = self::REPORT_COLUMNS;
@@ -95,7 +100,38 @@ final class SyncController
             [$request->str('device_code'), $user['id'], Db::now(), (int) ($report['updated_at'] ?? 0)]
         );
 
-        Response::json(['saved' => true, 'id' => $report['id']]);
+        Response::json([
+            'saved' => true,
+            'id' => $report['id'],
+            // گوشی از این فهرست می‌فهمد کدام فایل‌ها را باید بفرستد. بدون آن
+            // هر همگام‌سازی همه تصاویر را دوباره بالا می‌برد، که روی اینترنت
+            // یک روستا یعنی هیچ‌وقت تمام نمی‌شود.
+            'missing_files' => $this->missingFiles((string) $report['id']),
+        ]);
+    }
+
+    /**
+     * سطرهای رسانه و پیوست این پرونده که فایلشان روی سرور نیست.
+     *
+     * «هست یا نیست» از روی وجود خود فایل روی دیسک سنجیده می‌شود، نه از یک ستون
+     * دیگر: یک ستون باید همیشه درست نگه داشته شود و اولین بار که نشد، سرور
+     * می‌گوید فایلی را دارد که ندارد.
+     *
+     * @return list<array{kind: string, id: string}>
+     */
+    private function missingFiles(string $reportId): array
+    {
+        $missing = [];
+        foreach (['media' => 'media', 'attachment' => 'attachments'] as $kind => $table) {
+            $rows = Db::all("SELECT id, file_path FROM $table WHERE report_id = ?", [$reportId]);
+            foreach ($rows as $row) {
+                $path = trim((string) $row['file_path']);
+                if ($path === '' || Storage::resolve($path) === null) {
+                    $missing[] = ['kind' => $kind, 'id' => (string) $row['id']];
+                }
+            }
+        }
+        return $missing;
     }
 
     public function pull(Request $request): void
@@ -110,36 +146,16 @@ final class SyncController
             Response::fail(403, 'forbidden', 'این پرونده برای شما نیست.');
         }
 
+        // `synced_at` مال همین سرور است و معنایش روی گوشی مقصد چیز دیگری است:
+        // «آخرین بار که این گوشی فرستاد». فرستادنش یعنی گوشی مقصد فکر کند
+        // پرونده‌ای را فرستاده که هرگز نفرستاده.
+        unset($report['synced_at']);
+
         $report['devices'] = Db::all('SELECT * FROM devices WHERE report_id = ? ORDER BY row_number', [$id]);
         $report['attendees'] = Db::all('SELECT * FROM attendees WHERE report_id = ?', [$id]);
         $report['media'] = Db::all('SELECT * FROM media WHERE report_id = ? ORDER BY captured_at', [$id]);
         $report['attachments'] = Db::all('SELECT * FROM attachments WHERE report_id = ? ORDER BY added_at', [$id]);
         Response::json(['report' => $report]);
-    }
-
-    public function upload(Request $request): void
-    {
-        Auth::require($request);
-        $file = $_FILES['file'] ?? null;
-        if (!is_array($file)) {
-            Response::fail(400, 'no_file', 'فایلی ارسال نشده است.');
-        }
-        $stored = Storage::put($file, 'reports/' . date('Y/m'));
-        Response::json($stored);
-    }
-
-    public function download(Request $request): void
-    {
-        Auth::require($request);
-        $path = Storage::resolve($request->str('path'));
-        if ($path === null || !is_file($path)) {
-            Response::fail(404, 'not_found', 'فایل پیدا نشد.');
-        }
-        header('Content-Type: application/octet-stream');
-        header('Content-Length: ' . filesize($path));
-        header('Content-Disposition: attachment; filename="' . basename($path) . '"');
-        readfile($path);
-        exit;
     }
 
     /**

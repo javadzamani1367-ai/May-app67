@@ -53,8 +53,8 @@ $routes = [
     'GET /sync/manifest'         => [SyncController::class, 'manifest'],
     'POST /sync/report'          => [SyncController::class, 'push'],
     'GET /sync/report'           => [SyncController::class, 'pull'],
-    'POST /sync/file'            => [SyncController::class, 'upload'],
-    'GET /sync/file'             => [SyncController::class, 'download'],
+    'POST /sync/file'            => [SyncFileController::class, 'upload'],
+    'GET /sync/file'             => [SyncFileController::class, 'download'],
 
     'POST /approvals/submit'     => [ApprovalController::class, 'submit'],
     'POST /approvals/decide'     => [ApprovalController::class, 'decide'],

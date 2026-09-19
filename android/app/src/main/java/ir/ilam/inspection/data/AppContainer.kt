@@ -3,6 +3,7 @@ package ir.ilam.inspection.data
 import android.content.Context
 import ir.ilam.inspection.data.db.AppDatabase
 import ir.ilam.inspection.data.repo.CaseContentRepository
+import ir.ilam.inspection.data.repo.ImportRepository
 import ir.ilam.inspection.data.repo.ReportRepository
 import ir.ilam.inspection.data.repo.AccountRepository
 import ir.ilam.inspection.data.repo.PerformanceRepository
@@ -13,6 +14,7 @@ import ir.ilam.inspection.export.ExcelExporter
 import ir.ilam.inspection.export.HtmlReportBuilder
 import ir.ilam.inspection.export.PdfExporter
 import ir.ilam.inspection.export.WordExporter
+import ir.ilam.inspection.sync.ServerCaseSync
 import ir.ilam.inspection.sync.SyncService
 import ir.ilam.inspection.util.AppFonts
 import ir.ilam.inspection.sync.ApprovalSync
@@ -32,7 +34,7 @@ class AppContainer(private val context: Context) {
     val snippetRepository: SnippetRepository by lazy { SnippetRepository(database.snippetDao()) }
     val userRepository: UserRepository by lazy { UserRepository(database.userDao()) }
     val accountRepository: AccountRepository by lazy { AccountRepository(vault, settingsRepository) }
-    val approvalSync: ApprovalSync by lazy { ApprovalSync(vault, settingsRepository) }
+    val approvalSync: ApprovalSync by lazy { ApprovalSync(vault, settingsRepository, serverCaseSync) }
     val performanceRepository: PerformanceRepository by lazy {
         PerformanceRepository(database, vault, settingsRepository)
     }
@@ -50,5 +52,23 @@ class AppContainer(private val context: Context) {
 
     val syncService: SyncService by lazy {
         SyncService(context, database, reportRepository, fileStore, settingsRepository)
+    }
+
+    val importRepository: ImportRepository by lazy { ImportRepository(database, fileStore) }
+
+    /**
+     * Cases to and from the central server. Takes the device code from
+     * [syncService] rather than reading it itself, so there is one answer to
+     * "which installation is this" across the whole app.
+     */
+    val serverCaseSync: ServerCaseSync by lazy {
+        ServerCaseSync(
+            database = database,
+            reports = reportRepository,
+            imports = importRepository,
+            settings = settingsRepository,
+            vault = vault,
+            deviceCode = { syncService.deviceId() }
+        )
     }
 }

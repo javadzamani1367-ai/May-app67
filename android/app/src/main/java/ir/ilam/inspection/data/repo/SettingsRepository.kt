@@ -43,6 +43,15 @@ class SettingsRepository(private val dao: SettingDao) {
 
     suspend fun setMediaQuality(quality: Int) = put(KEY_MEDIA_QUALITY, quality.toString())
 
+    /**
+     * How far this phone has pulled cases from the server, as the server's own
+     * `updated_at`. Not the local clock: two phones' clocks disagree by
+     * minutes and a case would be skipped for ever.
+     */
+    suspend fun pulledAt(): Long = dao.value(KEY_PULLED_AT)?.toLongOrNull() ?: 0L
+
+    suspend fun setPulledAt(timestamp: Long) = put(KEY_PULLED_AT, timestamp.toString())
+
 
     companion object {
         const val KEY_EXPERT_CODE = "expert_code"
@@ -50,6 +59,7 @@ class SettingsRepository(private val dao: SettingDao) {
         const val KEY_DEFAULT_AREA = "default_area_code"
         const val KEY_SYNC_TARGET = "sync_target"
         const val KEY_MEDIA_QUALITY = "media_quality"
+        const val KEY_PULLED_AT = "server_pulled_at"
         const val DEFAULT_AREA = "401"
         const val DEFAULT_QUALITY = 85
     }
