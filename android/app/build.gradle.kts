@@ -134,6 +134,12 @@ dependencies {
     implementation(libs.osmdroid)
     implementation(libs.androidx.security.crypto)
 
+    // Roughly 400 KB, against a 20 MB ceiling the release build sits 7 MB
+    // under. It buys the one thing no amount of care in the app can: a sync
+    // that happens when the expert is back on Wi-Fi and has forgotten to ask
+    // for one.
+    implementation(libs.androidx.work)
+
     testImplementation(libs.junit)
 
     // The wire format shared with the Windows archive and the server is built

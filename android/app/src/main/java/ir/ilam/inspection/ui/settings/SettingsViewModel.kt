@@ -8,6 +8,7 @@ import ir.ilam.inspection.data.AppContainer
 import ir.ilam.inspection.data.repo.AppSettings
 import ir.ilam.inspection.export.ShareUtil
 import ir.ilam.inspection.sync.ServerCaseSync
+import ir.ilam.inspection.sync.ServerSyncWorker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -123,6 +124,21 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
             _serverOutcome.value = outcome
             if (outcome.reachedServer) _serverLastRun.value = System.currentTimeMillis()
             _serverBusy.value = false
+        }
+    }
+
+    /**
+     * The background sync switch. The job is registered or cancelled straight
+     * away rather than at the next app start, so turning it off stops it now.
+     */
+    fun setAutoSync(context: Context, enabled: Boolean) {
+        viewModelScope.launch {
+            repository.setAutoSync(enabled)
+            if (enabled) {
+                ServerSyncWorker.schedule(context)
+            } else {
+                ServerSyncWorker.cancel(context)
+            }
         }
     }
 

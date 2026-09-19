@@ -481,6 +481,8 @@
     <string name="server_sync_files_down">%1$s فایل دریافت شد</string>
     <string name="server_sync_failed">%1$s پرونده ناموفق — دفعه بعد دوباره تلاش می‌شود</string>
     <string name="server_sync_nothing">چیز تازه‌ای برای ارسال یا دریافت نبود</string>
+    <string name="server_sync_auto">ارسال خودکار</string>
+    <string name="server_sync_auto_hint">فقط وقتی به وای‌فای وصل باشید، هر چند ساعت یک‌بار. با اینترنت سیم‌کارت چیزی فرستاده نمی‌شود.</string>
     <string name="server_sync_offline">سرور در دسترس نبود. پرونده‌ها روی گوشی محفوظ‌اند و دفعه بعد فرستاده می‌شوند.</string>
 
     <string name="sync_title">همگام‌سازی مستقیم با ویندوز</string>

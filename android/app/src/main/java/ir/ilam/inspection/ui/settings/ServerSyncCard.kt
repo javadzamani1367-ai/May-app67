@@ -1,13 +1,17 @@
 package ir.ilam.inspection.ui.settings
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.Switch
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -34,6 +38,8 @@ fun ServerSyncCard(
     pending: Int,
     lastRun: Long?,
     outcome: ServerCaseSync.Outcome?,
+    autoSync: Boolean,
+    onAutoSyncChange: (Boolean) -> Unit,
     onSync: () -> Unit
 ) {
     SectionCard(title = stringResource(R.string.server_sync_title)) {
@@ -75,6 +81,28 @@ fun ServerSyncCard(
                 enabled = !busy,
                 modifier = Modifier.fillMaxWidth()
             ) { Text(stringResource(R.string.server_sync_now)) }
+
+            // Wi-Fi only, and the label says so: an expert paying for data on
+            // their own SIM has to be able to see that from the switch itself,
+            // not discover it from a bill.
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.server_sync_auto),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = stringResource(R.string.server_sync_auto_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(checked = autoSync, onCheckedChange = onAutoSyncChange)
+            }
 
             lastRun?.let {
                 Text(

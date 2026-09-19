@@ -16,7 +16,8 @@ class SettingsRepository(private val dao: SettingDao) {
             expertName = map[KEY_EXPERT_NAME].orEmpty(),
             defaultAreaCode = map[KEY_DEFAULT_AREA] ?: DEFAULT_AREA,
             syncTarget = map[KEY_SYNC_TARGET].orEmpty(),
-            mediaQuality = map[KEY_MEDIA_QUALITY]?.toIntOrNull() ?: DEFAULT_QUALITY
+            mediaQuality = map[KEY_MEDIA_QUALITY]?.toIntOrNull() ?: DEFAULT_QUALITY,
+            autoSync = map[KEY_AUTO_SYNC] != FALSE
         )
     }
 
@@ -52,6 +53,15 @@ class SettingsRepository(private val dao: SettingDao) {
 
     suspend fun setPulledAt(timestamp: Long) = put(KEY_PULLED_AT, timestamp.toString())
 
+    /**
+     * Background sync on Wi-Fi. On unless it was explicitly turned off, so a
+     * phone that upgrades into this version starts sending without anyone
+     * having to find the switch.
+     */
+    suspend fun autoSync(): Boolean = dao.value(KEY_AUTO_SYNC) != FALSE
+
+    suspend fun setAutoSync(enabled: Boolean) = put(KEY_AUTO_SYNC, if (enabled) TRUE else FALSE)
+
 
     companion object {
         const val KEY_EXPERT_CODE = "expert_code"
@@ -60,6 +70,9 @@ class SettingsRepository(private val dao: SettingDao) {
         const val KEY_SYNC_TARGET = "sync_target"
         const val KEY_MEDIA_QUALITY = "media_quality"
         const val KEY_PULLED_AT = "server_pulled_at"
+        const val KEY_AUTO_SYNC = "auto_sync"
+        private const val TRUE = "1"
+        private const val FALSE = "0"
         const val DEFAULT_AREA = "401"
         const val DEFAULT_QUALITY = 85
     }
@@ -70,5 +83,6 @@ data class AppSettings(
     val expertName: String = "",
     val defaultAreaCode: String = SettingsRepository.DEFAULT_AREA,
     val syncTarget: String = "",
-    val mediaQuality: Int = SettingsRepository.DEFAULT_QUALITY
+    val mediaQuality: Int = SettingsRepository.DEFAULT_QUALITY,
+    val autoSync: Boolean = true
 )

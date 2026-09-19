@@ -191,6 +191,8 @@ fun SettingsScreen(onBack: () -> Unit, onUsers: () -> Unit) {
                 pending = pendingServer,
                 lastRun = serverLastRun,
                 outcome = serverOutcome,
+                autoSync = settings.autoSync,
+                onAutoSyncChange = { viewModel.setAutoSync(context, it) },
                 onSync = viewModel::syncWithServer
             )
 

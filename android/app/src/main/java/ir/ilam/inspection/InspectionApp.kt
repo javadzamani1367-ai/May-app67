@@ -3,7 +3,11 @@ package ir.ilam.inspection
 import android.app.Application
 import android.content.Context
 import ir.ilam.inspection.data.AppContainer
+import ir.ilam.inspection.sync.ServerSyncWorker
 import ir.ilam.inspection.util.MapConfig
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * Manual dependency container. The app is small and offline; a DI framework
@@ -18,6 +22,17 @@ class InspectionApp : Application() {
         super.onCreate()
         container = AppContainer(this)
         MapConfig.ensure(this)
+
+        // Reading the setting touches the encrypted database, so it cannot
+        // happen on the main thread during startup. Registering the job is
+        // cheap and idempotent — an already scheduled one keeps its place.
+        CoroutineScope(Dispatchers.IO).launch {
+            if (container.settingsRepository.autoSync()) {
+                ServerSyncWorker.schedule(this@InspectionApp)
+            } else {
+                ServerSyncWorker.cancel(this@InspectionApp)
+            }
+        }
     }
 }
 
