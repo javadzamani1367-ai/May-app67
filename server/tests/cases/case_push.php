@@ -26,6 +26,7 @@ $report = [
     'created_at' => 1756900000000,
     'updated_at' => 1757700000000,
     'county' => 'دره‌شهر',
+    'area_code' => '410',
     'district' => 'ماژین',
     'address' => 'روستای نمونه',
     'owner_name' => 'نام مالک',
@@ -74,6 +75,7 @@ check('پرونده ذخیره می‌شود', ($push['body']['ok'] ?? false) ==
 $row = $pdo->query("SELECT * FROM reports WHERE id = '$reportId'")->fetch(PDO::FETCH_ASSOC);
 check('پرونده در جدول هست', is_array($row));
 equals('فارسی سالم رسید', 'دره‌شهر', $row['county'] ?? '');
+equals('ناحیه هم رسید', '410', $row['area_code'] ?? '');
 equals('ولتاژ سالم رسید', 228.0, (float) ($row['voltage_r'] ?? 0));
 equals('دستگاه ثبت شد', 1, (int) $pdo->query("SELECT COUNT(*) FROM devices WHERE report_id = '$reportId'")->fetchColumn());
 equals('حاضر ثبت شد', 1, (int) $pdo->query("SELECT COUNT(*) FROM attendees WHERE report_id = '$reportId'")->fetchColumn());

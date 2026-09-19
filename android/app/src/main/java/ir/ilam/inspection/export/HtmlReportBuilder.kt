@@ -117,7 +117,7 @@ class HtmlReportBuilder(private val context: Context, private val files: FileSto
             null
         }
         return listOf(
-            text(R.string.field_county) to r.county,
+            text(R.string.field_county) to labels.countyWithArea(r.county, r.areaCode),
             text(R.string.field_district) to r.district,
             text(R.string.field_address) to r.address,
             text(R.string.field_postal_code) to PersianNumbers.toPersian(r.postalCode),

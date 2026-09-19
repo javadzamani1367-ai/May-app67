@@ -38,7 +38,7 @@ class ExcelExporter(private val context: Context, private val files: FileStore) 
             labels.reportType(r.reportType),
             PersianDate.format(r.reportDate),
             r.visitDate?.let { PersianDate.format(it) }.orEmpty(),
-            r.county.orEmpty(),
+            labels.countyWithArea(r.county, r.areaCode).orEmpty(),
             r.district.orEmpty(),
             r.address.orEmpty(),
             PersianNumbers.toPersian(r.subscriptionNumber),

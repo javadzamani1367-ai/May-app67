@@ -25,6 +25,7 @@ object SyncPayload {
         json.put("created_at", r.createdAt)
         json.put("updated_at", r.updatedAt)
         json.put("county", r.county)
+        json.put("area_code", r.areaCode)
         json.put("district", r.district)
         json.put("address", r.address)
         json.put("postal_code", r.postalCode)

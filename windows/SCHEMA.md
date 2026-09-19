@@ -1,6 +1,6 @@
 # اسکیمای مشترک — مرجع سمت ویندوز
 
-نسخه اسکیما: **۳** (`SCHEMA_VERSION = 3`)
+نسخه اسکیما: **۴** (`SCHEMA_VERSION = 4`)
 
 > `SCHEMA_VERSION` فقط برای جدول‌های مشترک گوشی و ویندوز است و در دست‌دادن همگام‌سازی بررسی می‌شود.
 > نسخه پایگاه داده Room جداست (`DATABASE_VERSION`) و وقتی گوشی جدولی می‌گیرد که به آرشیو ربطی ندارد
@@ -33,7 +33,10 @@ CREATE TABLE reports (
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
   synced_at INTEGER,
-  county TEXT, district TEXT, address TEXT, postal_code TEXT,
+  county TEXT,
+  -- ناحیه رسمی شرکت توزیع، ۴۰۱ تا ۴۱۹. جدا از نام شهرستان، چون ایلام دو ناحیه است
+  area_code TEXT,
+  district TEXT, address TEXT, postal_code TEXT,
   latitude REAL, longitude REAL, gps_accuracy REAL,
   file_number TEXT, bill_number TEXT, subscription_number TEXT, usage_type TEXT,
   owner_name TEXT, owner_national_id TEXT, owner_phone TEXT, owner_relation TEXT,

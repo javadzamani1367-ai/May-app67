@@ -21,6 +21,9 @@ namespace CryptoInspection.Archive.Data
         public long? SyncedAt { get; set; }
 
         public string County { get; set; }
+
+        /// <summary>Official distribution area, 401 to 419. Ilam is two of them.</summary>
+        public string AreaCode { get; set; }
         public string District { get; set; }
         public string Address { get; set; }
         public string PostalCode { get; set; }

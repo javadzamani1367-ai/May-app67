@@ -40,6 +40,9 @@ equals('با دستگاهش', 1, count($case['devices'] ?? []));
 equals('با حاضرینش', 1, count($case['attendees'] ?? []));
 equals('با رسانه‌اش', 1, count($case['media'] ?? []));
 equals('ردیف دستگاه درست خوانده شد', 1, (int) ($case['devices'][0]['row_number'] ?? 0));
+// ناحیه باید تا اینجا سالم برسد: مدیر از روی همین تصمیم می‌گیرد پرونده مال
+// کدام ناحیه ایلام است.
+equals('ناحیه در پرونده کشیده‌شده هست', '410', $case['area_code'] ?? '');
 check('synced_at سرور همراه پرونده نمی‌رود', !array_key_exists('synced_at', $case));
 
 $managerFile = $probe->raw("sync/file&kind=media&id=$mediaId", $managerToken);

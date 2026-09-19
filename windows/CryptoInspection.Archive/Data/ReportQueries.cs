@@ -29,7 +29,12 @@ namespace CryptoInspection.Archive.Data
             "tap_point, phase_type, amperage_r, amperage_s, amperage_t, voltage_r, voltage_s, " +
             "voltage_t, total_watt, tariff_type, meter_type, seal_external, seal_external_serial, " +
             "seal_internal, meter_appearance_ok, meter_tampered, " +
-            "approval_state, approval_comment, approval_at";
+            "approval_state, approval_comment, approval_at, " +
+            // New columns go on the END of this list, never in the middle.
+            // ReadReport takes its values by position, so inserting one beside
+            // the column it belongs with silently shifts every field after it
+            // — addresses arriving as districts, with nothing failing.
+            "area_code";
 
         private readonly Database _database;
 
@@ -263,6 +268,11 @@ namespace CryptoInspection.Archive.Data
             }
         }
 
+        /// <summary>
+        /// Rows come back by position, so these indexes and the order of
+        /// <c>ReportColumns</c> are one thing in two places. Add to the end of
+        /// both, together.
+        /// </summary>
         private static Report ReadReport(IDataRecord record)
         {
             return new Report
@@ -317,7 +327,8 @@ namespace CryptoInspection.Archive.Data
                 MeterTampered = Database.GetNullableInt(record, 47),
                 ApprovalState = Database.GetInt(record, 48),
                 ApprovalComment = Database.GetString(record, 49),
-                ApprovalAt = Database.GetNullableLong(record, 50)
+                ApprovalAt = Database.GetNullableLong(record, 50),
+                AreaCode = Database.GetString(record, 51)
             };
         }
     }

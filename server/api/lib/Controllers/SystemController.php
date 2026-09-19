@@ -9,7 +9,7 @@ final class SystemController
      * یکی باشد. تست `server/tests/run.php` این سه را با هم مقایسه می‌کند،
      * چون یک عدد جامانده یعنی سرور ادعا می‌کند اسکیمایی دارد که ندارد.
      */
-    public const SCHEMA_VERSION = 3;
+    public const SCHEMA_VERSION = 4;
 
     public function ping(Request $request): void
     {

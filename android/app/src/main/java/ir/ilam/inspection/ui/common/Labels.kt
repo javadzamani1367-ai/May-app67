@@ -16,8 +16,16 @@ import ir.ilam.inspection.data.model.OutputFormat
 import ir.ilam.inspection.data.model.ReportStatus
 import ir.ilam.inspection.data.model.ReportType
 import ir.ilam.inspection.data.model.UserRole
+import ir.ilam.inspection.util.CountyLabel
 
 /** All user visible names for coded values, resolved from resources. */
+
+/** «ایلام — ناحیه ۴۰۱», the same wording the report form uses. */
+@Composable
+fun countyWithArea(county: String?, areaCode: String?): String? = CountyLabel.of(
+    county,
+    areaCode
+) { name, area -> stringResource(R.string.county_with_code, name, area) }
 
 @Composable
 fun reportTypeLabel(type: ReportType): String = stringResource(

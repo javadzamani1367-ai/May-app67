@@ -66,6 +66,7 @@ class VisitViewModel(private val container: AppContainer, private val reportId: 
 
     fun setLocationField(
         county: String? = null,
+        areaCode: String? = null,
         district: String? = null,
         address: String? = null,
         postalCode: String? = null,
@@ -75,6 +76,7 @@ class VisitViewModel(private val container: AppContainer, private val reportId: 
     ) = edit { current ->
         current.copy(
             county = county ?: current.county,
+            areaCode = areaCode ?: current.areaCode,
             district = district ?: current.district,
             address = address ?: current.address,
             postalCode = postalCode ?: current.postalCode,

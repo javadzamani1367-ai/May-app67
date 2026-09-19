@@ -34,6 +34,7 @@ import ir.ilam.inspection.R
 import ir.ilam.inspection.container
 import ir.ilam.inspection.data.model.ReportStatus
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
+import ir.ilam.inspection.ui.common.countyWithArea
 import ir.ilam.inspection.ui.common.SectionCard
 import ir.ilam.inspection.ui.common.ValueRow
 import ir.ilam.inspection.ui.common.dispatchUnitLabel
@@ -122,7 +123,10 @@ fun CaseDetailScreen(
                         stringResource(R.string.form_visit_date),
                         current.report.visitDate?.let { PersianDate.format(it) }
                     )
-                    ValueRow(stringResource(R.string.field_county), current.report.county)
+                    ValueRow(
+                        stringResource(R.string.field_county),
+                        countyWithArea(current.report.county, current.report.areaCode)
+                    )
                     ValueRow(stringResource(R.string.field_address), current.report.address)
                     ValueRow(
                         stringResource(R.string.field_subscription_number),

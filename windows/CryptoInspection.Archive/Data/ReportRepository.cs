@@ -95,7 +95,7 @@ namespace CryptoInspection.Archive.Data
                 @"INSERT OR REPLACE INTO reports (
                     id, tracking_code, temp_code, report_type, status, expert_code,
                     report_date, visit_date, created_at, updated_at, synced_at,
-                    county, district, address, postal_code, latitude, longitude, gps_accuracy,
+                    county, area_code, district, address, postal_code, latitude, longitude, gps_accuracy,
                     file_number, bill_number, subscription_number, usage_type,
                     owner_name, owner_national_id, owner_phone, owner_relation,
                     meter_amperage, measured_amperage, connection_type, seal_status,
@@ -108,7 +108,7 @@ namespace CryptoInspection.Archive.Data
                   VALUES (
                     $id, $tracking_code, $temp_code, $report_type, $status, $expert_code,
                     $report_date, $visit_date, $created_at, $updated_at, $synced_at,
-                    $county, $district, $address, $postal_code, $latitude, $longitude, $gps_accuracy,
+                    $county, $area_code, $district, $address, $postal_code, $latitude, $longitude, $gps_accuracy,
                     $file_number, $bill_number, $subscription_number, $usage_type,
                     $owner_name, $owner_national_id, $owner_phone, $owner_relation,
                     $meter_amperage, $measured_amperage, $connection_type, $seal_status,
@@ -133,6 +133,7 @@ namespace CryptoInspection.Archive.Data
                     Database.Bind(command, "$updated_at", report.UpdatedAt);
                     Database.Bind(command, "$synced_at", report.SyncedAt);
                     Database.Bind(command, "$county", report.County);
+                    Database.Bind(command, "$area_code", report.AreaCode);
                     Database.Bind(command, "$district", report.District);
                     Database.Bind(command, "$address", report.Address);
                     Database.Bind(command, "$postal_code", report.PostalCode);

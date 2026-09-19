@@ -73,7 +73,7 @@ namespace CryptoInspection.Archive.Export
             sheet.Cell(row, column++).Value = Labels.ReportType(r.ReportType);
             sheet.Cell(row, column++).Value = PersianDate.Format(r.ReportDate);
             sheet.Cell(row, column++).Value = PersianDate.Format(r.VisitDate);
-            sheet.Cell(row, column++).Value = r.County ?? string.Empty;
+            sheet.Cell(row, column++).Value = Labels.CountyWithArea(r.County, r.AreaCode);
             sheet.Cell(row, column++).Value = r.District ?? string.Empty;
             sheet.Cell(row, column++).Value = r.Address ?? string.Empty;
             sheet.Cell(row, column++).Value = PersianNumbers.ToPersian(r.SubscriptionNumber);

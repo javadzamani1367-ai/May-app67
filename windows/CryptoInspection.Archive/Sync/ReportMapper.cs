@@ -31,6 +31,7 @@ namespace CryptoInspection.Archive.Sync
                     // the archive stamps it with the moment the case arrived here.
                     SyncedAt = null,
                     County = json.String("county"),
+                    AreaCode = json.String("area_code"),
                     District = json.String("district"),
                     Address = json.String("address"),
                     PostalCode = json.String("postal_code"),

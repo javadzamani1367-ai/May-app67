@@ -39,6 +39,7 @@ class SyncPayloadTest {
             updatedAt = 1_757_700_000_000,
             syncedAt = 1_757_650_000_000,
             county = "دره‌شهر",
+            areaCode = "410",
             district = "ماژین",
             address = "روستای نمونه، کوچه سوم",
             postalCode = "6931234567",

@@ -69,6 +69,9 @@ CREATE TABLE IF NOT EXISTS reports (
   updated_at          BIGINT       NOT NULL,
   synced_at           BIGINT       NULL,
   county              VARCHAR(100) NULL,
+  -- ناحیه رسمی شرکت توزیع (۴۰۱ تا ۴۱۹). جدا از نام شهرستان است چون
+  -- ایلام دو ناحیه با یک نام دارد.
+  area_code           VARCHAR(8)   NULL,
   district            VARCHAR(100) NULL,
   address             TEXT         NULL,
   postal_code         VARCHAR(32)  NULL,

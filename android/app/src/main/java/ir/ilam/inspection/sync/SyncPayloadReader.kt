@@ -37,6 +37,7 @@ object SyncPayloadReader {
             updatedAt = json.optLong("updated_at"),
             syncedAt = null,
             county = json.text("county"),
+            areaCode = json.text("area_code"),
             district = json.text("district"),
             address = json.text("address"),
             postalCode = json.text("postal_code"),

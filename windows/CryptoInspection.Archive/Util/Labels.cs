@@ -1,8 +1,32 @@
+using System.Linq;
+
 namespace CryptoInspection.Archive.Util
 {
     /// <summary>Names for the coded values shared with the phone's schema.</summary>
     public static class Labels
     {
+        /// <summary>
+        /// «ایلام — ناحیه ۴۰۱». Same rule as the phone's CountyLabel: a case
+        /// filed before the area was recorded is written as the plain county
+        /// name rather than with an empty area beside it.
+        /// </summary>
+        public static string CountyWithArea(string county, string areaCode)
+        {
+            string name = (county ?? string.Empty).Trim();
+            if (name.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            string area = new string((areaCode ?? string.Empty).Where(char.IsDigit).ToArray());
+            if (area.Length == 0)
+            {
+                return name;
+            }
+
+            return Strings.Format("county_with_code", name, PersianNumbers.ToPersian(area));
+        }
+
         public static string ReportType(int code)
         {
             return Strings.Coded("report_type", code);

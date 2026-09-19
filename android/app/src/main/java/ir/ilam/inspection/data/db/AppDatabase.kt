@@ -14,14 +14,14 @@ import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
  * with `windows/SCHEMA.md`; the sync handshake refuses to talk to an archive
  * built against a different version.
  */
-const val SCHEMA_VERSION = 3
+const val SCHEMA_VERSION = 4
 
 /**
  * Room's own version. It moves ahead of [SCHEMA_VERSION] whenever the phone
  * gains a table the archive has no business knowing about — a local typing
  * convenience must not make an up-to-date archive look incompatible.
  */
-const val DATABASE_VERSION = 6
+const val DATABASE_VERSION = 7
 
 @Database(
     entities = [
@@ -169,6 +169,37 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Version 4 of the shared schema: the case carries its area code.
+         *
+         * Cases that already exist are not left blank. The area is in their
+         * tracking code — `M-401-050614-482917` — so it is read back out of
+         * the segment between the first two dashes, and only when that segment
+         * is entirely digits. A manually entered code from the Soragh system
+         * has no such segment, and is left null rather than guessed at.
+         */
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE reports ADD COLUMN area_code TEXT")
+
+                val code = "COALESCE(NULLIF(tracking_code, ''), NULLIF(temp_code, ''))"
+                val tail = "substr($code, instr($code, '-') + 1)"
+                db.execSQL(
+                    "UPDATE reports SET area_code = " +
+                        "substr($tail, 1, instr($tail, '-') - 1) " +
+                        "WHERE $code IS NOT NULL " +
+                        "AND instr($code, '-') > 0 " +
+                        "AND instr($tail, '-') > 1"
+                )
+                // Anything that came out with a non digit in it was not an
+                // area code to begin with.
+                db.execSQL(
+                    "UPDATE reports SET area_code = NULL " +
+                        "WHERE area_code IS NOT NULL AND area_code GLOB '*[^0-9]*'"
+                )
+            }
+        }
+
         private fun build(context: Context): AppDatabase {
             System.loadLibrary("sqlcipher")
             val passphrase = KeyStoreVault(context).databasePassphrase()
@@ -180,7 +211,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_2_3,
                     MIGRATION_3_4,
                     MIGRATION_4_5,
-                    MIGRATION_5_6
+                    MIGRATION_5_6,
+                    MIGRATION_6_7
                 )
                 .build()
         }

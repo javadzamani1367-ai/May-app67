@@ -42,7 +42,7 @@ namespace CryptoInspection.Archive.Export
             Report r = detail.Report;
             return new List<Field>
             {
-                new Field(Strings.Get("column_county"), r.County),
+                new Field(Strings.Get("column_county"), Labels.CountyWithArea(r.County, r.AreaCode)),
                 new Field(Strings.Get("column_district"), r.District),
                 new Field(Strings.Get("column_address"), r.Address),
                 new Field(Strings.Get("form_postal_code"), PersianNumbers.ToPersian(r.PostalCode)),

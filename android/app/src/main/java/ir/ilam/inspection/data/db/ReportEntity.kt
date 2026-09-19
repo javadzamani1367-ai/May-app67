@@ -35,6 +35,13 @@ data class ReportEntity(
 
     // location
     @ColumnInfo(name = "county") val county: String? = null,
+    /**
+     * The distribution company's area, 401 to 419. Held apart from [county]
+     * because Ilam is two areas under one name: without this a case says
+     * which city it is in but not which area, and the area is what decides
+     * whose desk it lands on.
+     */
+    @ColumnInfo(name = "area_code") val areaCode: String? = null,
     @ColumnInfo(name = "district") val district: String? = null,
     @ColumnInfo(name = "address") val address: String? = null,
     @ColumnInfo(name = "postal_code") val postalCode: String? = null,

@@ -26,6 +26,7 @@
     <sys:String x:Key="column_report_date">تاریخ گزارش</sys:String>
     <sys:String x:Key="column_visit_date">تاریخ بازدید</sys:String>
     <sys:String x:Key="column_county">شهرستان</sys:String>
+    <sys:String x:Key="county_with_code">{0} — ناحیه {1}</sys:String>
     <sys:String x:Key="column_district">بخش</sys:String>
     <sys:String x:Key="column_address">آدرس</sys:String>
     <sys:String x:Key="column_subscription">شماره اشتراک</sys:String>

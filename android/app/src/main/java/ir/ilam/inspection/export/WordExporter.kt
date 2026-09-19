@@ -124,7 +124,7 @@ class WordExporter(private val context: Context, private val files: FileStore) {
             null
         }
         return listOf(
-            label(R.string.field_county) to r.county,
+            label(R.string.field_county) to labels.countyWithArea(r.county, r.areaCode),
             label(R.string.field_district) to r.district,
             label(R.string.field_address) to r.address,
             label(R.string.field_postal_code) to PersianNumbers.toPersian(r.postalCode),

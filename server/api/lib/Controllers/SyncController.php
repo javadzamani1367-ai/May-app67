@@ -13,7 +13,7 @@ final class SyncController
     /** ستون‌های جدول reports، همان‌هایی که گوشی و ویندوز دارند. */
     private const REPORT_COLUMNS = [
         'id', 'tracking_code', 'temp_code', 'report_type', 'status', 'expert_code',
-        'report_date', 'visit_date', 'created_at', 'updated_at', 'county', 'district',
+        'report_date', 'visit_date', 'created_at', 'updated_at', 'county', 'area_code', 'district',
         'address', 'postal_code', 'latitude', 'longitude', 'gps_accuracy', 'file_number',
         'bill_number', 'subscription_number', 'usage_type', 'owner_name', 'owner_national_id',
         'owner_phone', 'owner_relation', 'meter_amperage', 'connection_type', 'seal_status',

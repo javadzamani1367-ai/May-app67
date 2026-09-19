@@ -49,9 +49,15 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
   را اضافه کنید. **اگر این را فراموش کنید، مقدار بی‌صدا دور ریخته می‌شود.**
 
 **قدم ۴ — ویندوز**
-- `windows/CryptoInspection.Archive/Data/Schema.cs` → DDL
-- `windows/CryptoInspection.Archive/Data/Models.cs` → فیلد مدل
-- `windows/CryptoInspection.Archive/Sync/ReportMapper.cs` → خواندن از JSON
+- `Data/Schema.cs` → هم DDL جدول، هم یک سطر در `AddedColumns` تا آرشیوهای
+  موجود هم ستون را بگیرند
+- `Data/Models.cs` → فیلد مدل
+- `Sync/ReportMapper.cs` → خواندن از JSON
+- `Data/ReportRepository.cs` → فهرست ستون‌ها و `$`پارامترهای INSERT
+- `Data/ReportQueries.cs` → **ستون تازه را به آخر `ReportColumns` اضافه کنید،
+  نه وسطش.** `ReadReport` مقادیر را با **شماره ستون** می‌خواند، پس یک ستون
+  اضافه‌شده در وسط، همه فیلدهای بعدی را یکی جابه‌جا می‌کند — آدرس به جای بخش
+  خوانده می‌شود و هیچ خطایی هم نمی‌دهد
 - `windows/SCHEMA.md` → مستند
 
 **قدم ۵ — اگر باید بین دستگاه‌ها منتقل شود**

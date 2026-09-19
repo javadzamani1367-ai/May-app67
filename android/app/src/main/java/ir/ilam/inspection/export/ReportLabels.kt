@@ -13,6 +13,7 @@ import ir.ilam.inspection.data.model.TariffType
 import ir.ilam.inspection.data.model.YesNo
 import ir.ilam.inspection.data.model.ReportStatus
 import ir.ilam.inspection.data.model.ReportType
+import ir.ilam.inspection.util.CountyLabel
 
 /**
  * Names for coded values outside Compose — the exporters need the same words
@@ -23,6 +24,12 @@ class ReportLabels(private val context: Context) {
     fun text(res: Int): String = context.getString(res)
 
     fun text(res: Int, argument: String): String = context.getString(res, argument)
+
+    /** «ایلام — ناحیه ۴۰۱», for the report form and the spreadsheet. */
+    fun countyWithArea(county: String?, areaCode: String?): String? =
+        CountyLabel.of(county, areaCode) { name, area ->
+            context.getString(R.string.county_with_code, name, area)
+        }
 
     fun tapPoint(code: Int?): String? = TapPoint.of(code)?.let {
         context.getString(

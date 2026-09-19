@@ -109,6 +109,7 @@ class ReportRepository(
             createdAt = now,
             updatedAt = now,
             county = countyName,
+            areaCode = areaCode,
             district = district?.trim()?.ifBlank { null },
             address = address?.trim()?.ifBlank { null },
             subscriptionNumber = subscription?.trim()?.ifBlank { null }
@@ -133,7 +134,11 @@ class ReportRepository(
         val current = reports.byId(id) ?: return null
         if (current.trackingCode != null) return current
         val type = ReportType.of(current.reportType)
-        val areaCode = current.tempCode?.split(TrackingCode.SEPARATOR)?.getOrNull(1)
+        // The case carries its own area now. The temporary code is still read
+        // as a fallback for cases filed before that column existed and whose
+        // code was manual, so nothing regenerates under a different area.
+        val areaCode = current.areaCode
+            ?: current.tempCode?.split(TrackingCode.SEPARATOR)?.getOrNull(1)
             ?: settings.defaultAreaCode()
         val generated = TrackingCode.generate(type, areaCode, current.reportDate, current.subscriptionNumber)
             ?: return current
