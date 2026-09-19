@@ -59,7 +59,13 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
 [`HANDOVER.md` بخش ۷](HANDOVER.md#۷-تغییر-اسکیما--چهار-جا)) و
 `php server/tests/run.php` را بزنید.
 
-**قدم ۶ — نمایش**
+**قدم ۶ — ساختار انتقال**
+`sync/SyncPayload.kt` (نوشتن) و `sync/SyncPayloadReader.kt` (خواندن). هر دو، وگرنه
+فیلد به سرور می‌رود و برنمی‌گردد — یا برعکس. تست
+`SyncPayloadTest.kt` یک پرونده کامل را از هر دو نیمه رد می‌کند؛ فیلد تازه را در
+نمونه همان تست هم بگذارید تا اگر یک نیمه جا ماند، تست بگوید.
+
+**قدم ۷ — نمایش**
 - برچسب در `android/app/src/main/res/values/strings.xml`
 - فیلد در همان مرحله بازدید (مثلاً `ui/visit/LocationStep.kt`)
 - ردیف در خروجی: `export/WordExporter.kt`، `export/HtmlReportBuilder.kt` و
