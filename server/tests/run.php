@@ -132,6 +132,40 @@ check('سرور ستون اضافه ندارد', $extraOnServer === [], implode(
 $tableCount = preg_match_all('/CREATE TABLE IF NOT EXISTS/', $sql);
 check('هر ۱۴ جدول در schema.sql هست', $tableCount === 14, "$tableCount جدول");
 
+// نسخه اسکیما در سه زبان نوشته شده و هیچ کامپایلری آن سه را با هم مقایسه
+// نمی‌کند. اگر یکی جا بماند، سرور در /ping عددی را اعلام می‌کند که اسکیمای
+// واقعی‌اش نیست و طرف مقابل بی‌دلیل ادغام را رد یا قبول می‌کند.
+function declaredVersion(string $relativePath, string $pattern): ?int
+{
+    $text = @file_get_contents(__DIR__ . '/' . $relativePath);
+    if ($text === false) {
+        return null;
+    }
+    return preg_match($pattern, $text, $m) === 1 ? (int) $m[1] : null;
+}
+
+$phoneVersion = declaredVersion(
+    '../../android/app/src/main/java/ir/ilam/inspection/data/db/AppDatabase.kt',
+    '/const val SCHEMA_VERSION = (\d+)/'
+);
+$serverVersion = declaredVersion(
+    '../api/lib/Controllers/SystemController.php',
+    '/public const SCHEMA_VERSION = (\d+)/'
+);
+$windowsVersion = declaredVersion(
+    '../../windows/CryptoInspection.Archive/Data/Schema.cs',
+    '/public const int Version = (\d+)/'
+);
+$documentedVersion = declaredVersion(
+    '../../windows/SCHEMA.md',
+    '/`SCHEMA_VERSION = (\d+)`/'
+);
+
+check('نسخه اسکیمای گوشی خوانده شد', $phoneVersion !== null);
+equals('نسخه اسکیمای سرور با گوشی یکی است', $phoneVersion, $serverVersion);
+equals('نسخه اسکیمای ویندوز با گوشی یکی است', $phoneVersion, $windowsVersion);
+equals('نسخه مستندشده با گوشی یکی است', $phoneVersion, $documentedVersion);
+
 // ---------------------------------------------------------------------------
 echo "\n";
 echo "$passed تست موفق";
