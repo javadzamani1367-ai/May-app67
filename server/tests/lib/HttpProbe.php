@@ -113,6 +113,21 @@ final class HttpProbe
         ];
     }
 
+    /** همان فرم، وقتی متن پاسخ هم لازم است و نه فقط کد وضعیت. */
+    public function formHtml(string $path, array $fields): string
+    {
+        $handle = curl_init("http://127.0.0.1:$this->port/$path");
+        curl_setopt_array($handle, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query($fields),
+            CURLOPT_TIMEOUT => 20,
+        ]);
+        $raw = (string) curl_exec($handle);
+        curl_close($handle);
+        return $raw;
+    }
+
     /** فرم HTML، برای setup.php که JSON نیست. */
     public function form(string $path, array $fields): int
     {

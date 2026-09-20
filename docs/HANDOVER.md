@@ -277,7 +277,8 @@ server/
     ├── .htaccess       ← بازنویسی مسیر، با جایگزین index.php?route=…
     ├── config.php      ← رمز پایگاه داده. در .gitignore. هرگز در مخزن نیست.
     ├── install-check.php  ← بعد از نصب یک‌بار باز می‌شود و همه چیز را می‌سنجد
-    ├── setup.php       ← ساخت اولین مدیر
+    ├── setup.php       ← ساخت اولین مدیر. بعد از اولین کاربر خودش را می‌بندد.
+    ├── reset-manager.php ← تنها راه برگشت وقتی رمز مدیر گم شد؛ با app_key باز می‌شود
     ├── lib/
     │   ├── Db.php, Config.php, Request.php, Response.php
     │   ├── Auth.php        ← توکن، نقش، و مهار دستگاه

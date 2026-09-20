@@ -100,3 +100,5 @@ equals('پرونده ناموجود، ۴۰۴ می‌گیرد', 404, $notFound['s
 
 $badRoute = $probe->json('GET', 'no/such/route', [], $managerToken);
 equals('مسیر ناموجود، ۴۰۴ می‌گیرد', 404, $badRoute['status']);
+
+require __DIR__ . '/manager_recovery.php';
