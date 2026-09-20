@@ -341,6 +341,7 @@
     <string name="dispatch_generate">تولید و اشتراک‌گذاری</string>
     <string name="dispatch_history">سوابق ارسال</string>
     <string name="dispatch_history_empty">ارسالی ثبت نشده است</string>
+    <string name="dispatch_share_failed">ارسال باز نشد. فایل‌ها ساخته شده و روی گوشی هستند؛ از صفحه پرونده دوباره تلاش کنید.</string>
     <string name="dispatch_done">فایل ساخته شد</string>
     <string name="dispatch_nothing_selected">حداقل یک مورد را انتخاب کنید</string>
     <string-array name="dispatch_units">
@@ -508,6 +509,8 @@
     <string name="lock_wrong_password">رمز عبور نادرست است</string>
     <string name="lock_short_password">رمز عبور باید حداقل شش نویسه باشد</string>
     <string name="lock_missing_user_code">کد کاربری را وارد کنید</string>
+    <string name="lock_server_address">آدرس سرور</string>
+    <string name="lock_server_address_hint">آدرس پوشه‌ای که فایل‌های سرور در آن نصب شده، مثل https://example.com/api — خالی بگذارید تا برنامه کاملاً آفلاین کار کند.</string>
     <string name="lock_device_code">کد این دستگاه</string>
     <string name="lock_needs_activation">این دستگاه هنوز فعال نشده است. برای اولین ورود باید به اینترنت وصل باشید تا سرور دستگاه شما را تأیید کند.</string>
     <string name="lock_server_unreachable">سرور در دسترس نیست. اتصال اینترنت و آدرس سرور را بررسی کنید.</string>

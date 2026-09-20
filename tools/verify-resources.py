@@ -87,6 +87,23 @@ else:
         if not re.fullmatch(r"\d{3}", code.strip()):
             problems.append(f"area code {code!r} is not three digits")
 
+# 6. every folder FileStore writes to must be declared to FileProvider
+#
+# Sharing a file from a folder that file_paths.xml does not list throws
+# IllegalArgumentException and takes the app down with it — and only when
+# someone actually shares that kind of file, which is how `attachments/` went
+# missing until a dispatch with a document killed the app in the field.
+store = (root / "java" / "ir" / "ilam" / "inspection" / "util" / "FileStore.kt")
+paths_xml = (root / "res" / "xml" / "file_paths.xml")
+if store.exists() and paths_xml.exists():
+    folders = set(re.findall(r'const val [A-Z_]+ = "([a-z]+)"', store.read_text(encoding="utf-8")))
+    declared = set(re.findall(r'<files-path[^>]*path="([^"/]+)', paths_xml.read_text(encoding="utf-8")))
+    for folder in sorted(folders - declared):
+        problems.append(
+            f"FileStore writes to '{folder}/' but file_paths.xml does not declare it; "
+            "sharing from there crashes the app"
+        )
+
 for problem in problems:
     print("FAIL:", problem)
 print(f"{len(problems)} problem(s)")

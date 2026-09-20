@@ -126,6 +126,21 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
                 Text(stringResource(R.string.lock_request_registration))
             }
         }
+
+        // Always available: settings are behind this screen, so without this
+        // a wrong address has no way of being corrected.
+        TextButton(onClick = viewModel::openServerAddress, enabled = !state.busy) {
+            Text(stringResource(R.string.lock_server_address))
+        }
+    }
+
+    if (state.editingServer) {
+        ServerAddressDialog(
+            current = state.serverAddress,
+            busy = state.busy,
+            onDismiss = viewModel::closeServerAddress,
+            onSave = viewModel::saveServerAddress
+        )
     }
 
     if (state.askingRegistration) {

@@ -13,47 +13,57 @@ import java.io.File
  */
 object ShareUtil {
 
-    fun share(context: Context, file: File, mimeType: String = mimeFor(file)) {
-        val uri = FileProvider.getUriForFile(
-            context,
-            context.packageName + ".fileprovider",
-            file
-        )
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = mimeType
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        val chooser = Intent.createChooser(intent, context.getString(R.string.action_share))
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(chooser)
-    }
+    /**
+     * Returns false when the hand-off could not be started.
+     *
+     * Wrapped because failing here used to take the whole app down with it,
+     * after the report had already been built and the expert was one tap from
+     * sending it. A file in a folder FileProvider has no root for throws, and
+     * so does a phone with nothing able to receive the type. Neither is worth
+     * losing the work over — the caller says so instead.
+     */
+    fun share(context: Context, file: File, mimeType: String = mimeFor(file)): Boolean =
+        runCatching {
+            val uri = FileProvider.getUriForFile(
+                context,
+                context.packageName + ".fileprovider",
+                file
+            )
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = mimeType
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            val chooser = Intent.createChooser(intent, context.getString(R.string.action_share))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(chooser)
+        }.isSuccess
 
     /**
      * Several files in one hand-off: the report plus the documents and videos
      * that cannot live inside it. The type is narrowed only when every file
      * agrees, otherwise a chooser would hide apps that can take the rest.
      */
-    fun shareMany(context: Context, files: List<File>) {
-        if (files.isEmpty()) return
-        if (files.size == 1) {
-            share(context, files.first())
-            return
-        }
-        val uris = ArrayList(
-            files.map {
-                FileProvider.getUriForFile(context, context.packageName + ".fileprovider", it)
+    fun shareMany(context: Context, files: List<File>): Boolean {
+        if (files.isEmpty()) return false
+        if (files.size == 1) return share(context, files.first())
+
+        return runCatching {
+            val uris = ArrayList(
+                files.map {
+                    FileProvider.getUriForFile(context, context.packageName + ".fileprovider", it)
+                }
+            )
+            val types = files.map { mimeFor(it) }.distinct()
+            val intent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                type = types.singleOrNull() ?: "*/*"
+                putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-        )
-        val types = files.map { mimeFor(it) }.distinct()
-        val intent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
-            type = types.singleOrNull() ?: "*/*"
-            putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        val chooser = Intent.createChooser(intent, context.getString(R.string.action_share))
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(chooser)
+            val chooser = Intent.createChooser(intent, context.getString(R.string.action_share))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(chooser)
+        }.isSuccess
     }
 
     fun mimeFor(file: File): String = when (file.extension.lowercase()) {

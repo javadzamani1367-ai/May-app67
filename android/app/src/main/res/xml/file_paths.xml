@@ -3,6 +3,11 @@
     <!-- Everything the app shares lives inside its private storage; nothing is
          written to the public gallery. -->
     <files-path name="media" path="media/" />
+    <!-- Attachments are handed to the chooser as separate files beside the
+         report, so they need a root here just as much as the media do. Without
+         this line FileProvider throws the moment a dispatch includes a
+         document, and the app dies with the report already built. -->
+    <files-path name="attachments" path="attachments/" />
     <files-path name="exports" path="exports/" />
     <cache-path name="cache" path="." />
 </paths>

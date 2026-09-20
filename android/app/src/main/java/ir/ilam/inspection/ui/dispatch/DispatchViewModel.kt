@@ -107,16 +107,17 @@ class DispatchViewModel(
                 deadlineDays = PersianNumbers.parseIntOrNull(current.deadlineDays)
             )
 
-            if (bundle.files.isNotEmpty()) {
-                ShareUtil.shareMany(context, bundle.files)
-            }
+            // The dispatch is already recorded above, so a hand-off that
+            // cannot start is reported rather than hidden: the files are on
+            // the phone and the expert can send them again from the case.
+            val handedOff = bundle.files.isEmpty() || ShareUtil.shareMany(context, bundle.files)
             _state.update {
                 it.copy(
                     busy = false,
-                    message = if (bundle.viaPrintSheet) {
-                        R.string.export_via_print_dialog
-                    } else {
-                        R.string.dispatch_done
+                    message = when {
+                        !handedOff -> R.string.dispatch_share_failed
+                        bundle.viaPrintSheet -> R.string.export_via_print_dialog
+                        else -> R.string.dispatch_done
                     }
                 )
             }

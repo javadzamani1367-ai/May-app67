@@ -19,6 +19,8 @@ data class LockState(
     val errorRes: Int? = null,
     val noticeRes: Int? = null,
     val askingRegistration: Boolean = false,
+    val editingServer: Boolean = false,
+    val serverAddress: String = "",
     val unlocked: Boolean = false
 )
 
@@ -26,6 +28,7 @@ data class LockState(
 class LockViewModel(private val container: AppContainer) : ViewModel() {
 
     private val account = container.accountRepository
+    private val settings = container.settingsRepository
 
     private val _state = MutableStateFlow(LockState())
     val state: StateFlow<LockState> = _state.asStateFlow()
@@ -36,7 +39,41 @@ class LockViewModel(private val container: AppContainer) : ViewModel() {
         it.copy(serverMessage = null, errorRes = null, noticeRes = null)
     }
 
+    init {
+        // Shown on the entry screen so the address can be corrected from here.
+        viewModelScope.launch {
+            val stored = settings.current().syncTarget
+            _state.update { it.copy(serverAddress = stored) }
+        }
+    }
+
     fun openRegistration() = _state.update { it.copy(askingRegistration = true) }
+
+    /**
+     * The server address, editable from the entry screen.
+     *
+     * It lives in settings, and settings are behind this screen — so a wrong
+     * address, or an account the server does not know, left the phone with no
+     * way back to the one field that fixes it. The address is not a secret and
+     * knowing it grants nothing, so correcting it here costs nothing.
+     */
+    fun openServerAddress() = _state.update { it.copy(editingServer = true) }
+
+    fun closeServerAddress() = _state.update { it.copy(editingServer = false) }
+
+    fun saveServerAddress(value: String) {
+        viewModelScope.launch {
+            val trimmed = value.trim()
+            settings.setSyncTarget(trimmed)
+            _state.update {
+                it.copy(
+                    serverAddress = trimmed,
+                    editingServer = false,
+                    noticeRes = R.string.settings_saved
+                )
+            }
+        }
+    }
 
     fun closeRegistration() = _state.update { it.copy(askingRegistration = false) }
 
