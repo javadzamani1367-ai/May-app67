@@ -26,11 +26,21 @@ class InspectionApp : Application() {
         // Reading the setting touches the encrypted database, so it cannot
         // happen on the main thread during startup. Registering the job is
         // cheap and idempotent — an already scheduled one keeps its place.
+        //
+        // Wrapped, and deliberately: an exception thrown in a coroutine with
+        // no handler reaches the default one and kills the process, so a
+        // database that will not open or a WorkManager that did not
+        // initialise would stop the app from starting at all — every launch,
+        // with no way in. Background sending is a convenience; opening the
+        // app is not. If this fails the expert still works offline and still
+        // has the sync button in settings.
         CoroutineScope(Dispatchers.IO).launch {
-            if (container.settingsRepository.autoSync()) {
-                ServerSyncWorker.schedule(this@InspectionApp)
-            } else {
-                ServerSyncWorker.cancel(this@InspectionApp)
+            runCatching {
+                if (container.settingsRepository.autoSync()) {
+                    ServerSyncWorker.schedule(this@InspectionApp)
+                } else {
+                    ServerSyncWorker.cancel(this@InspectionApp)
+                }
             }
         }
     }
