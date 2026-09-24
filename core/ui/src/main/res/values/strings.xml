@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="picker_ok">تأیید</string>
+    <string name="picker_cancel">لغو</string>
+    <string name="picker_previous_month">ماه قبل</string>
+    <string name="picker_next_month">ماه بعد</string>
+    <string name="picker_today">امروز</string>
+    <string name="picker_tomorrow">فردا</string>
+    <string name="picker_next_saturday">شنبه‌ی بعد</string>
+    <string name="picker_no_date">بدون تاریخ</string>
+    <string name="picker_time_title">انتخاب ساعت</string>
+</resources>

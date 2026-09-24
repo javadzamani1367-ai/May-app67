@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="channel_reminders">یادآوری‌ها</string>
+    <string name="channel_reminders_desc">یادآوری کارها در زمان مقرر</string>
+    <string name="channel_alarms">آلارم‌ها</string>
+    <string name="channel_alarms_desc">آلارم تمام‌صفحه با صدا تا زمانی که پاسخ دهید</string>
+    <string name="channel_missed">یادآوری‌های از دست رفته</string>
+    <string name="channel_missed_desc">یادآوری‌هایی که هنگام خاموش بودن گوشی گذشتند</string>
+    <string name="action_done">انجام شد</string>
+    <string name="action_snooze_10">۱۰ دقیقه بعد</string>
+    <string name="action_snooze_60">۱ ساعت بعد</string>
+    <string name="action_dismiss">بستن</string>
+    <string name="missed_prefix">از دست رفته: %1$s</string>
+    <string name="alarm_title">وقت انجام کار</string>
+</resources>

@@ -1,5 +1,6 @@
 package ir.roozban.core.timeparser
 
+import ir.roozban.core.recurrence.RecurrenceSpec
 import java.time.Duration
 import java.time.LocalDateTime
 

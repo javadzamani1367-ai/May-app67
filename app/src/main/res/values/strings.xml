@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">روزبان</string>
+    <string name="tab_today">امروز</string>
+    <string name="tab_upcoming">آینده</string>
+    <string name="tab_inbox">صندوق</string>
 </resources>

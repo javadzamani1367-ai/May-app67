@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">تنظیمات</string>
+    <string name="settings_back">بازگشت</string>
+
+    <string name="settings_health">سلامت یادآوری‌ها</string>
+    <string name="health_notifications">اجازه‌ی اعلان</string>
+    <string name="health_exact">آلارم‌های دقیق</string>
+    <string name="health_full_screen">آلارم تمام‌صفحه</string>
+    <string name="health_battery">بدون محدودیت باتری</string>
+    <string name="health_ok">فعال</string>
+    <string name="health_fix">درست کنید</string>
+    <string name="health_battery_guide">راهنمای تنظیم باتری برای گوشی شما</string>
+
+    <string name="settings_default_reminder">یادآوری پیش‌فرض کارهای زمان‌دار</string>
+    <string name="settings_reminder_none">بدون</string>
+    <string name="settings_reminder_notification">اعلان</string>
+    <string name="settings_reminder_alarm">آلارم</string>
+    <string name="settings_on_time">سر وقت</string>
+    <string name="settings_minutes_before">%1$s دقیقه قبل</string>
+
+    <string name="settings_all_day">یادآوری کارهای بدون ساعت</string>
+    <string name="settings_all_day_desc">مثل «پرداخت قبض آخر ماه»؛ صبح همان روز یادآوری می‌شود.</string>
+    <string name="settings_at_time">ساعت %1$s</string>
+
+    <string name="settings_words">معنای کلمات زمانی</string>
+    <string name="settings_words_desc">وقتی می‌نویسید «فردا عصر»، کار برای چه ساعتی ثبت شود.</string>
+    <string name="word_morning">صبح</string>
+    <string name="word_noon">ظهر</string>
+    <string name="word_afternoon">بعدازظهر</string>
+    <string name="word_evening">عصر</string>
+    <string name="word_night">شب</string>
+    <string name="decrease">کم کردن</string>
+    <string name="increase">زیاد کردن</string>
+
+    <string name="settings_appearance">ظاهر</string>
+    <string name="settings_dynamic_color">رنگ‌های والپیپر (Material You)</string>
+
+    <string name="settings_about">درباره</string>
+    <string name="settings_version">نسخه‌ی %1$s</string>
+    <string name="settings_privacy">همه‌ی داده‌ها فقط روی همین گوشی ذخیره می‌شوند.</string>
+
+    <string name="battery_title">راهنمای باتری</string>
+    <string name="battery_intro">برخی گوشی‌ها برای صرفه‌جویی در باتری، برنامه‌ها را در پس‌زمینه می‌بندند و یادآوری‌ها نمی‌رسند. این مراحل را یک بار انجام دهید:</string>
+    <string name="battery_device">گوشی شما: %1$s</string>
+    <string name="battery_request">حذف محدودیت باتری</string>
+    <string name="battery_autostart">باز کردن تنظیمات شروع خودکار</string>
+    <string name="battery_app_settings">تنظیمات برنامه</string>
+    <string name="battery_already">محدودیت باتری برای روزبان برداشته شده است.</string>
+</resources>

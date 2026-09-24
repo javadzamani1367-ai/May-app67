@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tasks_title_today">روزبان</string>
+    <string name="tasks_title_upcoming">آینده</string>
+    <string name="tasks_title_inbox">صندوق ورودی</string>
+    <string name="tasks_settings">تنظیمات</string>
+    <string name="tasks_add">کار جدید</string>
+    <string name="tasks_undo">بازگردانی</string>
+    <string name="tasks_deleted">کار حذف شد</string>
+    <string name="tasks_completed_today">انجام‌شده‌ی امروز</string>
+    <string name="tasks_complete">انجام شد</string>
+    <string name="tasks_reopen">برگرداندن به فهرست</string>
+
+    <string name="empty_today_title">امروز را با یک کار شروع کنید</string>
+    <string name="empty_today_body">روی «کار جدید» بزنید و به زبان خودتان بنویسید؛ مثلاً «جلسه با علی پس‌فردا ساعت ۱۰» یا «ورزش هر روز صبح ۳۰ دقیقه».</string>
+    <string name="empty_upcoming_title">برنامه‌ای برای روزهای آینده نیست</string>
+    <string name="empty_upcoming_body">کارهایی که برای فردا به بعد زمان دارند اینجا دیده می‌شوند.</string>
+    <string name="empty_inbox_title">صندوق ورودی خالی است</string>
+    <string name="empty_inbox_body">کارهای بدون تاریخ اینجا می‌مانند تا برایشان زمان بگذارید.</string>
+
+    <string name="permission_notifications_title">یادآوری‌ها بی‌صدا می‌مانند</string>
+    <string name="permission_notifications_body">برای اینکه روزبان بتواند سر وقت خبرتان کند، اجازه‌ی نمایش اعلان لازم است.</string>
+    <string name="permission_notifications_action">اجازه می‌دهم</string>
+    <string name="permission_exact_title">یادآوری‌ها ممکن است دیر برسند</string>
+    <string name="permission_exact_body">اجازه‌ی «آلارم‌ها و یادآوری‌ها» خاموش است؛ بدون آن اندروید زمان یادآوری را تا چند دقیقه جابه‌جا می‌کند.</string>
+    <string name="permission_open_settings">باز کردن تنظیمات</string>
+
+    <string name="quick_add_placeholder">مثلاً: خرید نان فردا عصر !مهم</string>
+    <string name="quick_add_save">ثبت</string>
+    <string name="quick_add_title_label">عنوان: %1$s</string>
+    <string name="quick_add_needs_review">زمان را با اطمینان تشخیص ندادم؛ لطفاً بررسی کنید.</string>
+    <string name="quick_add_no_time">بدون زمان</string>
+
+    <string name="editor_title_hint">عنوان کار</string>
+    <string name="editor_notes_hint">یادداشت</string>
+    <string name="editor_date">تاریخ</string>
+    <string name="editor_time">ساعت</string>
+    <string name="editor_no_date">بدون تاریخ</string>
+    <string name="editor_no_time">بدون ساعت</string>
+    <string name="editor_clear_time">حذف ساعت</string>
+    <string name="editor_reminder">یادآوری</string>
+    <string name="editor_reminder_none">بدون</string>
+    <string name="editor_reminder_notification">اعلان</string>
+    <string name="editor_reminder_alarm">آلارم</string>
+    <string name="editor_reminder_all_day_note">برای کار بدون ساعت، یادآوری در ساعت تعیین‌شده در تنظیمات می‌آید.</string>
+    <string name="editor_repeat">تکرار</string>
+    <string name="editor_remove_repeat">حذف تکرار</string>
+    <string name="editor_priority">اولویت (آیزنهاور)</string>
+    <string name="editor_important">مهم</string>
+    <string name="editor_urgent">فوری</string>
+    <string name="editor_estimate">تخمین زمان</string>
+    <string name="editor_estimate_none">بدون</string>
+    <string name="editor_save">ذخیره</string>
+    <string name="editor_delete">حذف</string>
+    <string name="editor_on_time">سر وقت</string>
+    <string name="editor_minutes_before">%1$s قبل</string>
+
+    <string name="quadrant_do_first">انجام فوری</string>
+    <string name="quadrant_schedule">برنامه‌ریزی</string>
+    <string name="quadrant_delegate">واگذاری</string>
+    <string name="quadrant_none">بدون اولویت</string>
+</resources>

@@ -4,4 +4,5 @@ plugins {
 
 dependencies {
     api(projects.core.calendar)
+    api(projects.core.recurrence)
 }

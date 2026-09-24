@@ -1,5 +1,7 @@
 package ir.roozban.core.timeparser
 
+import ir.roozban.core.recurrence.Frequency
+import ir.roozban.core.recurrence.RecurrenceSpec
 import ir.roozban.core.calendar.JalaliDate
 import ir.roozban.core.calendar.PersianWeek
 import ir.roozban.core.calendar.toJalali
@@ -214,13 +216,14 @@ internal class Resolver(private val prefs: TimeParserPrefs) {
         fun ok(d: LocalDate): Boolean =
             d.isAfter(today) || dayTime == null || today.atTime(dayTime.time).plusDays(dayTime.carryDays).isAfter(now)
 
+        val monthDay = r.jalaliMonthDay
         return when {
             r.byWeekdays.isNotEmpty() ->
                 (0L..7L).map { today.plusDays(it) }.first { it.dayOfWeek in r.byWeekdays && ok(it) }
-            r.frequency == Frequency.MONTHLY && r.jalaliMonthDay != null -> {
+            r.frequency == Frequency.MONTHLY && monthDay != null -> {
                 val jt = today.toJalali()
-                val thisMonth = dayOfMonth(jt, r.jalaliMonthDay).toLocalDate()
-                if (!thisMonth.isBefore(today) && ok(thisMonth)) thisMonth else dayOfMonth(jt.plusMonths(1), r.jalaliMonthDay).toLocalDate()
+                val thisMonth = dayOfMonth(jt, monthDay).toLocalDate()
+                if (!thisMonth.isBefore(today) && ok(thisMonth)) thisMonth else dayOfMonth(jt.plusMonths(1), monthDay).toLocalDate()
             }
             ok(today) -> today
             else -> today.plusDays(1)

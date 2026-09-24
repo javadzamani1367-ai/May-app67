@@ -51,7 +51,11 @@ dependencies {
     implementation(projects.core.calendar)
     implementation(projects.core.timeparser)
     implementation(projects.core.designsystem)
-    implementation(projects.feature.today)
+    implementation(projects.core.domain)
+    implementation(projects.core.data)
+    implementation(projects.core.alarm)
+    implementation(projects.feature.tasks)
+    implementation(projects.feature.settings)
     implementation(projects.billing.api)
 
     implementation(libs.androidx.core.ktx)
@@ -59,6 +63,7 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
 }
