@@ -30,6 +30,14 @@ jobs:
       - name: Assemble debug APKs (bazaar, myket, dev)
         run: ./gradlew assembleDebug
 
+      - name: Print exported Room schemas (temporary)
+        run: |
+          find core/database/schemas -name '*.json' -print -exec cat {} \;
+          G=https://dl.google.com/dl/android/maven2
+          for p in androidx/glance/glance-appwidget androidx/glance/glance-material3 androidx/room/room-testing androidx/test/runner; do
+            echo "$p => $(curl -sS $G/$p/maven-metadata.xml | tr -d ' \n' | sed 's/<\/version><version>/ /g;s/<[^>]*>/ /g' | tr ' ' '\n' | grep -E '^[0-9]' | grep -viE 'alpha|beta|rc|dev' | tail -3 | tr '\n' ' ')"
+          done
+
       - name: Android Lint (dev)
         run: ./gradlew :app:lintDevDebug
 
