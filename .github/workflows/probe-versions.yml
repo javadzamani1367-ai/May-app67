@@ -1,0 +1,13 @@
+name: probe-versions
+on: push
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          G=https://dl.google.com/dl/android/maven2
+          for p in androidx/room/room-runtime androidx/room/androidx.room.gradle.plugin androidx/work/work-runtime-ktx \
+                   androidx/hilt/hilt-work androidx/hilt/hilt-compiler androidx/test/core androidx/test/core-ktx \
+                   androidx/datastore/datastore-preferences androidx/lifecycle/lifecycle-process androidx/compose/material3/material3; do
+            echo "$p => $(curl -sS $G/$p/maven-metadata.xml | tr -d ' \n' | sed 's/<\/version><version>/ /g;s/<[^>]*>/ /g' | tr ' ' '\n' | grep -E '^[0-9]' | grep -viE 'alpha|beta|rc|dev' | tail -3 | tr '\n' ' ')"
+          done
