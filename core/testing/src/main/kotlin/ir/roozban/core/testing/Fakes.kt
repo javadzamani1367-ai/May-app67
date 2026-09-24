@@ -2,6 +2,7 @@ package ir.roozban.core.testing
 
 import ir.roozban.core.calendar.JalaliDate
 import ir.roozban.core.domain.AlarmScheduler
+import ir.roozban.core.domain.CompletionEvent
 import ir.roozban.core.domain.LabelRepository
 import ir.roozban.core.domain.ProjectRepository
 import ir.roozban.core.domain.ReminderRepository
@@ -17,6 +18,7 @@ import ir.roozban.core.model.Task
 import ir.roozban.core.model.UserSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.time.Clock
 import java.time.Instant
@@ -39,6 +41,7 @@ class FakeTaskRepository : TaskRepository {
     val tasks = MutableStateFlow<Map<String, Task>>(emptyMap())
     val deleted = mutableSetOf<String>()
     val completions = mutableListOf<Pair<String, LocalDate>>()
+    private val completionTimes = MutableStateFlow<List<Triple<String, LocalDate, Instant>>>(emptyList())
 
     override fun observeOpenTasks(): Flow<List<Task>> =
         tasks.map { m -> m.values.filter { !it.isCompleted && it.id !in deleted && it.parentId == null } }
@@ -56,6 +59,14 @@ class FakeTaskRepository : TaskRepository {
 
     override fun observeCompletedSince(since: Instant): Flow<List<Task>> =
         tasks.map { m -> m.values.filter { (it.completedAt ?: Instant.MIN) >= since } }
+
+    override fun observeCompletionEvents(from: Instant, until: Instant): Flow<List<CompletionEvent>> =
+        combine(tasks, completionTimes) { m, occ ->
+            val done = m.values.filter { it.id !in deleted && it.completedAt != null }
+                .map { CompletionEvent(it.id, it.title, it.projectId, it.completedAt!!, it.estimateMinutes) }
+            val series = occ.mapNotNull { (id, _, at) -> m[id]?.let { CompletionEvent(id, it.title, it.projectId, at, it.estimateMinutes) } }
+            (done + series).filter { !it.at.isBefore(from) && it.at.isBefore(until) }
+        }
 
     override fun observeTask(id: String): Flow<Task?> = tasks.map { it[id] }
 
@@ -78,10 +89,12 @@ class FakeTaskRepository : TaskRepository {
 
     override suspend fun recordCompletion(taskId: String, occurrence: LocalDate, at: Instant) {
         completions += taskId to occurrence
+        completionTimes.value = completionTimes.value + Triple(taskId, occurrence, at)
     }
 
     override suspend fun removeCompletion(taskId: String, occurrence: LocalDate) {
         completions -= taskId to occurrence
+        completionTimes.value = completionTimes.value.filterNot { it.first == taskId && it.second == occurrence }
     }
 }
 

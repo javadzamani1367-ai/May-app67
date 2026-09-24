@@ -1,5 +1,6 @@
 package ir.roozban.core.model
 
+import java.time.DayOfWeek
 import java.time.LocalTime
 
 data class UserSettings(
@@ -19,4 +20,10 @@ data class UserSettings(
     val showHijri: Boolean = true,
     /** Iran's official Hijri date can differ from Umm al-Qura by a day: -1, 0 or +1. */
     val hijriOffset: Int = 0,
+    val focus: FocusSettings = FocusSettings(),
+    /** Evening reminder for the daily review; null = off. */
+    val dailyReviewTime: LocalTime? = null,
+    /** Weekly review reminder; null time = off. */
+    val weeklyReviewDay: DayOfWeek = DayOfWeek.FRIDAY,
+    val weeklyReviewTime: LocalTime? = null,
 )

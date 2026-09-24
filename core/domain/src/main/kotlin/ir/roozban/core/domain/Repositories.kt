@@ -24,6 +24,9 @@ interface TaskRepository {
 
     fun observeCompletedSince(since: Instant): Flow<List<Task>>
 
+    /** Completions in [from, until): finished tasks plus each done occurrence of recurring ones. */
+    fun observeCompletionEvents(from: Instant, until: Instant): Flow<List<CompletionEvent>>
+
     fun observeTask(id: String): Flow<Task?>
 
     suspend fun get(id: String): Task?
