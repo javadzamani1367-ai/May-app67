@@ -89,6 +89,8 @@ class FakeFocusSystem : FocusSystem {
         shownTitle = taskTitle
     }
 
+    override fun canSilence(): Boolean = silenceAvailable
+
     override fun setSilenced(on: Boolean): Boolean {
         if (!silenceAvailable) return false
         silenced = on

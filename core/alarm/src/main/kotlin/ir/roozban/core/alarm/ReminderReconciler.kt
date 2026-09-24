@@ -1,7 +1,9 @@
 package ir.roozban.core.alarm
 
+import ir.roozban.core.domain.FocusService
 import ir.roozban.core.domain.ReminderRepository
 import ir.roozban.core.domain.ReminderSync
+import ir.roozban.core.domain.RoutineReminders
 import ir.roozban.core.domain.TaskRepository
 import java.time.Clock
 import java.time.LocalDate
@@ -20,9 +22,14 @@ class ReminderReconciler @Inject constructor(
     private val reminders: ReminderRepository,
     private val notifier: ReminderNotifier,
     private val scheduler: AndroidAlarmScheduler,
+    private val focus: FocusService,
+    private val routines: RoutineReminders,
     private val clock: Clock,
 ) {
     suspend fun reconcile() {
+        // A focus period that ended while the phone was off is finished now; otherwise re-armed.
+        focus.onAlarm()
+        routines.syncAll()
         for (missed in sync.reconcile()) {
             tasks.get(missed.taskId)?.takeIf { !it.isCompleted }?.let { notifier.show(it, missed.kind, missed = true) }
             reminders.markFired(missed.taskId)

@@ -109,4 +109,7 @@
     <string name="calendar_week">هفته</string>
     <string name="calendar_month">ماه</string>
     <string name="calendar_all_day">بی‌ساعت</string>
+    <string name="editor_tracked">زمان صرف‌شده: %1$s</string>
+    <string name="editor_tracked_none">هنوز زمانی ثبت نشده</string>
+    <string name="editor_start_focus">تمرکز</string>
 </resources>

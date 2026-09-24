@@ -11,10 +11,16 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- Focus mode turns on Do Not Disturb (an app-owned automatic rule). -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
     <application>
         <receiver
             android:name=".ReminderReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".RoutineReceiver"
             android:exported="false" />
 
         <!-- Only protected system broadcasts; they restore alarms after reboot, update or clock change. -->

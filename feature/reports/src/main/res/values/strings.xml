@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reports_title">گزارش‌ها</string>
+    <string name="reports_back">بازگشت</string>
+    <string name="reports_week">هفته</string>
+    <string name="reports_month">ماه</string>
+    <string name="reports_previous">دوره‌ی قبل</string>
+    <string name="reports_next">دوره‌ی بعد</string>
+    <string name="reports_completed">کار انجام‌شده</string>
+    <string name="reports_tracked">زمان ثبت‌شده</string>
+    <string name="reports_focus">تمرکز</string>
+    <string name="reports_focus_value">%1$s دوره</string>
+    <string name="reports_habits">انجام عادت‌ها</string>
+    <string name="reports_percent">٪%1$s</string>
+    <string name="reports_vs_previous">%1$s نسبت به دوره‌ی قبل</string>
+    <string name="reports_completed_per_day">کارهای انجام‌شده در هر روز</string>
+    <string name="reports_time_per_day">زمان ثبت‌شده در هر روز</string>
+    <string name="reports_by_project">زمان به تفکیک پروژه</string>
+    <string name="reports_no_project">بدون پروژه</string>
+    <string name="reports_hours">ساعت‌های کاری</string>
+    <string name="reports_peak_hour">پربازده‌ترین ساعت شما: %1$s</string>
+    <string name="reports_top_tasks">بیشترین زمان</string>
+    <string name="reports_no_task">بدون کار مشخص</string>
+    <string name="reports_empty">در این دوره هنوز چیزی ثبت نشده است. با تیک زدن کارها و استفاده از حالت تمرکز، گزارش‌ها پر می‌شوند.</string>
+    <string name="reports_open_daily">مرور امروز</string>
+    <string name="reports_open_weekly">مرور هفته</string>
+    <string name="reports_chart_desc">%1$s: %2$s</string>
+
+    <string name="review_daily_title">مرور امروز</string>
+    <string name="review_weekly_title">مرور هفته</string>
+    <string name="review_done_today">امروز انجام دادید</string>
+    <string name="review_done_count">%1$s کار</string>
+    <string name="review_nothing_done">هنوز کاری تیک نخورده است.</string>
+    <string name="review_leftover">مانده‌ها</string>
+    <string name="review_leftover_empty">چیزی جا نمانده. آفرین!</string>
+    <string name="review_all_tomorrow">همه به فردا</string>
+    <string name="review_tomorrow">فردا</string>
+    <string name="review_pick_date">تاریخ دیگر</string>
+    <string name="review_done">انجام شد</string>
+    <string name="review_delete">حذف</string>
+    <string name="review_habits">عادت‌های امروز</string>
+    <string name="review_tomorrow_plan">برنامه‌ی فردا</string>
+    <string name="review_tomorrow_empty">برای فردا هنوز کاری ندارید.</string>
+    <string name="review_focus_today">امروز %1$s تمرکز کردید.</string>
+    <string name="review_week_summary">این هفته</string>
+    <string name="review_overdue">عقب‌افتاده‌ها</string>
+    <string name="review_next_week">بار کاری هفته‌ی آینده</string>
+    <string name="review_habit_week">%1$s از %2$s</string>
+    <string name="review_reminder">یادآوری مرور</string>
+    <string name="review_reminder_off">خاموش</string>
+    <string name="review_reminder_daily">هر روز ساعت</string>
+    <string name="review_reminder_weekly">هر هفته</string>
+    <string name="review_more">گزینه‌ها</string>
+    <string name="review_cancel">انصراف</string>
+</resources>

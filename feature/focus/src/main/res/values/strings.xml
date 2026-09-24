@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="focus_title">تمرکز</string>
+    <string name="focus_back">بازگشت</string>
+    <string name="focus_phase_work">تمرکز</string>
+    <string name="focus_phase_short_break">استراحت کوتاه</string>
+    <string name="focus_phase_long_break">استراحت بلند</string>
+    <string name="focus_cycle">دوره‌ی %1$s از %2$s</string>
+    <string name="focus_start">شروع</string>
+    <string name="focus_start_break">شروع استراحت</string>
+    <string name="focus_start_work">شروع تمرکز</string>
+    <string name="focus_pause">توقف</string>
+    <string name="focus_resume">ادامه</string>
+    <string name="focus_stop">پایان</string>
+    <string name="focus_skip">رد کردن</string>
+    <string name="focus_paused">متوقف</string>
+    <string name="focus_no_task">بدون کار مشخص</string>
+    <string name="focus_pick_task">روی چه کاری تمرکز می‌کنید؟</string>
+    <string name="focus_today">امروز: %1$s دوره، %2$s دقیقه تمرکز</string>
+    <string name="focus_settings">تنظیمات تمرکز</string>
+    <string name="focus_work_minutes">مدت تمرکز</string>
+    <string name="focus_short_minutes">استراحت کوتاه</string>
+    <string name="focus_long_minutes">استراحت بلند</string>
+    <string name="focus_cycles">استراحت بلند پس از</string>
+    <string name="focus_minutes_value">%1$s دقیقه</string>
+    <string name="focus_cycles_value">%1$s دوره</string>
+    <string name="focus_auto_breaks">شروع خودکار استراحت</string>
+    <string name="focus_auto_work">شروع خودکار تمرکز بعدی</string>
+    <string name="focus_silence">بی‌صدا کردن اعلان‌ها هنگام تمرکز</string>
+    <string name="focus_silence_desc">«مزاحم نشوید» روشن می‌شود؛ آلارم‌ها، مخاطبان ستاره‌دار و تماس‌های تکراری همچنان شنیده می‌شوند.</string>
+    <string name="focus_silence_access">برای بی‌صدا کردن، اجازه‌ی دسترسی به «مزاحم نشوید» لازم است.</string>
+    <string name="focus_silence_grant">دادن اجازه</string>
+    <string name="focus_decrease">کم کردن</string>
+    <string name="focus_increase">زیاد کردن</string>
+    <string name="focus_locked">حالت تمرکز از قابلیت‌های Pro است. سابقه‌ی تمرکزهای قبلی همچنان در گزارش‌ها دیده می‌شود.</string>
+    <string name="focus_bar_open">باز کردن تمرکز</string>
+</resources>

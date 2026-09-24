@@ -13,4 +13,17 @@
     <string name="widget_empty">کاری برای امروز نیست.</string>
     <string name="widget_add">کار جدید</string>
     <string name="widget_overdue">عقب‌افتاده</string>
+    <string name="tab_habits">عادت‌ها</string>
+    <string name="tab_more">بیشتر</string>
+    <string name="more_title">بیشتر</string>
+    <string name="more_focus">تمرکز</string>
+    <string name="more_focus_desc">پومودورو با بی‌صدا کردن اعلان‌ها</string>
+    <string name="more_inbox">صندوق ورودی</string>
+    <string name="more_inbox_desc">کارهای بدون تاریخ</string>
+    <string name="more_projects">پروژه‌ها</string>
+    <string name="more_reports">گزارش‌ها</string>
+    <string name="more_reports_desc">زمان صرف‌شده، کارهای انجام‌شده، ساعت‌های پربازده</string>
+    <string name="more_daily_review">مرور امروز</string>
+    <string name="more_weekly_review">مرور هفته</string>
+    <string name="more_settings">تنظیمات</string>
 </resources>

@@ -6,6 +6,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.roozban.core.domain.AddSubtaskUseCase
 import ir.roozban.core.domain.CompleteTaskUseCase
 import ir.roozban.core.domain.DeleteTaskUseCase
+import ir.roozban.core.domain.FocusRepository
+import ir.roozban.core.domain.FocusService
 import ir.roozban.core.domain.LabelRepository
 import ir.roozban.core.domain.ProjectRepository
 import ir.roozban.core.domain.ReopenTaskUseCase
@@ -51,6 +53,8 @@ class TaskEditorViewModel @Inject constructor(
     private val completeTask: CompleteTaskUseCase,
     private val reopenTask: ReopenTaskUseCase,
     private val tags: TagResolver,
+    private val focus: FocusService,
+    focusRepository: FocusRepository,
     projects: ProjectRepository,
     labels: LabelRepository,
     private val clock: Clock,
@@ -71,7 +75,24 @@ class TaskEditorViewModel @Inject constructor(
         .flatMapLatest { id -> if (id == null) flowOf(emptyList()) else tasks.observeSubtasks(id) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** Time recorded on this task (focus and manual), in minutes. */
+    val trackedMinutes: StateFlow<Int> = _state.map { it?.original?.id }.distinctUntilChanged()
+        .flatMapLatest { id -> if (id == null) flowOf(0L) else focusRepository.observeTaskSeconds(id) }
+        .map { ((it + 30) / 60).toInt() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
     val today: LocalDate get() = LocalDate.now(clock)
+
+    /** Saves the task, then starts a focus period on it. */
+    fun startFocus(onStarted: () -> Unit) {
+        val s = _state.value ?: return
+        viewModelScope.launch {
+            if (s.canSave && s.draft != s.original) updateTask(s.draft.copy(title = s.draft.title.trim()))
+            focus.start(s.original.id)
+            _state.value = null
+            onStarted()
+        }
+    }
 
     fun load(id: String) {
         if (_state.value?.original?.id == id) return

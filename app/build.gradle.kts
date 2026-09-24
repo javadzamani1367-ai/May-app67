@@ -56,6 +56,9 @@ dependencies {
     implementation(projects.core.alarm)
     implementation(projects.feature.tasks)
     implementation(projects.feature.settings)
+    implementation(projects.feature.focus)
+    implementation(projects.feature.habits)
+    implementation(projects.feature.reports)
     implementation(projects.billing.api)
 
     implementation(libs.androidx.core.ktx)

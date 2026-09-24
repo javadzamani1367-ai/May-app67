@@ -46,6 +46,14 @@ class ReminderNotifier @Inject constructor(
                 },
                 NotificationChannel(CHANNEL_MISSED, context.getString(R.string.channel_missed), NotificationManager.IMPORTANCE_DEFAULT)
                     .apply { description = context.getString(R.string.channel_missed_desc) },
+                NotificationChannel(CHANNEL_FOCUS, context.getString(R.string.channel_focus), NotificationManager.IMPORTANCE_LOW).apply {
+                    description = context.getString(R.string.channel_focus_desc)
+                    setShowBadge(false)
+                },
+                NotificationChannel(CHANNEL_FOCUS_END, context.getString(R.string.channel_focus_end), NotificationManager.IMPORTANCE_HIGH)
+                    .apply { description = context.getString(R.string.channel_focus_end_desc) },
+                NotificationChannel(CHANNEL_HABITS, context.getString(R.string.channel_habits), NotificationManager.IMPORTANCE_DEFAULT)
+                    .apply { description = context.getString(R.string.channel_habits_desc) },
             ),
         )
     }
@@ -106,6 +114,9 @@ class ReminderNotifier @Inject constructor(
         const val CHANNEL_REMINDERS = "reminders"
         const val CHANNEL_ALARMS = "alarms"
         const val CHANNEL_MISSED = "missed"
+        const val CHANNEL_FOCUS = "focus"
+        const val CHANNEL_FOCUS_END = "focus_end"
+        const val CHANNEL_HABITS = "habits"
 
         fun notificationId(taskId: String): Int = taskId.hashCode()
     }

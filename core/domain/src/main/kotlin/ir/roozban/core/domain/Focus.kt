@@ -128,6 +128,14 @@ class FocusService @Inject constructor(
 
     val state: Flow<FocusState> = store.state
 
+    fun canSilence(): Boolean = system.canSilence()
+
+    /** Applies new settings; a running phase keeps its length, silencing follows at once. */
+    suspend fun updateSettings(transform: (FocusSettings) -> FocusSettings) {
+        settings.update { it.copy(focus = transform(it.focus)) }
+        transition { s, _, _ -> FocusEngine.Transition(s) }
+    }
+
     /** Starts a new focus period (replacing whatever was going on). */
     suspend fun start(taskId: String?) = transition { s, fs, now ->
         val stopped = FocusEngine.stop(s, fs, now)

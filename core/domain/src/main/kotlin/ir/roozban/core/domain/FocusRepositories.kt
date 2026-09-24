@@ -50,6 +50,9 @@ interface FocusSystem {
 
     /** Returns false when silencing is not possible (e.g. no Do Not Disturb access). */
     fun setSilenced(on: Boolean): Boolean
+
+    /** Whether Do Not Disturb can be controlled (the user granted access). */
+    fun canSilence(): Boolean
 }
 
 interface HabitRepository {

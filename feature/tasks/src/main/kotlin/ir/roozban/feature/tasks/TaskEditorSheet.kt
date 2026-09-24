@@ -1,5 +1,6 @@
 package ir.roozban.feature.tasks
 
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -67,6 +68,7 @@ internal fun TaskEditorSheet(
     val projects by viewModel.projects.collectAsStateWithLifecycle()
     val labels by viewModel.labels.collectAsStateWithLifecycle()
     val subtasks by viewModel.subtasks.collectAsStateWithLifecycle()
+    val trackedMinutes by viewModel.trackedMinutes.collectAsStateWithLifecycle()
     var showRepeat by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showDate by remember { mutableStateOf(false) }
@@ -101,6 +103,11 @@ internal fun TaskEditorSheet(
                         onAddSubtask = viewModel::addSubtask,
                         onToggleSubtask = viewModel::toggleSubtask,
                         onDeleteSubtask = viewModel::deleteSubtask,
+                    )
+                    FocusRow(
+                        trackedMinutes = trackedMinutes,
+                        enabled = !task.isCompleted,
+                        onStart = { viewModel.startFocus(onClose) },
                     )
                 },
                 onImportant = viewModel::setImportant,
@@ -327,5 +334,27 @@ private fun ChipRow(content: @Composable () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         content()
+    }
+}
+
+/** Time spent so far and a shortcut to focus on this task. */
+@Composable
+private fun FocusRow(trackedMinutes: Int, enabled: Boolean, onStart: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(painterResource(DsR.drawable.ic_timer), null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(12.dp))
+        Text(
+            if (trackedMinutes > 0) stringResource(R.string.editor_tracked, TaskFormatter.duration(trackedMinutes)) else stringResource(R.string.editor_tracked_none),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f),
+        )
+        FilledTonalButton(onClick = onStart, enabled = enabled) {
+            Icon(painterResource(DsR.drawable.ic_play), null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(stringResource(R.string.editor_start_focus))
+        }
     }
 }
