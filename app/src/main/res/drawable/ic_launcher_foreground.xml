@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rising sun over the horizon: «روز» + «بان» (keeper of the day). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,64A16,16 0,0 1,70 64Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,66h48v4h-48z" />
+    <path
+        android:fillColor="#FFDDB0"
+        android:pathData="M52,34h4v9h-4z" />
+    <path
+        android:fillColor="#FFDDB0"
+        android:pathData="M33.5,45.5L36.3,42.7L41.9,48.3L39.1,51.1Z" />
+    <path
+        android:fillColor="#FFDDB0"
+        android:pathData="M74.5,45.5L71.7,42.7L66.1,48.3L68.9,51.1Z" />
+</vector>

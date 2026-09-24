@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="today_add_task">کار جدید</string>
+    <string name="today_empty_title">امروز را با یک کار شروع کنید</string>
+    <string name="today_empty_body">روی «کار جدید» بزنید و به زبان خودتان بنویسید؛ مثلاً «جلسه با علی پس‌فردا ساعت ۱۰» یا «ورزش هر روز صبح ۳۰ دقیقه».</string>
+    <string name="today_session_note">پیش‌نمایش فاز ۱: کارها هنوز ذخیره‌ی دائمی نمی‌شوند.</string>
+    <string name="today_week">هفته‌ی جاری</string>
+    <string name="quick_add_placeholder">مثلاً: خرید نان فردا عصر</string>
+    <string name="quick_add_save">ثبت</string>
+    <string name="quick_add_title_label">عنوان: %1$s</string>
+    <string name="quick_add_needs_review">زمان را با اطمینان تشخیص ندادم؛ لطفاً بررسی کنید.</string>
+    <string name="quick_add_no_time">بدون زمان</string>
+</resources>

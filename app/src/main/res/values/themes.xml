@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Roozban" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/roozban_background</item>
+    </style>
+
+    <style name="Theme.Roozban.Splash" parent="Theme.SplashScreen.IconBackground">
+        <item name="windowSplashScreenBackground">@color/roozban_background</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/roozban_brand</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Roozban</item>
+    </style>
+</resources>
