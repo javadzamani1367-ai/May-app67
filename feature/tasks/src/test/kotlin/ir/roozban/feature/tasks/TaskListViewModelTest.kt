@@ -41,11 +41,16 @@ class TaskListViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
+    private val projects = FakeProjectRepository()
+    private val labels = FakeLabelRepository()
+
     private fun viewModel(mode: ListMode = ListMode.TODAY) = TaskListViewModel(
         tasks = tasks,
+        projects = projects,
+        labels = labels,
         settings = settings,
         parser = QuickAddParser(),
-        addTask = AddTaskUseCase(tasks, settings, sync, TagResolver(FakeProjectRepository(), FakeLabelRepository(), clock), clock),
+        addTask = AddTaskUseCase(tasks, settings, sync, TagResolver(projects, labels, clock), clock),
         completeTask = CompleteTaskUseCase(tasks, sync, clock),
         reopenTask = ReopenTaskUseCase(tasks, sync, clock),
         clock = clock,
@@ -88,6 +93,23 @@ class TaskListViewModelTest {
             assertThat(tasks.get(id)!!.isCompleted).isTrue()
             vm.undo(done.undo!!)
             assertThat(tasks.get(id)!!.isCompleted).isFalse()
+        }
+    }
+
+    @Test
+    fun `quick add with a project shows it on the row`() = runTest {
+        val vm = viewModel()
+        vm.state.test {
+            vm.onQuickAddTextChange("خرید نان امروز #خانه @خرید")
+            assertThat(vm.quickAdd.value.preview!!.chips.map { it.kind })
+                .containsExactly(ChipKind.TIME, ChipKind.PROJECT, ChipKind.LABEL).inOrder()
+            vm.submitQuickAdd()
+            var state = awaitItem()
+            while (state.sections.isEmpty() || state.sections.first().tasks.first().project == null) state = awaitItem()
+            val item = state.sections.first().tasks.single()
+            assertThat(item.project?.name).isEqualTo("خانه")
+            assertThat(item.labels.map { it.name }).containsExactly("خرید")
+            cancelAndIgnoreRemainingEvents()
         }
     }
 

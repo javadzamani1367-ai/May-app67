@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.roozban.core.domain.AddTaskUseCase
 import ir.roozban.core.domain.CompleteTaskUseCase
+import ir.roozban.core.domain.LabelRepository
+import ir.roozban.core.domain.ProjectRepository
 import ir.roozban.core.domain.QuickAddParser
 import ir.roozban.core.domain.QuickAddResult
 import ir.roozban.core.domain.ReopenTaskUseCase
@@ -39,6 +41,8 @@ sealed interface TaskListEvent {
 @HiltViewModel
 class TaskListViewModel @Inject constructor(
     private val tasks: TaskRepository,
+    private val projects: ProjectRepository,
+    private val labels: LabelRepository,
     private val settings: SettingsRepository,
     private val parser: QuickAddParser,
     private val addTask: AddTaskUseCase,
@@ -47,19 +51,28 @@ class TaskListViewModel @Inject constructor(
     private val clock: Clock,
 ) : ViewModel() {
 
-    /** Set once by the screen; each list (tab) has its own ViewModel instance. */
-    private val mode = MutableStateFlow<ListMode?>(null)
+    private data class Target(val mode: ListMode, val projectId: String?)
+
+    /** Set once by the screen; each list (tab or project) has its own ViewModel instance. */
+    private val target = MutableStateFlow<Target?>(null)
+
+    private val context = combine(
+        projects.observeProjects(),
+        labels.observeLabels(),
+        tasks.observeSubtaskProgress(),
+    ) { p, l, progress -> TaskListBuilder.Context(p.associateBy { it.id }, l.associateBy { it.id }, progress) }
 
     /** Re-emitted by [refresh] (e.g. on resume) so «today» follows the calendar. */
     private val today = MutableStateFlow(LocalDate.now(clock))
 
-    val state: StateFlow<TaskListUiState> = mode.filterNotNull().flatMapLatest { listMode ->
+    val state: StateFlow<TaskListUiState> = target.filterNotNull().flatMapLatest { t ->
         combine(
             tasks.observeOpenTasks(),
             today.flatMapLatest { day -> tasks.observeCompletedSince(day.atStartOfDay(clock.zone).toInstant()) },
             today,
-        ) { open, completed, _ ->
-            TaskListBuilder.build(listMode, open, completed, LocalDateTime.now(clock))
+            context,
+        ) { open, completed, _, ctx ->
+            TaskListBuilder.build(t.mode, open, completed, LocalDateTime.now(clock), ctx, t.projectId)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TaskListUiState(ListMode.TODAY))
 
@@ -76,8 +89,8 @@ class TaskListViewModel @Inject constructor(
         viewModelScope.launch { settings.settings.collect { currentSettings = it } }
     }
 
-    fun setMode(listMode: ListMode) {
-        mode.value = listMode
+    fun setMode(listMode: ListMode, projectId: String? = null) {
+        target.value = Target(listMode, projectId)
     }
 
     fun refresh() {
@@ -103,7 +116,7 @@ class TaskListViewModel @Inject constructor(
         lastParse = null
         _quickAdd.value = QuickAddState()
         viewModelScope.launch {
-            val task = addTask(input) ?: return@launch
+            val task = addTask(input, defaultProjectId = target.value?.projectId) ?: return@launch
             val whenText = task.due?.let { TaskFormatter.due(it, LocalDate.now(clock)) }
             _events.send(TaskListEvent.Message(if (whenText != null) "ثبت شد: $whenText" else "ثبت شد"))
         }
@@ -149,6 +162,8 @@ class TaskListViewModel @Inject constructor(
                 else -> null
             }
             priority?.let { add(PreviewChip(ChipKind.PRIORITY, it)) }
+            projectName?.let { add(PreviewChip(ChipKind.PROJECT, it)) }
+            labelNames.forEach { add(PreviewChip(ChipKind.LABEL, it)) }
         }
         return QuickAddPreview(
             title = title,

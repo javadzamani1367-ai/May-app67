@@ -4,4 +4,6 @@
     <string name="tab_today">امروز</string>
     <string name="tab_upcoming">آینده</string>
     <string name="tab_inbox">صندوق</string>
+    <string name="tab_projects">پروژه‌ها</string>
+    <string name="tab_calendar">تقویم</string>
 </resources>

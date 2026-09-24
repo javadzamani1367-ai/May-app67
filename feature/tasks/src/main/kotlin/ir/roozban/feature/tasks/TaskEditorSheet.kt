@@ -45,6 +45,7 @@ import ir.roozban.core.model.ReminderKind
 import ir.roozban.core.model.Task
 import ir.roozban.core.model.TaskDue
 import ir.roozban.core.ui.JalaliDatePickerDialog
+import ir.roozban.core.recurrence.RecurrenceSpec
 import ir.roozban.core.ui.TimePickerDialog
 import java.time.LocalDate
 import java.time.LocalTime
@@ -63,6 +64,10 @@ internal fun TaskEditorSheet(
 ) {
     LaunchedEffect(taskId) { viewModel.load(taskId) }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val projects by viewModel.projects.collectAsStateWithLifecycle()
+    val labels by viewModel.labels.collectAsStateWithLifecycle()
+    val subtasks by viewModel.subtasks.collectAsStateWithLifecycle()
+    var showRepeat by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showDate by remember { mutableStateOf(false) }
     var showTime by remember { mutableStateOf(false) }
@@ -83,7 +88,21 @@ internal fun TaskEditorSheet(
                 onClearTime = { viewModel.setTime(null) },
                 onReminderKind = viewModel::setReminderKind,
                 onReminderOffset = viewModel::setReminderOffset,
-                onRemoveRecurrence = viewModel::removeRecurrence,
+                onEditRecurrence = { showRepeat = true },
+                organize = {
+                    OrganizeSection(
+                        task = task,
+                        projects = projects,
+                        labels = labels,
+                        subtasks = subtasks,
+                        onProject = viewModel::setProject,
+                        onToggleLabel = viewModel::toggleLabel,
+                        onAddLabel = viewModel::addLabel,
+                        onAddSubtask = viewModel::addSubtask,
+                        onToggleSubtask = viewModel::toggleSubtask,
+                        onDeleteSubtask = viewModel::deleteSubtask,
+                    )
+                },
                 onImportant = viewModel::setImportant,
                 onUrgent = viewModel::setUrgent,
                 onEstimate = viewModel::setEstimate,
@@ -101,6 +120,17 @@ internal fun TaskEditorSheet(
                         showDate = false
                     },
                     onDismiss = { showDate = false },
+                )
+            }
+            if (showRepeat) {
+                RecurrencePickerDialog(
+                    initial = task.recurrence?.let(RecurrenceSpec::parse),
+                    startDay = (task.due?.date ?: viewModel.today).dayOfWeek,
+                    onConfirm = {
+                        viewModel.setRecurrence(it)
+                        showRepeat = false
+                    },
+                    onDismiss = { showRepeat = false },
                 )
             }
             if (showTime) {
@@ -127,7 +157,8 @@ private fun EditorContent(
     onClearTime: () -> Unit,
     onReminderKind: (ReminderKind?) -> Unit,
     onReminderOffset: (Int) -> Unit,
-    onRemoveRecurrence: () -> Unit,
+    onEditRecurrence: () -> Unit,
+    organize: @Composable () -> Unit,
     onImportant: (Boolean) -> Unit,
     onUrgent: (Boolean) -> Unit,
     onEstimate: (Int?) -> Unit,
@@ -203,12 +234,14 @@ private fun EditorContent(
             }
         }
 
-        task.recurrence?.let { rrule ->
-            EditorRow(DsR.drawable.ic_repeat, stringResource(R.string.editor_repeat), onClick = null) {
-                Text(TaskFormatter.recurrence(rrule).orEmpty(), color = MaterialTheme.colorScheme.primary)
-                TextButton(onClick = onRemoveRecurrence) { Text(stringResource(R.string.editor_remove_repeat)) }
-            }
+        EditorRow(DsR.drawable.ic_repeat, stringResource(R.string.editor_repeat), onClick = onEditRecurrence) {
+            Text(
+                task.recurrence?.let(TaskFormatter::recurrence) ?: stringResource(R.string.editor_no_repeat),
+                color = if (task.recurrence != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
+
+        organize()
 
         Section(DsR.drawable.ic_flag, stringResource(R.string.editor_priority)) {
             ChipRow {

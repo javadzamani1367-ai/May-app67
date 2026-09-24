@@ -4,7 +4,7 @@ import ir.roozban.core.domain.Highlight
 import ir.roozban.core.model.Quadrant
 import ir.roozban.core.model.ReminderKind
 
-enum class ListMode { TODAY, UPCOMING, INBOX }
+enum class ListMode { TODAY, UPCOMING, INBOX, PROJECT }
 
 data class TaskListUiState(
     val mode: ListMode,
@@ -12,6 +12,8 @@ data class TaskListUiState(
     /** Only for [ListMode.TODAY]. */
     val header: TodayHeader? = null,
     val sections: List<TaskSection> = emptyList(),
+    /** Only for [ListMode.PROJECT]. */
+    val projectName: String? = null,
     val completed: List<TaskItem> = emptyList(),
 ) {
     val isEmpty: Boolean get() = !loading && sections.all { it.tasks.isEmpty() } && completed.isEmpty()
@@ -43,7 +45,13 @@ data class TaskItem(
     val quadrant: Quadrant,
     val reminder: ReminderKind?,
     val completed: Boolean,
+    val project: TagChip? = null,
+    val labels: List<TagChip> = emptyList(),
+    /** «۲/۵» when the task has subtasks. */
+    val subtaskProgress: String? = null,
 )
+
+data class TagChip(val name: String, val color: Int)
 
 data class QuickAddState(
     val text: String = "",
@@ -58,6 +66,6 @@ data class QuickAddPreview(
     val needsReview: Boolean,
 )
 
-enum class ChipKind { TIME, RECURRENCE, DURATION, PRIORITY }
+enum class ChipKind { TIME, RECURRENCE, DURATION, PRIORITY, PROJECT, LABEL }
 
 data class PreviewChip(val kind: ChipKind, val label: String)

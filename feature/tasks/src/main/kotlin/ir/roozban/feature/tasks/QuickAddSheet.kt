@@ -69,6 +69,7 @@ internal fun QuickAddSheet(
                 HighlightKind.RECURRENCE -> SpanStyle(background = colors.tertiaryContainer, color = colors.onTertiaryContainer)
                 HighlightKind.DURATION -> SpanStyle(background = colors.secondaryContainer, color = colors.onSecondaryContainer)
                 HighlightKind.PRIORITY -> SpanStyle(background = colors.errorContainer, color = colors.onErrorContainer)
+                HighlightKind.PROJECT, HighlightKind.LABEL -> SpanStyle(background = colors.surfaceVariant, color = colors.primary)
             }
         }
     }
@@ -132,6 +133,8 @@ private fun PreviewRow(preview: QuickAddPreview) {
                     ChipKind.RECURRENCE -> DsR.drawable.ic_repeat
                     ChipKind.DURATION -> DsR.drawable.ic_timer
                     ChipKind.PRIORITY -> DsR.drawable.ic_flag
+                    ChipKind.PROJECT -> DsR.drawable.ic_folder
+                    ChipKind.LABEL -> DsR.drawable.ic_label
                 }
                 AssistChip(
                     onClick = {},

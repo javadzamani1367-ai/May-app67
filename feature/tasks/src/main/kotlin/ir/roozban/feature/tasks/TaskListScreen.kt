@@ -11,6 +11,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -64,6 +66,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.roozban.core.alarm.ReminderPermissions
 import ir.roozban.core.designsystem.R as DsR
+import ir.roozban.core.designsystem.theme.TagColors
 import ir.roozban.core.model.Quadrant
 import ir.roozban.core.model.ReminderKind
 
@@ -71,9 +74,11 @@ import ir.roozban.core.model.ReminderKind
 internal fun TaskListRoute(
     mode: ListMode,
     onOpenSettings: () -> Unit,
+    projectId: String? = null,
+    onBack: (() -> Unit)? = null,
     viewModel: TaskListViewModel = hiltViewModel(),
 ) {
-    LaunchedEffect(mode) { viewModel.setMode(mode) }
+    LaunchedEffect(mode, projectId) { viewModel.setMode(mode, projectId) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val quickAdd by viewModel.quickAdd.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
@@ -109,6 +114,7 @@ internal fun TaskListRoute(
         onToggle = viewModel::onToggleComplete,
         onOpen = { editingId = it },
         onOpenSettings = onOpenSettings,
+        onBack = onBack,
     )
 
     if (sheetOpen) {
@@ -144,6 +150,7 @@ internal fun TaskListScreen(
     onToggle: (String) -> Unit,
     onOpen: (String) -> Unit,
     onOpenSettings: () -> Unit,
+    onBack: (() -> Unit)? = null,
 ) {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -151,14 +158,20 @@ internal fun TaskListScreen(
             TopAppBar(
                 title = {
                     Text(
-                        stringResource(
-                            when (mode) {
-                                ListMode.TODAY -> R.string.tasks_title_today
-                                ListMode.UPCOMING -> R.string.tasks_title_upcoming
-                                ListMode.INBOX -> R.string.tasks_title_inbox
-                            },
-                        ),
+                        when (mode) {
+                            ListMode.TODAY -> stringResource(R.string.tasks_title_today)
+                            ListMode.UPCOMING -> stringResource(R.string.tasks_title_upcoming)
+                            ListMode.INBOX -> stringResource(R.string.tasks_title_inbox)
+                            ListMode.PROJECT -> state.projectName.orEmpty()
+                        },
                     )
+                },
+                navigationIcon = {
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(painterResource(DsR.drawable.ic_arrow_back), stringResource(R.string.tasks_back))
+                        }
+                    }
                 },
                 actions = {
                     IconButton(onClick = onOpenSettings) {
@@ -397,35 +410,44 @@ private fun CompletionCircle(checked: Boolean, color: Color, onToggle: () -> Uni
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TaskMeta(task: TaskItem) {
     val parts = buildList {
         task.dueLabel?.let { add(Triple(DsR.drawable.ic_schedule, it, task.overdue)) }
         task.recurrenceLabel?.let { add(Triple(DsR.drawable.ic_repeat, it, false)) }
         task.estimateLabel?.let { add(Triple(DsR.drawable.ic_timer, it, false)) }
+        task.subtaskProgress?.let { add(Triple(DsR.drawable.ic_checklist, it, false)) }
     }
-    if (parts.isEmpty() && task.reminder == null) return
-    Row(
+    if (parts.isEmpty() && task.reminder == null && task.project == null && task.labels.isEmpty()) return
+    FlowRow(
         modifier = Modifier.padding(top = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
+        task.project?.let { TagText(DsR.drawable.ic_folder, it.name, TagColors.color(it.color)) }
         parts.forEach { (icon, label, isError) ->
             val color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(icon), contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
-                Spacer(Modifier.width(3.dp))
-                Text(label, style = MaterialTheme.typography.labelMedium, color = color, maxLines = 1)
-            }
+            TagText(icon, label, color)
         }
+        task.labels.forEach { TagText(DsR.drawable.ic_label, it.name, TagColors.color(it.color)) }
         task.reminder?.let {
             Icon(
                 painterResource(if (it == ReminderKind.ALARM) DsR.drawable.ic_alarm else DsR.drawable.ic_notifications),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(14.dp),
+                modifier = Modifier.size(14.dp).align(Alignment.CenterVertically),
             )
         }
+    }
+}
+
+@Composable
+private fun TagText(icon: Int, label: String, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(painterResource(icon), contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
+        Spacer(Modifier.width(3.dp))
+        Text(label, style = MaterialTheme.typography.labelMedium, color = color, maxLines = 1)
     }
 }
 
@@ -435,6 +457,7 @@ private fun EmptyState(mode: ListMode) {
         ListMode.TODAY -> R.string.empty_today_title to R.string.empty_today_body
         ListMode.UPCOMING -> R.string.empty_upcoming_title to R.string.empty_upcoming_body
         ListMode.INBOX -> R.string.empty_inbox_title to R.string.empty_inbox_body
+        ListMode.PROJECT -> R.string.empty_project_title to R.string.empty_project_body
     }
     Column(
         modifier = Modifier.fillMaxWidth().padding(top = 48.dp, start = 16.dp, end = 16.dp),

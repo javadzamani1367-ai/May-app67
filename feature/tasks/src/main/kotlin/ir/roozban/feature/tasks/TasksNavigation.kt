@@ -2,6 +2,7 @@ package ir.roozban.feature.tasks
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -13,9 +14,24 @@ data object UpcomingRoute
 @Serializable
 data object InboxRoute
 
-/** The three lists; each destination gets its own ViewModel and saved state. */
-fun NavGraphBuilder.tasksScreens(onOpenSettings: () -> Unit) {
+@Serializable
+data object ProjectsRoute
+
+@Serializable
+data class ProjectRoute(val projectId: String)
+
+/** The lists and projects; each destination gets its own ViewModel and saved state. */
+fun NavGraphBuilder.tasksScreens(
+    onOpenSettings: () -> Unit,
+    onOpenProject: (String) -> Unit,
+    onBack: () -> Unit,
+) {
     composable<TodayRoute> { TaskListRoute(ListMode.TODAY, onOpenSettings) }
     composable<UpcomingRoute> { TaskListRoute(ListMode.UPCOMING, onOpenSettings) }
     composable<InboxRoute> { TaskListRoute(ListMode.INBOX, onOpenSettings) }
+    composable<ProjectsRoute> { ProjectsScreen(onOpenProject = onOpenProject, onOpenSettings = onOpenSettings) }
+    composable<ProjectRoute> { entry ->
+        val route = entry.toRoute<ProjectRoute>()
+        TaskListRoute(ListMode.PROJECT, onOpenSettings, projectId = route.projectId, onBack = onBack)
+    }
 }

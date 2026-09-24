@@ -5,6 +5,9 @@ import ir.roozban.core.calendar.PersianDigits
 import ir.roozban.core.calendar.PersianNames
 import ir.roozban.core.calendar.PersianWeek
 import ir.roozban.core.calendar.toJalali
+import ir.roozban.core.domain.SubtaskProgress
+import ir.roozban.core.model.Label
+import ir.roozban.core.model.Project
 import ir.roozban.core.model.Quadrant
 import ir.roozban.core.model.Task
 import ir.roozban.core.model.TaskDue
@@ -17,9 +20,23 @@ internal object TaskListBuilder {
 
     private const val UPCOMING_DAYS = 7L
 
-    fun build(mode: ListMode, open: List<Task>, completedToday: List<Task>, now: LocalDateTime): TaskListUiState {
+    /** Lookup tables for decorating rows. */
+    data class Context(
+        val projects: Map<String, Project> = emptyMap(),
+        val labels: Map<String, Label> = emptyMap(),
+        val progress: Map<String, SubtaskProgress> = emptyMap(),
+    )
+
+    fun build(
+        mode: ListMode,
+        open: List<Task>,
+        completedToday: List<Task>,
+        now: LocalDateTime,
+        context: Context = Context(),
+        projectId: String? = null,
+    ): TaskListUiState {
         val today = now.toLocalDate()
-        fun item(task: Task, sectionDate: LocalDate?) = task.toItem(sectionDate, today, now)
+        fun item(task: Task, sectionDate: LocalDate?) = task.toItem(sectionDate, today, now, context, showProject = mode != ListMode.PROJECT)
 
         val sections = when (mode) {
             ListMode.TODAY -> {
@@ -47,6 +64,13 @@ internal object TaskListBuilder {
                 val undated = open.filter { it.due == null }.sortedWith(compareBy({ it.quadrant.sortOrder }, { it.createdAt }))
                 listOf(TaskSection(SectionKind.NO_DATE, null, undated.map { item(it, null) })).filter { it.tasks.isNotEmpty() }
             }
+            ListMode.PROJECT -> {
+                val (dated, undated) = open.filter { it.projectId == projectId }.partition { it.due != null }
+                listOf(
+                    TaskSection(SectionKind.DAY, "زمان‌دار", dated.map { item(it, null) }),
+                    TaskSection(SectionKind.NO_DATE, "بدون تاریخ", undated.sortedWith(compareBy({ it.quadrant.sortOrder }, { it.createdAt })).map { item(it, null) }),
+                ).filter { it.tasks.isNotEmpty() }
+            }
         }
         return TaskListUiState(
             mode = mode,
@@ -54,6 +78,7 @@ internal object TaskListBuilder {
             header = if (mode == ListMode.TODAY) header(today) else null,
             sections = sections,
             completed = if (mode == ListMode.TODAY) completedToday.map { item(it, today) } else emptyList(),
+            projectName = projectId?.let { context.projects[it]?.name },
         )
     }
 
@@ -65,7 +90,7 @@ internal object TaskListBuilder {
             Quadrant.ELIMINATE, Quadrant.NONE -> 3
         }
 
-    private fun Task.toItem(sectionDate: LocalDate?, today: LocalDate, now: LocalDateTime): TaskItem {
+    private fun Task.toItem(sectionDate: LocalDate?, today: LocalDate, now: LocalDateTime, context: Context, showProject: Boolean): TaskItem {
         val due = due
         val overdue = !isCompleted && due != null && when (due) {
             is TaskDue.AllDay -> due.date.isBefore(today)
@@ -81,6 +106,9 @@ internal object TaskListBuilder {
             quadrant = quadrant,
             reminder = if (due != null) reminder?.kind else null,
             completed = isCompleted,
+            project = projectId?.takeIf { showProject }?.let { context.projects[it] }?.let { TagChip(it.name, it.color) },
+            labels = labelIds.mapNotNull { context.labels[it] }.sortedBy { it.name }.map { TagChip(it.name, it.color) },
+            subtaskProgress = context.progress[id]?.let { "${PersianDigits.format(it.done)}/${PersianDigits.format(it.total)}" },
         )
     }
 

@@ -26,6 +26,8 @@ import ir.roozban.feature.settings.BatteryGuideRoute
 import ir.roozban.feature.settings.SettingsRoute
 import ir.roozban.feature.settings.settingsScreens
 import ir.roozban.feature.tasks.InboxRoute
+import ir.roozban.feature.tasks.ProjectRoute
+import ir.roozban.feature.tasks.ProjectsRoute
 import ir.roozban.feature.tasks.TodayRoute
 import ir.roozban.feature.tasks.UpcomingRoute
 import ir.roozban.feature.tasks.tasksScreens
@@ -35,6 +37,7 @@ private enum class Tab(val route: Any, val routeClass: KClass<*>, @DrawableRes v
     TODAY(TodayRoute, TodayRoute::class, DsR.drawable.ic_today, R.string.tab_today),
     UPCOMING(UpcomingRoute, UpcomingRoute::class, DsR.drawable.ic_upcoming, R.string.tab_upcoming),
     INBOX(InboxRoute, InboxRoute::class, DsR.drawable.ic_inbox, R.string.tab_inbox),
+    PROJECTS(ProjectsRoute, ProjectsRoute::class, DsR.drawable.ic_folder, R.string.tab_projects),
 }
 
 @Composable
@@ -70,7 +73,11 @@ fun RoozbanApp(navController: NavHostController = rememberNavController()) {
             startDestination = TodayRoute,
             modifier = Modifier.padding(padding),
         ) {
-            tasksScreens(onOpenSettings = { navController.navigate(SettingsRoute) })
+            tasksScreens(
+                onOpenSettings = { navController.navigate(SettingsRoute) },
+                onOpenProject = { navController.navigate(ProjectRoute(it)) },
+                onBack = { navController.popBackStack() },
+            )
             settingsScreens(
                 onBack = { navController.popBackStack() },
                 onOpenBatteryGuide = { navController.navigate(BatteryGuideRoute) },

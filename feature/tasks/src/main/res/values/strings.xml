@@ -4,6 +4,7 @@
     <string name="tasks_title_upcoming">آینده</string>
     <string name="tasks_title_inbox">صندوق ورودی</string>
     <string name="tasks_settings">تنظیمات</string>
+    <string name="tasks_back">بازگشت</string>
     <string name="tasks_add">کار جدید</string>
     <string name="tasks_undo">بازگردانی</string>
     <string name="tasks_deleted">کار حذف شد</string>
@@ -16,6 +17,8 @@
     <string name="empty_upcoming_title">برنامه‌ای برای روزهای آینده نیست</string>
     <string name="empty_upcoming_body">کارهایی که برای فردا به بعد زمان دارند اینجا دیده می‌شوند.</string>
     <string name="empty_inbox_title">صندوق ورودی خالی است</string>
+    <string name="empty_project_title">این پروژه هنوز کاری ندارد</string>
+    <string name="empty_project_body">کاری که اینجا ثبت کنید در همین پروژه قرار می‌گیرد.</string>
     <string name="empty_inbox_body">کارهای بدون تاریخ اینجا می‌مانند تا برایشان زمان بگذارید.</string>
 
     <string name="permission_notifications_title">یادآوری‌ها بی‌صدا می‌مانند</string>
@@ -25,7 +28,7 @@
     <string name="permission_exact_body">اجازه‌ی «آلارم‌ها و یادآوری‌ها» خاموش است؛ بدون آن اندروید زمان یادآوری را تا چند دقیقه جابه‌جا می‌کند.</string>
     <string name="permission_open_settings">باز کردن تنظیمات</string>
 
-    <string name="quick_add_placeholder">مثلاً: خرید نان فردا عصر !مهم</string>
+    <string name="quick_add_placeholder">مثلاً: خرید نان فردا عصر #خانه !مهم</string>
     <string name="quick_add_save">ثبت</string>
     <string name="quick_add_title_label">عنوان: %1$s</string>
     <string name="quick_add_needs_review">زمان را با اطمینان تشخیص ندادم؛ لطفاً بررسی کنید.</string>
@@ -44,7 +47,6 @@
     <string name="editor_reminder_alarm">آلارم</string>
     <string name="editor_reminder_all_day_note">برای کار بدون ساعت، یادآوری در ساعت تعیین‌شده در تنظیمات می‌آید.</string>
     <string name="editor_repeat">تکرار</string>
-    <string name="editor_remove_repeat">حذف تکرار</string>
     <string name="editor_priority">اولویت (آیزنهاور)</string>
     <string name="editor_important">مهم</string>
     <string name="editor_urgent">فوری</string>
@@ -59,4 +61,43 @@
     <string name="quadrant_schedule">برنامه‌ریزی</string>
     <string name="quadrant_delegate">واگذاری</string>
     <string name="quadrant_none">بدون اولویت</string>
+
+    <string name="editor_project">پروژه</string>
+    <string name="editor_no_project">بدون پروژه</string>
+    <string name="editor_labels">برچسب‌ها</string>
+    <string name="editor_new_label">برچسب جدید</string>
+    <string name="editor_subtasks">زیرکارها</string>
+    <string name="editor_add_subtask">افزودن زیرکار</string>
+    <string name="editor_no_repeat">بدون تکرار</string>
+
+    <string name="repeat_title">تکرار</string>
+    <string name="repeat_none">بدون تکرار</string>
+    <string name="repeat_daily">روزانه</string>
+    <string name="repeat_weekly">هفتگی</string>
+    <string name="repeat_monthly">ماهانه</string>
+    <string name="repeat_yearly">سالانه</string>
+    <string name="repeat_every">هر</string>
+    <string name="repeat_unit_day">روز</string>
+    <string name="repeat_unit_week">هفته</string>
+    <string name="repeat_unit_month">ماه</string>
+    <string name="repeat_unit_year">سال</string>
+    <string name="repeat_month_same_day">همان روز ماه</string>
+    <string name="repeat_month_last_day">آخرین روز ماه</string>
+    <string name="dialog_ok">تأیید</string>
+    <string name="dialog_cancel">لغو</string>
+
+    <string name="projects_title">پروژه‌ها</string>
+    <string name="projects_new">پروژه‌ی جدید</string>
+    <string name="projects_empty_title">هنوز پروژه‌ای ندارید</string>
+    <string name="projects_empty_body">کارهای مرتبط را در پروژه‌ها کنار هم بگذارید. در ثبت سریع هم می‌توانید بنویسید: «#خانه».</string>
+    <string name="projects_name">نام پروژه</string>
+    <string name="projects_color">رنگ</string>
+    <string name="projects_rename">ویرایش</string>
+    <string name="projects_archive">بایگانی</string>
+    <string name="projects_unarchive">خارج کردن از بایگانی</string>
+    <string name="projects_delete">حذف</string>
+    <string name="projects_delete_confirm">پروژه‌ی «%1$s» حذف شود؟ کارهایش حذف نمی‌شوند و بدون پروژه می‌مانند.</string>
+    <string name="projects_archived">بایگانی‌شده</string>
+    <string name="projects_open_count">%1$s کار</string>
+    <string name="projects_more">گزینه‌ها</string>
 </resources>
