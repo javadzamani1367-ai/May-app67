@@ -122,9 +122,9 @@ private fun ReportBody(report: Report, previous: Report?, projects: Map<String, 
     }
     val dayLabels = report.days.map { d ->
         if (range == ReportRange.WEEK) {
-            PersianNames.WEEKDAYS_SHORT[PersianWeek.indexOf(d.dayOfWeek)]
+            PersianNames.WEEKDAYS_SHORT[PersianWeek.indexOf(d.date.dayOfWeek)]
         } else {
-            d.toJalali().day.let { if (it == 1 || it % 5 == 0) PersianDigits.format(it) else "" }
+            d.date.toJalali().day.let { if (it == 1 || it % 5 == 0) PersianDigits.format(it) else "" }
         }
     }
     val todayIndex = report.days.indexOfFirst { it.date == java.time.LocalDate.now() }.takeIf { it >= 0 }
