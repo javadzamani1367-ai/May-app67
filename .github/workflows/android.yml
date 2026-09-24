@@ -27,6 +27,9 @@ jobs:
       - name: Unit tests (JVM modules + all Android variants)
         run: ./gradlew test --stacktrace
 
+      - name: Print Room schemas
+        run: for f in core/database/schemas/*/*.json; do echo "=== SCHEMA $f"; cat "$f"; echo; echo "=== END"; done
+
       - name: Assemble debug APKs (bazaar, myket, dev)
         run: ./gradlew assembleDebug
 
