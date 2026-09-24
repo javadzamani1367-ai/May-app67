@@ -36,10 +36,13 @@ class QuickAddActivity : AppCompatActivity() {
         setContent {
             val userSettings by settings.settings.collectAsStateWithLifecycle(initialValue = null)
             RoozbanTheme(dynamicColor = userSettings?.dynamicColor == true) {
-                StandaloneQuickAdd(initialText = shared) { saved ->
-                    if (saved) Toast.makeText(this, R.string.quick_add_saved, Toast.LENGTH_SHORT).show()
-                    finish()
-                }
+                StandaloneQuickAdd(
+                    initialText = shared,
+                    onDone = { saved ->
+                        if (saved) Toast.makeText(this, R.string.quick_add_saved, Toast.LENGTH_SHORT).show()
+                        finish()
+                    },
+                )
             }
         }
     }
