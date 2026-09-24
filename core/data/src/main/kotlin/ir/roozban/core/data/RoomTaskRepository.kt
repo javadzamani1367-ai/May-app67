@@ -1,13 +1,20 @@
 package ir.roozban.core.data
 
 import ir.roozban.core.database.CompletionEntity
+import ir.roozban.core.database.LabelDao
+import ir.roozban.core.database.ProjectDao
 import ir.roozban.core.database.ReminderDao
 import ir.roozban.core.database.TaskDao
 import ir.roozban.core.database.toEntity
 import ir.roozban.core.database.toFloatingSeconds
 import ir.roozban.core.database.toModel
+import ir.roozban.core.domain.LabelRepository
+import ir.roozban.core.domain.ProjectRepository
 import ir.roozban.core.domain.ReminderRepository
+import ir.roozban.core.domain.SubtaskProgress
 import ir.roozban.core.domain.TaskRepository
+import ir.roozban.core.model.Label
+import ir.roozban.core.model.Project
 import ir.roozban.core.model.Reminder
 import ir.roozban.core.model.Task
 import kotlinx.coroutines.flow.Flow
@@ -27,11 +34,20 @@ class RoomTaskRepository @Inject constructor(
     override fun observeCompletedSince(since: Instant): Flow<List<Task>> =
         dao.observeCompletedSince(since.toEpochMilli()).map { list -> list.map { it.toModel() } }
 
+    override fun observeSubtasks(parentId: String): Flow<List<Task>> =
+        dao.observeSubtasks(parentId).map { list -> list.map { it.toModel() } }
+
+    override fun observeProjectTasks(projectId: String): Flow<List<Task>> =
+        dao.observeProjectTasks(projectId).map { list -> list.map { it.toModel() } }
+
+    override fun observeSubtaskProgress(): Flow<Map<String, SubtaskProgress>> =
+        dao.observeSubtaskProgress().map { rows -> rows.associate { it.parentId to SubtaskProgress(it.total, it.done) } }
+
     override fun observeTask(id: String): Flow<Task?> = dao.observe(id).map { it?.toModel() }
 
     override suspend fun get(id: String): Task? = dao.get(id)?.toModel()
 
-    override suspend fun upsert(task: Task) = dao.upsert(task.toEntity())
+    override suspend fun upsert(task: Task) = dao.upsert(task.toEntity(), task.labelIds)
 
     override suspend fun delete(id: String) = dao.softDelete(id, clock.millis())
 
@@ -64,4 +80,37 @@ class RoomReminderRepository @Inject constructor(
         dao.pendingUntil(until.toFloatingSeconds()).map { it.toModel() }
 
     override suspend fun markFired(taskId: String) = dao.markFired(taskId)
+}
+
+class RoomProjectRepository @Inject constructor(
+    private val dao: ProjectDao,
+    private val taskDao: TaskDao,
+) : ProjectRepository {
+    override fun observeProjects(): Flow<List<Project>> = dao.observeAll().map { list -> list.map { it.toModel() } }
+
+    override fun observeOpenCounts(): Flow<Map<String, Int>> =
+        dao.observeOpenCounts().map { rows -> rows.associate { it.projectId to it.count } }
+
+    override suspend fun get(id: String): Project? = dao.get(id)?.toModel()
+
+    override suspend fun all(): List<Project> = dao.all().map { it.toModel() }
+
+    override suspend fun upsert(project: Project) = dao.upsert(project.toEntity())
+
+    override suspend fun delete(id: String) {
+        taskDao.detachProject(id)
+        dao.delete(id)
+    }
+}
+
+class RoomLabelRepository @Inject constructor(
+    private val dao: LabelDao,
+) : LabelRepository {
+    override fun observeLabels(): Flow<List<Label>> = dao.observeAll().map { list -> list.map { it.toModel() } }
+
+    override suspend fun all(): List<Label> = dao.all().map { it.toModel() }
+
+    override suspend fun upsert(label: Label) = dao.upsert(label.toEntity())
+
+    override suspend fun delete(id: String) = dao.delete(id)
 }

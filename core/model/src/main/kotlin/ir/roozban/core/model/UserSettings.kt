@@ -14,4 +14,9 @@ data class UserSettings(
     /** Reminder applied to new tasks that have a due date. Null = none. */
     val defaultReminder: ReminderSetting? = ReminderSetting(ReminderKind.NOTIFICATION),
     val dynamicColor: Boolean = false,
+    /** Calendar: show Gregorian / Hijri dates next to Jalali ones. */
+    val showGregorian: Boolean = true,
+    val showHijri: Boolean = true,
+    /** Iran's official Hijri date can differ from Umm al-Qura by a day: -1, 0 or +1. */
+    val hijriOffset: Int = 0,
 )

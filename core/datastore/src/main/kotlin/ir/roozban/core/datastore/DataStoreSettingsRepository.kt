@@ -39,6 +39,9 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
         val DEFAULT_REMINDER_KIND = stringPreferencesKey("default_reminder_kind")
         val DEFAULT_REMINDER_OFFSET = intPreferencesKey("default_reminder_offset")
         val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
+        val SHOW_GREGORIAN = booleanPreferencesKey("show_gregorian")
+        val SHOW_HIJRI = booleanPreferencesKey("show_hijri")
+        val HIJRI_OFFSET = intPreferencesKey("hijri_offset")
     }
 
     private companion object {
@@ -66,6 +69,9 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
                         ?.let { ReminderSetting(it, this[Keys.DEFAULT_REMINDER_OFFSET] ?: 0) }
                 },
                 dynamicColor = this[Keys.DYNAMIC_COLOR] ?: DEFAULTS.dynamicColor,
+                showGregorian = this[Keys.SHOW_GREGORIAN] ?: DEFAULTS.showGregorian,
+                showHijri = this[Keys.SHOW_HIJRI] ?: DEFAULTS.showHijri,
+                hijriOffset = this[Keys.HIJRI_OFFSET] ?: DEFAULTS.hijriOffset,
             )
         }
 
@@ -79,6 +85,9 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
             this[Keys.DEFAULT_REMINDER_KIND] = s.defaultReminder?.kind?.name ?: NONE
             this[Keys.DEFAULT_REMINDER_OFFSET] = s.defaultReminder?.offsetMinutes ?: 0
             this[Keys.DYNAMIC_COLOR] = s.dynamicColor
+            this[Keys.SHOW_GREGORIAN] = s.showGregorian
+            this[Keys.SHOW_HIJRI] = s.showHijri
+            this[Keys.HIJRI_OFFSET] = s.hijriOffset
         }
     }
 }

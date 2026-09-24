@@ -1,5 +1,7 @@
 package ir.roozban.core.database
 
+import ir.roozban.core.model.Label
+import ir.roozban.core.model.Project
 import ir.roozban.core.model.Reminder
 import ir.roozban.core.model.ReminderKind
 import ir.roozban.core.model.ReminderSetting
@@ -16,7 +18,7 @@ fun LocalDateTime.toFloatingSeconds(): Long = toEpochSecond(ZoneOffset.UTC)
 
 fun floatingSecondsToLocal(seconds: Long): LocalDateTime = LocalDateTime.ofEpochSecond(seconds, 0, ZoneOffset.UTC)
 
-fun TaskEntity.toModel(): Task = Task(
+fun TaskEntity.toModel(labelIds: Collection<String> = emptyList()): Task = Task(
     id = id,
     title = title,
     notes = notes,
@@ -32,10 +34,15 @@ fun TaskEntity.toModel(): Task = Task(
     reminder = reminderKind?.let { kind ->
         runCatching { ReminderKind.valueOf(kind) }.getOrNull()?.let { ReminderSetting(it, reminderOffset) }
     },
+    projectId = projectId,
+    parentId = parentId,
+    labelIds = labelIds.toSet(),
     completedAt = completedAt?.let(Instant::ofEpochMilli),
     createdAt = Instant.ofEpochMilli(createdAt),
     updatedAt = Instant.ofEpochMilli(updatedAt),
 )
+
+fun TaskWithLabels.toModel(): Task = task.toModel(labelIds)
 
 fun Task.toEntity(): TaskEntity = TaskEntity(
     id = id,
@@ -53,6 +60,8 @@ fun Task.toEntity(): TaskEntity = TaskEntity(
     completedAt = completedAt?.toEpochMilli(),
     createdAt = createdAt.toEpochMilli(),
     updatedAt = updatedAt.toEpochMilli(),
+    projectId = projectId,
+    parentId = parentId,
 )
 
 fun ReminderEntity.toModel(): Reminder = Reminder(
@@ -68,3 +77,11 @@ fun Reminder.toEntity(): ReminderEntity = ReminderEntity(
     kind = kind.name,
     state = state.name,
 )
+
+fun ProjectEntity.toModel() = Project(id, name, color, archived, sortOrder, Instant.ofEpochMilli(createdAt), Instant.ofEpochMilli(updatedAt))
+
+fun Project.toEntity() = ProjectEntity(id, name, color, archived, sortOrder, createdAt.toEpochMilli(), updatedAt.toEpochMilli())
+
+fun LabelEntity.toModel() = Label(id, name, color, Instant.ofEpochMilli(createdAt), Instant.ofEpochMilli(updatedAt))
+
+fun Label.toEntity() = LabelEntity(id, name, color, createdAt.toEpochMilli(), updatedAt.toEpochMilli())

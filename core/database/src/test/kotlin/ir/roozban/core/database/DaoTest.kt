@@ -69,7 +69,7 @@ class DaoTest {
         tasks.upsert(task("evening", TaskDue.At(day, LocalTime.of(20, 0))).toEntity())
         tasks.upsert(task("morning", TaskDue.At(day, LocalTime.of(9, 0))).toEntity())
         tasks.upsert(task("done", TaskDue.AllDay(day)).copy(completedAt = Instant.ofEpochMilli(5)).toEntity())
-        assertThat(tasks.observeOpen().first().map { it.id })
+        assertThat(tasks.observeOpen().first().map { it.task.id })
             .containsExactly("morning", "evening", "allday", "later", "undated").inOrder()
     }
 
@@ -102,6 +102,61 @@ class DaoTest {
         tasks.softDelete("b", at = 1)
         tasks.purgeDeleted(before = 2)
         assertThat(reminders.get("b")).isNull()
+    }
+
+    @Test
+    fun `labels are stored through the junction table`() = runTest {
+        db.labelDao().upsert(LabelEntity("l1", "خرید", 0, 1, 1))
+        db.labelDao().upsert(LabelEntity("l2", "فوری", 0, 1, 1))
+        val t = task("a").copy(labelIds = setOf("l1", "l2"))
+        tasks.upsert(t.toEntity(), t.labelIds)
+        assertThat(tasks.get("a")?.toModel()?.labelIds).containsExactly("l1", "l2")
+        tasks.upsert(t.toEntity(), setOf("l2"))
+        assertThat(tasks.get("a")?.toModel()?.labelIds).containsExactly("l2")
+        db.labelDao().delete("l2")
+        assertThat(tasks.get("a")?.toModel()?.labelIds).isEmpty()
+    }
+
+    @Test
+    fun `subtasks are hidden from lists and counted for their parent`() = runTest {
+        tasks.upsert(task("parent").toEntity())
+        tasks.upsert(task("s1").copy(parentId = "parent").toEntity())
+        tasks.upsert(task("s2").copy(parentId = "parent", completedAt = Instant.ofEpochMilli(9)).toEntity())
+        assertThat(tasks.observeOpen().first().map { it.task.id }).containsExactly("parent")
+        assertThat(tasks.observeSubtasks("parent").first().map { it.task.id }).containsExactly("s1", "s2").inOrder()
+        assertThat(tasks.observeSubtaskProgress().first()).containsExactly(SubtaskProgressRow("parent", 2, 1))
+        // Purging a deleted parent removes its subtasks too.
+        tasks.softDelete("parent", at = 1)
+        tasks.purgeDeleted(before = 2)
+        assertThat(tasks.observeSubtasks("parent").first()).isEmpty()
+    }
+
+    @Test
+    fun `projects count open top-level tasks and detach on delete`() = runTest {
+        db.projectDao().upsert(ProjectEntity("p", "کار", 1, false, 0, 1, 1))
+        tasks.upsert(task("a").copy(projectId = "p").toEntity())
+        tasks.upsert(task("b").copy(projectId = "p").toEntity())
+        tasks.upsert(task("done").copy(projectId = "p", completedAt = Instant.ofEpochMilli(1)).toEntity())
+        assertThat(db.projectDao().observeOpenCounts().first()).containsExactly(ProjectCountRow("p", 2))
+        assertThat(tasks.observeProjectTasks("p").first().map { it.task.id }).containsExactly("a", "b")
+        tasks.detachProject("p")
+        db.projectDao().delete("p")
+        assertThat(tasks.get("a")?.task?.projectId).isNull()
+    }
+
+    @Test
+    fun `backup replaceAll swaps the whole dataset`() = runTest {
+        tasks.upsert(task("old").toEntity())
+        db.backupDao().replaceAll(
+            tasks = listOf(task("new").toEntity()),
+            projects = listOf(ProjectEntity("p", "خانه", 0, false, 0, 1, 1)),
+            labels = listOf(LabelEntity("l", "خرید", 0, 1, 1)),
+            taskLabels = listOf(TaskLabelEntity("new", "l"), TaskLabelEntity("missing", "l")),
+            completions = listOf(CompletionEntity("new", 1, 1)),
+        )
+        assertThat(db.backupDao().tasks().map { it.id }).containsExactly("new")
+        assertThat(db.backupDao().taskLabels()).containsExactly(TaskLabelEntity("new", "l"))
+        assertThat(db.backupDao().completions()).hasSize(1)
     }
 
     @Test

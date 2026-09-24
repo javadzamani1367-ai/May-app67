@@ -1,10 +1,15 @@
 package ir.roozban.core.testing
 
 import ir.roozban.core.domain.AlarmScheduler
+import ir.roozban.core.domain.LabelRepository
+import ir.roozban.core.domain.ProjectRepository
+import ir.roozban.core.domain.SubtaskProgress
 import ir.roozban.core.domain.ReminderRepository
 import ir.roozban.core.domain.SettingsRepository
 import ir.roozban.core.domain.TaskRepository
 import ir.roozban.core.calendar.JalaliDate
+import ir.roozban.core.model.Label
+import ir.roozban.core.model.Project
 import ir.roozban.core.model.Reminder
 import ir.roozban.core.model.ReminderKind
 import ir.roozban.core.model.ReminderState
@@ -36,7 +41,18 @@ class FakeTaskRepository : TaskRepository {
     val completions = mutableListOf<Pair<String, LocalDate>>()
 
     override fun observeOpenTasks(): Flow<List<Task>> =
-        tasks.map { m -> m.values.filter { !it.isCompleted && it.id !in deleted } }
+        tasks.map { m -> m.values.filter { !it.isCompleted && it.id !in deleted && it.parentId == null } }
+
+    override fun observeSubtasks(parentId: String): Flow<List<Task>> =
+        tasks.map { m -> m.values.filter { it.parentId == parentId && it.id !in deleted }.sortedBy { it.createdAt } }
+
+    override fun observeProjectTasks(projectId: String): Flow<List<Task>> =
+        tasks.map { m -> m.values.filter { it.projectId == projectId && !it.isCompleted && it.id !in deleted && it.parentId == null } }
+
+    override fun observeSubtaskProgress(): Flow<Map<String, SubtaskProgress>> = tasks.map { m ->
+        m.values.filter { it.parentId != null && it.id !in deleted }.groupBy { it.parentId!! }
+            .mapValues { (_, subs) -> SubtaskProgress(subs.size, subs.count { it.isCompleted }) }
+    }
 
     override fun observeCompletedSince(since: Instant): Flow<List<Task>> =
         tasks.map { m -> m.values.filter { (it.completedAt ?: Instant.MIN) >= since } }
@@ -66,6 +82,34 @@ class FakeTaskRepository : TaskRepository {
 
     override suspend fun removeCompletion(taskId: String, occurrence: LocalDate) {
         completions -= taskId to occurrence
+    }
+}
+
+class FakeProjectRepository : ProjectRepository {
+    val projects = MutableStateFlow<Map<String, Project>>(emptyMap())
+    var tasks: FakeTaskRepository? = null
+
+    override fun observeProjects(): Flow<List<Project>> = projects.map { m -> m.values.sortedWith(compareBy({ it.archived }, { it.sortOrder })) }
+    override fun observeOpenCounts(): Flow<Map<String, Int>> = MutableStateFlow(emptyMap())
+    override suspend fun get(id: String) = projects.value[id]
+    override suspend fun all() = projects.value.values.toList()
+    override suspend fun upsert(project: Project) {
+        projects.value = projects.value + (project.id to project)
+    }
+    override suspend fun delete(id: String) {
+        projects.value = projects.value - id
+    }
+}
+
+class FakeLabelRepository : LabelRepository {
+    val labels = MutableStateFlow<Map<String, Label>>(emptyMap())
+    override fun observeLabels(): Flow<List<Label>> = labels.map { it.values.sortedBy { l -> l.name } }
+    override suspend fun all() = labels.value.values.toList()
+    override suspend fun upsert(label: Label) {
+        labels.value = labels.value + (label.id to label)
+    }
+    override suspend fun delete(id: String) {
+        labels.value = labels.value - id
     }
 }
 

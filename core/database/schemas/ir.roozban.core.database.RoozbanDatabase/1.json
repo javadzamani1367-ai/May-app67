@@ -1,0 +1,246 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "32bd1798e84c088799a4b255030a1877",
+    "entities": [
+      {
+        "tableName": "task",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `notes` TEXT NOT NULL, `due_date` INTEGER, `due_minute` INTEGER, `important` INTEGER NOT NULL, `urgent` INTEGER NOT NULL, `estimate_min` INTEGER, `rrule` TEXT, `rrule_start` INTEGER, `reminder_kind` TEXT, `reminder_offset` INTEGER NOT NULL, `completed_at` INTEGER, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `deleted_at` INTEGER, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dueDate",
+            "columnName": "due_date",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "dueMinute",
+            "columnName": "due_minute",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "important",
+            "columnName": "important",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "urgent",
+            "columnName": "urgent",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "estimateMinutes",
+            "columnName": "estimate_min",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "rrule",
+            "columnName": "rrule",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "rruleStart",
+            "columnName": "rrule_start",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "reminderKind",
+            "columnName": "reminder_kind",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "reminderOffset",
+            "columnName": "reminder_offset",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completed_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_task_due_date",
+            "unique": false,
+            "columnNames": [
+              "due_date"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_task_due_date` ON `${TABLE_NAME}` (`due_date`)"
+          },
+          {
+            "name": "index_task_completed_at",
+            "unique": false,
+            "columnNames": [
+              "completed_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_task_completed_at` ON `${TABLE_NAME}` (`completed_at`)"
+          },
+          {
+            "name": "index_task_deleted_at",
+            "unique": false,
+            "columnNames": [
+              "deleted_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_task_deleted_at` ON `${TABLE_NAME}` (`deleted_at`)"
+          }
+        ]
+      },
+      {
+        "tableName": "reminder",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`task_id` TEXT NOT NULL, `trigger_at` INTEGER NOT NULL, `kind` TEXT NOT NULL, `state` TEXT NOT NULL, PRIMARY KEY(`task_id`), FOREIGN KEY(`task_id`) REFERENCES `task`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "taskId",
+            "columnName": "task_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "triggerAt",
+            "columnName": "trigger_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "task_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_reminder_trigger_at",
+            "unique": false,
+            "columnNames": [
+              "trigger_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_reminder_trigger_at` ON `${TABLE_NAME}` (`trigger_at`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "task",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "task_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "task_completion",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`task_id` TEXT NOT NULL, `occurrence` INTEGER NOT NULL, `completed_at` INTEGER NOT NULL, PRIMARY KEY(`task_id`, `occurrence`), FOREIGN KEY(`task_id`) REFERENCES `task`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "taskId",
+            "columnName": "task_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "occurrence",
+            "columnName": "occurrence",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completed_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "task_id",
+            "occurrence"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "task",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "task_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '32bd1798e84c088799a4b255030a1877')"
+    ]
+  }
+}

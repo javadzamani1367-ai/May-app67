@@ -1,10 +1,12 @@
 package ir.roozban.core.database
 
 import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.Relation
 
 /**
  * Dates are stored as epoch days, times as minutes of the day, date-times as *floating* local
@@ -12,7 +14,13 @@ import androidx.room.PrimaryKey
  */
 @Entity(
     tableName = "task",
-    indices = [Index("due_date"), Index("completed_at"), Index("deleted_at")],
+    indices = [
+        Index("due_date"),
+        Index("completed_at"),
+        Index("deleted_at"),
+        Index("project_id"),
+        Index("parent_id"),
+    ],
 )
 data class TaskEntity(
     @PrimaryKey val id: String,
@@ -31,6 +39,9 @@ data class TaskEntity(
     @ColumnInfo(name = "created_at") val createdAt: Long,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
     @ColumnInfo(name = "deleted_at") val deletedAt: Long? = null,
+    /** No foreign key (added by migration to an existing table); cleared in code when a project is deleted. */
+    @ColumnInfo(name = "project_id") val projectId: String? = null,
+    @ColumnInfo(name = "parent_id") val parentId: String? = null,
 )
 
 @Entity(
@@ -55,4 +66,61 @@ data class CompletionEntity(
     /** Epoch day of the completed occurrence. */
     val occurrence: Long,
     @ColumnInfo(name = "completed_at") val completedAt: Long,
+)
+
+@Entity(tableName = "project")
+data class ProjectEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val color: Int,
+    val archived: Boolean,
+    @ColumnInfo(name = "sort_order") val sortOrder: Int,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+    @ColumnInfo(name = "updated_at") val updatedAt: Long,
+)
+
+@Entity(tableName = "label")
+data class LabelEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val color: Int,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+    @ColumnInfo(name = "updated_at") val updatedAt: Long,
+)
+
+@Entity(
+    tableName = "task_label",
+    primaryKeys = ["task_id", "label_id"],
+    foreignKeys = [
+        ForeignKey(TaskEntity::class, ["id"], ["task_id"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(LabelEntity::class, ["id"], ["label_id"], onDelete = ForeignKey.CASCADE),
+    ],
+    indices = [Index("label_id")],
+)
+data class TaskLabelEntity(
+    @ColumnInfo(name = "task_id") val taskId: String,
+    @ColumnInfo(name = "label_id") val labelId: String,
+)
+
+/** A task with its label ids (Room fills [labels] through the junction table). */
+data class TaskWithLabels(
+    @Embedded val task: TaskEntity,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "task_id",
+        entity = TaskLabelEntity::class,
+        projection = ["label_id"],
+    )
+    val labelIds: List<String>,
+)
+
+data class SubtaskProgressRow(
+    @ColumnInfo(name = "parent_id") val parentId: String,
+    val total: Int,
+    val done: Int,
+)
+
+data class ProjectCountRow(
+    @ColumnInfo(name = "project_id") val projectId: String,
+    val count: Int,
 )

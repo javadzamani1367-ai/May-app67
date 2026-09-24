@@ -44,6 +44,10 @@ data class Task(
     val recurrence: String? = null,
     val recurrenceStart: LocalDate? = null,
     val reminder: ReminderSetting? = null,
+    val projectId: String? = null,
+    /** Set for subtasks; subtasks are shown inside their parent, not in the lists. */
+    val parentId: String? = null,
+    val labelIds: Set<String> = emptySet(),
     val completedAt: Instant? = null,
     val createdAt: Instant,
     val updatedAt: Instant,

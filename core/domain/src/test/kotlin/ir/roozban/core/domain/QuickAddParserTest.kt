@@ -63,4 +63,16 @@ class QuickAddParserTest {
         assertThat(r.estimate?.toMinutes()).isEqualTo(30)
         assertThat(r.title).isEqualTo("ورزش")
     }
+
+    @Test
+    fun `project and labels`() {
+        val r = parse("خرید نان #خانه @خرید @فوری_امروز فردا")
+        assertThat(r.title).isEqualTo("خرید نان")
+        assertThat(r.projectName).isEqualTo("خانه")
+        assertThat(r.labelNames).containsExactly("خرید", "فوری امروز").inOrder()
+        assertThat(r.highlights.map { it.kind })
+            .containsExactly(HighlightKind.PROJECT, HighlightKind.LABEL, HighlightKind.LABEL, HighlightKind.TIME).inOrder()
+        // An e-mail address is not a label.
+        assertThat(parse("ارسال به ali@example.com").labelNames).isEmpty()
+    }
 }

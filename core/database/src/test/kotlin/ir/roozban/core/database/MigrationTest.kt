@@ -1,0 +1,75 @@
+package ir.roozban.core.database
+
+import android.database.sqlite.SQLiteDatabase
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
+import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runTest
+import org.json.JSONObject
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import java.io.File
+
+/**
+ * Creates a real version-1 database from the committed schema (`schemas/…/1.json`), fills it,
+ * then opens it with the current Room database. Room runs the migrations and validates the
+ * resulting schema against the current entities, so a wrong migration fails here.
+ */
+@RunWith(RobolectricTestRunner::class)
+class MigrationTest {
+
+    private val schemaDir = File("schemas/ir.roozban.core.database.RoozbanDatabase")
+
+    private fun createFromSchema(file: File, version: Int) {
+        val db = JSONObject(File(schemaDir, "$version.json").readText()).getJSONObject("database")
+        val sql = SQLiteDatabase.openOrCreateDatabase(file, null)
+        val entities = db.getJSONArray("entities")
+        for (i in 0 until entities.length()) {
+            val entity = entities.getJSONObject(i)
+            val table = entity.getString("tableName")
+            sql.execSQL(entity.getString("createSql").replace("\${TABLE_NAME}", table))
+            val indices = entity.optJSONArray("indices") ?: continue
+            for (j in 0 until indices.length()) {
+                sql.execSQL(indices.getJSONObject(j).getString("createSql").replace("\${TABLE_NAME}", table))
+            }
+        }
+        val setup = db.getJSONArray("setupQueries")
+        for (i in 0 until setup.length()) sql.execSQL(setup.getString(i))
+        sql.version = version
+        sql.close()
+    }
+
+    @Test
+    fun `migrates 1 to 2 keeping tasks, reminders and completions`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val file = context.getDatabasePath("migration-test.db").apply { parentFile?.mkdirs(); delete() }
+        createFromSchema(file, 1)
+        SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READWRITE).use { v1 ->
+            v1.execSQL(
+                """INSERT INTO task (id, title, notes, due_date, due_minute, important, urgent, estimate_min, rrule,
+                   rrule_start, reminder_kind, reminder_offset, completed_at, created_at, updated_at, deleted_at)
+                   VALUES ('t1', 'جلسه', '', 20720, 600, 1, 0, 30, 'FREQ=DAILY', 20720, 'ALARM', 5, NULL, 1, 2, NULL)""",
+            )
+            v1.execSQL("INSERT INTO reminder (task_id, trigger_at, kind, state) VALUES ('t1', 1790000000, 'ALARM', 'PENDING')")
+            v1.execSQL("INSERT INTO task_completion (task_id, occurrence, completed_at) VALUES ('t1', 20719, 3)")
+        }
+
+        val db = Room.databaseBuilder(context, RoozbanDatabase::class.java, file.path)
+            .allowMainThreadQueries()
+            .build()
+        val task = db.taskDao().get("t1")!!
+        assertThat(task.task.title).isEqualTo("جلسه")
+        assertThat(task.task.estimateMinutes).isEqualTo(30)
+        assertThat(task.task.projectId).isNull()
+        assertThat(task.task.parentId).isNull()
+        assertThat(task.labelIds).isEmpty()
+        assertThat(db.reminderDao().get("t1")?.kind).isEqualTo("ALARM")
+        assertThat(db.taskDao().completions("t1").map { it.occurrence }).containsExactly(20719L)
+        // New tables work after migration.
+        db.projectDao().upsert(ProjectEntity("p1", "خانه", 2, false, 0, 1, 1))
+        assertThat(db.projectDao().observeAll().first().map { it.name }).containsExactly("خانه")
+        db.close()
+    }
+}

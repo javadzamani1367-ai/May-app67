@@ -7,8 +7,11 @@ import ir.roozban.core.domain.CompleteTaskUseCase
 import ir.roozban.core.domain.QuickAddParser
 import ir.roozban.core.domain.ReminderSync
 import ir.roozban.core.domain.ReopenTaskUseCase
+import ir.roozban.core.domain.TagResolver
 import ir.roozban.core.domain.HighlightKind
 import ir.roozban.core.testing.FakeAlarmScheduler
+import ir.roozban.core.testing.FakeLabelRepository
+import ir.roozban.core.testing.FakeProjectRepository
 import ir.roozban.core.testing.FakeReminderRepository
 import ir.roozban.core.testing.FakeSettingsRepository
 import ir.roozban.core.testing.FakeTaskRepository
@@ -42,7 +45,7 @@ class TaskListViewModelTest {
         tasks = tasks,
         settings = settings,
         parser = QuickAddParser(),
-        addTask = AddTaskUseCase(tasks, settings, sync, clock),
+        addTask = AddTaskUseCase(tasks, settings, sync, TagResolver(FakeProjectRepository(), FakeLabelRepository(), clock), clock),
         completeTask = CompleteTaskUseCase(tasks, sync, clock),
         reopenTask = ReopenTaskUseCase(tasks, sync, clock),
         clock = clock,

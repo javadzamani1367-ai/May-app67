@@ -11,7 +11,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import javax.inject.Inject
 
-enum class HighlightKind { TIME, RECURRENCE, DURATION, PRIORITY }
+enum class HighlightKind { TIME, RECURRENCE, DURATION, PRIORITY, PROJECT, LABEL }
 
 data class Highlight(val start: Int, val end: Int, val kind: HighlightKind)
 
@@ -22,13 +22,18 @@ data class QuickAddResult(
     val estimate: Duration?,
     val important: Boolean,
     val urgent: Boolean,
+    /** From `#name`; resolved (or created) when the task is added. */
+    val projectName: String? = null,
+    /** From `@name` tokens. */
+    val labelNames: List<String> = emptyList(),
     val highlights: List<Highlight>,
     val confidence: Float,
 )
 
 /**
- * Quick-add syntax: free Persian text with a time expression, plus Eisenhower markers
- * `!مهم` (important), `!فوری` (urgent) and `!!` (both).
+ * Quick-add syntax: free Persian text with a time expression, plus
+ * - Eisenhower markers `!مهم` (important), `!فوری` (urgent) and `!!` (both),
+ * - `#پروژه` for the project and `@برچسب` for labels (underscores stand for spaces: `#خرید_خانه`).
  */
 class QuickAddParser @Inject constructor() {
 
@@ -47,6 +52,11 @@ class QuickAddParser @Inject constructor() {
             Highlight(m.range.first, m.range.last + 1, HighlightKind.PRIORITY)
         }.toList()
 
+        val projectMatch = PROJECT.find(text)
+        val labelMatches = LABEL.findAll(text).toList()
+        val tagSpans = listOfNotNull(projectMatch?.let { Highlight(it.range.first, it.range.last + 1, HighlightKind.PROJECT) }) +
+            labelMatches.map { Highlight(it.range.first, it.range.last + 1, HighlightKind.LABEL) }
+
         val due = when (val t = result.time) {
             null -> null
             is ResolvedTime.AllDay -> TaskDue.AllDay(t.date)
@@ -59,15 +69,17 @@ class QuickAddParser @Inject constructor() {
                 SpanKind.DURATION -> HighlightKind.DURATION
             }
             Highlight(it.start, it.end, kind)
-        } + markerSpans
+        } + markerSpans + tagSpans
 
         return QuickAddResult(
-            title = result.title.replace(MARKER, " ").replace(SPACES, " ").trim(),
+            title = result.title.replace(MARKER, " ").replace(PROJECT, " ").replace(LABEL, " ").replace(SPACES, " ").trim(),
             due = due,
             recurrence = result.recurrence,
             estimate = result.estimate,
             important = important,
             urgent = urgent,
+            projectName = projectMatch?.groupValues?.get(1)?.tagName(),
+            labelNames = labelMatches.map { it.groupValues[1].tagName() }.distinct(),
             highlights = highlights.sortedBy { it.start },
             confidence = result.confidence,
         )
@@ -75,7 +87,11 @@ class QuickAddParser @Inject constructor() {
 
     private companion object {
         val MARKER = Regex("(?<!\\S)!(!|مهم|فوری)(?!\\S)")
+        val PROJECT = Regex("(?<!\\S)#([\\p{L}\\p{N}_\u200C-]+)")
+        val LABEL = Regex("(?<!\\S)@([\\p{L}\\p{N}_\u200C-]+)")
         val SPACES = Regex("\\s+")
+
+        fun String.tagName() = replace('_', ' ')
     }
 }
 

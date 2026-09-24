@@ -1,5 +1,7 @@
 package ir.roozban.core.domain
 
+import ir.roozban.core.model.Label
+import ir.roozban.core.model.Project
 import ir.roozban.core.model.Reminder
 import ir.roozban.core.model.ReminderKind
 import ir.roozban.core.model.Task
@@ -10,8 +12,15 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 interface TaskRepository {
-    /** Open (not completed, not deleted) tasks, ordered by due date then creation. */
+    /** Open (not completed, not deleted) top-level tasks, ordered by due date then creation. */
     fun observeOpenTasks(): Flow<List<Task>>
+
+    fun observeSubtasks(parentId: String): Flow<List<Task>>
+
+    fun observeProjectTasks(projectId: String): Flow<List<Task>>
+
+    /** parentId → progress, for every task that has subtasks. */
+    fun observeSubtaskProgress(): Flow<Map<String, SubtaskProgress>>
 
     fun observeCompletedSince(since: Instant): Flow<List<Task>>
 
@@ -31,6 +40,35 @@ interface TaskRepository {
     suspend fun recordCompletion(taskId: String, occurrence: LocalDate, at: Instant)
 
     suspend fun removeCompletion(taskId: String, occurrence: LocalDate)
+}
+
+data class SubtaskProgress(val total: Int, val done: Int)
+
+interface ProjectRepository {
+    /** All projects, active first. */
+    fun observeProjects(): Flow<List<Project>>
+
+    /** projectId → number of open top-level tasks. */
+    fun observeOpenCounts(): Flow<Map<String, Int>>
+
+    suspend fun get(id: String): Project?
+
+    suspend fun all(): List<Project>
+
+    suspend fun upsert(project: Project)
+
+    /** Deletes the project; its tasks are kept without a project. */
+    suspend fun delete(id: String)
+}
+
+interface LabelRepository {
+    fun observeLabels(): Flow<List<Label>>
+
+    suspend fun all(): List<Label>
+
+    suspend fun upsert(label: Label)
+
+    suspend fun delete(id: String)
 }
 
 interface ReminderRepository {

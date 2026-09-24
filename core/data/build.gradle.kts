@@ -12,4 +12,10 @@ dependencies {
     implementation(projects.core.database)
     implementation(projects.core.datastore)
     implementation(projects.core.common)
+    implementation(projects.core.backup)
+
+    testImplementation(projects.core.testing)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

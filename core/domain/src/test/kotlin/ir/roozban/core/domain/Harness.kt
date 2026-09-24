@@ -1,6 +1,8 @@
 package ir.roozban.core.domain
 
 import ir.roozban.core.testing.FakeAlarmScheduler
+import ir.roozban.core.testing.FakeLabelRepository
+import ir.roozban.core.testing.FakeProjectRepository
 import ir.roozban.core.testing.FakeReminderRepository
 import ir.roozban.core.testing.FakeSettingsRepository
 import ir.roozban.core.testing.FakeTaskRepository
@@ -17,7 +19,11 @@ class Harness(settings: UserSettings = UserSettings()) {
     val scheduler = FakeAlarmScheduler()
     val sync = ReminderSync(reminders, tasks, this.settings, scheduler, clock)
     val parser = QuickAddParser()
-    val add = AddTaskUseCase(tasks, this.settings, sync, clock)
+    val projects = FakeProjectRepository()
+    val labels = FakeLabelRepository()
+    val tags = TagResolver(projects, labels, clock)
+    val add = AddTaskUseCase(tasks, this.settings, sync, tags, clock)
+    val addSubtask = AddSubtaskUseCase(tasks, clock)
     val update = UpdateTaskUseCase(tasks, sync, clock)
     val complete = CompleteTaskUseCase(tasks, sync, clock)
     val delete = DeleteTaskUseCase(tasks, sync)
