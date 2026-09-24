@@ -1,5 +1,9 @@
 package ir.roozban.core.database
 
+import ir.roozban.core.model.FocusSession
+import ir.roozban.core.model.Habit
+import ir.roozban.core.model.HabitLog
+import ir.roozban.core.model.HabitSchedule
 import ir.roozban.core.model.Label
 import ir.roozban.core.model.Project
 import ir.roozban.core.model.Reminder
@@ -8,6 +12,8 @@ import ir.roozban.core.model.ReminderSetting
 import ir.roozban.core.model.ReminderState
 import ir.roozban.core.model.Task
 import ir.roozban.core.model.TaskDue
+import ir.roozban.core.model.TimeEntry
+import ir.roozban.core.model.TimeSource
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -85,3 +91,50 @@ fun Project.toEntity() = ProjectEntity(id, name, color, archived, sortOrder, cre
 fun LabelEntity.toModel() = Label(id, name, color, Instant.ofEpochMilli(createdAt), Instant.ofEpochMilli(updatedAt))
 
 fun Label.toEntity() = LabelEntity(id, name, color, createdAt.toEpochMilli(), updatedAt.toEpochMilli())
+
+fun FocusSessionEntity.toModel() = FocusSession(
+    id, taskId, Instant.ofEpochMilli(startedAt), Instant.ofEpochMilli(endedAt), plannedMinutes, focusedSeconds, completed,
+)
+
+fun FocusSession.toEntity() = FocusSessionEntity(
+    id, taskId, startedAt.toEpochMilli(), endedAt.toEpochMilli(), plannedMinutes, focusedSeconds, completed,
+)
+
+fun TimeEntryEntity.toModel() = TimeEntry(
+    id, taskId, Instant.ofEpochMilli(startAt), Instant.ofEpochMilli(endAt),
+    runCatching { TimeSource.valueOf(source) }.getOrDefault(TimeSource.MANUAL),
+)
+
+fun TimeEntry.toEntity() = TimeEntryEntity(id, taskId, start.toEpochMilli(), end.toEpochMilli(), source.name)
+
+fun HabitEntity.toModel() = Habit(
+    id = id,
+    name = name,
+    color = color,
+    schedule = HabitSchedule.decode(schedule),
+    targetPerDay = target,
+    reminderTime = reminderMinute?.let { LocalTime.of(it / 60, it % 60) },
+    startDate = LocalDate.ofEpochDay(startDate),
+    archived = archived,
+    sortOrder = sortOrder,
+    createdAt = Instant.ofEpochMilli(createdAt),
+    updatedAt = Instant.ofEpochMilli(updatedAt),
+)
+
+fun Habit.toEntity() = HabitEntity(
+    id = id,
+    name = name,
+    color = color,
+    schedule = schedule.encode(),
+    target = targetPerDay,
+    reminderMinute = reminderTime?.let { it.hour * 60 + it.minute },
+    startDate = startDate.toEpochDay(),
+    archived = archived,
+    sortOrder = sortOrder,
+    createdAt = createdAt.toEpochMilli(),
+    updatedAt = updatedAt.toEpochMilli(),
+)
+
+fun HabitLogEntity.toModel() = HabitLog(habitId, LocalDate.ofEpochDay(date), count, Instant.ofEpochMilli(updatedAt))
+
+fun HabitLog.toEntity() = HabitLogEntity(habitId, date.toEpochDay(), count, updatedAt.toEpochMilli())

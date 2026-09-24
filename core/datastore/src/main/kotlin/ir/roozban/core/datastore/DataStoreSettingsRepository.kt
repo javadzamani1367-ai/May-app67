@@ -8,12 +8,14 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import ir.roozban.core.domain.SettingsRepository
+import ir.roozban.core.model.FocusSettings
 import ir.roozban.core.model.ReminderKind
 import ir.roozban.core.model.ReminderSetting
 import ir.roozban.core.model.UserSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.time.DayOfWeek
 import java.time.LocalTime
 
 /** [UserSettings] persisted in Preferences DataStore. Missing keys fall back to the defaults. */
@@ -42,6 +44,18 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
         val SHOW_GREGORIAN = booleanPreferencesKey("show_gregorian")
         val SHOW_HIJRI = booleanPreferencesKey("show_hijri")
         val HIJRI_OFFSET = intPreferencesKey("hijri_offset")
+        val FOCUS_WORK = intPreferencesKey("focus_work_min")
+        val FOCUS_SHORT = intPreferencesKey("focus_short_break_min")
+        val FOCUS_LONG = intPreferencesKey("focus_long_break_min")
+        val FOCUS_CYCLES = intPreferencesKey("focus_cycles")
+        val FOCUS_AUTO_BREAK = booleanPreferencesKey("focus_auto_break")
+        val FOCUS_AUTO_WORK = booleanPreferencesKey("focus_auto_work")
+        val FOCUS_SILENCE = booleanPreferencesKey("focus_silence")
+        /** Minute of day, or -1 for off. */
+        val DAILY_REVIEW = intPreferencesKey("daily_review_minute")
+        val WEEKLY_REVIEW = intPreferencesKey("weekly_review_minute")
+        /** ISO day of week. */
+        val WEEKLY_REVIEW_DAY = intPreferencesKey("weekly_review_day")
     }
 
     private companion object {
@@ -72,6 +86,18 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
                 showGregorian = this[Keys.SHOW_GREGORIAN] ?: DEFAULTS.showGregorian,
                 showHijri = this[Keys.SHOW_HIJRI] ?: DEFAULTS.showHijri,
                 hijriOffset = this[Keys.HIJRI_OFFSET] ?: DEFAULTS.hijriOffset,
+                focus = FocusSettings(
+                    workMinutes = this[Keys.FOCUS_WORK] ?: DEFAULTS.focus.workMinutes,
+                    shortBreakMinutes = this[Keys.FOCUS_SHORT] ?: DEFAULTS.focus.shortBreakMinutes,
+                    longBreakMinutes = this[Keys.FOCUS_LONG] ?: DEFAULTS.focus.longBreakMinutes,
+                    cyclesBeforeLongBreak = this[Keys.FOCUS_CYCLES] ?: DEFAULTS.focus.cyclesBeforeLongBreak,
+                    autoStartBreaks = this[Keys.FOCUS_AUTO_BREAK] ?: DEFAULTS.focus.autoStartBreaks,
+                    autoStartWork = this[Keys.FOCUS_AUTO_WORK] ?: DEFAULTS.focus.autoStartWork,
+                    silence = this[Keys.FOCUS_SILENCE] ?: DEFAULTS.focus.silence,
+                ),
+                dailyReviewTime = minuteOrDefault(this[Keys.DAILY_REVIEW], DEFAULTS.dailyReviewTime),
+                weeklyReviewTime = minuteOrDefault(this[Keys.WEEKLY_REVIEW], DEFAULTS.weeklyReviewTime),
+                weeklyReviewDay = this[Keys.WEEKLY_REVIEW_DAY]?.takeIf { it in 1..7 }?.let(DayOfWeek::of) ?: DEFAULTS.weeklyReviewDay,
             )
         }
 
@@ -88,6 +114,24 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
             this[Keys.SHOW_GREGORIAN] = s.showGregorian
             this[Keys.SHOW_HIJRI] = s.showHijri
             this[Keys.HIJRI_OFFSET] = s.hijriOffset
+            this[Keys.FOCUS_WORK] = s.focus.workMinutes
+            this[Keys.FOCUS_SHORT] = s.focus.shortBreakMinutes
+            this[Keys.FOCUS_LONG] = s.focus.longBreakMinutes
+            this[Keys.FOCUS_CYCLES] = s.focus.cyclesBeforeLongBreak
+            this[Keys.FOCUS_AUTO_BREAK] = s.focus.autoStartBreaks
+            this[Keys.FOCUS_AUTO_WORK] = s.focus.autoStartWork
+            this[Keys.FOCUS_SILENCE] = s.focus.silence
+            this[Keys.DAILY_REVIEW] = s.dailyReviewTime.toMinute()
+            this[Keys.WEEKLY_REVIEW] = s.weeklyReviewTime.toMinute()
+            this[Keys.WEEKLY_REVIEW_DAY] = s.weeklyReviewDay.value
         }
+
+        fun minuteOrDefault(value: Int?, default: LocalTime?): LocalTime? = when (value) {
+            null -> default
+            -1 -> null
+            else -> LocalTime.of(value / 60, value % 60)
+        }
+
+        fun LocalTime?.toMinute(): Int = this?.let { it.hour * 60 + it.minute } ?: -1
     }
 }

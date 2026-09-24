@@ -8,6 +8,7 @@ import ir.roozban.core.database.TaskDao
 import ir.roozban.core.database.toEntity
 import ir.roozban.core.database.toFloatingSeconds
 import ir.roozban.core.database.toModel
+import ir.roozban.core.domain.CompletionEvent
 import ir.roozban.core.domain.LabelRepository
 import ir.roozban.core.domain.ProjectRepository
 import ir.roozban.core.domain.ReminderRepository
@@ -33,6 +34,11 @@ class RoomTaskRepository @Inject constructor(
 
     override fun observeCompletedSince(since: Instant): Flow<List<Task>> =
         dao.observeCompletedSince(since.toEpochMilli()).map { list -> list.map { it.toModel() } }
+
+    override fun observeCompletionEvents(from: Instant, until: Instant): Flow<List<CompletionEvent>> =
+        dao.observeCompletionEvents(from.toEpochMilli(), until.toEpochMilli()).map { rows ->
+            rows.map { CompletionEvent(it.taskId, it.title, it.projectId, Instant.ofEpochMilli(it.at), it.estimateMinutes) }
+        }
 
     override fun observeSubtasks(parentId: String): Flow<List<Task>> =
         dao.observeSubtasks(parentId).map { list -> list.map { it.toModel() } }

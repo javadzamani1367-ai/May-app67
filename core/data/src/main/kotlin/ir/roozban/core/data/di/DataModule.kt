@@ -11,20 +11,30 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import ir.roozban.core.data.RoomBackupService
+import ir.roozban.core.data.RoomFocusRepository
+import ir.roozban.core.data.RoomHabitRepository
 import ir.roozban.core.data.RoomLabelRepository
 import ir.roozban.core.data.RoomProjectRepository
 import ir.roozban.core.data.RoomReminderRepository
 import ir.roozban.core.data.RoomTaskRepository
 import ir.roozban.core.database.BackupDao
+import ir.roozban.core.database.FocusDao
+import ir.roozban.core.database.HabitDao
 import ir.roozban.core.database.LabelDao
 import ir.roozban.core.database.ProjectDao
 import ir.roozban.core.database.ReminderDao
 import ir.roozban.core.database.RoozbanDatabase
 import ir.roozban.core.database.TaskDao
+import ir.roozban.core.datastore.DataStoreFocusStateStore
 import ir.roozban.core.datastore.DataStoreSettingsRepository
 import ir.roozban.core.domain.BackupService
+import ir.roozban.core.domain.Entitlements
+import ir.roozban.core.domain.FocusRepository
+import ir.roozban.core.domain.FocusStateStore
+import ir.roozban.core.domain.HabitRepository
 import ir.roozban.core.domain.LabelRepository
 import ir.roozban.core.domain.ProjectRepository
+import ir.roozban.core.domain.ProvisionalEntitlements
 import ir.roozban.core.domain.ReminderRepository
 import ir.roozban.core.domain.SettingsRepository
 import ir.roozban.core.domain.TaskRepository
@@ -48,6 +58,15 @@ abstract class DataModule {
     @Binds
     abstract fun backupService(impl: RoomBackupService): BackupService
 
+    @Binds
+    abstract fun focusRepository(impl: RoomFocusRepository): FocusRepository
+
+    @Binds
+    abstract fun habitRepository(impl: RoomHabitRepository): HabitRepository
+
+    @Binds
+    abstract fun entitlements(impl: ProvisionalEntitlements): Entitlements
+
     companion object {
         @Provides
         @Singleton
@@ -68,6 +87,19 @@ abstract class DataModule {
 
         @Provides
         fun backupDao(db: RoozbanDatabase): BackupDao = db.backupDao()
+
+        @Provides
+        fun focusDao(db: RoozbanDatabase): FocusDao = db.focusDao()
+
+        @Provides
+        fun habitDao(db: RoozbanDatabase): HabitDao = db.habitDao()
+
+        @Provides
+        @Singleton
+        fun focusStateStore(@ApplicationContext context: Context): FocusStateStore =
+            DataStoreFocusStateStore(
+                PreferenceDataStoreFactory.create { context.preferencesDataStoreFile("focus_state") },
+            )
 
         @Provides
         @Singleton

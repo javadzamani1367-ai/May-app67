@@ -54,6 +54,8 @@ object BackupMerger {
 
         val tasks = newest(local.tasks, incoming.tasks, { it.id }, { it.updatedAt })
         val taskIds = tasks.map { it.id }.toSet()
+        val habits = newest(local.habits, incoming.habits, { it.id }, { it.updatedAt })
+        val habitIds = habits.map { it.id }.toSet()
         return local.copy(
             tasks = tasks,
             projects = newest(local.projects, incoming.projects, { it.id }, { it.updatedAt }),
@@ -62,6 +64,12 @@ object BackupMerger {
                 .filter { it.taskId in taskIds }
                 .distinctBy { it.taskId to it.occurrence },
             settings = local.settings ?: incoming.settings,
+            focusSessions = (local.focusSessions + incoming.focusSessions).distinctBy { it.id },
+            timeEntries = (local.timeEntries + incoming.timeEntries).distinctBy { it.id },
+            habits = habits,
+            habitLogs = (local.habitLogs + incoming.habitLogs)
+                .filter { it.habitId in habitIds }
+                .groupBy { it.habitId to it.date }.values.map { versions -> versions.maxBy { it.updatedAt } },
         )
     }
 }

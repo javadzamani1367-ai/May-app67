@@ -107,6 +107,90 @@ interface TaskDao {
 
     @Query("SELECT * FROM task_completion WHERE task_id = :taskId ORDER BY occurrence")
     suspend fun completions(taskId: String): List<CompletionEntity>
+
+    /** Finished tasks plus done occurrences of recurring ones, in [from, until). */
+    @Query(
+        """
+        SELECT id AS task_id, title, project_id, completed_at AS at, estimate_min FROM task
+        WHERE completed_at >= :from AND completed_at < :until AND deleted_at IS NULL
+        UNION ALL
+        SELECT c.task_id AS task_id, t.title AS title, t.project_id AS project_id, c.completed_at AS at,
+               t.estimate_min AS estimate_min
+        FROM task_completion c JOIN task t ON t.id = c.task_id
+        WHERE c.completed_at >= :from AND c.completed_at < :until AND t.deleted_at IS NULL
+        """,
+    )
+    fun observeCompletionEvents(from: Long, until: Long): Flow<List<CompletionEventRow>>
+}
+
+@Dao
+interface FocusDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSession(session: FocusSessionEntity)
+
+    @Upsert
+    suspend fun upsertEntry(entry: TimeEntryEntity)
+
+    /** Stores a focus period and its time entry together. */
+    @Transaction
+    suspend fun record(session: FocusSessionEntity, entry: TimeEntryEntity) {
+        insertSession(session)
+        upsertEntry(entry)
+    }
+
+    @Query("SELECT * FROM focus_session WHERE ended_at >= :from AND ended_at < :until ORDER BY ended_at")
+    fun observeSessions(from: Long, until: Long): Flow<List<FocusSessionEntity>>
+
+    @Query(
+        """
+        SELECT e.*, t.title AS task_title, t.project_id AS task_project_id
+        FROM time_entry e LEFT JOIN task t ON t.id = e.task_id
+        WHERE e.end_at > :from AND e.start_at < :until ORDER BY e.start_at
+        """,
+    )
+    fun observeTracked(from: Long, until: Long): Flow<List<TrackedRow>>
+
+    @Query("SELECT COALESCE(SUM((end_at - start_at) / 1000), 0) FROM time_entry WHERE task_id = :taskId")
+    fun observeTaskSeconds(taskId: String): Flow<Long>
+
+    @Query("DELETE FROM time_entry WHERE id = :id")
+    suspend fun deleteEntry(id: String)
+}
+
+@Dao
+interface HabitDao {
+    @Query("SELECT * FROM habit ORDER BY archived, sort_order, name")
+    fun observeAll(): Flow<List<HabitEntity>>
+
+    @Query("SELECT * FROM habit WHERE id = :id")
+    fun observe(id: String): Flow<HabitEntity?>
+
+    @Query("SELECT * FROM habit")
+    suspend fun all(): List<HabitEntity>
+
+    @Query("SELECT * FROM habit WHERE id = :id")
+    suspend fun get(id: String): HabitEntity?
+
+    @Upsert
+    suspend fun upsert(habit: HabitEntity)
+
+    @Query("DELETE FROM habit WHERE id = :id")
+    suspend fun delete(id: String)
+
+    @Query("SELECT * FROM habit_log WHERE date BETWEEN :from AND :to")
+    fun observeLogs(from: Long, to: Long): Flow<List<HabitLogEntity>>
+
+    @Query("SELECT * FROM habit_log WHERE habit_id = :habitId ORDER BY date")
+    fun observeHabitLogs(habitId: String): Flow<List<HabitLogEntity>>
+
+    @Query("SELECT * FROM habit_log WHERE habit_id = :habitId AND date = :date")
+    suspend fun log(habitId: String, date: Long): HabitLogEntity?
+
+    @Upsert
+    suspend fun upsertLog(log: HabitLogEntity)
+
+    @Query("DELETE FROM habit_log WHERE habit_id = :habitId AND date = :date")
+    suspend fun deleteLog(habitId: String, date: Long)
 }
 
 @Dao
@@ -187,6 +271,39 @@ interface BackupDao {
     @Query("SELECT * FROM task_completion")
     suspend fun completions(): List<CompletionEntity>
 
+    @Query("SELECT * FROM focus_session")
+    suspend fun focusSessions(): List<FocusSessionEntity>
+
+    @Query("SELECT * FROM time_entry")
+    suspend fun timeEntries(): List<TimeEntryEntity>
+
+    @Query("SELECT * FROM habit")
+    suspend fun habits(): List<HabitEntity>
+
+    @Query("SELECT * FROM habit_log")
+    suspend fun habitLogs(): List<HabitLogEntity>
+
+    @Query("DELETE FROM focus_session")
+    suspend fun clearFocusSessions()
+
+    @Query("DELETE FROM time_entry")
+    suspend fun clearTimeEntries()
+
+    @Query("DELETE FROM habit")
+    suspend fun clearHabits()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFocusSessions(sessions: List<FocusSessionEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTimeEntries(entries: List<TimeEntryEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHabits(habits: List<HabitEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHabitLogs(logs: List<HabitLogEntity>)
+
     @Query("DELETE FROM task")
     suspend fun clearTasks()
 
@@ -222,8 +339,15 @@ interface BackupDao {
         labels: List<LabelEntity>,
         taskLabels: List<TaskLabelEntity>,
         completions: List<CompletionEntity>,
+        focusSessions: List<FocusSessionEntity> = emptyList(),
+        timeEntries: List<TimeEntryEntity> = emptyList(),
+        habits: List<HabitEntity> = emptyList(),
+        habitLogs: List<HabitLogEntity> = emptyList(),
     ) {
         clearReminders()
+        clearFocusSessions()
+        clearTimeEntries()
+        clearHabits() // cascades to habit_log
         clearTasks() // cascades to task_label and task_completion
         clearProjects()
         clearLabels()
@@ -234,5 +358,10 @@ interface BackupDao {
         val labelIds = labels.mapTo(HashSet()) { it.id }
         insertTaskLabels(taskLabels.filter { it.taskId in taskIds && it.labelId in labelIds })
         insertCompletions(completions.filter { it.taskId in taskIds })
+        insertFocusSessions(focusSessions)
+        insertTimeEntries(timeEntries)
+        insertHabits(habits)
+        val habitIds = habits.mapTo(HashSet()) { it.id }
+        insertHabitLogs(habitLogs.filter { it.habitId in habitIds })
     }
 }

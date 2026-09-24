@@ -167,4 +167,42 @@ class DaoTest {
         tasks.deleteCompletion("a", day.toEpochDay())
         assertThat(tasks.completions("a").map { it.occurrence }).containsExactly(day.plusDays(1).toEpochDay())
     }
+
+    @Test
+    fun `completion events include finished tasks and recurring occurrences`() = runTest {
+        tasks.upsert(task("a").copy(completedAt = Instant.ofEpochMilli(5_000)).toEntity())
+        tasks.upsert(task("r").toEntity())
+        tasks.insertCompletion(CompletionEntity("r", 20_000, 6_000))
+        tasks.insertCompletion(CompletionEntity("r", 19_999, 100))
+        val events = tasks.observeCompletionEvents(1_000, 10_000).first()
+        assertThat(events.map { it.taskId to it.at }).containsExactly("a" to 5_000L, "r" to 6_000L)
+        assertThat(events.first { it.taskId == "r" }.title).isEqualTo("کار r")
+    }
+
+    @Test
+    fun `focus sessions and tracked time with their task`() = runTest {
+        tasks.upsert(task("a").toEntity())
+        val focus = db.focusDao()
+        focus.record(FocusSessionEntity("s1", "a", 0, 1_500_000, 25, 1500, true), TimeEntryEntity("e1", "a", 0, 1_500_000, "FOCUS"))
+        focus.upsertEntry(TimeEntryEntity("e2", null, 2_000_000, 2_600_000, "MANUAL"))
+        assertThat(focus.observeSessions(0, 2_000_000).first().map { it.id }).containsExactly("s1")
+        val tracked = focus.observeTracked(1_000_000, 3_000_000).first()
+        assertThat(tracked.map { it.entry.id to it.taskTitle }).containsExactly("e1" to "کار a", "e2" to null).inOrder()
+        assertThat(focus.observeTaskSeconds("a").first()).isEqualTo(1500L)
+        focus.deleteEntry("e1")
+        assertThat(focus.observeTaskSeconds("a").first()).isEqualTo(0L)
+    }
+
+    @Test
+    fun `habit logs are ranged and deleted with the habit`() = runTest {
+        val habits = db.habitDao()
+        habits.upsert(HabitEntity("h", "ورزش", 0, "D", 1, null, 20_000, false, 0, 1, 1))
+        habits.upsertLog(HabitLogEntity("h", 20_001, 1, 1))
+        habits.upsertLog(HabitLogEntity("h", 20_005, 1, 1))
+        assertThat(habits.observeLogs(20_000, 20_003).first().map { it.date }).containsExactly(20_001L)
+        habits.upsertLog(HabitLogEntity("h", 20_001, 3, 2))
+        assertThat(habits.log("h", 20_001)?.count).isEqualTo(3)
+        habits.delete("h")
+        assertThat(habits.observeHabitLogs("h").first()).isEmpty()
+    }
 }

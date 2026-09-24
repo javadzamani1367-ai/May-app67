@@ -3,30 +3,41 @@ package ir.roozban.core.data
 import ir.roozban.core.backup.BackupCodec
 import ir.roozban.core.backup.BackupCompletion
 import ir.roozban.core.backup.BackupData
+import ir.roozban.core.backup.BackupFocusSession
+import ir.roozban.core.backup.BackupHabit
+import ir.roozban.core.backup.BackupHabitLog
 import ir.roozban.core.backup.BackupLabel
 import ir.roozban.core.backup.BackupMerger
 import ir.roozban.core.backup.BackupProject
 import ir.roozban.core.backup.BackupSettings
 import ir.roozban.core.backup.BackupTask
+import ir.roozban.core.backup.BackupTimeEntry
 import ir.roozban.core.backup.InvalidBackupException
 import ir.roozban.core.backup.WrongPasswordException
 import ir.roozban.core.database.BackupDao
 import ir.roozban.core.database.CompletionEntity
+import ir.roozban.core.database.FocusSessionEntity
+import ir.roozban.core.database.HabitEntity
+import ir.roozban.core.database.HabitLogEntity
 import ir.roozban.core.database.LabelEntity
 import ir.roozban.core.database.ProjectEntity
 import ir.roozban.core.database.TaskEntity
 import ir.roozban.core.database.TaskLabelEntity
+import ir.roozban.core.database.TimeEntryEntity
 import ir.roozban.core.domain.BackupService
 import ir.roozban.core.domain.ReminderSync
 import ir.roozban.core.domain.RestoreMode
 import ir.roozban.core.domain.RestoreResult
+import ir.roozban.core.domain.RoutineReminders
 import ir.roozban.core.domain.SettingsRepository
+import ir.roozban.core.model.FocusSettings
 import ir.roozban.core.model.ReminderKind
 import ir.roozban.core.model.ReminderSetting
 import ir.roozban.core.model.UserSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.Clock
+import java.time.DayOfWeek
 import java.time.LocalTime
 import javax.inject.Inject
 
@@ -34,6 +45,7 @@ class RoomBackupService @Inject constructor(
     private val dao: BackupDao,
     private val settings: SettingsRepository,
     private val reminders: ReminderSync,
+    private val routines: RoutineReminders,
     private val clock: Clock,
 ) : BackupService {
 
@@ -59,6 +71,7 @@ class RoomBackupService @Inject constructor(
             write(result)
             if (mode == RestoreMode.REPLACE) result.settings?.let { s -> settings.update { s.toModel() } }
             reminders.syncAll()
+            routines.syncAll()
             RestoreResult.Success(tasks = result.tasks.count { it.parentId == null }, projects = result.projects.size)
         }
 
@@ -71,6 +84,17 @@ class RoomBackupService @Inject constructor(
             labels = dao.labels().map { BackupLabel(it.id, it.name, it.color, it.createdAt, it.updatedAt) },
             completions = dao.completions().map { BackupCompletion(it.taskId, it.occurrence, it.completedAt) },
             settings = settings.current().toBackup(),
+            focusSessions = dao.focusSessions().map {
+                BackupFocusSession(it.id, it.taskId, it.startedAt, it.endedAt, it.plannedMinutes, it.focusedSeconds, it.completed)
+            },
+            timeEntries = dao.timeEntries().map { BackupTimeEntry(it.id, it.taskId, it.startAt, it.endAt, it.source) },
+            habits = dao.habits().map {
+                BackupHabit(
+                    it.id, it.name, it.color, it.schedule, it.target, it.reminderMinute, it.startDate,
+                    it.archived, it.sortOrder, it.createdAt, it.updatedAt,
+                )
+            },
+            habitLogs = dao.habitLogs().map { BackupHabitLog(it.habitId, it.date, it.count, it.updatedAt) },
         )
     }
 
@@ -81,6 +105,17 @@ class RoomBackupService @Inject constructor(
             labels = data.labels.map { LabelEntity(it.id, it.name, it.color, it.createdAt, it.updatedAt) },
             taskLabels = data.tasks.flatMap { t -> t.labelIds.map { TaskLabelEntity(t.id, it) } },
             completions = data.completions.map { CompletionEntity(it.taskId, it.occurrence, it.completedAt) },
+            focusSessions = data.focusSessions.map {
+                FocusSessionEntity(it.id, it.taskId, it.startedAt, it.endedAt, it.plannedMinutes, it.focusedSeconds, it.completed)
+            },
+            timeEntries = data.timeEntries.map { TimeEntryEntity(it.id, it.taskId, it.start, it.end, it.source) },
+            habits = data.habits.map {
+                HabitEntity(
+                    it.id, it.name, it.color, it.schedule, it.target.coerceAtLeast(1), it.reminderMinute, it.startDate,
+                    it.archived, it.sortOrder, it.createdAt, it.updatedAt,
+                )
+            },
+            habitLogs = data.habitLogs.map { HabitLogEntity(it.habitId, it.date, it.count, it.updatedAt) },
         )
     }
 
@@ -113,6 +148,16 @@ class RoomBackupService @Inject constructor(
         showGregorian = showGregorian,
         showHijri = showHijri,
         hijriOffset = hijriOffset,
+        focusWorkMinutes = focus.workMinutes,
+        focusShortBreakMinutes = focus.shortBreakMinutes,
+        focusLongBreakMinutes = focus.longBreakMinutes,
+        focusCycles = focus.cyclesBeforeLongBreak,
+        focusAutoStartBreaks = focus.autoStartBreaks,
+        focusAutoStartWork = focus.autoStartWork,
+        focusSilence = focus.silence,
+        dailyReviewMinute = dailyReviewTime?.let { it.hour * 60 + it.minute },
+        weeklyReviewDay = weeklyReviewDay.value,
+        weeklyReviewMinute = weeklyReviewTime?.let { it.hour * 60 + it.minute },
     )
 
     private fun BackupSettings.toModel() = UserSettings(
@@ -129,5 +174,17 @@ class RoomBackupService @Inject constructor(
         showGregorian = showGregorian,
         showHijri = showHijri,
         hijriOffset = hijriOffset,
+        focus = FocusSettings(
+            workMinutes = focusWorkMinutes.coerceIn(FocusSettings.WORK_RANGE),
+            shortBreakMinutes = focusShortBreakMinutes.coerceIn(FocusSettings.BREAK_RANGE),
+            longBreakMinutes = focusLongBreakMinutes.coerceIn(FocusSettings.BREAK_RANGE),
+            cyclesBeforeLongBreak = focusCycles.coerceIn(FocusSettings.CYCLES_RANGE),
+            autoStartBreaks = focusAutoStartBreaks,
+            autoStartWork = focusAutoStartWork,
+            silence = focusSilence,
+        ),
+        dailyReviewTime = dailyReviewMinute?.let { LocalTime.of(it / 60, it % 60) },
+        weeklyReviewDay = DayOfWeek.of(weeklyReviewDay.coerceIn(1, 7)),
+        weeklyReviewTime = weeklyReviewMinute?.let { LocalTime.of(it / 60, it % 60) },
     )
 }

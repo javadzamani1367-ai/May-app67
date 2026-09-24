@@ -72,4 +72,30 @@ class MigrationTest {
         assertThat(db.projectDao().observeAll().first().map { it.name }).containsExactly("خانه")
         db.close()
     }
+
+    @Test
+    fun `migrates 2 to 3 keeping projects and labels and adding focus and habits`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val file = context.getDatabasePath("migration-test-2.db").apply { parentFile?.mkdirs(); delete() }
+        createFromSchema(file, 2)
+        SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READWRITE).use { v2 ->
+            v2.execSQL("INSERT INTO project (id, name, color, archived, sort_order, created_at, updated_at) VALUES ('p', 'کار', 1, 0, 0, 1, 1)")
+            v2.execSQL(
+                """INSERT INTO task (id, title, notes, due_date, due_minute, important, urgent, estimate_min, rrule,
+                   rrule_start, reminder_kind, reminder_offset, completed_at, created_at, updated_at, deleted_at, project_id, parent_id)
+                   VALUES ('t', 'گزارش', '', NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, 0, NULL, 1, 1, NULL, 'p', NULL)""",
+            )
+            v2.execSQL("INSERT INTO label (id, name, color, created_at, updated_at) VALUES ('l', 'مهم', 0, 1, 1)")
+            v2.execSQL("INSERT INTO task_label (task_id, label_id) VALUES ('t', 'l')")
+        }
+        val db = Room.databaseBuilder(context, RoozbanDatabase::class.java, file.path).allowMainThreadQueries().build()
+        val task = db.taskDao().get("t")!!
+        assertThat(task.task.projectId).isEqualTo("p")
+        assertThat(task.labelIds).containsExactly("l")
+        db.habitDao().upsert(HabitEntity("h", "ورزش", 0, "D", 1, null, 20_000, false, 0, 1, 1))
+        db.focusDao().record(FocusSessionEntity("s", "t", 0, 1, 25, 1, true), TimeEntryEntity("e", "t", 0, 1000, "FOCUS"))
+        assertThat(db.habitDao().all().map { it.name }).containsExactly("ورزش")
+        assertThat(db.focusDao().observeTracked(0, 2000).first().single().projectId).isEqualTo("p")
+        db.close()
+    }
 }

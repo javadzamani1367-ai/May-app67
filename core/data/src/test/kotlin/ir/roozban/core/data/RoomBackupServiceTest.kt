@@ -5,12 +5,21 @@ import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import ir.roozban.core.database.RoozbanDatabase
 import ir.roozban.core.domain.AddTaskUseCase
+import ir.roozban.core.domain.HabitUseCases
+import ir.roozban.core.domain.RoutineReminders
+import ir.roozban.core.model.FocusSession
+import ir.roozban.core.model.HabitSchedule
+import ir.roozban.core.model.TimeEntry
+import ir.roozban.core.model.TimeSource
+import java.time.Instant
+import java.time.LocalTime
 import ir.roozban.core.domain.QuickAddParser
 import ir.roozban.core.domain.ReminderSync
 import ir.roozban.core.domain.RestoreMode
 import ir.roozban.core.domain.RestoreResult
 import ir.roozban.core.domain.TagResolver
 import ir.roozban.core.testing.FakeAlarmScheduler
+import ir.roozban.core.testing.FakeRoutineAlarms
 import ir.roozban.core.testing.FakeSettingsRepository
 import ir.roozban.core.testing.TestClock
 import ir.roozban.core.testing.jalali
@@ -34,7 +43,12 @@ class RoomBackupServiceTest {
     private val scheduler = FakeAlarmScheduler()
     private val sync = ReminderSync(RoomReminderRepository(db.reminderDao()), tasks, settings, scheduler, clock)
     private val add = AddTaskUseCase(tasks, settings, sync, TagResolver(projects, labels, clock), clock)
-    private val backup = RoomBackupService(db.backupDao(), settings, sync, clock)
+    private val habitRepo = RoomHabitRepository(db.habitDao())
+    private val routineAlarms = FakeRoutineAlarms()
+    private val routines = RoutineReminders(habitRepo, settings, routineAlarms, clock)
+    private val habits = HabitUseCases(habitRepo, routines, clock)
+    private val focus = RoomFocusRepository(db.focusDao())
+    private val backup = RoomBackupService(db.backupDao(), settings, sync, routines, clock)
     private val password = "رمز۱۲۳۴".toCharArray()
 
     @After
@@ -77,5 +91,30 @@ class RoomBackupServiceTest {
         assertThat(backup.restore(file, "اشتباه".toCharArray(), RestoreMode.REPLACE)).isEqualTo(RestoreResult.WrongPassword)
         assertThat(backup.restore(ByteArray(100) { 7 }, password, RestoreMode.REPLACE)).isInstanceOf(RestoreResult.Invalid::class.java)
         assertThat(tasks.observeOpenTasks().first()).hasSize(1)
+    }
+
+    @Test
+    fun `habits, logs and focus history survive a restore and reminders are re-armed`() = runTest {
+        val habit = habits.create("ورزش", 1, HabitSchedule.Daily, 2, LocalTime.of(20, 0))!!
+        habits.tap(habit, clock.now.toLocalDate())
+        val t = Instant.now(clock)
+        focus.record(
+            FocusSession("f1", null, t, t.plusSeconds(1500), 25, 1500, true),
+            TimeEntry("e1", null, t, t.plusSeconds(1500), TimeSource.FOCUS),
+        )
+        settings.update { it.copy(focus = it.focus.copy(workMinutes = 50)) }
+        val file = backup.createBackup(password)
+
+        habits.delete(habit)
+        settings.update { it.copy(focus = it.focus.copy(workMinutes = 25)) }
+        routineAlarms.habits.clear()
+
+        backup.restore(file, password, RestoreMode.REPLACE)
+        assertThat(habitRepo.all().single().targetPerDay).isEqualTo(2)
+        assertThat(habitRepo.log(habit.id, clock.now.toLocalDate())?.count).isEqualTo(1)
+        assertThat(focus.observeSessions(t.minusSeconds(1), t.plusSeconds(3600)).first().map { it.id }).containsExactly("f1")
+        assertThat(focus.observeTaskSeconds("none").first()).isEqualTo(0L)
+        assertThat(settings.current().focus.workMinutes).isEqualTo(50)
+        assertThat(routineAlarms.habits).containsKey(habit.id)
     }
 }

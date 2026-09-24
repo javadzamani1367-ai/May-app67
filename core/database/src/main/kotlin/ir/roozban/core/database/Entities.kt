@@ -124,3 +124,68 @@ data class ProjectCountRow(
     @ColumnInfo(name = "project_id") val projectId: String,
     val count: Int,
 )
+
+/** A finished or stopped focus period. No foreign key: the history outlives deleted tasks. */
+@Entity(tableName = "focus_session", indices = [Index("ended_at")])
+data class FocusSessionEntity(
+    @PrimaryKey val id: String,
+    @ColumnInfo(name = "task_id") val taskId: String?,
+    @ColumnInfo(name = "started_at") val startedAt: Long,
+    @ColumnInfo(name = "ended_at") val endedAt: Long,
+    @ColumnInfo(name = "planned_min") val plannedMinutes: Int,
+    @ColumnInfo(name = "focused_sec") val focusedSeconds: Long,
+    val completed: Boolean,
+)
+
+@Entity(tableName = "time_entry", indices = [Index("task_id"), Index("end_at")])
+data class TimeEntryEntity(
+    @PrimaryKey val id: String,
+    @ColumnInfo(name = "task_id") val taskId: String?,
+    @ColumnInfo(name = "start_at") val startAt: Long,
+    @ColumnInfo(name = "end_at") val endAt: Long,
+    val source: String,
+)
+
+@Entity(tableName = "habit")
+data class HabitEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val color: Int,
+    /** See `HabitSchedule.encode`. */
+    val schedule: String,
+    val target: Int,
+    @ColumnInfo(name = "reminder_minute") val reminderMinute: Int?,
+    @ColumnInfo(name = "start_date") val startDate: Long,
+    val archived: Boolean,
+    @ColumnInfo(name = "sort_order") val sortOrder: Int,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+    @ColumnInfo(name = "updated_at") val updatedAt: Long,
+)
+
+@Entity(
+    tableName = "habit_log",
+    primaryKeys = ["habit_id", "date"],
+    foreignKeys = [ForeignKey(HabitEntity::class, ["id"], ["habit_id"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index("date")],
+)
+data class HabitLogEntity(
+    @ColumnInfo(name = "habit_id") val habitId: String,
+    /** Epoch day. */
+    val date: Long,
+    val count: Int,
+    @ColumnInfo(name = "updated_at") val updatedAt: Long,
+)
+
+data class CompletionEventRow(
+    @ColumnInfo(name = "task_id") val taskId: String,
+    val title: String,
+    @ColumnInfo(name = "project_id") val projectId: String?,
+    val at: Long,
+    @ColumnInfo(name = "estimate_min") val estimateMinutes: Int?,
+)
+
+data class TrackedRow(
+    @Embedded val entry: TimeEntryEntity,
+    @ColumnInfo(name = "task_title") val taskTitle: String?,
+    @ColumnInfo(name = "task_project_id") val projectId: String?,
+)

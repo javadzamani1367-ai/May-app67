@@ -16,6 +16,10 @@ data class BackupData(
     val labels: List<BackupLabel> = emptyList(),
     val completions: List<BackupCompletion> = emptyList(),
     val settings: BackupSettings? = null,
+    val focusSessions: List<BackupFocusSession> = emptyList(),
+    val timeEntries: List<BackupTimeEntry> = emptyList(),
+    val habits: List<BackupHabit> = emptyList(),
+    val habitLogs: List<BackupHabitLog> = emptyList(),
 ) {
     companion object {
         const val FORMAT_VERSION = 1
@@ -82,4 +86,46 @@ data class BackupSettings(
     val showGregorian: Boolean = true,
     val showHijri: Boolean = true,
     val hijriOffset: Int = 0,
+    val focusWorkMinutes: Int = 25,
+    val focusShortBreakMinutes: Int = 5,
+    val focusLongBreakMinutes: Int = 15,
+    val focusCycles: Int = 4,
+    val focusAutoStartBreaks: Boolean = true,
+    val focusAutoStartWork: Boolean = false,
+    val focusSilence: Boolean = true,
+    val dailyReviewMinute: Int? = null,
+    val weeklyReviewDay: Int = 5,
+    val weeklyReviewMinute: Int? = null,
 )
+
+@Serializable
+data class BackupFocusSession(
+    val id: String,
+    val taskId: String? = null,
+    val startedAt: Long,
+    val endedAt: Long,
+    val plannedMinutes: Int,
+    val focusedSeconds: Long,
+    val completed: Boolean,
+)
+
+@Serializable
+data class BackupTimeEntry(val id: String, val taskId: String? = null, val start: Long, val end: Long, val source: String)
+
+@Serializable
+data class BackupHabit(
+    val id: String,
+    val name: String,
+    val color: Int = 0,
+    val schedule: String = "D",
+    val target: Int = 1,
+    val reminderMinute: Int? = null,
+    val startDate: Long,
+    val archived: Boolean = false,
+    val sortOrder: Int = 0,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
+@Serializable
+data class BackupHabitLog(val habitId: String, val date: Long, val count: Int, val updatedAt: Long)

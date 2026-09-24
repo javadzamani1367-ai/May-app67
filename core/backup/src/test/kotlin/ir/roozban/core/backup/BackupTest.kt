@@ -80,4 +80,29 @@ class BackupTest {
         assertThat(merged.projects).isEqualTo(data.projects)
         assertThat(merged.settings).isEqualTo(data.settings)
     }
+
+    @Test
+    fun `habits, their logs and focus history round-trip and merge`() {
+        val habit = BackupHabit("h1", "ورزش", schedule = "W:1,3", target = 2, reminderMinute = 1200, startDate = 20_700, createdAt = 1, updatedAt = 1)
+        val withHabits = data.copy(
+            habits = listOf(habit),
+            habitLogs = listOf(BackupHabitLog("h1", 20_701, 2, 1)),
+            focusSessions = listOf(BackupFocusSession("f1", "t1", 10, 20, 25, 1500, true)),
+            timeEntries = listOf(BackupTimeEntry("e1", "t1", 10, 20, "FOCUS")),
+        )
+        val password = "رمز امن".toCharArray()
+        assertThat(BackupCodec().decode(BackupCodec().encode(withHabits, password), password)).isEqualTo(withHabits)
+
+        val incoming = BackupData(
+            createdAt = 3,
+            habits = listOf(habit.copy(name = "ورزش صبح", updatedAt = 5), BackupHabit("h2", "کتاب", startDate = 20_700, createdAt = 2, updatedAt = 2)),
+            habitLogs = listOf(BackupHabitLog("h1", 20_701, 1, 0), BackupHabitLog("h1", 20_702, 1, 3), BackupHabitLog("gone", 20_702, 1, 3)),
+            focusSessions = listOf(BackupFocusSession("f1", "t1", 10, 20, 25, 1500, true), BackupFocusSession("f2", null, 30, 40, 25, 600, false)),
+        )
+        val merged = BackupMerger.merge(withHabits, incoming)
+        assertThat(merged.habits.associate { it.id to it.name }).containsExactly("h1", "ورزش صبح", "h2", "کتاب")
+        assertThat(merged.habitLogs.associate { it.date to it.count }).containsExactly(20_701L, 2, 20_702L, 1)
+        assertThat(merged.focusSessions.map { it.id }).containsExactly("f1", "f2")
+        assertThat(merged.timeEntries.map { it.id }).containsExactly("e1")
+    }
 }
