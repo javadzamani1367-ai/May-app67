@@ -1,0 +1,18 @@
+name: probe-versions
+on: push
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query Google Maven
+        run: |
+          G=https://dl.google.com/dl/android/maven2
+          for p in com/android/tools/build/gradle androidx/compose/compose-bom androidx/activity/activity-compose \
+                   androidx/core/core-ktx androidx/lifecycle/lifecycle-runtime-compose androidx/navigation/navigation-compose \
+                   androidx/hilt/hilt-navigation-compose androidx/hilt/hilt-lifecycle-viewmodel-compose androidx/appcompat/appcompat \
+                   androidx/datastore/datastore-preferences androidx/core/core-splashscreen androidx/room/room-runtime \
+                   androidx/test/ext/junit androidx/compose/material3/material3; do
+            echo "$p => $(curl -sS $G/$p/maven-metadata.xml | tr -d ' \n' | sed 's/<\/version><version>/ /g;s/<[^>]*>/ /g' | tr ' ' '\n' | grep -E '^[0-9]' | grep -viE 'alpha|beta|rc|dev' | tail -4 | tr '\n' ' ')"
+          done
+          echo "SDK platforms:"; ls $ANDROID_HOME/platforms; ls $ANDROID_HOME/build-tools
+          curl -sS https://dl.google.com/android/repository/repository2-3.xml | grep -oE 'platforms;android-[0-9A-Za-z.]+' | sort -uV | tail -5
