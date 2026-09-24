@@ -25,6 +25,44 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".entry.QuickAddActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/shortcut_new_task"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Roozban.Translucent"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".entry.QuickAddTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_widget_add"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".widget.TodayWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_description">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/today_widget_info" />
+        </receiver>
+
         <!-- Persists the per-app locale (fa-IR) on Android 12 and below. -->
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"

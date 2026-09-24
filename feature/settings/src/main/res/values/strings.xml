@@ -47,4 +47,29 @@
     <string name="battery_autostart">باز کردن تنظیمات شروع خودکار</string>
     <string name="battery_app_settings">تنظیمات برنامه</string>
     <string name="battery_already">محدودیت باتری برای روزبان برداشته شده است.</string>
+
+    <string name="settings_calendar">تقویم</string>
+    <string name="settings_show_gregorian">نمایش تاریخ میلادی</string>
+    <string name="settings_show_hijri">نمایش تاریخ قمری</string>
+    <string name="settings_hijri_offset">تصحیح تاریخ قمری</string>
+    <string name="settings_hijri_offset_desc">تاریخ قمری رسمی ایران بر پایه‌ی رؤیت هلال است و ممکن است یک روز با محاسبه فرق کند.</string>
+    <string name="settings_days">%1$s روز</string>
+
+    <string name="backup_title">پشتیبان‌گیری</string>
+    <string name="backup_desc">فایل پشتیبان با رمزی که تعیین می‌کنید رمزنگاری می‌شود و فقط با همان رمز باز می‌شود. رمز را فراموش نکنید؛ راهی برای بازیابی آن نیست.</string>
+    <string name="backup_create">ساخت پشتیبان</string>
+    <string name="backup_restore">بازیابی از فایل</string>
+    <string name="backup_password">رمز</string>
+    <string name="backup_password_repeat">تکرار رمز</string>
+    <string name="backup_password_hint">دست‌کم ۶ نویسه</string>
+    <string name="backup_mode_replace">جایگزینی همه‌ی داده‌ها</string>
+    <string name="backup_mode_merge">ادغام با داده‌های فعلی</string>
+    <string name="backup_saved">پشتیبان ذخیره شد.</string>
+    <string name="backup_failed">ذخیره‌ی پشتیبان ناموفق بود.</string>
+    <string name="backup_restored">بازیابی شد: %1$s کار و %2$s پروژه.</string>
+    <string name="backup_wrong_password">رمز نادرست است یا فایل آسیب دیده است.</string>
+    <string name="backup_invalid">این فایل، پشتیبان روزبان نیست.</string>
+    <string name="backup_working">در حال انجام…</string>
+    <string name="dialog_ok">تأیید</string>
+    <string name="dialog_cancel">لغو</string>
 </resources>

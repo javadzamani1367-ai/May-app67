@@ -25,6 +25,7 @@ import ir.roozban.core.designsystem.R as DsR
 import ir.roozban.feature.settings.BatteryGuideRoute
 import ir.roozban.feature.settings.SettingsRoute
 import ir.roozban.feature.settings.settingsScreens
+import ir.roozban.feature.tasks.CalendarRoute
 import ir.roozban.feature.tasks.InboxRoute
 import ir.roozban.feature.tasks.ProjectRoute
 import ir.roozban.feature.tasks.ProjectsRoute
@@ -36,6 +37,7 @@ import kotlin.reflect.KClass
 private enum class Tab(val route: Any, val routeClass: KClass<*>, @DrawableRes val icon: Int, @StringRes val label: Int) {
     TODAY(TodayRoute, TodayRoute::class, DsR.drawable.ic_today, R.string.tab_today),
     UPCOMING(UpcomingRoute, UpcomingRoute::class, DsR.drawable.ic_upcoming, R.string.tab_upcoming),
+    CALENDAR(CalendarRoute, CalendarRoute::class, DsR.drawable.ic_calendar_month, R.string.tab_calendar),
     INBOX(InboxRoute, InboxRoute::class, DsR.drawable.ic_inbox, R.string.tab_inbox),
     PROJECTS(ProjectsRoute, ProjectsRoute::class, DsR.drawable.ic_folder, R.string.tab_projects),
 }

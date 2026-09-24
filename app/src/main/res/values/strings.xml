@@ -6,4 +6,11 @@
     <string name="tab_inbox">صندوق</string>
     <string name="tab_projects">پروژه‌ها</string>
     <string name="tab_calendar">تقویم</string>
+    <string name="quick_add_saved">ثبت شد</string>
+    <string name="shortcut_new_task">کار جدید</string>
+    <string name="tile_label">کار جدید</string>
+    <string name="widget_description">کارهای امروز و عقب‌افتاده</string>
+    <string name="widget_empty">کاری برای امروز نیست.</string>
+    <string name="widget_add">کار جدید</string>
+    <string name="widget_overdue">عقب‌افتاده</string>
 </resources>

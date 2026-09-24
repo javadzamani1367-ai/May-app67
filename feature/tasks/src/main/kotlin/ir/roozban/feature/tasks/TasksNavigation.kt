@@ -3,6 +3,7 @@ package ir.roozban.feature.tasks
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import ir.roozban.feature.tasks.calendar.CalendarScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -13,6 +14,9 @@ data object UpcomingRoute
 
 @Serializable
 data object InboxRoute
+
+@Serializable
+data object CalendarRoute
 
 @Serializable
 data object ProjectsRoute
@@ -29,6 +33,7 @@ fun NavGraphBuilder.tasksScreens(
     composable<TodayRoute> { TaskListRoute(ListMode.TODAY, onOpenSettings) }
     composable<UpcomingRoute> { TaskListRoute(ListMode.UPCOMING, onOpenSettings) }
     composable<InboxRoute> { TaskListRoute(ListMode.INBOX, onOpenSettings) }
+    composable<CalendarRoute> { CalendarScreen(onOpenSettings = onOpenSettings) }
     composable<ProjectsRoute> { ProjectsScreen(onOpenProject = onOpenProject, onOpenSettings = onOpenSettings) }
     composable<ProjectRoute> { entry ->
         val route = entry.toRoute<ProjectRoute>()

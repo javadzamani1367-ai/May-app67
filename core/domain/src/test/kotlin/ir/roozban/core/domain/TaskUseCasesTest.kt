@@ -1,16 +1,16 @@
 package ir.roozban.core.domain
 
+import com.google.common.truth.Truth.assertThat
+import ir.roozban.core.model.ReminderKind
+import ir.roozban.core.model.ReminderSetting
+import ir.roozban.core.model.TaskDue
+import ir.roozban.core.model.UserSettings
 import ir.roozban.core.testing.FakeAlarmScheduler
 import ir.roozban.core.testing.FakeReminderRepository
 import ir.roozban.core.testing.FakeSettingsRepository
 import ir.roozban.core.testing.FakeTaskRepository
 import ir.roozban.core.testing.TestClock
 import ir.roozban.core.testing.jalali
-import com.google.common.truth.Truth.assertThat
-import ir.roozban.core.model.ReminderKind
-import ir.roozban.core.model.ReminderSetting
-import ir.roozban.core.model.TaskDue
-import ir.roozban.core.model.UserSettings
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.time.LocalTime

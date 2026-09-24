@@ -3,7 +3,10 @@ package ir.roozban.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ir.roozban.core.domain.BackupService
 import ir.roozban.core.domain.ReminderSync
+import ir.roozban.core.domain.RestoreMode
+import ir.roozban.core.domain.RestoreResult
 import ir.roozban.core.domain.SettingsRepository
 import ir.roozban.core.model.ReminderKind
 import ir.roozban.core.model.ReminderSetting
@@ -21,6 +24,7 @@ enum class DayPart { MORNING, NOON, AFTERNOON, EVENING, NIGHT }
 class SettingsViewModel @Inject constructor(
     private val repository: SettingsRepository,
     private val reminders: ReminderSync,
+    private val backup: BackupService,
 ) : ViewModel() {
 
     val settings: StateFlow<UserSettings?> =
@@ -56,4 +60,16 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setDynamicColor(enabled: Boolean) = update { it.copy(dynamicColor = enabled) }
+
+    fun setShowGregorian(show: Boolean) = update { it.copy(showGregorian = show) }
+
+    fun setShowHijri(show: Boolean) = update { it.copy(showHijri = show) }
+
+    fun adjustHijriOffset(delta: Int) = update { it.copy(hijriOffset = (it.hijriOffset + delta).coerceIn(-2, 2)) }
+
+    /** Encrypts all data with [password]; the caller writes the bytes to the chosen file. */
+    suspend fun createBackup(password: CharArray): ByteArray = backup.createBackup(password)
+
+    suspend fun restore(file: ByteArray, password: CharArray, mode: RestoreMode): RestoreResult =
+        backup.restore(file, password, mode)
 }

@@ -100,4 +100,13 @@
     <string name="projects_archived">بایگانی‌شده</string>
     <string name="projects_open_count">%1$s کار</string>
     <string name="projects_more">گزینه‌ها</string>
+
+    <string name="calendar_title">تقویم</string>
+    <string name="calendar_previous">قبلی</string>
+    <string name="calendar_next">بعدی</string>
+    <string name="calendar_today">امروز</string>
+    <string name="calendar_day">روز</string>
+    <string name="calendar_week">هفته</string>
+    <string name="calendar_month">ماه</string>
+    <string name="calendar_all_day">بی‌ساعت</string>
 </resources>

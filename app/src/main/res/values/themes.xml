@@ -4,6 +4,14 @@
         <item name="android:windowBackground">@color/roozban_background</item>
     </style>
 
+    <!-- Quick add over whatever is on screen (Share, widget, tile, shortcut). -->
+    <style name="Theme.Roozban.Translucent" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+
     <style name="Theme.Roozban.Splash" parent="Theme.SplashScreen.IconBackground">
         <item name="windowSplashScreenBackground">@color/roozban_background</item>
         <item name="windowSplashScreenIconBackgroundColor">@color/roozban_brand</item>

@@ -4,11 +4,11 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import ir.roozban.core.domain.AddTaskUseCase
 import ir.roozban.core.domain.CompleteTaskUseCase
+import ir.roozban.core.domain.HighlightKind
 import ir.roozban.core.domain.QuickAddParser
 import ir.roozban.core.domain.ReminderSync
 import ir.roozban.core.domain.ReopenTaskUseCase
 import ir.roozban.core.domain.TagResolver
-import ir.roozban.core.domain.HighlightKind
 import ir.roozban.core.testing.FakeAlarmScheduler
 import ir.roozban.core.testing.FakeLabelRepository
 import ir.roozban.core.testing.FakeProjectRepository

@@ -109,18 +109,32 @@ class TaskListViewModel @Inject constructor(
         _quickAdd.value = QuickAddState(text, result.toPreview(now.toLocalDate()))
     }
 
-    /** Returns true when the task was added (the sheet should then close). */
+    /** Returns true when the task was accepted (the sheet should then close); saving continues in the background. */
     fun submitQuickAdd(): Boolean {
-        val input = lastParse ?: return false
-        if (input.title.isBlank()) return false
+        val input = takeQuickAdd() ?: return false
+        viewModelScope.launch { save(input) }
+        return true
+    }
+
+    /** Like [submitQuickAdd] but returns only after the task is stored, for screens that close right away. */
+    suspend fun submitQuickAddAndWait(): Boolean {
+        val input = takeQuickAdd() ?: return false
+        save(input)
+        return true
+    }
+
+    private fun takeQuickAdd(): QuickAddResult? {
+        val input = lastParse ?: return null
+        if (input.title.isBlank()) return null
         lastParse = null
         _quickAdd.value = QuickAddState()
-        viewModelScope.launch {
-            val task = addTask(input, defaultProjectId = target.value?.projectId) ?: return@launch
-            val whenText = task.due?.let { TaskFormatter.due(it, LocalDate.now(clock)) }
-            _events.send(TaskListEvent.Message(if (whenText != null) "ثبت شد: $whenText" else "ثبت شد"))
-        }
-        return true
+        return input
+    }
+
+    private suspend fun save(input: QuickAddResult) {
+        val task = addTask(input, defaultProjectId = target.value?.projectId) ?: return
+        val whenText = task.due?.let { TaskFormatter.due(it, LocalDate.now(clock)) }
+        _events.send(TaskListEvent.Message(if (whenText != null) "ثبت شد: $whenText" else "ثبت شد"))
     }
 
     fun dismissQuickAdd() {

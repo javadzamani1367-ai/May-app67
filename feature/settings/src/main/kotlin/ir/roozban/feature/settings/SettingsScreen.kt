@@ -26,6 +26,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -69,7 +71,9 @@ internal fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val snackbar = remember { SnackbarHostState() }
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings_title)) },
@@ -94,6 +98,8 @@ internal fun SettingsScreen(
             DefaultReminderCard(s, viewModel)
             AllDayCard(s, viewModel)
             WordsCard(s, viewModel)
+            CalendarCard(s, viewModel)
+            BackupCard(viewModel, snackbar)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 SettingsCard(stringResource(R.string.settings_appearance)) {
                     SwitchRow(stringResource(R.string.settings_dynamic_color), s.dynamicColor, viewModel::setDynamicColor)
@@ -212,6 +218,31 @@ private fun AllDayCard(s: UserSettings, vm: SettingsViewModel) {
             },
             onDismiss = { picking = false },
         )
+    }
+}
+
+@Composable
+private fun CalendarCard(s: UserSettings, vm: SettingsViewModel) {
+    SettingsCard(stringResource(R.string.settings_calendar)) {
+        SwitchRow(stringResource(R.string.settings_show_gregorian), s.showGregorian, vm::setShowGregorian)
+        SwitchRow(stringResource(R.string.settings_show_hijri), s.showHijri, vm::setShowHijri)
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.settings_hijri_offset), style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    stringResource(R.string.settings_hijri_offset_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            FilledTonalIconButton(onClick = { vm.adjustHijriOffset(-1) }) { Text("−", style = MaterialTheme.typography.titleMedium) }
+            Text(
+                PersianDigits.toPersian(if (s.hijriOffset > 0) "+${s.hijriOffset}" else s.hijriOffset.toString()),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 12.dp),
+            )
+            FilledTonalIconButton(onClick = { vm.adjustHijriOffset(+1) }) { Text("+", style = MaterialTheme.typography.titleMedium) }
+        }
     }
 }
 

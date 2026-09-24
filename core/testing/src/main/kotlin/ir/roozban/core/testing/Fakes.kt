@@ -1,13 +1,13 @@
 package ir.roozban.core.testing
 
+import ir.roozban.core.calendar.JalaliDate
 import ir.roozban.core.domain.AlarmScheduler
 import ir.roozban.core.domain.LabelRepository
 import ir.roozban.core.domain.ProjectRepository
-import ir.roozban.core.domain.SubtaskProgress
 import ir.roozban.core.domain.ReminderRepository
 import ir.roozban.core.domain.SettingsRepository
+import ir.roozban.core.domain.SubtaskProgress
 import ir.roozban.core.domain.TaskRepository
-import ir.roozban.core.calendar.JalaliDate
 import ir.roozban.core.model.Label
 import ir.roozban.core.model.Project
 import ir.roozban.core.model.Reminder
