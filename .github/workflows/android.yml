@@ -11,6 +11,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -44,3 +46,16 @@ jobs:
         with:
           name: roozban-dev-debug
           path: app/build/outputs/apk/dev/debug/*.apk
+
+      # Test build for manual review: a rolling pre-release with a stable download URL.
+      - name: Publish test APK (pre-release "roozban-dev")
+        if: github.event_name == 'push' && github.ref == 'refs/heads/claude/roozban-architecture-planning-w81883'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/dev/debug/*.apk roozban-dev.apk
+          gh release delete roozban-dev --cleanup-tag --yes || true
+          gh release create roozban-dev roozban-dev.apk \
+            --prerelease --latest=false --target "$GITHUB_SHA" \
+            --title "روزبان — نسخه‌ی آزمایشی" \
+            --notes "نسخه‌ی آزمایشی (debug) از commit ${GITHUB_SHA::7}. فقط برای بررسی؛ داده‌ها هنوز ذخیره‌ی دائمی نمی‌شوند."

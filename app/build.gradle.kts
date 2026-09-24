@@ -26,6 +26,17 @@ android {
         }
     }
 
+    // A committed debug key keeps test builds from CI installable over each other.
+    // It is public and only for debug builds; release signing is configured in phase 8.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
