@@ -35,13 +35,13 @@ data class BackgroundPreset(val id: String, val name: String, val colors: List<C
 object Backgrounds {
     val presets = listOf(
         BackgroundPreset("dawn", "سپیده‌دم", listOf(Color(0xFFFFE0B2), Color(0xFFF8BBD0), Color(0xFFD1C4E9))),
-        BackgroundPreset("sky", "آسمان", listOf(Color(0xFFE3F2FD), Color(0xFFBBDEFB), Color(0xFF90CAF9)), Pattern.WAVES),
-        BackgroundPreset("lavender", "یاس", listOf(Color(0xFFF3E5F5), Color(0xFFE1BEE7), Color(0xFFD1C4E9)), Pattern.DOTS),
+        BackgroundPreset("sky", "آسمان", listOf(Color(0xFFE3F2FD), Color(0xFFBBDEFB), Color(0xFF90CAF9)), BackgroundPreset.Pattern.WAVES),
+        BackgroundPreset("lavender", "یاس", listOf(Color(0xFFF3E5F5), Color(0xFFE1BEE7), Color(0xFFD1C4E9)), BackgroundPreset.Pattern.DOTS),
         BackgroundPreset("sunset", "غروب", listOf(Color(0xFFFF8A65), Color(0xFFF06292), Color(0xFF7E57C2))),
-        BackgroundPreset("turquoise", "کاشی فیروزه", listOf(Color(0xFF0D47A1), Color(0xFF1565C0), Color(0xFF00838F)), Pattern.GIRIH, dark = true),
-        BackgroundPreset("rose", "گل‌سرخ", listOf(Color(0xFFFFEBEE), Color(0xFFFFCDD2), Color(0xFFF8BBD0)), Pattern.GIRIH),
-        BackgroundPreset("sand", "کویر", listOf(Color(0xFFFFF8E1), Color(0xFFFFE0B2), Color(0xFFFFCC80)), Pattern.WAVES),
-        BackgroundPreset("night", "شب پرستاره", listOf(Color(0xFF0D1B2A), Color(0xFF1B263B), Color(0xFF3A2E5C)), Pattern.DOTS, dark = true),
+        BackgroundPreset("turquoise", "کاشی فیروزه", listOf(Color(0xFF0D47A1), Color(0xFF1565C0), Color(0xFF00838F)), BackgroundPreset.Pattern.GIRIH, dark = true),
+        BackgroundPreset("rose", "گل‌سرخ", listOf(Color(0xFFFFEBEE), Color(0xFFFFCDD2), Color(0xFFF8BBD0)), BackgroundPreset.Pattern.GIRIH),
+        BackgroundPreset("sand", "کویر", listOf(Color(0xFFFFF8E1), Color(0xFFFFE0B2), Color(0xFFFFCC80)), BackgroundPreset.Pattern.WAVES),
+        BackgroundPreset("night", "شب پرستاره", listOf(Color(0xFF0D1B2A), Color(0xFF1B263B), Color(0xFF3A2E5C)), BackgroundPreset.Pattern.DOTS, dark = true),
     )
 
     fun preset(id: String?): BackgroundPreset? =
