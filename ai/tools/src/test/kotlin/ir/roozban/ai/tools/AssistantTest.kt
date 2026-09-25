@@ -37,10 +37,11 @@ class AssistantTest {
         f.habit("ورزش")
         val overdue = false
         fun names(msg: String) = MessageGrammar.tools(Hints.find(ir.roozban.ai.tools.AssistantContext(f.clock.now, listOf(), listOf()), msg), msg, overdue).map { it.name }
-        assertThat(names("فردا ساعت ۵ به مامان زنگ بزنم")).containsExactly("create_task", "list_tasks")
+        assertThat(names("فردا ساعت ۵ به مامان زنگ بزنم")).containsExactly("create_task")
+        assertThat(names("فردا چی دارم؟")).containsExactly("create_task", "list_tasks")
         val ctx = f.context()
         val tools = MessageGrammar.tools(Hints.find(ctx, "جلسه با علی رو بنداز فردا"), "جلسه با علی رو بنداز فردا", overdue)
-        assertThat(tools.map { it.name }).containsExactly("create_task", "complete_task", "reschedule", "list_tasks")
+        assertThat(tools.map { it.name }).containsExactly("create_task", "complete_task", "reschedule")
         val reschedule = tools.first { it.name == "reschedule" }
         assertThat(reschedule.args.first { it.name == "task" }.type).isEqualTo(ArgType.Choice(listOf("#2")))
         assertThat(reschedule.args.first { it.name == "when" }.type).isEqualTo(ArgType.Choice(listOf("فردا")))

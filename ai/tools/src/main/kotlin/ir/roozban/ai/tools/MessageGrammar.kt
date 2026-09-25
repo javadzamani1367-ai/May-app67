@@ -26,16 +26,20 @@ object MessageGrammar {
         val whenOptional = ArgType.Choice(time, nullable = true)
         val whenRequired = ArgType.Choice(time)
 
+        val project = PROJECT.find(message)?.groupValues?.get(1)?.let { listOf(it) }.orEmpty()
+        val ranges = RANGE_WORDS.filter { (_, words) -> says(words) }.map { it.first }.ifEmpty { listOf(Tools.RANGE_TODAY, Tools.RANGE_ALL) }
+        // An edit or a removal is not a completion unless the message also says it was done.
+        val canComplete = !(says(UPDATE_WORDS) || says(DELETE_WORDS)) || says(DONE_WORDS)
         return buildList {
-            add(Tools.createTask.pin("when" to whenOptional, "repeat" to ArgType.Choice(repeat, nullable = true)))
+            add(Tools.createTask.pin("when" to whenOptional, "repeat" to ArgType.Choice(repeat, nullable = true), "project" to ArgType.Choice(project, nullable = true)))
             if (hasTask) {
-                add(Tools.completeTask.pin("task" to taskChoice))
+                if (canComplete) add(Tools.completeTask.pin("task" to taskChoice))
                 if (time.isNotEmpty()) add(Tools.reschedule.pin("task" to taskChoice, "when" to whenRequired))
                 if (says(UPDATE_WORDS)) add(Tools.updateTask.pin("task" to taskChoice))
                 if (says(DELETE_WORDS)) add(Tools.deleteTask.pin("task" to taskChoice))
             }
             if (hasOverdue && time.isNotEmpty() && says(OVERDUE_WORDS)) add(Tools.rescheduleOverdue.pin("when" to whenRequired))
-            add(Tools.listTasks)
+            if (says(LIST_WORDS)) add(Tools.listTasks.pin("range" to ArgType.Choice(ranges)))
             if (says(SLOT_WORDS)) add(Tools.findFreeSlot.pin("day" to ArgType.Choice(time.ifEmpty { listOf("امروز") })))
             if (says(FOCUS_WORDS)) add(Tools.startFocus.pin("task" to ArgType.Choice(taskRefs, nullable = true)))
             if (says(HABIT_WORDS)) add(Tools.createHabit.pin("reminder" to whenOptional))
@@ -81,4 +85,14 @@ object MessageGrammar {
     private val SLOT_WORDS = listOf("وقت", "آزاد", "خالی", "فرصت")
     private val FOCUS_WORDS = listOf("تمرکز", "پومودورو", "فوکوس")
     private val HABIT_WORDS = listOf("عادت")
+    private val DONE_WORDS = listOf("انجام", "تموم", "تمام", "تیک", "کردم", "دادم", "خریدم", "رفتم", "فرستادم")
+    private val LIST_WORDS = listOf("چی", "چه", "کدوم", "کدام", "نشون", "نشان", "لیست", "فهرست", "کارهام", "کارام", "برنامه")
+    private val RANGE_WORDS = listOf(
+        Tools.RANGE_OVERDUE to listOf("عقب", "مونده", "مانده"),
+        Tools.RANGE_TOMORROW to listOf("فردا"),
+        Tools.RANGE_WEEK to listOf("هفته"),
+        Tools.RANGE_TODAY to listOf("امروز"),
+        Tools.RANGE_ALL to listOf("همه", "کل"),
+    )
+    private val PROJECT = Regex("پروژه(?:‌ی|ی)?\\s+([\\p{L}\\p{N}‌_-]+)")
 }
