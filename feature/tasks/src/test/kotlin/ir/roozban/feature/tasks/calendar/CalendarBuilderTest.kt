@@ -2,6 +2,9 @@ package ir.roozban.feature.tasks.calendar
 
 import com.google.common.truth.Truth.assertThat
 import ir.roozban.core.calendar.toJalali
+import ir.roozban.core.model.EventCalendar
+import ir.roozban.core.model.EventKind
+import ir.roozban.core.model.PersonalEvent
 import ir.roozban.core.model.Quadrant
 import ir.roozban.core.model.Task
 import ir.roozban.core.model.TaskDue
@@ -79,5 +82,19 @@ class CalendarBuilderTest {
     fun `month navigation follows Jalali months`() {
         assertThat(CalendarBuilder.shift(CalendarMode.MONTH, jalali("1405-06-31"), 1).toJalali().toString()).isEqualTo("1405-07-30")
         assertThat(CalendarBuilder.shift(CalendarMode.WEEK, today, -1)).isEqualTo(today.minusWeeks(1))
+    }
+
+    @Test
+    fun `month grid carries occasions and personal events`() {
+        val birthday = PersonalEvent(
+            id = "b", title = "تولد سارا", kind = EventKind.BIRTHDAY, calendar = EventCalendar.JALALI,
+            month = 7, day = 20, year = 1375, createdAt = Instant.EPOCH, updatedAt = Instant.EPOCH,
+        )
+        val days = CalendarBuilder.build(CalendarMode.MONTH, today, today, emptyList(), true, true, 0, listOf(birthday))
+        val hafez = days.single { it.date == jalali("1405-07-20") }
+        assertThat(hafez.occasions.map { it.title }).contains("روز بزرگداشت حافظ")
+        assertThat(hafez.events.single().count).isEqualTo(30)
+        assertThat(hafez.isHoliday).isFalse()
+        assertThat(days.filter { it.events.isNotEmpty() }).hasSize(1)
     }
 }
