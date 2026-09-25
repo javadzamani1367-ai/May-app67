@@ -1,5 +1,16 @@
 package ir.roozban.feature.habits
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.ui.text.font.FontWeight
+import ir.roozban.core.designsystem.theme.Roozban
+import ir.roozban.core.designsystem.components.EmptyState
+import ir.roozban.core.designsystem.components.roleOf
+import ir.roozban.core.designsystem.components.IconBadge
+import ir.roozban.core.designsystem.components.AppCard
+import ir.roozban.core.designsystem.components.RoozbanTopBar
+import ir.roozban.core.designsystem.components.RoozbanFab
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,14 +32,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,7 +76,7 @@ internal fun HabitsScreen(
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(
+            RoozbanTopBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.habits_title))
@@ -89,7 +98,7 @@ internal fun HabitsScreen(
         },
         floatingActionButton = {
             if (state.access == Access.FULL) {
-                ExtendedFloatingActionButton(
+                RoozbanFab(
                     onClick = { editing = HabitDraft(color = state.active.size % TagColors.count) },
                     icon = { Icon(painterResource(DsR.drawable.ic_add), null) },
                     text = { Text(stringResource(R.string.habits_new)) },
@@ -142,18 +151,7 @@ internal fun HabitsScreen(
             }
             if (!state.loading && state.active.isEmpty() && state.archived.isEmpty()) {
                 item(key = "empty") {
-                    Column(Modifier.fillMaxWidth().padding(top = 48.dp, start = 16.dp, end = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(painterResource(DsR.drawable.ic_fire), null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
-                        Spacer(Modifier.height(12.dp))
-                        Text(stringResource(R.string.habits_empty_title), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            stringResource(R.string.habits_empty_body),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                    EmptyState(DsR.drawable.ic_fire, stringResource(R.string.habits_empty_title), stringResource(R.string.habits_empty_body), Roozban.colors.streak)
                 }
             }
         }
@@ -187,15 +185,19 @@ private fun HabitRow(
 ) {
     var menu by remember { mutableStateOf(false) }
     val color = TagColors.color(card.habit.color)
-    Card(
+    val doneToday = card.week.firstOrNull { it.isToday }?.status == ir.roozban.core.domain.HabitDayStatus.DONE
+    AppCard(
         onClick = onOpen,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        accent = color,
+        container = if (doneToday) Roozban.colors.completed.container.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceContainer,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 12.dp)) {
+        Column(Modifier.padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                IconBadge(DsR.drawable.ic_habit, roleOf(color), size = 40.dp)
+                Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(card.habit.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(card.habit.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(scheduleLabel(card.habit.schedule), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 StreakBadge(card.stats)
@@ -235,27 +237,37 @@ private fun HabitRow(
     }
 }
 
+/** Streak as an amber flame pill (grey when broken), freezes as a small blue snowflake count. */
 @Composable
 internal fun StreakBadge(stats: HabitStats) {
+    val streak = Roozban.colors.streak
+    val active = stats.current > 0
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            painterResource(DsR.drawable.ic_fire),
-            null,
-            tint = if (stats.current > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-            modifier = Modifier.size(20.dp),
-        )
-        Spacer(Modifier.width(2.dp))
-        Text(
-            stringResource(
-                if (stats.unit == StreakUnit.DAY) R.string.habits_streak_days else R.string.habits_streak_weeks,
-                PersianDigits.format(stats.current),
-            ),
-            style = MaterialTheme.typography.labelLarge,
-        )
+        Row(
+            Modifier
+                .clip(CircleShape)
+                .background(if (active) streak.container else MaterialTheme.colorScheme.surfaceContainerHighest)
+                .padding(horizontal = 10.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(painterResource(DsR.drawable.ic_fire), null, tint = if (active) streak.color else MaterialTheme.colorScheme.outline, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(3.dp))
+            Text(
+                stringResource(
+                    if (stats.unit == StreakUnit.DAY) R.string.habits_streak_days else R.string.habits_streak_weeks,
+                    PersianDigits.format(stats.current),
+                ),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = if (active) streak.onContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         if (stats.freezes > 0) {
             Spacer(Modifier.width(6.dp))
-            Icon(painterResource(DsR.drawable.ic_snowflake), null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(16.dp))
-            Text(PersianDigits.format(stats.freezes), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.tertiary)
+            Icon(painterResource(DsR.drawable.ic_snowflake), null, tint = Roozban.colors.info.color, modifier = Modifier.size(16.dp))
+            Text(PersianDigits.format(stats.freezes), style = MaterialTheme.typography.labelMedium, color = Roozban.colors.info.color)
         }
+    }
+}
     }
 }

@@ -95,6 +95,11 @@ class SettingsViewModel @Inject constructor(
 
     fun setDateNotification(enabled: Boolean) = update { it.copy(dateNotification = enabled) }
 
+    /** null = default sound, "" = silent, else a sound URI. */
+    fun setHabitSound(sound: String?) = update { it.copy(habitSound = sound) }
+
+    fun setEventSound(sound: String?) = update { it.copy(eventSound = sound) }
+
     fun setShowGregorian(show: Boolean) = update { it.copy(showGregorian = show) }
 
     fun setShowHijri(show: Boolean) = update { it.copy(showHijri = show) }

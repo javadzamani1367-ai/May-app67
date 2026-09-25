@@ -78,20 +78,21 @@ internal fun BackupCard(viewModel: SettingsViewModel, snackbar: SnackbarHostStat
         if (uri != null) fileToRestore = uri
     }
 
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer), modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.backup_title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-            Text(stringResource(R.string.backup_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                Button(onClick = { askPasswordForCreate = true }, enabled = !busy, modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.backup_create))
-                }
-                OutlinedButton(onClick = { openLauncher.launch(arrayOf("*/*")) }, enabled = !busy, modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.backup_restore))
-                }
+    SettingsCard(
+        stringResource(R.string.backup_title),
+        stringResource(R.string.backup_desc),
+        icon = ir.roozban.core.designsystem.R.drawable.ic_backup,
+        role = ir.roozban.core.designsystem.theme.Roozban.colors.completed,
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = { askPasswordForCreate = true }, enabled = !busy, modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.backup_create))
             }
-            if (busy) Text(stringResource(R.string.backup_working), style = MaterialTheme.typography.bodySmall)
+            OutlinedButton(onClick = { openLauncher.launch(arrayOf("*/*")) }, enabled = !busy, modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.backup_restore))
+            }
         }
+        if (busy) Text(stringResource(R.string.backup_working), style = MaterialTheme.typography.bodySmall)
     }
 
     if (askPasswordForCreate) {

@@ -96,4 +96,13 @@
     <string name="palette_green">سبز</string>
     <string name="settings_date_notification">تاریخ امروز در نوار اعلان</string>
     <string name="settings_date_notification_desc">عدد روز کنار ساعت و تاریخ کامل شمسی، میلادی و قمری در نوار اعلان</string>
+    <string name="sounds_title">صدای اعلان‌ها</string>
+    <string name="sounds_desc">صدای یادآوری عادت‌ها و مناسبت‌های شخصی را خودتان انتخاب کنید.</string>
+    <string name="sounds_habits">یادآوری عادت‌ها</string>
+    <string name="sounds_events">مناسبت‌های من (تولد، سالگرد و …)</string>
+    <string name="sounds_choose">انتخاب</string>
+    <string name="sounds_preview">پخش</string>
+    <string name="sounds_default">صدای پیش‌فرض گوشی</string>
+    <string name="sounds_silent">بی‌صدا (فقط لرزش)</string>
+    <string name="sounds_custom">صدای انتخابی</string>
 </resources>

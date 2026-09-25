@@ -1,5 +1,12 @@
 package ir.roozban.app.navigation
 
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
@@ -95,7 +102,13 @@ fun RoozbanApp(
                     FocusMiniBar(onOpen = { navController.navigate(FocusRoute()) { launchSingleTop = true } })
                 }
                 if (current != null) {
-                    NavigationBar {
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        tonalElevation = 0.dp,
+                        modifier = Modifier
+                            .shadow(12.dp, RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
+                    ) {
                         Tab.entries.forEach { tab ->
                             NavigationBarItem(
                                 selected = tab == current,
@@ -107,7 +120,14 @@ fun RoozbanApp(
                                     }
                                 },
                                 icon = { Icon(painterResource(tab.icon), contentDescription = null) },
-                                label = { Text(stringResource(tab.label)) },
+                                label = { Text(stringResource(tab.label), fontWeight = if (tab == current) FontWeight.Bold else FontWeight.Normal) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
                             )
                         }
                     }

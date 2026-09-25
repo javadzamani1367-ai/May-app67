@@ -161,4 +161,7 @@
     <string name="converter_days_after">%1$s روز دیگر</string>
     <string name="converter_days_before">%1$s روز پیش</string>
     <string name="converter_show">نمایش در تقویم</string>
+    <string name="hero_today">امروز</string>
+    <string name="hero_overdue">عقب‌افتاده</string>
+    <string name="hero_done">انجام شده</string>
 </resources>

@@ -1,5 +1,10 @@
 package ir.roozban.feature.focus
 
+import androidx.compose.ui.graphics.Brush
+import ir.roozban.core.designsystem.theme.Roozban
+import ir.roozban.core.designsystem.components.SectionTitle
+import ir.roozban.core.designsystem.components.AppCard
+import ir.roozban.core.designsystem.components.RoozbanTopBar
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.animation.core.animateFloatAsState
@@ -39,7 +44,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -82,7 +86,7 @@ fun FocusScreen(taskId: String?, onBack: () -> Unit, viewModel: FocusViewModel =
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(
+            RoozbanTopBar(
                 title = { Text(stringResource(R.string.focus_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(painterResource(DsR.drawable.ic_arrow_back), stringResource(R.string.focus_back)) }
@@ -170,22 +174,30 @@ private fun PhaseHeader(state: FocusUiState) {
 private fun TimerRing(state: FocusUiState) {
     val progress by animateFloatAsState(state.progress, label = "focus-progress")
     val track = MaterialTheme.colorScheme.surfaceContainerHighest
-    val color = if (state.phase == FocusPhase.WORK) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
+    // Focus is violet→accent, breaks are a restful teal→green.
+    val colors = if (state.phase == FocusPhase.WORK) {
+        listOf(Roozban.colors.focus.color, MaterialTheme.colorScheme.primary, Roozban.colors.focus.color)
+    } else {
+        listOf(Roozban.colors.completed.color, Roozban.colors.success.color, Roozban.colors.completed.color)
+    }
+    val glow = colors.first().copy(alpha = 0.10f)
     Box(Modifier.size(260.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
-            val stroke = 14.dp.toPx()
+            val stroke = 16.dp.toPx()
             val inset = stroke / 2
             val arcSize = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke)
             val topLeft = androidx.compose.ui.geometry.Offset(inset, inset)
+            drawCircle(glow, radius = size.minDimension / 2 - stroke)
             drawArc(track, 0f, 360f, false, topLeft, arcSize, style = Stroke(stroke))
-            drawArc(color, -90f, 360f * progress, false, topLeft, arcSize, style = Stroke(stroke, cap = StrokeCap.Round))
+            drawArc(Brush.sweepGradient(colors), -90f, 360f * progress, false, topLeft, arcSize, style = Stroke(stroke, cap = StrokeCap.Round))
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 formatCountdown(state.remainingMillis),
                 fontSize = 56.sp,
-                fontWeight = FontWeight.Light,
+                fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.displayLarge,
+                color = colors.first(),
             )
             if (state.timer is FocusState.Paused) {
                 Text(stringResource(R.string.focus_paused), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -208,7 +220,12 @@ private fun Controls(state: FocusUiState, viewModel: FocusViewModel) {
     val big = Modifier.size(72.dp)
     Row(horizontalArrangement = Arrangement.spacedBy(24.dp), verticalAlignment = Alignment.CenterVertically) {
         val active = state.timer != FocusState.Idle
-        FilledTonalIconButton(onClick = viewModel::stop, enabled = active, modifier = Modifier.size(52.dp)) {
+        FilledTonalIconButton(
+            onClick = viewModel::stop,
+            enabled = active,
+            modifier = Modifier.size(52.dp),
+            colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Roozban.colors.error.container, contentColor = Roozban.colors.error.color),
+        ) {
             Icon(painterResource(DsR.drawable.ic_stop), stringResource(R.string.focus_stop))
         }
         when (state.timer) {
@@ -222,12 +239,17 @@ private fun Controls(state: FocusUiState, viewModel: FocusViewModel) {
                 onClick = viewModel::start,
                 enabled = state.access == Access.FULL,
                 modifier = big,
-                colors = IconButtonDefaults.filledIconButtonColors(),
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = Roozban.colors.focus.color, contentColor = Roozban.colors.focus.onColor),
             ) {
                 Icon(painterResource(DsR.drawable.ic_play), stringResource(R.string.focus_start), Modifier.size(36.dp))
             }
         }
-        FilledTonalIconButton(onClick = viewModel::skip, enabled = active, modifier = Modifier.size(52.dp)) {
+        FilledTonalIconButton(
+            onClick = viewModel::skip,
+            enabled = active,
+            modifier = Modifier.size(52.dp),
+            colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Roozban.colors.info.container, contentColor = Roozban.colors.info.color),
+        ) {
             Icon(painterResource(DsR.drawable.ic_skip_next), stringResource(R.string.focus_skip))
         }
     }
@@ -237,13 +259,9 @@ private fun Controls(state: FocusUiState, viewModel: FocusViewModel) {
 private fun SettingsCard(state: FocusUiState, update: ((FocusSettings) -> FocusSettings) -> Unit) {
     val s = state.settings
     val context = LocalContext.current
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer), modifier = Modifier.fillMaxWidth()) {
+    AppCard(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 8.dp)) {
-            Text(
-                stringResource(R.string.focus_settings),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            )
+            SectionTitle(stringResource(R.string.focus_settings), icon = DsR.drawable.ic_settings, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             Stepper(stringResource(R.string.focus_work_minutes), stringResource(R.string.focus_minutes_value, PersianDigits.format(s.workMinutes)),
                 onMinus = { update { it.copy(workMinutes = it.workMinutes - 5) } }, onPlus = { update { it.copy(workMinutes = it.workMinutes + 5) } })
             Stepper(stringResource(R.string.focus_short_minutes), stringResource(R.string.focus_minutes_value, PersianDigits.format(s.shortBreakMinutes)),
@@ -274,9 +292,9 @@ private fun SettingsCard(state: FocusUiState, update: ((FocusSettings) -> FocusS
 private fun Stepper(label: String, value: String, onMinus: () -> Unit, onPlus: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, modifier = Modifier.weight(1f))
-        IconButton(onClick = onMinus) { Text("−", style = MaterialTheme.typography.titleLarge) }
-        Text(value, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.width(80.dp))
-        IconButton(onClick = onPlus) { Text("+", style = MaterialTheme.typography.titleLarge) }
+        FilledTonalIconButton(onClick = onMinus, modifier = Modifier.size(36.dp)) { Text("−", style = MaterialTheme.typography.titleMedium) }
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary, textAlign = TextAlign.Center, modifier = Modifier.width(80.dp))
+        FilledTonalIconButton(onClick = onPlus, modifier = Modifier.size(36.dp)) { Text("+", style = MaterialTheme.typography.titleMedium) }
     }
 }
 
@@ -324,14 +342,15 @@ internal fun phaseName(phase: FocusPhase): String = stringResource(
 
 @Composable
 private fun phaseContainer(phase: FocusPhase) =
-    if (phase == FocusPhase.WORK) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.tertiaryContainer
+    if (phase == FocusPhase.WORK) Roozban.colors.focus.container else Roozban.colors.completed.container
 
 /** Shown above the bottom navigation while a timer is active. */
 @Composable
 fun FocusMiniBar(onOpen: () -> Unit, viewModel: FocusBarViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     if (!state.visible) return
-    Surface(color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen)) {
+    val role = if (state.phase == FocusPhase.WORK) Roozban.colors.focus else Roozban.colors.completed
+    Surface(color = role.container, contentColor = role.onContainer, modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen)) {
         Row(Modifier.padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(painterResource(DsR.drawable.ic_timer), null, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(12.dp))

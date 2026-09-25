@@ -66,6 +66,9 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
         val DATE_NOTIFICATION = booleanPreferencesKey("date_notification")
         /** "" = off. */
         val PRAYER_CITY = stringPreferencesKey("prayer_city")
+        /** Absent = default sound. */
+        val HABIT_SOUND = stringPreferencesKey("habit_sound")
+        val EVENT_SOUND = stringPreferencesKey("event_sound")
     }
 
     private companion object {
@@ -115,6 +118,8 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
                 startScreen = enumOr(this[Keys.START_SCREEN], DEFAULTS.startScreen),
                 dateNotification = this[Keys.DATE_NOTIFICATION] ?: DEFAULTS.dateNotification,
                 prayerCity = this[Keys.PRAYER_CITY]?.let { it.ifEmpty { null } } ?: DEFAULTS.prayerCity,
+                habitSound = this[Keys.HABIT_SOUND],
+                eventSound = this[Keys.EVENT_SOUND],
             )
         }
 
@@ -148,6 +153,8 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
             this[Keys.START_SCREEN] = s.startScreen.name
             this[Keys.DATE_NOTIFICATION] = s.dateNotification
             this[Keys.PRAYER_CITY] = s.prayerCity.orEmpty()
+            if (s.habitSound == null) remove(Keys.HABIT_SOUND) else this[Keys.HABIT_SOUND] = s.habitSound
+            if (s.eventSound == null) remove(Keys.EVENT_SOUND) else this[Keys.EVENT_SOUND] = s.eventSound
         }
 
         inline fun <reified E : Enum<E>> enumOr(name: String?, default: E): E =

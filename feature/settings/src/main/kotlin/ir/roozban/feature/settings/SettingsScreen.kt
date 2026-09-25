@@ -1,5 +1,11 @@
 package ir.roozban.feature.settings
 
+import androidx.compose.ui.text.font.FontWeight
+import ir.roozban.core.designsystem.theme.Role
+import ir.roozban.core.designsystem.theme.Roozban
+import ir.roozban.core.designsystem.components.IconBadge
+import ir.roozban.core.designsystem.components.AppCard
+import ir.roozban.core.designsystem.components.RoozbanTopBar
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -30,7 +36,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,7 +79,7 @@ internal fun SettingsScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            RoozbanTopBar(
                 title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -96,10 +101,11 @@ internal fun SettingsScreen(
             AppearanceCard(
                 s,
                 viewModel,
-                section = { title, content -> SettingsCard(title) { content() } },
+                section = { title, content -> SettingsCard(title, icon = DsR.drawable.ic_palette, role = Roozban.colors.focus) { content() } },
                 switchRow = { label, checked, onChange -> SwitchRow(label, checked, onChange) },
             )
             HealthCard(onOpenBatteryGuide)
+            SoundsCard(s, viewModel)
             DefaultReminderCard(s, viewModel)
             AllDayCard(s, viewModel)
             WordsCard(s, viewModel)
@@ -110,14 +116,23 @@ internal fun SettingsScreen(
     }
 }
 
+/** A settings group: white card, colored icon badge and heading. */
 @Composable
-private fun SettingsCard(title: String, description: String? = null, content: @Composable () -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+internal fun SettingsCard(
+    title: String,
+    description: String? = null,
+    icon: Int = DsR.drawable.ic_settings,
+    role: Role? = null,
+    content: @Composable () -> Unit,
+) {
+    val r = role ?: Role(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary, MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)
+    AppCard(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconBadge(icon, r, size = 36.dp)
+                Spacer(Modifier.width(12.dp))
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            }
             description?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -134,7 +149,7 @@ private fun HealthCard(onOpenBatteryGuide: () -> Unit) {
         status = ReminderPermissions.status(context)
         onPauseOrDispose { }
     }
-    SettingsCard(stringResource(R.string.settings_health)) {
+    SettingsCard(stringResource(R.string.settings_health), icon = DsR.drawable.ic_notifications, role = Roozban.colors.success) {
         HealthRow(stringResource(R.string.health_notifications), status.notifications) {
             context.startSafely(ReminderPermissions.notificationSettings(context))
         }
@@ -170,7 +185,7 @@ private fun HealthRow(label: String, ok: Boolean, onFix: () -> Unit) {
 
 @Composable
 private fun DefaultReminderCard(s: UserSettings, vm: SettingsViewModel) {
-    SettingsCard(stringResource(R.string.settings_default_reminder)) {
+    SettingsCard(stringResource(R.string.settings_default_reminder), icon = DsR.drawable.ic_alarm, role = Roozban.colors.info) {
         val kind = s.defaultReminder?.kind
         ChipRow {
             FilterChip(kind == null, { vm.setDefaultReminderKind(null) }, { Text(stringResource(R.string.settings_reminder_none)) })
@@ -199,7 +214,7 @@ private fun DefaultReminderCard(s: UserSettings, vm: SettingsViewModel) {
 @Composable
 private fun AllDayCard(s: UserSettings, vm: SettingsViewModel) {
     var picking by remember { mutableStateOf(false) }
-    SettingsCard(stringResource(R.string.settings_all_day), stringResource(R.string.settings_all_day_desc)) {
+    SettingsCard(stringResource(R.string.settings_all_day), stringResource(R.string.settings_all_day_desc), icon = DsR.drawable.ic_schedule, role = Roozban.colors.info) {
         val time = s.allDayReminderTime
         SwitchRow(
             label = time?.let { stringResource(R.string.settings_at_time, PersianDateFormatter.time(it)) }
@@ -223,7 +238,7 @@ private fun AllDayCard(s: UserSettings, vm: SettingsViewModel) {
 
 @Composable
 private fun CalendarCard(s: UserSettings, vm: SettingsViewModel) {
-    SettingsCard(stringResource(R.string.settings_calendar)) {
+    SettingsCard(stringResource(R.string.settings_calendar), icon = DsR.drawable.ic_calendar_month, role = Roozban.colors.completed) {
         SwitchRow(stringResource(R.string.settings_date_notification), s.dateNotification, vm::setDateNotification)
         Text(
             stringResource(R.string.settings_date_notification_desc),
@@ -254,7 +269,7 @@ private fun CalendarCard(s: UserSettings, vm: SettingsViewModel) {
 
 @Composable
 private fun WordsCard(s: UserSettings, vm: SettingsViewModel) {
-    SettingsCard(stringResource(R.string.settings_words), stringResource(R.string.settings_words_desc)) {
+    SettingsCard(stringResource(R.string.settings_words), stringResource(R.string.settings_words_desc), icon = DsR.drawable.ic_edit, role = Roozban.colors.warning) {
         HourStepper(stringResource(R.string.word_morning), s.morningHour) { vm.adjustHour(DayPart.MORNING, it) }
         HourStepper(stringResource(R.string.word_noon), s.noonHour) { vm.adjustHour(DayPart.NOON, it) }
         HourStepper(stringResource(R.string.word_afternoon), s.afternoonHour) { vm.adjustHour(DayPart.AFTERNOON, it) }
@@ -307,7 +322,7 @@ private fun AboutCard() {
     val version = remember {
         runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull().orEmpty()
     }
-    SettingsCard(stringResource(R.string.settings_about)) {
+    SettingsCard(stringResource(R.string.settings_about), icon = DsR.drawable.ic_today) {
         Text(stringResource(R.string.settings_version, PersianDigits.toPersian(version)), style = MaterialTheme.typography.bodyMedium)
         Text(stringResource(R.string.settings_privacy), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }

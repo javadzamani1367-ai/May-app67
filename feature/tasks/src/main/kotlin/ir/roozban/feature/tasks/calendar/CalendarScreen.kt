@@ -1,5 +1,7 @@
 package ir.roozban.feature.tasks.calendar
 
+import ir.roozban.core.designsystem.components.RoozbanTopBar
+import ir.roozban.core.designsystem.components.RoozbanFab
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,7 +34,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import ir.roozban.core.ui.JalaliDatePickerDialog
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.HorizontalDivider
@@ -43,7 +44,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -110,7 +110,7 @@ internal fun CalendarScreen(
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(
+            RoozbanTopBar(
                 title = {
                     Text(
                         state.title,
@@ -160,7 +160,7 @@ internal fun CalendarScreen(
         },
         floatingActionButton = {
             if (state.mode == CalendarMode.MONTH) {
-                ExtendedFloatingActionButton(
+                RoozbanFab(
                     onClick = { eventDraft = EventDraft(date = state.selected) },
                     icon = { Icon(painterResource(DsR.drawable.ic_event_star), null) },
                     text = { Text(stringResource(R.string.event_new)) },
@@ -407,7 +407,7 @@ private fun DayHeader(day: CalendarDay, modifier: Modifier) {
         Text(
             PersianNames.WEEKDAYS_SHORT[PersianWeek.indexOf(day.date.dayOfWeek)],
             style = MaterialTheme.typography.labelSmall,
-            color = if (day.isHoliday) colors.error else colors.onSurfaceVariant,
+            color = if (day.isHoliday) holidayColor() else colors.onSurfaceVariant,
         )
         Box(
             Modifier.size(28.dp).clip(CircleShape).background(if (day.isToday) colors.primary else Color.Transparent),
@@ -418,13 +418,13 @@ private fun DayHeader(day: CalendarDay, modifier: Modifier) {
                 style = MaterialTheme.typography.titleSmall,
                 color = when {
                     day.isToday -> colors.onPrimary
-                    day.isHoliday -> colors.error
+                    day.isHoliday -> holidayColor()
                     else -> colors.onSurface
                 },
             )
         }
         day.holidayNames.firstOrNull()?.let {
-            Text(it, fontSize = 8.sp, color = colors.error, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(it, fontSize = 8.sp, color = holidayColor(), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -444,7 +444,7 @@ private fun DayColumn(
     val colors = MaterialTheme.colorScheme
     BoxWithConstraints(
         modifier
-            .background(if (day.isHoliday) colors.errorContainer.copy(alpha = 0.15f) else Color.Transparent)
+            .background(if (day.isHoliday) holidayColor().copy(alpha = 0.06f) else Color.Transparent)
             .border(0.5.dp, colors.outlineVariant.copy(alpha = 0.5f)),
     ) {
         val laneWidth = maxWidth
@@ -494,12 +494,17 @@ private fun DayColumn(
 
 @Composable
 private fun TaskChip(task: CalendarTask, dimmed: Boolean, modifier: Modifier) {
-    val color = quadrantColor(task.quadrant)
+    // Plain tasks take the accent so the timeline is never grey.
+    val color = if (task.quadrant == ir.roozban.core.model.Quadrant.NONE || task.quadrant == ir.roozban.core.model.Quadrant.ELIMINATE) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        quadrantColor(task.quadrant)
+    }
     Box(
         modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(color.copy(alpha = if (dimmed) 0.1f else 0.18f))
-            .border(1.dp, color.copy(alpha = if (dimmed) 0.3f else 0.8f), RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(8.dp))
+            .background(color.copy(alpha = if (dimmed) 0.08f else 0.16f))
+            .border(1.dp, color.copy(alpha = if (dimmed) 0.25f else 0.7f), RoundedCornerShape(8.dp))
             .padding(horizontal = 3.dp, vertical = 1.dp),
     ) {
         Text(task.title, fontSize = 10.sp, lineHeight = 12.sp, maxLines = 3, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurface)

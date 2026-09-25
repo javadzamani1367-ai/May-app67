@@ -19,13 +19,15 @@
 
     <TextView
         android:id="@+id/date_day"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginStart="10dp"
         android:layout_marginEnd="12dp"
+        android:background="@drawable/bg_date_badge"
+        android:gravity="center"
         android:includeFontPadding="false"
-        android:textColor="@color/date_accent"
-        android:textSize="38sp"
+        android:textColor="#FFFFFF"
+        android:textSize="30sp"
         android:textStyle="bold" />
 
     <LinearLayout

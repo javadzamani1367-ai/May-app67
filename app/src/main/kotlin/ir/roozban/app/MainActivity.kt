@@ -85,7 +85,7 @@ class MainActivity : AppCompatActivity() {
                         background = background,
                         imageFile = image,
                         veil = userSettings.backgroundVeil,
-                        veilColor = if (dark) ComposeColor(0xFF121316) else ComposeColor.White,
+                        veilColor = if (dark) ComposeColor(0xFF0F121A) else ComposeColor(0xFFF4F6FB),
                     )
                 } else {
                     AppBackdrop(null, null, 0f, MaterialTheme.colorScheme.background)

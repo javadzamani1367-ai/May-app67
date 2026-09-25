@@ -81,6 +81,11 @@ class DataStoreSettingsRepositoryTest {
         assertThat(a.startScreen).isEqualTo(StartScreen.CALENDAR)
         assertThat(a.dateNotification).isFalse()
         assertThat(a.prayerCity).isEqualTo("tehran")
+        repo.update { it.copy(habitSound = "content://media/internal/audio/media/12", eventSound = "") }
+        assertThat(repo.current().habitSound).isEqualTo("content://media/internal/audio/media/12")
+        assertThat(repo.current().eventSound).isEqualTo("")
+        repo.update { it.copy(habitSound = null) }
+        assertThat(repo.current().habitSound).isNull()
         repo.update { it.copy(background = null, prayerCity = null) }
         assertThat(repo.current().background).isNull()
         assertThat(repo.current().prayerCity).isNull()

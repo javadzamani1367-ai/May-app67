@@ -68,10 +68,10 @@ class DateNotifier @Inject constructor(
             if (occasion != null) {
                 setViewVisibility(R.id.date_occasion, View.VISIBLE)
                 setTextViewText(R.id.date_occasion, occasion.title)
-                setTextColor(R.id.date_occasion, ContextCompat.getColor(context, if (occasion.holiday) R.color.date_holiday else R.color.date_accent))
+                setTextColor(R.id.date_occasion, ContextCompat.getColor(context, if (occasion.holiday) R.color.date_occasion_holiday else R.color.date_occasion))
             }
             if (occasion?.holiday == true || today.dayOfWeek == java.time.DayOfWeek.FRIDAY) {
-                setTextColor(R.id.date_day, ContextCompat.getColor(context, R.color.date_holiday))
+                setInt(R.id.date_day, "setBackgroundResource", R.drawable.bg_date_badge_holiday)
             }
         }
 

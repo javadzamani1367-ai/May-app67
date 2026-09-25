@@ -121,5 +121,9 @@ class SettingsViewModelTest {
         assertThat(s.dateNotification).isFalse()
         vm.setBackgroundPreset(null)
         assertThat(settings.current().background).isNull()
+        vm.setHabitSound("content://media/internal/audio/media/7")
+        vm.setEventSound("")
+        assertThat(settings.current().habitSound).isEqualTo("content://media/internal/audio/media/7")
+        assertThat(settings.current().eventSound).isEqualTo("")
     }
 }

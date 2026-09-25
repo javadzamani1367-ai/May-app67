@@ -20,8 +20,8 @@ import ir.roozban.core.model.ThemePalette
 private val RoozbanShapes = Shapes(
     extraSmall = RoundedCornerShape(8.dp),
     small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(18.dp),
-    large = RoundedCornerShape(26.dp),
+    medium = RoundedCornerShape(20.dp),
+    large = RoundedCornerShape(28.dp),
     extraLarge = RoundedCornerShape(32.dp),
 )
 
@@ -54,7 +54,10 @@ fun RoozbanTheme(
         else -> lightSchemeOf(palette)
     }
     val colors = if (transparentBackground) base.copy(background = Color.Transparent, surface = Color.Transparent) else base
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+    CompositionLocalProvider(
+        LocalLayoutDirection provides LayoutDirection.Rtl,
+        LocalSemanticColors provides if (darkTheme) DarkSemantic else LightSemantic,
+    ) {
         MaterialTheme(
             colorScheme = colors,
             typography = RoozbanTypography,

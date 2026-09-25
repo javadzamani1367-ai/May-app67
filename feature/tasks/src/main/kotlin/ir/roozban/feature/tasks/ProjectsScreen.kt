@@ -1,5 +1,14 @@
 package ir.roozban.feature.tasks
 
+import androidx.compose.ui.text.font.FontWeight
+import ir.roozban.core.designsystem.theme.Roozban
+import ir.roozban.core.designsystem.components.EmptyState
+import ir.roozban.core.designsystem.components.StatusPill
+import ir.roozban.core.designsystem.components.roleOf
+import ir.roozban.core.designsystem.components.IconBadge
+import ir.roozban.core.designsystem.components.AppCard
+import ir.roozban.core.designsystem.components.RoozbanTopBar
+import ir.roozban.core.designsystem.components.RoozbanFab
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,7 +36,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +43,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -70,7 +77,7 @@ internal fun ProjectsScreen(
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(
+            RoozbanTopBar(
                 title = { Text(stringResource(R.string.projects_title)) },
                 actions = {
                     IconButton(onClick = onOpenSettings) {
@@ -80,7 +87,7 @@ internal fun ProjectsScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            RoozbanFab(
                 onClick = { creating = true },
                 icon = { Icon(painterResource(DsR.drawable.ic_add), null) },
                 text = { Text(stringResource(R.string.projects_new)) },
@@ -115,16 +122,7 @@ internal fun ProjectsScreen(
             }
             if (!state.loading && state.active.isEmpty() && state.archived.isEmpty()) {
                 item(key = "empty") {
-                    Column(Modifier.fillMaxWidth().padding(top = 48.dp, start = 16.dp, end = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(stringResource(R.string.projects_empty_title), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            stringResource(R.string.projects_empty_body),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                    EmptyState(DsR.drawable.ic_folder, stringResource(R.string.projects_empty_title), stringResource(R.string.projects_empty_body), Roozban.colors.warning)
                 }
             }
         }
@@ -159,20 +157,17 @@ private fun ProjectRow(
     onDelete: (Project) -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
-    Card(
+    val color = TagColors.color(item.project.color)
+    AppCard(
         onClick = { onOpen(item.project.id) },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        accent = color,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Row(Modifier.padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(painterResource(DsR.drawable.ic_folder), null, tint = TagColors.color(item.project.color), modifier = Modifier.size(22.dp))
+        Row(Modifier.padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            IconBadge(DsR.drawable.ic_folder, roleOf(color), size = 40.dp)
             Spacer(Modifier.width(12.dp))
-            Text(item.project.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            Text(
-                stringResource(R.string.projects_open_count, item.openCount),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text(item.project.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            StatusPill(stringResource(R.string.projects_open_count, item.openCount), roleOf(color))
             Box {
                 IconButton(onClick = { menu = true }) {
                     Icon(painterResource(DsR.drawable.ic_more_vert), stringResource(R.string.projects_more))

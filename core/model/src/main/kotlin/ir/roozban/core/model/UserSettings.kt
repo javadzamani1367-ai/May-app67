@@ -37,6 +37,10 @@ data class UserSettings(
     val dateNotification: Boolean = true,
     /** City for prayer times (see `IranCities`); null = not shown. */
     val prayerCity: String? = null,
+    /** Notification sound for habit reminders: null = system default, "" = silent, else a sound URI. */
+    val habitSound: String? = null,
+    /** Notification sound for personal occasions (same encoding as [habitSound]). */
+    val eventSound: String? = null,
 ) {
     companion object {
         const val BACKGROUND_IMAGE = "image"

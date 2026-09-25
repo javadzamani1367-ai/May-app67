@@ -2,6 +2,8 @@
 <resources>
     <color name="event_accent">#C2185B</color>
     <color name="brand_accent">#5B3CC4</color>
-    <color name="date_accent">#5B3CC4</color>
+    <color name="date_accent">#4A5BD4</color>
     <color name="date_holiday">#D32F2F</color>
+    <color name="date_occasion">#4A5BD4</color>
+    <color name="date_occasion_holiday">#D32F2F</color>
 </resources>

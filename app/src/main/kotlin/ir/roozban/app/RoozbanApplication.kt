@@ -51,6 +51,12 @@ class RoozbanApplication : Application() {
             }
         }
         appScope.launch {
+            // Habit and occasion channels follow the sounds chosen in settings.
+            settings.settings.map { it.habitSound to it.eventSound }.distinctUntilChanged().collect { (habit, event) ->
+                notifier.applySounds(habit, event)
+            }
+        }
+        appScope.launch {
             // The date notification follows its switch and the Hijri offset.
             settings.settings.map { it.dateNotification to it.hijriOffset }.distinctUntilChanged().drop(1).collect {
                 dateNotifier.refresh()

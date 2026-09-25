@@ -47,6 +47,7 @@ import ir.roozban.core.calendar.PersianDateFormatter
 import ir.roozban.core.calendar.PersianDigits
 import ir.roozban.core.calendar.PersianNames
 import ir.roozban.core.calendar.PersianWeek
+import ir.roozban.core.designsystem.theme.Roozban
 import ir.roozban.core.designsystem.theme.TagColors
 import ir.roozban.core.domain.HabitDayStatus
 import ir.roozban.core.domain.HabitUseCases
@@ -61,8 +62,8 @@ internal fun DayDot(cell: HabitDayCell, target: Int, color: Color, size: Dp, lab
     val scheme = MaterialTheme.colorScheme
     val (fill, textColor, border) = when (cell.status) {
         HabitDayStatus.DONE -> Triple(color, scheme.surface, null)
-        HabitDayStatus.FROZEN -> Triple(scheme.tertiaryContainer, scheme.onTertiaryContainer, null)
-        HabitDayStatus.MISSED -> Triple(scheme.errorContainer.copy(alpha = 0.5f), scheme.onErrorContainer, null)
+        HabitDayStatus.FROZEN -> Triple(Roozban.colors.info.container, Roozban.colors.info.onContainer, null)
+        HabitDayStatus.MISSED -> Triple(Roozban.colors.error.container, Roozban.colors.error.onContainer, null)
         HabitDayStatus.PARTIAL -> Triple(Color.Transparent, scheme.onSurface, color)
         HabitDayStatus.PENDING -> Triple(if (cell.count > 0) color.copy(alpha = 0.35f) else Color.Transparent, scheme.onSurface, color)
         HabitDayStatus.OFF -> Triple(if (cell.count > 0) color else Color.Transparent, if (cell.count > 0) scheme.surface else scheme.onSurfaceVariant, null)
@@ -70,7 +71,7 @@ internal fun DayDot(cell: HabitDayCell, target: Int, color: Color, size: Dp, lab
     }
     var m = Modifier.size(size).clip(CircleShape).background(fill)
     if (border != null) m = m.border(2.dp, border, CircleShape)
-    if (cell.isToday && border == null) m = m.border(2.dp, scheme.primary, CircleShape)
+    if (cell.isToday && border == null && cell.status != HabitDayStatus.DONE) m = m.border(2.dp, scheme.primary, CircleShape)
     if (onClick != null && !cell.isFuture) m = m.clickable(onClick = onClick)
     Box(m, contentAlignment = Alignment.Center) {
         val text = when {

@@ -1,5 +1,8 @@
 package ir.roozban.feature.reports
 
+import androidx.compose.ui.text.font.FontWeight
+import ir.roozban.core.designsystem.theme.Roozban
+import ir.roozban.core.designsystem.components.RoozbanTopBar
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,7 +30,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -72,7 +74,7 @@ internal fun ReviewScreen(onBack: () -> Unit, viewModel: ReviewViewModel = hiltV
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(
+            RoozbanTopBar(
                 title = { Text(stringResource(if (state.kind == ReviewKind.DAILY) R.string.review_daily_title else R.string.review_weekly_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(painterResource(DsR.drawable.ic_arrow_back), stringResource(R.string.reports_back)) }
@@ -107,11 +109,17 @@ private class TaskActions(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DailyBody(review: DailyReview, today: LocalDate, actions: TaskActions, viewModel: ReviewViewModel) {
-    Section(stringResource(R.string.review_done_today) + " · " + stringResource(R.string.review_done_count, PersianDigits.format(review.completed.size))) {
+    Section(stringResource(R.string.review_done_today) + " · " + stringResource(R.string.review_done_count, PersianDigits.format(review.completed.size)), DsR.drawable.ic_check, Roozban.colors.success.color) {
         if (review.completed.isEmpty()) {
             Muted(stringResource(R.string.review_nothing_done))
         } else {
-            review.completed.forEach { Text("✓ " + it.title, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(vertical = 2.dp)) }
+            review.completed.forEach {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 3.dp)) {
+                    Icon(painterResource(DsR.drawable.ic_check), null, tint = Roozban.colors.completed.color, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(it.title, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
         }
         if (review.focusMinutes > 0) {
             Spacer(Modifier.height(8.dp))
@@ -120,7 +128,7 @@ private fun DailyBody(review: DailyReview, today: LocalDate, actions: TaskAction
     }
     LeftoverSection(stringResource(R.string.review_leftover), review.leftover, today, actions, viewModel)
     if (review.habits.isNotEmpty()) {
-        Section(stringResource(R.string.review_habits)) {
+        Section(stringResource(R.string.review_habits), DsR.drawable.ic_fire, Roozban.colors.streak.color) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 review.habits.forEach { h ->
                     FilterChip(
@@ -139,7 +147,7 @@ private fun DailyBody(review: DailyReview, today: LocalDate, actions: TaskAction
             }
         }
     }
-    Section(stringResource(R.string.review_tomorrow_plan)) {
+    Section(stringResource(R.string.review_tomorrow_plan), DsR.drawable.ic_upcoming, Roozban.colors.info.color) {
         if (review.tomorrow.isEmpty()) {
             Muted(stringResource(R.string.review_tomorrow_empty))
         } else {
@@ -161,15 +169,15 @@ private fun WeeklyBody(review: WeeklyReview, today: LocalDate, actions: TaskActi
     Text(formatPeriod(r.period, wholeMonth = false), style = MaterialTheme.typography.titleMedium)
     Spacer(Modifier.height(8.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        StatCard(stringResource(R.string.reports_completed), PersianDigits.format(r.completed), formatChange(r.completed, p.completed), Modifier.weight(1f))
-        StatCard(stringResource(R.string.reports_tracked), formatMinutes(r.trackedMinutes), formatChange(r.trackedMinutes, p.trackedMinutes), Modifier.weight(1f))
+        StatCard(stringResource(R.string.reports_completed), PersianDigits.format(r.completed), formatChange(r.completed, p.completed), Modifier.weight(1f), role = Roozban.colors.success, icon = DsR.drawable.ic_check)
+        StatCard(stringResource(R.string.reports_tracked), formatMinutes(r.trackedMinutes), formatChange(r.trackedMinutes, p.trackedMinutes), Modifier.weight(1f), role = Roozban.colors.info, icon = DsR.drawable.ic_schedule)
     }
-    Section(stringResource(R.string.reports_completed_per_day)) {
+    Section(stringResource(R.string.reports_completed_per_day), DsR.drawable.ic_check, Roozban.colors.success.color) {
         BarChart(r.days.map { it.completed }, r.days.map { PersianNames.WEEKDAYS_SHORT[PersianWeek.indexOf(it.date.dayOfWeek)] },
-            MaterialTheme.colorScheme.primary, height = 100.dp, highlight = r.days.indexOfFirst { it.date == today }.takeIf { it >= 0 })
+            Roozban.colors.success.color, height = 100.dp, highlight = r.days.indexOfFirst { it.date == today }.takeIf { it >= 0 })
     }
     if (review.habits.isNotEmpty()) {
-        Section(stringResource(R.string.reports_habits)) {
+        Section(stringResource(R.string.reports_habits), DsR.drawable.ic_fire, Roozban.colors.streak.color) {
             review.habits.forEach { hw ->
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
                     Text(hw.habit.name, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(120.dp))
@@ -184,15 +192,15 @@ private fun WeeklyBody(review: WeeklyReview, today: LocalDate, actions: TaskActi
         }
     }
     LeftoverSection(stringResource(R.string.review_overdue), review.overdue, today, actions, viewModel)
-    Section(stringResource(R.string.review_next_week)) {
+    Section(stringResource(R.string.review_next_week), DsR.drawable.ic_upcoming, Roozban.colors.info.color) {
         BarChart(review.nextWeek.map { it.second }, review.nextWeek.map { PersianNames.WEEKDAYS_SHORT[PersianWeek.indexOf(it.first.dayOfWeek)] },
-            MaterialTheme.colorScheme.secondary, height = 80.dp)
+            Roozban.colors.info.color, height = 80.dp)
     }
 }
 
 @Composable
 private fun LeftoverSection(title: String, tasks: List<Task>, today: LocalDate, actions: TaskActions, viewModel: ReviewViewModel) {
-    Section(title) {
+    Section(title, DsR.drawable.ic_warning, if (tasks.isEmpty()) Roozban.colors.success.color else Roozban.colors.error.color) {
         if (tasks.isEmpty()) {
             Muted(stringResource(R.string.review_leftover_empty))
             return@Section
@@ -212,7 +220,7 @@ private fun LeftoverRow(task: Task, today: LocalDate, actions: TaskActions) {
             Text(task.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
             task.due?.let { Muted(PersianDateFormatter.relativeDay(it.date, today)) }
         }
-        TextButton(onClick = { actions.onTomorrow(task) }) { Text(stringResource(R.string.review_tomorrow)) }
+        TextButton(onClick = { actions.onTomorrow(task) }) { Text(stringResource(R.string.review_tomorrow), color = Roozban.colors.info.color, fontWeight = FontWeight.Bold) }
         Box {
             IconButton(onClick = { menu = true }) { Icon(painterResource(DsR.drawable.ic_more_vert), stringResource(R.string.review_more)) }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
@@ -231,7 +239,7 @@ private fun LeftoverRow(task: Task, today: LocalDate, actions: TaskActions) {
 @Composable
 private fun ReminderSection(kind: ReviewKind, settings: UserSettings, viewModel: ReviewViewModel) {
     var pickingTime by remember { mutableStateOf(false) }
-    Section(stringResource(R.string.review_reminder)) {
+    Section(stringResource(R.string.review_reminder), DsR.drawable.ic_notifications, MaterialTheme.colorScheme.primary) {
         val time = if (kind == ReviewKind.DAILY) settings.dailyReviewTime else settings.weeklyReviewTime
         if (kind == ReviewKind.WEEKLY) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

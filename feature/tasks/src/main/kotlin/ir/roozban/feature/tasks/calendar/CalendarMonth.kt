@@ -1,5 +1,8 @@
 package ir.roozban.feature.tasks.calendar
 
+import ir.roozban.core.designsystem.theme.Roozban
+import ir.roozban.core.designsystem.components.IconBadge
+import ir.roozban.core.designsystem.components.AppCard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -56,7 +59,6 @@ import ir.roozban.core.calendar.toJalali
 import ir.roozban.core.designsystem.R as DsR
 import ir.roozban.core.designsystem.icons.eventIcon
 import ir.roozban.core.designsystem.icons.eventKindName
-import ir.roozban.core.designsystem.theme.CalendarColors
 import ir.roozban.core.designsystem.theme.TagColors
 import ir.roozban.core.domain.EventOccurrence
 import ir.roozban.core.model.EventKind
@@ -67,10 +69,8 @@ import java.time.LocalDate
 
 /** Holiday red; the light variant on dark themes (detected from the text color, since backgrounds may be see-through). */
 @Composable
-internal fun holidayColor(): Color =
-    if (MaterialTheme.colorScheme.onSurface.isLight()) CalendarColors.holidayDark else CalendarColors.holidayLight
+internal fun holidayColor(): Color = Roozban.colors.holiday
 
-private fun Color.isLight(): Boolean = (0.299f * red + 0.587f * green + 0.114f * blue) > 0.5f
 
 /** Month grid with swipe navigation, and below it the selected day, the month's occasions and the user's own. */
 @Composable
@@ -87,7 +87,13 @@ internal fun MonthView(
     val swipe by rememberUpdatedState(onSwipe)
     Column(Modifier.fillMaxSize()) {
         Column(
-            Modifier.pointerInput(Unit) {
+            Modifier
+                .padding(horizontal = 10.dp)
+                .clip(MaterialTheme.shapes.large)
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f), MaterialTheme.shapes.large)
+                .padding(vertical = 8.dp)
+                .pointerInput(Unit) {
                 var total = 0f
                 detectHorizontalDragGestures(
                     onDragStart = { total = 0f },
@@ -99,19 +105,20 @@ internal fun MonthView(
                 )
             },
         ) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp)) {
                 PersianNames.WEEKDAYS_SHORT.forEachIndexed { i, label ->
                     Text(
                         label,
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (i == 6) holidayColor() else MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = if (i == 6) holidayColor() else MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
                     )
                 }
             }
             state.days.chunked(7).forEach { week ->
-                Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
                     week.forEach { day ->
                         MonthCell(day, day.date == state.selected, Modifier.weight(1f)) {
                             if (day.date == state.selected) onOpenDay(day.date) else onSelect(day.date)
@@ -121,9 +128,21 @@ internal fun MonthView(
             }
         }
         val tabs = listOf(R.string.calendar_tab_day, R.string.calendar_tab_occasions, R.string.calendar_tab_mine)
-        PrimaryTabRow(selectedTabIndex = tab, containerColor = Color.Transparent) {
+        PrimaryTabRow(
+            selectedTabIndex = tab,
+            containerColor = Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.primary,
+            divider = {},
+            modifier = Modifier.padding(top = 4.dp),
+        ) {
             tabs.forEachIndexed { i, label ->
-                Tab(selected = tab == i, onClick = { tab = i }, text = { Text(stringResource(label), maxLines = 1) })
+                Tab(
+                    selected = tab == i,
+                    onClick = { tab = i },
+                    selectedContentColor = MaterialTheme.colorScheme.primary,
+                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = { Text(stringResource(label), maxLines = 1, fontWeight = if (tab == i) FontWeight.Bold else FontWeight.Normal) },
+                )
             }
         }
         when (tab) {
@@ -134,45 +153,64 @@ internal fun MonthView(
     }
 }
 
+/**
+ * One day. Hierarchy: today is a filled accent circle, the selected day a soft accent tile,
+ * holidays red, then small markers: personal event (its own color and icon), official occasion
+ * (blue dot), tasks (priority-colored dots).
+ */
 @Composable
 private fun MonthCell(day: CalendarDay, isSelected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     val holiday = holidayColor()
-    val shape = RoundedCornerShape(12.dp)
+    val shape = RoundedCornerShape(14.dp)
+    val alpha = if (day.inMonth) 1f else 0.3f
     Column(
         modifier = modifier
-            .aspectRatio(0.86f)
+            .aspectRatio(0.84f)
             .padding(2.dp)
             .clip(shape)
             .background(
                 when {
                     isSelected -> colors.primaryContainer
-                    day.isHoliday && day.inMonth -> holiday.copy(alpha = 0.07f)
+                    day.isHoliday && day.inMonth -> holiday.copy(alpha = 0.08f)
                     else -> Color.Transparent
                 },
             )
-            .then(if (day.isToday) Modifier.border(2.dp, colors.primary, shape) else Modifier)
+            .then(if (isSelected) Modifier.border(1.5.dp, colors.primary.copy(alpha = 0.6f), shape) else Modifier)
             .clickable(onClick = onClick)
-            .padding(top = 3.dp, bottom = 3.dp),
+            .padding(top = 4.dp, bottom = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val alpha = if (day.inMonth) 1f else 0.3f
-        Text(
-            day.jalaliDay,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = if (day.isToday) FontWeight.Bold else FontWeight.Medium,
-            color = (if (day.isHoliday) holiday else colors.onSurface).copy(alpha = alpha),
-        )
+        Box(
+            Modifier.size(30.dp).clip(CircleShape).background(if (day.isToday) colors.primary else Color.Transparent),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                day.jalaliDay,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = if (day.isToday || isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = when {
+                    day.isToday -> colors.onPrimary
+                    day.isHoliday -> holiday.copy(alpha = alpha)
+                    else -> colors.onSurface.copy(alpha = alpha)
+                },
+            )
+        }
         val secondary = listOfNotNull(day.gregorianDay, day.hijriDay).joinToString("  ")
         if (secondary.isNotEmpty()) {
-            Text(secondary, fontSize = 9.sp, color = colors.onSurfaceVariant.copy(alpha = alpha), maxLines = 1)
+            Text(secondary, fontSize = 9.sp, color = colors.onSurfaceVariant.copy(alpha = alpha * 0.9f), maxLines = 1)
         }
         Spacer(Modifier.weight(1f))
         Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
             day.events.firstOrNull()?.let {
-                Icon(painterResource(eventIcon(it.event.kind)), null, tint = TagColors.color(it.event.color).copy(alpha = alpha), modifier = Modifier.size(11.dp))
+                Box(
+                    Modifier.size(14.dp).clip(CircleShape).background(TagColors.color(it.event.color).copy(alpha = alpha)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(painterResource(eventIcon(it.event.kind)), null, tint = Color.White, modifier = Modifier.size(9.dp))
+                }
             }
-            if (day.occasions.isNotEmpty()) Box(Modifier.size(5.dp).clip(CircleShape).background(colors.tertiary.copy(alpha = alpha)))
+            if (day.occasions.isNotEmpty()) Box(Modifier.size(5.dp).clip(CircleShape).background(Roozban.colors.info.color.copy(alpha = alpha)))
             val tasks = day.allDay + day.timed
             tasks.take(2).forEach { Box(Modifier.size(5.dp).clip(CircleShape).background(quadrantColor(it.quadrant).copy(alpha = alpha))) }
             if (tasks.size > 2) Text("+", fontSize = 9.sp, color = colors.onSurfaceVariant)
@@ -213,9 +251,9 @@ private fun DayTab(state: CalendarUiState, onOpenTask: (String) -> Unit, onOpenE
         items(day.occasions, key = { "o${it.title}" }) { OccasionLine(it.title, holiday = false) }
         items(day.events, key = { "e${it.event.id}" }) { EventRow(it, state.today, onOpenEvent) }
         items(day.allDay + day.timed.sortedBy { it.start }, key = { "t${it.id}" }) { task ->
-            Card(
+            AppCard(
                 onClick = { onOpenTask(task.id) },
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                accent = quadrantColor(task.quadrant),
                 modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
             ) {
                 Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -233,7 +271,7 @@ private fun DayTab(state: CalendarUiState, onOpenTask: (String) -> Unit, onOpenE
 @Composable
 private fun OccasionLine(title: String, holiday: Boolean) {
     Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(8.dp).clip(CircleShape).background(if (holiday) holidayColor() else MaterialTheme.colorScheme.tertiary))
+        Box(Modifier.size(8.dp).clip(CircleShape).background(if (holiday) holidayColor() else Roozban.colors.info.color))
         Spacer(Modifier.width(8.dp))
         Text(
             title,
@@ -247,14 +285,11 @@ private fun OccasionLine(title: String, holiday: Boolean) {
 @Composable
 private fun PrayerCard(state: CalendarUiState, onPickCity: () -> Unit) {
     val prayer = state.prayer
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-    ) {
+    AppCard(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(DsR.drawable.ic_mosque), null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(8.dp))
+                IconBadge(DsR.drawable.ic_mosque, Roozban.colors.completed, size = 34.dp)
+                Spacer(Modifier.width(10.dp))
                 Text(stringResource(R.string.calendar_prayer_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                 TextButton(onClick = onPickCity) {
                     Text(state.city?.name ?: stringResource(R.string.calendar_pick_city))
@@ -274,7 +309,7 @@ private fun PrayerCard(state: CalendarUiState, onPickCity: () -> Unit) {
                         row.forEach { (label, time) ->
                             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(stringResource(label), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(PersianDateFormatter.time(time), style = MaterialTheme.typography.titleMedium)
+                                Text(PersianDateFormatter.time(time), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Roozban.colors.completed.color)
                             }
                         }
                     }
@@ -338,9 +373,9 @@ private fun MineTab(state: CalendarUiState, onOpenEvent: (PersonalEvent) -> Unit
 @Composable
 private fun EventRow(occ: EventOccurrence, today: LocalDate, onOpen: (PersonalEvent) -> Unit) {
     val color = TagColors.color(occ.event.color)
-    Card(
+    AppCard(
         onClick = { onOpen(occ.event) },
-        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.12f)),
+        accent = color,
         modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {

@@ -26,4 +26,11 @@
     <string name="more_daily_review">مرور امروز</string>
     <string name="more_weekly_review">مرور هفته</string>
     <string name="more_settings">تنظیمات</string>
+    <string name="more_group_work">کار و برنامه</string>
+    <string name="more_group_insight">مرور و گزارش</string>
+    <string name="more_group_app">برنامه</string>
+    <string name="more_projects_desc">کارها را دسته‌بندی کنید</string>
+    <string name="more_daily_review_desc">دو دقیقه برای جمع‌بندی امروز</string>
+    <string name="more_weekly_review_desc">هفته‌ای که گذشت و هفته‌ی پیش رو</string>
+    <string name="more_settings_desc">ظاهر، یادآوری‌ها، صدای اعلان‌ها و پشتیبان‌گیری</string>
 </resources>

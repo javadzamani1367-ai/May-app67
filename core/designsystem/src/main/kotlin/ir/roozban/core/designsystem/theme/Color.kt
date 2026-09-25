@@ -22,7 +22,7 @@ private data class Accent(
 )
 
 private fun accentOf(palette: ThemePalette): Accent = when (palette) {
-    ThemePalette.INDIGO -> Accent(Color(0xFF4355B9), Color(0xFFDEE0FF), Color(0xFF00105C), Color(0xFFBAC3FF), Color(0xFF08218A), Color(0xFF293CA0), Color(0xFFDEE0FF))
+    ThemePalette.INDIGO -> Accent(Color(0xFF4A5BD4), Color(0xFFE2E5FF), Color(0xFF0E1A66), Color(0xFFB8C2FF), Color(0xFF15237A), Color(0xFF3141A8), Color(0xFFE2E5FF))
     ThemePalette.OCEAN -> Accent(Color(0xFF00639B), Color(0xFFCEE5FF), Color(0xFF001D33), Color(0xFF96CCFF), Color(0xFF003353), Color(0xFF004A76), Color(0xFFCEE5FF))
     ThemePalette.VIOLET -> Accent(Color(0xFF6750A4), Color(0xFFEADDFF), Color(0xFF21005D), Color(0xFFD0BCFF), Color(0xFF381E72), Color(0xFF4F378B), Color(0xFFEADDFF))
     ThemePalette.ROSE -> Accent(Color(0xFFA23F6A), Color(0xFFFFD9E3), Color(0xFF3E0021), Color(0xFFFFB0CA), Color(0xFF5F1138), Color(0xFF832755), Color(0xFFFFD9E3))
@@ -44,36 +44,37 @@ fun lightSchemeOf(palette: ThemePalette): ColorScheme {
         primaryContainer = a.lightContainer,
         onPrimaryContainer = a.lightOnContainer,
         inversePrimary = a.dark,
-        secondary = Color(0xFF5B5D72),
+        secondary = Color(0xFF0E8A86),
         onSecondary = Color.White,
         secondaryContainer = a.lightContainer.copy(alpha = 0.6f).compositeOverWhite(),
         onSecondaryContainer = a.lightOnContainer,
-        tertiary = Color(0xFF9A4521),
+        tertiary = Color(0xFFB9650B),
         onTertiary = Color.White,
-        tertiaryContainer = Color(0xFFFFDBCC),
-        onTertiaryContainer = Color(0xFF360F00),
-        error = Color(0xFFBA1A1A),
+        tertiaryContainer = Color(0xFFFFE6C7),
+        onTertiaryContainer = Color(0xFF3F2200),
+        error = Color(0xFFD13B3B),
         onError = Color.White,
         errorContainer = Color(0xFFFFDAD6),
         onErrorContainer = Color(0xFF410002),
-        background = Color.White,
-        onBackground = Color(0xFF16171B),
-        surface = Color.White,
-        onSurface = Color(0xFF16171B),
-        surfaceVariant = Color(0xFFE4E3EB),
-        onSurfaceVariant = Color(0xFF45464F),
-        outline = Color(0xFF767680),
-        outlineVariant = Color(0xFFC8C7D0),
-        inverseSurface = Color(0xFF2F3036),
-        inverseOnSurface = Color(0xFFF2F0F4),
+        // A barely tinted canvas with white cards on it: depth without heaviness.
+        background = mix(Color(0xFFF4F6FB), a.light, 0.035f),
+        onBackground = Color(0xFF161A26),
+        surface = mix(Color(0xFFF4F6FB), a.light, 0.035f),
+        onSurface = Color(0xFF161A26),
+        surfaceVariant = mix(Color(0xFFE6E9F2), a.light, 0.06f),
+        onSurfaceVariant = Color(0xFF545A6B),
+        outline = Color(0xFF7A8193),
+        outlineVariant = mix(Color(0xFFD9DDE8), a.light, 0.08f),
+        inverseSurface = Color(0xFF2B2F3B),
+        inverseOnSurface = Color(0xFFF1F2F7),
         surfaceTint = a.light,
-        surfaceDim = Color(0xFFDCDBE0),
+        surfaceDim = Color(0xFFD9DCE6),
         surfaceBright = Color.White,
         surfaceContainerLowest = Color.White,
-        surfaceContainerLow = Color(0xFFF8F8FB),
-        surfaceContainer = Color(0xFFF3F3F7),
-        surfaceContainerHigh = Color(0xFFEDEDF1),
-        surfaceContainerHighest = Color(0xFFE7E7EC),
+        surfaceContainerLow = Color(0xFFFCFCFE),
+        surfaceContainer = Color.White,
+        surfaceContainerHigh = mix(Color(0xFFF1F3F9), a.light, 0.04f),
+        surfaceContainerHighest = mix(Color(0xFFE8EBF3), a.light, 0.06f),
     )
 }
 
@@ -85,38 +86,46 @@ fun darkSchemeOf(palette: ThemePalette): ColorScheme {
         primaryContainer = a.darkContainer,
         onPrimaryContainer = a.darkOnContainer,
         inversePrimary = a.light,
-        secondary = Color(0xFFC4C5DD),
-        onSecondary = Color(0xFF2D2F42),
-        secondaryContainer = Color(0xFF3A3C50),
-        onSecondaryContainer = Color(0xFFE0E1F9),
-        tertiary = Color(0xFFFFB595),
-        onTertiary = Color(0xFF571E00),
-        tertiaryContainer = Color(0xFF7B2E0B),
-        onTertiaryContainer = Color(0xFFFFDBCC),
+        secondary = Color(0xFF6ED7D0),
+        onSecondary = Color(0xFF003734),
+        secondaryContainer = a.darkContainer,
+        onSecondaryContainer = a.darkOnContainer,
+        tertiary = Color(0xFFFFBE73),
+        onTertiary = Color(0xFF462600),
+        tertiaryContainer = Color(0xFF5E3A06),
+        onTertiaryContainer = Color(0xFFFFE6C7),
         error = Color(0xFFFFB4AB),
         onError = Color(0xFF690005),
         errorContainer = Color(0xFF93000A),
         onErrorContainer = Color(0xFFFFDAD6),
-        background = Color(0xFF121316),
-        onBackground = Color(0xFFE4E2E6),
-        surface = Color(0xFF121316),
-        onSurface = Color(0xFFE4E2E6),
-        surfaceVariant = Color(0xFF46464F),
-        onSurfaceVariant = Color(0xFFC7C5D0),
-        outline = Color(0xFF90909A),
-        outlineVariant = Color(0xFF46464F),
-        inverseSurface = Color(0xFFE4E2E6),
-        inverseOnSurface = Color(0xFF2F3036),
+        // Deep blue-grey rather than black; raised surfaces get lighter, accents stay pastel.
+        background = mix(Color(0xFF0F121A), a.dark, 0.03f),
+        onBackground = Color(0xFFE6E8F0),
+        surface = mix(Color(0xFF0F121A), a.dark, 0.03f),
+        onSurface = Color(0xFFE6E8F0),
+        surfaceVariant = Color(0xFF2E3342),
+        onSurfaceVariant = Color(0xFFB3B9CA),
+        outline = Color(0xFF8A90A2),
+        outlineVariant = Color(0xFF363B4B),
+        inverseSurface = Color(0xFFE6E8F0),
+        inverseOnSurface = Color(0xFF2B2F3B),
         surfaceTint = a.dark,
-        surfaceDim = Color(0xFF121316),
-        surfaceBright = Color(0xFF38393C),
-        surfaceContainerLowest = Color(0xFF0D0E11),
-        surfaceContainerLow = Color(0xFF1A1B1F),
-        surfaceContainer = Color(0xFF1F1F23),
-        surfaceContainerHigh = Color(0xFF292A2D),
-        surfaceContainerHighest = Color(0xFF343438),
+        surfaceDim = Color(0xFF0F121A),
+        surfaceBright = Color(0xFF363B4B),
+        surfaceContainerLowest = Color(0xFF0B0D13),
+        surfaceContainerLow = mix(Color(0xFF151923), a.dark, 0.03f),
+        surfaceContainer = mix(Color(0xFF1A1F2B), a.dark, 0.04f),
+        surfaceContainerHigh = mix(Color(0xFF232838), a.dark, 0.05f),
+        surfaceContainerHighest = mix(Color(0xFF2C3244), a.dark, 0.06f),
     )
 }
+
+/** Blends [accent] into [base] by [amount] (0..1). */
+internal fun mix(base: Color, accent: Color, amount: Float): Color = Color(
+    red = base.red + (accent.red - base.red) * amount,
+    green = base.green + (accent.green - base.green) * amount,
+    blue = base.blue + (accent.blue - base.blue) * amount,
+)
 
 private fun Color.compositeOverWhite(): Color = Color(
     red = red * alpha + (1 - alpha),
@@ -126,6 +135,6 @@ private fun Color.compositeOverWhite(): Color = Color(
 
 /** Holiday red, the same in every palette so holidays always read as holidays. */
 object CalendarColors {
-    val holidayLight = Color(0xFFD32F2F)
-    val holidayDark = Color(0xFFFF8A80)
+    val holidayLight = LightSemantic.holiday
+    val holidayDark = DarkSemantic.holiday
 }

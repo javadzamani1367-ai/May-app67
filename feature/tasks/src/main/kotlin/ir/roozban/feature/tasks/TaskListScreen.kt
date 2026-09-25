@@ -1,5 +1,13 @@
 package ir.roozban.feature.tasks
 
+import ir.roozban.core.calendar.PersianDigits
+import ir.roozban.core.designsystem.components.AppCard
+import ir.roozban.core.designsystem.theme.priorityColor
+import ir.roozban.core.designsystem.theme.Roozban
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Brush
+import ir.roozban.core.designsystem.components.RoozbanTopBar
+import ir.roozban.core.designsystem.components.RoozbanFab
 import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -29,7 +37,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +47,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -155,7 +161,7 @@ internal fun TaskListScreen(
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(
+            RoozbanTopBar(
                 title = {
                     Text(
                         when (mode) {
@@ -182,7 +188,7 @@ internal fun TaskListScreen(
         },
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            RoozbanFab(
                 onClick = onAdd,
                 icon = { Icon(painterResource(DsR.drawable.ic_add), contentDescription = null) },
                 text = { Text(stringResource(R.string.tasks_add)) },
@@ -200,20 +206,23 @@ internal fun TaskListScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             state.header?.let { header ->
-                item(key = "header") { DateHeader(header) }
-                item(key = "week") { WeekStrip(header.week) }
+                item(key = "header") {
+                    val today = state.sections.firstOrNull { it.kind == SectionKind.TODAY }?.tasks?.size ?: 0
+                    val overdue = state.sections.firstOrNull { it.kind == SectionKind.OVERDUE }?.tasks?.size ?: 0
+                    DateHero(header, today, overdue, state.completed.size)
+                }
                 item(key = "permissions") { ReminderPermissionBanner() }
             }
             state.sections.forEach { section ->
                 section.title?.let { title ->
-                    item(key = "section-${section.kind}-$title") { SectionTitle(title, section.kind == SectionKind.OVERDUE) }
+                    item(key = "section-${section.kind}-$title") { SectionTitle(title, section.kind, section.tasks.size) }
                 }
                 items(section.tasks, key = { it.id }) { task ->
                     TaskRow(task, onToggle = { onToggle(task.id) }, onClick = { onOpen(task.id) }, modifier = Modifier.animateItem())
                 }
             }
             if (state.completed.isNotEmpty()) {
-                item(key = "completed-title") { SectionTitle(stringResource(R.string.tasks_completed_today), false) }
+                item(key = "completed-title") { SectionTitle(stringResource(R.string.tasks_completed_today), null, state.completed.size, done = true) }
                 items(state.completed, key = { "done-" + it.id }) { task ->
                     TaskRow(task, onToggle = { onToggle(task.id) }, onClick = { onOpen(task.id) }, modifier = Modifier.animateItem())
                 }
@@ -223,59 +232,84 @@ internal fun TaskListScreen(
     }
 }
 
+/**
+ * The day at a glance: a calm gradient card with the Jalali date, the other calendars, the
+ * week strip and three counters (today, overdue, done).
+ */
 @Composable
-private fun DateHeader(header: TodayHeader) {
-    Column(Modifier.padding(horizontal = 4.dp)) {
-        Text(
-            text = header.weekday,
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.semantics { heading() },
-        )
-        Text(text = header.date, style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = header.secondaryDates,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-@Composable
-private fun WeekStrip(week: List<WeekDay>) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+private fun DateHero(header: TodayHeader, today: Int, overdue: Int, done: Int) {
+    val scheme = MaterialTheme.colorScheme
+    val gradient = Brush.linearGradient(listOf(scheme.primary, Roozban.colors.focus.color.copy(alpha = 0.92f)))
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clip(MaterialTheme.shapes.large)
+            .background(gradient)
+            .padding(horizontal = 18.dp, vertical = 16.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 8.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-        ) {
-            week.forEach { day -> WeekDayCell(day) }
+        Row(verticalAlignment = Alignment.Bottom) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = header.weekday,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = scheme.onPrimary,
+                    modifier = Modifier.semantics { heading() },
+                )
+                Text(text = header.date, style = MaterialTheme.typography.titleLarge, color = scheme.onPrimary)
+                Text(
+                    text = header.secondaryDates,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = scheme.onPrimary.copy(alpha = 0.8f),
+                )
+            }
+        }
+        Spacer(Modifier.height(14.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            header.week.forEach { day -> WeekDayCell(day) }
+        }
+        Spacer(Modifier.height(14.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            HeroCounter(stringResource(R.string.hero_today), today, Modifier.weight(1f))
+            HeroCounter(stringResource(R.string.hero_overdue), overdue, Modifier.weight(1f), alert = overdue > 0)
+            HeroCounter(stringResource(R.string.hero_done), done, Modifier.weight(1f))
         }
     }
 }
 
 @Composable
+private fun HeroCounter(label: String, value: Int, modifier: Modifier, alert: Boolean = false) {
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
+    Column(
+        modifier
+            .clip(MaterialTheme.shapes.small)
+            .background(if (alert) Roozban.colors.error.color.copy(alpha = 0.85f) else onPrimary.copy(alpha = 0.16f))
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(PersianDigits.format(value), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = onPrimary)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = onPrimary.copy(alpha = 0.9f))
+    }
+}
+
+@Composable
 private fun WeekDayCell(day: WeekDay) {
-    val background by animateColorAsState(
-        if (day.isToday) MaterialTheme.colorScheme.primary else Color.Transparent,
-        label = "weekDayBackground",
-    )
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
+    val background by animateColorAsState(if (day.isToday) onPrimary else Color.Transparent, label = "weekDayBackground")
     val content = when {
-        day.isToday -> MaterialTheme.colorScheme.onPrimary
-        day.isWeekend -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.onSurface
+        day.isToday -> MaterialTheme.colorScheme.primary
+        day.isWeekend -> Color(0xFFFFD1CC)
+        else -> onPrimary
     }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(day.label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(day.label, style = MaterialTheme.typography.labelMedium, color = onPrimary.copy(alpha = 0.75f))
         Spacer(Modifier.height(6.dp))
         Box(
-            modifier = Modifier.size(36.dp).clip(CircleShape).background(background),
+            modifier = Modifier.size(34.dp).clip(CircleShape).background(background),
             contentAlignment = Alignment.Center,
         ) {
-            Text(day.dayOfMonth, style = MaterialTheme.typography.titleMedium, color = content)
+            Text(day.dayOfMonth, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = content)
         }
     }
 }
@@ -318,58 +352,71 @@ private fun ReminderPermissionBanner() {
 
 @Composable
 private fun Banner(title: String, body: String, action: String, onAction: () -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    val role = Roozban.colors.warning
+    AppCard(container = role.container, accent = role.color, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painterResource(DsR.drawable.ic_warning),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onErrorContainer,
-                    modifier = Modifier.size(20.dp),
-                )
+                Icon(painterResource(DsR.drawable.ic_warning), contentDescription = null, tint = role.color, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onErrorContainer)
+                Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = role.onContainer)
             }
             Spacer(Modifier.height(4.dp))
-            Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer)
-            TextButton(onClick = onAction, modifier = Modifier.align(Alignment.End)) { Text(action) }
+            Text(body, style = MaterialTheme.typography.bodyMedium, color = role.onContainer)
+            TextButton(onClick = onAction, modifier = Modifier.align(Alignment.End)) { Text(action, color = role.color, fontWeight = FontWeight.Bold) }
         }
     }
 }
 
 @Composable
-private fun SectionTitle(title: String, isOverdue: Boolean) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleSmall,
-        color = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 12.dp, start = 4.dp).semantics { heading() },
-    )
+private fun SectionTitle(title: String, kind: SectionKind?, count: Int, done: Boolean = false) {
+    val color = when {
+        done -> Roozban.colors.completed.color
+        kind == SectionKind.OVERDUE -> Roozban.colors.error.color
+        kind == SectionKind.TODAY -> MaterialTheme.colorScheme.primary
+        kind == SectionKind.NO_DATE -> Roozban.colors.info.color
+        else -> MaterialTheme.colorScheme.secondary
+    }
+    Row(
+        Modifier.padding(top = 14.dp, start = 4.dp, bottom = 2.dp).semantics { heading() },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(width = 4.dp, height = 16.dp).clip(CircleShape).background(color))
+        Spacer(Modifier.width(8.dp))
+        Text(text = title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = color)
+        Spacer(Modifier.width(8.dp))
+        Text(
+            PersianDigits.format(count),
+            style = MaterialTheme.typography.labelSmall,
+            color = color,
+            modifier = Modifier.clip(CircleShape).background(color.copy(alpha = 0.12f)).padding(horizontal = 8.dp, vertical = 1.dp),
+        )
+    }
 }
 
 @Composable
-internal fun quadrantColor(quadrant: Quadrant): Color = when (quadrant) {
-    Quadrant.DO_FIRST -> MaterialTheme.colorScheme.error
-    Quadrant.SCHEDULE -> MaterialTheme.colorScheme.primary
-    Quadrant.DELEGATE -> MaterialTheme.colorScheme.tertiary
-    Quadrant.ELIMINATE, Quadrant.NONE -> MaterialTheme.colorScheme.outline
-}
+internal fun quadrantColor(quadrant: Quadrant): Color = priorityColor(quadrant, MaterialTheme.colorScheme.outline)
 
 @Composable
 private fun TaskRow(task: TaskItem, onToggle: () -> Unit, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Card(
+    val priority = quadrantColor(task.quadrant)
+    // State at a glance: done → soft teal card, overdue → red edge, important → its priority color edge.
+    val accent = when {
+        task.completed -> Roozban.colors.completed.color
+        task.overdue -> Roozban.colors.error.color
+        task.quadrant == Quadrant.NONE || task.quadrant == Quadrant.ELIMINATE -> null
+        else -> priority
+    }
+    AppCard(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        accent = accent,
+        container = if (task.completed) Roozban.colors.completed.container.copy(alpha = 0.55f) else MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CompletionCircle(task.completed, quadrantColor(task.quadrant), onToggle)
+            CompletionCircle(task.completed, if (task.completed) Roozban.colors.completed.color else priority, onToggle)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
@@ -426,8 +473,12 @@ private fun TaskMeta(task: TaskItem) {
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         task.project?.let { TagText(DsR.drawable.ic_folder, it.name, TagColors.color(it.color)) }
-        parts.forEach { (icon, label, isError) ->
-            val color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+        parts.forEachIndexed { i, (icon, label, isError) ->
+            val color = when {
+                isError -> Roozban.colors.error.color
+                i == 0 && icon == DsR.drawable.ic_schedule -> Roozban.colors.info.color
+                else -> MaterialTheme.colorScheme.onSurfaceVariant
+            }
             TagText(icon, label, color)
         }
         task.labels.forEach { TagText(DsR.drawable.ic_label, it.name, TagColors.color(it.color)) }
@@ -459,17 +510,11 @@ private fun EmptyState(mode: ListMode) {
         ListMode.INBOX -> R.string.empty_inbox_title to R.string.empty_inbox_body
         ListMode.PROJECT -> R.string.empty_project_title to R.string.empty_project_body
     }
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 48.dp, start = 16.dp, end = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(stringResource(title), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            stringResource(body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
+    val (icon, role) = when (mode) {
+        ListMode.TODAY -> DsR.drawable.ic_today to Roozban.colors.success
+        ListMode.UPCOMING -> DsR.drawable.ic_upcoming to Roozban.colors.info
+        ListMode.INBOX -> DsR.drawable.ic_inbox to Roozban.colors.focus
+        ListMode.PROJECT -> DsR.drawable.ic_folder to Roozban.colors.warning
     }
+    ir.roozban.core.designsystem.components.EmptyState(icon, stringResource(title), stringResource(body), role)
 }

@@ -1,5 +1,11 @@
 package ir.roozban.feature.habits
 
+import androidx.compose.ui.text.font.FontWeight
+import ir.roozban.core.designsystem.theme.Role
+import ir.roozban.core.designsystem.theme.Roozban
+import ir.roozban.core.designsystem.components.IconBadge
+import ir.roozban.core.designsystem.components.AppCard
+import ir.roozban.core.designsystem.components.RoozbanTopBar
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,7 +33,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -65,7 +70,7 @@ internal fun HabitDetailScreen(onBack: () -> Unit, viewModel: HabitDetailViewMod
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(
+            RoozbanTopBar(
                 title = { Text(habit?.name.orEmpty()) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(painterResource(DsR.drawable.ic_arrow_back), stringResource(R.string.habits_back)) }
@@ -98,17 +103,19 @@ internal fun HabitDetailScreen(onBack: () -> Unit, viewModel: HabitDetailViewMod
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val unit = if (stats.unit == StreakUnit.DAY) R.string.habits_streak_days else R.string.habits_streak_weeks
-                StatTile(stringResource(R.string.habits_current), stringResource(unit, PersianDigits.format(stats.current)), Modifier.weight(1f))
-                StatTile(stringResource(R.string.habits_best), stringResource(unit, PersianDigits.format(stats.best)), Modifier.weight(1f))
+                StatTile(stringResource(R.string.habits_current), stringResource(unit, PersianDigits.format(stats.current)), Roozban.colors.streak, DsR.drawable.ic_fire, Modifier.weight(1f))
+                StatTile(stringResource(R.string.habits_best), stringResource(unit, PersianDigits.format(stats.best)), Roozban.colors.focus, DsR.drawable.ic_event_star, Modifier.weight(1f))
                 StatTile(
                     stringResource(R.string.habits_rate),
                     stringResource(R.string.habits_percent, PersianDigits.format((stats.rate30 * 100).roundToInt())),
+                    Roozban.colors.success,
+                    DsR.drawable.ic_bar_chart,
                     Modifier.weight(1f),
                 )
             }
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(DsR.drawable.ic_snowflake), null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(18.dp))
+                Icon(painterResource(DsR.drawable.ic_snowflake), null, tint = Roozban.colors.info.color, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
                 Text(stringResource(R.string.habits_freezes, PersianDigits.format(stats.freezes)), style = MaterialTheme.typography.labelLarge)
             }
@@ -140,10 +147,12 @@ internal fun HabitDetailScreen(onBack: () -> Unit, viewModel: HabitDetailViewMod
 }
 
 @Composable
-private fun StatTile(label: String, value: String, modifier: Modifier) {
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer), modifier = modifier) {
+private fun StatTile(label: String, value: String, role: Role, icon: Int, modifier: Modifier) {
+    AppCard(modifier = modifier) {
         Column(Modifier.padding(12.dp)) {
-            Text(value, style = MaterialTheme.typography.titleLarge)
+            IconBadge(icon, role, size = 32.dp)
+            Spacer(Modifier.height(8.dp))
+            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = role.color)
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -203,8 +212,8 @@ private fun Legend(color: Color) {
     val scheme = MaterialTheme.colorScheme
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
         LegendItem(color, stringResource(R.string.habits_legend_done))
-        LegendItem(scheme.tertiaryContainer, stringResource(R.string.habits_legend_frozen))
-        LegendItem(scheme.errorContainer.copy(alpha = 0.5f), stringResource(R.string.habits_legend_missed))
+        LegendItem(Roozban.colors.info.container, stringResource(R.string.habits_legend_frozen))
+        LegendItem(Roozban.colors.error.container, stringResource(R.string.habits_legend_missed))
     }
 }
 

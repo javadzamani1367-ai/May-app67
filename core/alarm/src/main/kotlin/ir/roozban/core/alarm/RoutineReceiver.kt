@@ -84,7 +84,7 @@ class RoutineReceiver : BroadcastReceiver() {
                 .putExtra(EXTRA_ID, habit.id),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val notification = NotificationCompat.Builder(context, ReminderNotifier.CHANNEL_HABITS)
+        val notification = NotificationCompat.Builder(context, notifier.habitChannel())
             .setSmallIcon(R.drawable.ic_stat_habit)
             .setContentTitle(habit.name)
             .setContentText(context.getString(R.string.habit_reminder_text))
@@ -112,7 +112,7 @@ class RoutineReceiver : BroadcastReceiver() {
             1 -> context.getString(R.string.event_tomorrow)
             else -> context.getString(R.string.event_in_days, PersianDigits.format(due.daysBefore))
         } + " · " + PersianDateFormatter.dayMonth(due.occurrence.date.toJalali())
-        val notification = NotificationCompat.Builder(context, ReminderNotifier.CHANNEL_EVENTS)
+        val notification = NotificationCompat.Builder(context, notifier.eventChannel())
             .setSmallIcon(eventIcon(event.kind))
             .setColor(ContextCompat.getColor(context, R.color.event_accent))
             .setContentTitle(title)
@@ -130,7 +130,7 @@ class RoutineReceiver : BroadcastReceiver() {
     private fun showReview(context: Context, kind: ReviewKind) {
         if (!notifier.canPost()) return
         val daily = kind == ReviewKind.DAILY
-        val notification = NotificationCompat.Builder(context, ReminderNotifier.CHANNEL_HABITS)
+        val notification = NotificationCompat.Builder(context, notifier.habitChannel())
             .setSmallIcon(R.drawable.ic_stat_reminder)
             .setContentTitle(context.getString(if (daily) R.string.review_daily_title else R.string.review_weekly_title))
             .setContentText(context.getString(if (daily) R.string.review_daily_text else R.string.review_weekly_text))
