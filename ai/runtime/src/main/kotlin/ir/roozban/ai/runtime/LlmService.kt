@@ -107,7 +107,7 @@ class LlmService : Service() {
             }
         }
 
-        override fun transcribe(modelPath: String, pcmPath: String, prompt: String?, threads: Int): String? = onWorker {
+        override fun transcribe(modelPath: String, pcmPath: String, prompt: String?, threads: Int, beam: Int): String? = onWorker {
             if (!ensureInit()) return@onWorker null.also { lastSpeechError = "unsupported device" }
             if (speechPath != modelPath) {
                 if (speech != 0L) LlamaNative.nativeSpeechFree(speech)
@@ -117,7 +117,7 @@ class LlmService : Service() {
             }
             val pcm = Pcm.readRaw(File(pcmPath))
             val start = android.os.SystemClock.elapsedRealtime()
-            val text = LlamaNative.nativeTranscribe(speech, pcm, "fa", prompt.orEmpty(), threads)
+            val text = LlamaNative.nativeTranscribe(speech, pcm, "fa", prompt.orEmpty(), threads, beam)
             Log.i(TAG, "transcribed ${pcm.size / 16} ms of audio in ${android.os.SystemClock.elapsedRealtime() - start} ms")
             if (text == null) lastSpeechError = LlamaNative.nativeLastError()
             text

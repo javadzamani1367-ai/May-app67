@@ -22,8 +22,17 @@ struct SpeechStats {
     double audio_ms = 0;
 };
 
-/** 16 kHz mono float samples in [-1, 1] → text. [language] e.g. "fa". Returns false on error. */
-bool transcribe(Speech * s, const std::vector<float> & samples, const std::string & language, const std::string & prompt,
-    int n_threads, std::string & text, std::string & error, SpeechStats * stats = nullptr);
+struct SpeechOptions {
+    std::string language = "fa";
+    /** Biases the vocabulary and script; empty for none. */
+    std::string prompt;
+    int threads = 4;
+    /** 1 = greedy; more = beam search (slower, usually more accurate). */
+    int beam = 1;
+};
+
+/** 16 kHz mono float samples in [-1, 1] → text. Returns false on error. */
+bool transcribe(Speech * s, const std::vector<float> & samples, const SpeechOptions & options,
+    std::string & text, std::string & error, SpeechStats * stats = nullptr);
 
 }  // namespace roozban

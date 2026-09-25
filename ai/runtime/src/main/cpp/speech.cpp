@@ -26,12 +26,13 @@ void speech_free(Speech * s) {
     delete s;
 }
 
-bool transcribe(Speech * s, const std::vector<float> & samples, const std::string & language, const std::string & prompt,
-    int n_threads, std::string & text, std::string & error, SpeechStats * stats) {
+bool transcribe(Speech * s, const std::vector<float> & samples, const SpeechOptions & o,
+    std::string & text, std::string & error, SpeechStats * stats) {
     auto t0 = std::chrono::steady_clock::now();
-    whisper_full_params p = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
-    p.n_threads = n_threads;
-    p.language = language.c_str();
+    whisper_full_params p = whisper_full_default_params(o.beam > 1 ? WHISPER_SAMPLING_BEAM_SEARCH : WHISPER_SAMPLING_GREEDY);
+    if (o.beam > 1) p.beam_search.beam_size = o.beam;
+    p.n_threads = o.threads;
+    p.language = o.language.c_str();
     p.detect_language = false;
     p.translate = false;
     p.no_context = true;
@@ -42,7 +43,7 @@ bool transcribe(Speech * s, const std::vector<float> & samples, const std::strin
     p.print_special = false;
     p.print_timestamps = false;
     p.suppress_blank = true;
-    p.initial_prompt = prompt.empty() ? nullptr : prompt.c_str();
+    p.initial_prompt = o.prompt.empty() ? nullptr : o.prompt.c_str();
     if (whisper_full(s->ctx, p, samples.data(), (int) samples.size()) != 0) {
         error = "transcription failed";
         return false;

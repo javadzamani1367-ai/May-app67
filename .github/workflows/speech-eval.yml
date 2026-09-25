@@ -1,0 +1,96 @@
+name: Speech eval (Persian)
+
+# Word and character error rates of the app's speech code on Persian FLEURS clips, for the
+# original Whisper models and Persian fine-tunes converted to whisper.cpp.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/speech_eval/**'
+      - '.github/workflows/speech-eval.yml'
+
+concurrency:
+  group: speech-eval-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg > /dev/null
+      - run: python3 tools/speech_eval/eval.py prepare clips 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-clips
+          path: clips/
+
+  eval:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: orig-base,    src: ggml, model: ggml-base-q5_1.bin }
+          - { name: orig-small,   src: ggml, model: ggml-small-q5_1.bin }
+          - { name: orig-turbo,   src: ggml, model: ggml-large-v3-turbo-q5_0.bin }
+          - { name: hezar-small,  src: hf,   model: hezarai/whisper-small-fa, quant: q5_1 }
+          - { name: c1tech-small, src: hf,   model: C1Tech/whisper_small_persian, quant: q5_1 }
+          - { name: amir-small,   src: hf,   model: AmirMohseni/whisper-small-persian, quant: q5_1 }
+          - { name: c1tech-base,  src: hf,   model: C1Tech/whisper_base_persian, quant: q5_1 }
+          - { name: nezami-turbo, src: hf,   model: nezamisafa/whisper-v3-turbo-persian-v1.0, quant: q5_0 }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fa-clips
+          path: clips
+
+      - name: Build speech bench and quantizer
+        run: |
+          cmake -S ai/runtime/src/main/cpp -B bench-build -DGGML_NATIVE=OFF > /dev/null
+          cmake --build bench-build --target roozban-speech-bench -j "$(nproc)"
+          cmake -S ai/runtime/src/main/cpp/whisper.cpp -B wbuild -DWHISPER_BUILD_TESTS=OFF -DGGML_NATIVE=OFF > /dev/null
+          cmake --build wbuild --target whisper-quantize -j "$(nproc)"
+
+      - name: License
+        if: matrix.src == 'hf'
+        run: curl -s "https://huggingface.co/api/models/${{ matrix.model }}" | python3 -c "import json,sys;d=json.load(sys.stdin);print('LICENSE', [t for t in d.get('tags',[]) if t.startswith('license:')], d.get('cardData',{}).get('license'))"
+
+      - name: Get model
+        run: |
+          if [ "${{ matrix.src }}" = ggml ]; then
+            curl -L --fail --retry 3 -o model.bin "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${{ matrix.model }}"
+          else
+            pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+            pip install -q transformers huggingface_hub safetensors numpy
+            tools/speech_eval/convert.sh "${{ matrix.model }}" "${{ matrix.quant }}" model.bin
+          fi
+          echo "MODEL ${{ matrix.name }} size=$(stat -c %s model.bin) sha256=$(sha256sum model.bin | cut -d' ' -f1)"
+
+      - name: Greedy, no prompt (current app settings)
+        run: |
+          ./bench-build/roozban-speech-bench model.bin 4 1 - clips/list.txt > greedy.txt
+          python3 tools/speech_eval/eval.py score clips greedy.txt | tee -a summary.txt
+
+      - name: Beam 5 with Persian prompt
+        run: |
+          ./bench-build/roozban-speech-bench model.bin 4 5 tools/speech_eval/prompt_fa.txt clips/list.txt > beam.txt
+          python3 tools/speech_eval/eval.py score clips beam.txt | tee -a summary.txt
+
+      - name: Summary
+        if: always()
+        run: { echo "### ${{ matrix.name }}"; echo '```'; cat summary.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.src == 'hf'
+        with:
+          name: speech-${{ matrix.name }}
+          path: model.bin
+          retention-days: 7

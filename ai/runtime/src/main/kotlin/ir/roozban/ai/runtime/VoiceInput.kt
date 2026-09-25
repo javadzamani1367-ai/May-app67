@@ -83,6 +83,11 @@ class VoiceInput @Inject constructor(
         emit(Recording.Done(if (spoken) Pcm.trim(all.copyOf(size)) else ShortArray(0), vad.endReason))
     }.flowOn(Dispatchers.IO)
 
+    private companion object {
+        /** Set from the Persian speech eval (tools/speech_eval). */
+        const val BEAM = 1
+    }
+
     override suspend fun transcribe(samples: ShortArray, prompt: String?): String = withContext(Dispatchers.IO) {
         val model = models.state.value.activeSpeech ?: throw LlmException("مدل تشخیص گفتار نصب نیست.")
         if (samples.isEmpty()) return@withContext ""
@@ -90,7 +95,7 @@ class VoiceInput @Inject constructor(
         try {
             Pcm.writeRaw(file, samples)
             val threads = DeviceTier.threadsFor(Runtime.getRuntime().availableProcessors())
-            val text = engine.withService { s -> s.transcribe(model.file.path, file.path, prompt.orEmpty(), threads) ?: throw LlmException(s.lastError()) }
+            val text = engine.withService { s -> s.transcribe(model.file.path, file.path, prompt.orEmpty(), threads, BEAM) ?: throw LlmException(s.lastError()) }
             Transcript.clean(text)
         } finally {
             file.delete()

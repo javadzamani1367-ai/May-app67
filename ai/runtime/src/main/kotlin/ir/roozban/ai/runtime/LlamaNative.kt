@@ -38,7 +38,7 @@ internal object LlamaNative {
     external fun nativeSpeechFree(handle: Long)
 
     /** Text, or null on error (see [nativeLastError]). */
-    external fun nativeTranscribe(handle: Long, pcm: ShortArray, language: String, prompt: String, threads: Int): String?
+    external fun nativeTranscribe(handle: Long, pcm: ShortArray, language: String, prompt: String, threads: Int, beam: Int): String?
 
     external fun nativeGenerate(
         handle: Long,

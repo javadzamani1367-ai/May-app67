@@ -12,5 +12,5 @@ JNIEXPORT jint JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeWarmUp(JNIEn
 JNIEXPORT jint JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeGenerate(JNIEnv *, jobject, jlong, jstring, jstring, jfloat, jfloat, jfloat, jint, jint, jobject) { return -1; }
 JNIEXPORT jlong JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeSpeechLoad(JNIEnv *, jobject, jstring) { return 0; }
 JNIEXPORT void JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeSpeechFree(JNIEnv *, jobject, jlong) {}
-JNIEXPORT jstring JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeTranscribe(JNIEnv *, jobject, jlong, jshortArray, jstring, jstring, jint) { return nullptr; }
+JNIEXPORT jstring JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeTranscribe(JNIEnv *, jobject, jlong, jshortArray, jstring, jstring, jint, jint) { return nullptr; }
 }

@@ -22,7 +22,7 @@ interface ILlmService {
      * Transcribes raw 16 kHz mono PCM16 from [pcmPath] with the speech model at [modelPath]
      * (loaded on first use). Returns the text, or null with the reason in lastError().
      */
-    String transcribe(String modelPath, String pcmPath, String prompt, int threads);
+    String transcribe(String modelPath, String pcmPath, String prompt, int threads, int beam);
 
     String lastError();
 
