@@ -65,11 +65,11 @@ class PromptBuilder(
         return Examples.all.map { (ctx, message, answer) ->
             val state = if (ctx !== world) stateOf(ctx, Int.MAX_VALUE) else ""
             world = ctx
-            Example(state + hintLines(Hints.find(ctx, message), ctx) + MESSAGE_LABEL + message, answer)
+            Example(state + hintLines(Hints.find(ctx, message), message, ctx) + MESSAGE_LABEL + message, answer)
         }
     }
 
-    private fun hints(context: AssistantContext, message: String, taskCount: Int): String = hintLines(Hints.find(context, message), context, taskCount)
+    private fun hints(context: AssistantContext, message: String, taskCount: Int): String = hintLines(Hints.find(context, message), message, context, taskCount)
 
     private fun state(context: AssistantContext, taskCount: Int): String = stateOf(context, taskCount)
 
@@ -116,12 +116,16 @@ class PromptBuilder(
         }
 
         /** The guide lines before a message; the examples use the same format. */
-        fun hintLines(h: Hints, context: AssistantContext? = null, taskCount: Int = Int.MAX_VALUE): String = buildString {
+        fun hintLines(h: Hints, message: String, context: AssistantContext? = null, taskCount: Int = Int.MAX_VALUE): String = buildString {
             val tasks = h.tasks.filter { it <= taskCount }
             append("کار مرتبط در فهرست: ")
             appendLine(if (tasks.isEmpty()) "ندارد" else tasks.joinToString("، ") { n -> "#$n" + (context?.tasks?.getOrNull(n - 1)?.let { " ${it.title}" } ?: "") })
             if (h.habits.isNotEmpty()) appendLine("عادت مرتبط: " + h.habits.joinToString("، "))
             appendLine("زمان در پیام: " + (listOfNotNull(h.repeat, h.time).joinToString(" ").ifEmpty { "ندارد" }))
+            if (context != null) {
+                val overdue = context.tasks.any { t -> t.due?.let { it.date < context.today } == true }
+                appendLine("ابزارهای ممکن: " + MessageGrammar.tools(h, message, overdue).joinToString("، ") { it.name })
+            }
         }
 
         private val TOOLS_TEXT = Tools.all.joinToString("\n") { toolLine(it) }

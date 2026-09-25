@@ -108,7 +108,7 @@ class ActionPlanner(private val context: AssistantContext, private val message: 
                 }
                 Tools.findFreeSlot -> {
                     val day = call.time("day")?.let { times.day(it, now) } ?: context.today
-                    val minutes = (call.number("minutes") ?: 30).coerceIn(5, 600)
+                    val minutes = (hints?.minutes ?: call.number("minutes") ?: 30).coerceIn(5, 600)
                     PlannedAction(call, spec.risk, "وقت آزاد ${PersianDigits.format(minutes)} دقیقه‌ای، ${Describe.day(day, context.today)}", Operation.FindFreeSlot(day, minutes))
                 }
                 Tools.startFocus -> {
@@ -132,9 +132,11 @@ class ActionPlanner(private val context: AssistantContext, private val message: 
         val spec = Tools.createTask
         val title = call.text("title") ?: return fail(call, spec, "عنوان کار مشخص نبود.")
         val whenText = call.time("when")
-        val due = whenText?.let { times.due(it, now) }
+        val repeatText = fromMessage(call.text("repeat"), hints?.repeat)
+        // «هر شنبه ساعت ۹» carries the time inside the repeat words.
+        val due = whenText?.let { times.due(it, now) } ?: repeatText?.let { times.due(it, now) }
         if (whenText != null && due == null) return fail(call, spec, "زمان «$whenText» را نفهمیدم.")
-        val recurrence = fromMessage(call.text("repeat"), hints?.repeat)?.let { times.recurrence(it, now) }
+        val recurrence = repeatText?.let { times.recurrence(it, now) }
         val repeatDue = due ?: recurrence?.let { TaskDue.AllDay(context.today) }
         val summary = buildString {
             append("کار جدید: «").append(title).append('»')
@@ -149,7 +151,7 @@ class ActionPlanner(private val context: AssistantContext, private val message: 
                 recurrence = recurrence,
                 important = call.flag("important") ?: false,
                 urgent = call.flag("urgent") ?: false,
-                minutes = call.number("minutes")?.takeIf { it in 1..1440 },
+                minutes = (hints?.minutes ?: call.number("minutes"))?.takeIf { it in 1..1440 },
                 project = call.text("project"),
             ),
         )

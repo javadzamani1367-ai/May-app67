@@ -17,7 +17,7 @@ class AssistantTest {
         val g = Gbnf.forTools()
         assertThat(g).startsWith("root ::= \"{\\\"actions\\\":[\" actions? \"],\\\"reply\\\":\" str \"}\"")
         Tools.all.forEach { assertThat(g).contains("t-${it.name.replace('_', '-')} ::= \"{\\\"tool\\\":\\\"${it.name}\\\"") }
-        assertThat(g).contains("c-today-tomorrow-week-overdue-all ::= \"\\\"today\\\"\"")
+        assertThat(g).contains("(\"\\\"today\\\"\" | ")
         assertThat(g).contains("actions ::= action (\",\" action){0,5}")
         // Every rule referenced is defined.
         val defined = Regex("^([a-z0-9-]+) ::=", RegexOption.MULTILINE).findAll(g).map { it.groupValues[1] }.toSet()
@@ -28,6 +28,26 @@ class AssistantTest {
         java.io.File("build/gbnf").apply { mkdirs() }.resolve("tools.gbnf").writeText(g)
         PromptBuilder.EXAMPLES.forEachIndexed { i, ex -> java.io.File("build/gbnf/example$i.json").writeText(ex.answer) }
         java.io.File("build/gbnf/prefix.txt").writeText(PromptBuilder(ChatTemplate.CHATML_NO_THINK, 4096).prefix())
+    }
+
+    @Test
+    fun `message grammar allows only sensible tools with pinned references and times`() = runTest {
+        f.task("خرید نان")
+        f.task("جلسه با علی")
+        f.habit("ورزش")
+        val overdue = false
+        fun names(msg: String) = MessageGrammar.tools(Hints.find(ir.roozban.ai.tools.AssistantContext(f.clock.now, listOf(), listOf()), msg), msg, overdue).map { it.name }
+        assertThat(names("فردا ساعت ۵ به مامان زنگ بزنم")).containsExactly("create_task", "list_tasks")
+        val ctx = f.context()
+        val tools = MessageGrammar.tools(Hints.find(ctx, "جلسه با علی رو بنداز فردا"), "جلسه با علی رو بنداز فردا", overdue)
+        assertThat(tools.map { it.name }).containsExactly("create_task", "complete_task", "reschedule", "list_tasks")
+        val reschedule = tools.first { it.name == "reschedule" }
+        assertThat(reschedule.args.first { it.name == "task" }.type).isEqualTo(ArgType.Choice(listOf("#2")))
+        assertThat(reschedule.args.first { it.name == "when" }.type).isEqualTo(ArgType.Choice(listOf("فردا")))
+        assertThat(MessageGrammar.tools(Hints.find(ctx, "کار ۱ رو پاک کن"), "کار ۱ رو پاک کن", overdue).map { it.name }).contains("delete_task")
+        assertThat(MessageGrammar.tools(Hints.find(ctx, "امروز ورزش کردم"), "امروز ورزش کردم", overdue).map { it.name }).contains("log_habit")
+        val g = MessageGrammar.grammar(ctx, "جلسه با علی رو بنداز فردا")
+        assertThat(g).contains("(\"\\\"#2\\\"\")")
     }
 
     @Test
@@ -77,7 +97,7 @@ class AssistantTest {
         assertThat(done.plan.actions.single().operation).isInstanceOf(Operation.CompleteTask::class.java)
         assertThat(done.plan.needsConfirmation).isFalse()
         val request = engine.requests.single()
-        assertThat(request.grammar).isEqualTo(Gbnf.forTools())
+        assertThat(request.grammar).isEqualTo(MessageGrammar.grammar(f.context(), "نان رو خریدم"))
         assertThat(request.sampling.temperature).isEqualTo(0f)
     }
 }

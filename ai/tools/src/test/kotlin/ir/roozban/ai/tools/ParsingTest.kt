@@ -84,4 +84,11 @@ class ParsingTest {
             }
         }
     }
+
+    @Test
+    fun `every example fits its own message grammar`() {
+        Examples.all.forEach { (ctx, message, answer) ->
+            assertWithMessage(message).that(GrammarCheck.problems(ctx, message, answer)).isEmpty()
+        }
+    }
 }

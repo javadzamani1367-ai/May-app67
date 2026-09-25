@@ -21,14 +21,12 @@ class Assistant(
     private val template: ChatTemplate,
     private val contextTokens: Int,
 ) {
-    private val grammar = Gbnf.forTools()
-
     fun ask(context: AssistantContext, history: List<Turn>, message: String): Flow<AssistantEvent> = flow {
         val builder = PromptBuilder(template, contextTokens) { engine.countTokens(it) ?: ir.roozban.ai.core.TokenEstimate.of(it) }
         val prompt = builder.build(context, history, message)
         val raw = StringBuilder()
         val reply = ReplyStream()
-        engine.generate(GenerationRequest(prompt, grammar, SamplingParams.Greedy, PromptBuilder.ANSWER_TOKENS)).collect { piece ->
+        engine.generate(GenerationRequest(prompt, MessageGrammar.grammar(context, message), SamplingParams.Greedy, PromptBuilder.ANSWER_TOKENS)).collect { piece ->
             raw.append(piece)
             if (reply.feed(piece).isNotEmpty()) emit(AssistantEvent.Partial(reply.text))
         }

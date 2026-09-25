@@ -49,7 +49,10 @@ object Matcher {
 
     /** How much of [title] the free text [message] mentions: the share of its words found there. */
     fun mentions(message: String, title: String): Double {
-        val tw = words(title)
+        val all = words(title)
+        // «خرید هفتگی» must not point at «خرید دارو»: generic action words only count when the
+        // title has nothing more specific.
+        val tw = all.filter { it !in GENERIC }.ifEmpty { all }
         if (tw.isEmpty()) return 0.0
         val mw = words(message)
         val hit = tw.count { w -> mw.any { it == w || (minOf(it.length, w.length) >= 3 && (it.startsWith(w) || w.startsWith(it))) } }
@@ -60,12 +63,16 @@ object Matcher {
 
     private fun unify(s: String): String = PersianDigits.toAscii(s).lowercase()
         .replace('ي', 'ی').replace('ى', 'ی').replace('ك', 'ک').replace('ة', 'ه').replace('أ', 'ا').replace('إ', 'ا')
-        .replace("‌", "").replace(PUNCT, " ").replace(SPACES, " ").trim()
+        .replace("‌", "").replace("خوند", "خواند").replace(PUNCT, " ").replace(SPACES, " ").trim()
 
     private val NUMBER = Regex("#?\\s*(\\d{1,4})")
     private val PUNCT = Regex("[\\p{P}\\p{S}]")
     private val SPACES = Regex("\\s+")
     private val STOP = setOf("را", "رو", "به", "از", "با", "و", "که", "در", "برای", "کار", "تسک")
     private const val THRESHOLD = 0.5
+    private val GENERIC = setOf(
+        "خرید", "ارسال", "زنگ", "تماس", "انجام", "پرداخت", "تمدید", "گرفتن", "دادن", "رفتن", "نوشتن", "کردن",
+        "جلسه", "قرار", "برنامه", "امروز", "فردا",
+    )
     private const val MARGIN = 0.15
 }

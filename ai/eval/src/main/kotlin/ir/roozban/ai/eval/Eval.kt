@@ -2,7 +2,7 @@ package ir.roozban.ai.eval
 
 import ir.roozban.ai.core.ChatTemplate
 import ir.roozban.ai.tools.ActionPlanner
-import ir.roozban.ai.tools.Gbnf
+import ir.roozban.ai.tools.MessageGrammar
 import ir.roozban.ai.tools.PromptBuilder
 import ir.roozban.ai.tools.ResponseParser
 import kotlinx.coroutines.runBlocking
@@ -35,7 +35,6 @@ fun main(args: Array<String>) {
     val label = opts["label"] ?: template.name
 
     val http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build()
-    val grammar = Gbnf.forTools()
     val context = Scenario.context()
     val builder = PromptBuilder(template, contextTokens = 4096)
     val rows = mutableListOf<String>()
@@ -45,7 +44,7 @@ fun main(args: Array<String>) {
         val prompt = runBlocking { builder.build(context, emptyList(), case.input) }
         val body = buildJsonObject {
             put("prompt", prompt)
-            put("grammar", grammar)
+            put("grammar", MessageGrammar.grammar(context, case.input))
             put("n_predict", PromptBuilder.ANSWER_TOKENS)
             put("temperature", 0.0)
             put("cache_prompt", true)
