@@ -4,6 +4,7 @@
     <string name="tasks_title_upcoming">آینده</string>
     <string name="tasks_title_inbox">صندوق ورودی</string>
     <string name="tasks_settings">تنظیمات</string>
+    <string name="tasks_assistant">دستیار</string>
     <string name="tasks_back">بازگشت</string>
     <string name="tasks_add">کار جدید</string>
     <string name="tasks_undo">بازگردانی</string>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ai_channel_downloads">دانلود مدل دستیار</string>
+    <string name="ai_download_title">دانلود مدل %1$s</string>
+    <string name="ai_download_done">مدل %1$s آماده است</string>
+    <string name="ai_download_failed">دانلود مدل %1$s انجام نشد</string>
+    <string name="ai_download_cancel">توقف</string>
+</resources>

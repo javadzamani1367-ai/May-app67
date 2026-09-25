@@ -29,8 +29,9 @@ fun NavGraphBuilder.tasksScreens(
     onOpenSettings: () -> Unit,
     onOpenProject: (String) -> Unit,
     onBack: () -> Unit,
+    onOpenAssistant: (() -> Unit)? = null,
 ) {
-    composable<TodayRoute> { TaskListRoute(ListMode.TODAY, onOpenSettings) }
+    composable<TodayRoute> { TaskListRoute(ListMode.TODAY, onOpenSettings, onOpenAssistant = onOpenAssistant) }
     composable<UpcomingRoute> { TaskListRoute(ListMode.UPCOMING, onOpenSettings) }
     composable<InboxRoute> { TaskListRoute(ListMode.INBOX, onOpenSettings) }
     composable<CalendarRoute> { CalendarScreen(onOpenSettings = onOpenSettings) }

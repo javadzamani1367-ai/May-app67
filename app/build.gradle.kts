@@ -37,6 +37,12 @@ android {
         }
     }
 
+    // ggml loads its CPU backend variants from the native library directory at runtime,
+    // so the libraries must be extracted on install.
+    packaging {
+        jniLibs.useLegacyPackaging = true
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -59,6 +65,8 @@ dependencies {
     implementation(projects.feature.focus)
     implementation(projects.feature.habits)
     implementation(projects.feature.reports)
+    implementation(projects.feature.assistant)
+    implementation(projects.ai.runtime)
     implementation(projects.billing.api)
 
     implementation(libs.androidx.core.ktx)

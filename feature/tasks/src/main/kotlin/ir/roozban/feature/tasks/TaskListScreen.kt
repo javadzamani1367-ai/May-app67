@@ -82,6 +82,7 @@ internal fun TaskListRoute(
     onOpenSettings: () -> Unit,
     projectId: String? = null,
     onBack: (() -> Unit)? = null,
+    onOpenAssistant: (() -> Unit)? = null,
     viewModel: TaskListViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(mode, projectId) { viewModel.setMode(mode, projectId) }
@@ -121,6 +122,7 @@ internal fun TaskListRoute(
         onOpen = { editingId = it },
         onOpenSettings = onOpenSettings,
         onBack = onBack,
+        onOpenAssistant = onOpenAssistant,
     )
 
     if (sheetOpen) {
@@ -157,6 +159,7 @@ internal fun TaskListScreen(
     onOpen: (String) -> Unit,
     onOpenSettings: () -> Unit,
     onBack: (() -> Unit)? = null,
+    onOpenAssistant: (() -> Unit)? = null,
 ) {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -180,6 +183,11 @@ internal fun TaskListScreen(
                     }
                 },
                 actions = {
+                    if (onOpenAssistant != null) {
+                        IconButton(onClick = onOpenAssistant) {
+                            Icon(painterResource(DsR.drawable.ic_assistant), stringResource(R.string.tasks_assistant), tint = Roozban.colors.focus.color)
+                        }
+                    }
                     IconButton(onClick = onOpenSettings) {
                         Icon(painterResource(DsR.drawable.ic_settings), stringResource(R.string.tasks_settings))
                     }

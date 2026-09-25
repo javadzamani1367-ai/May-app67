@@ -57,6 +57,9 @@ class PromptBuilder(
         appendLine("Tools (args always in this order):")
         Tools.all.forEach { appendLine(toolLine(it)) }
         appendLine()
+        // Everything above is fixed, so the engine reuses its cached keys; the state comes last.
+        appendLine(EXAMPLES)
+        appendLine()
         val today = context.today
         val j = today.toJalali()
         appendLine("Now: ${PersianDateFormatter.fullDate(j)}، ساعت ${PersianDateFormatter.time(context.now.toLocalTime())} ($today)")
@@ -85,8 +88,6 @@ class PromptBuilder(
                 }
             })
         }
-        appendLine()
-        append(EXAMPLES)
     }
 
     private fun toolLine(spec: ToolSpec): String {

@@ -1,0 +1,108 @@
+package ir.roozban.ai.runtime
+
+import android.app.Service
+import android.content.Intent
+import android.os.IBinder
+import android.os.RemoteException
+import android.util.Log
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicLong
+
+/**
+ * Hosts the model in its own process (`:ai`), so a model that exhausts memory takes down only
+ * this process, never the app. All native work runs on one worker thread.
+ */
+class LlmService : Service() {
+    private val worker = Executors.newSingleThreadExecutor { Thread(it, "llm").apply { priority = Thread.NORM_PRIORITY } }
+    private val handle = AtomicLong(0)
+
+    @Volatile
+    private var available: Boolean? = null
+
+    private fun <T> onWorker(block: () -> T): T = worker.submit(block).get()
+
+    private fun ensureInit(): Boolean {
+        available?.let { return it }
+        val ok = LlamaNative.loadError == null && runCatching { LlamaNative.nativeInit(applicationInfo.nativeLibraryDir) }.getOrDefault(false)
+        if (!ok) Log.w(TAG, "native engine unavailable: ${LlamaNative.loadError}")
+        available = ok
+        return ok
+    }
+
+    private val binder = object : ILlmService.Stub() {
+        override fun available(): Boolean = onWorker { ensureInit() }
+
+        override fun load(path: String, contextTokens: Int, threads: Int, batchTokens: Int): String? = onWorker {
+            if (!ensureInit()) return@onWorker "unsupported device"
+            freeModel()
+            val h = LlamaNative.nativeLoad(path, contextTokens, threads, batchTokens)
+            if (h == 0L) LlamaNative.nativeLastError() else null.also { handle.set(h) }
+        }
+
+        override fun countTokens(text: String): Int = onWorker {
+            val h = handle.get()
+            if (h == 0L) -1 else LlamaNative.nativeCountTokens(h, text)
+        }
+
+        override fun generate(
+            prompt: String,
+            grammar: String?,
+            temperature: Float,
+            topP: Float,
+            minP: Float,
+            seed: Int,
+            maxTokens: Int,
+            callback: ILlmCallback,
+        ) {
+            worker.execute {
+                val h = handle.get()
+                if (h == 0L) {
+                    callback.safe { onError("no model loaded") }
+                    return@execute
+                }
+                var alive = true
+                val produced = LlamaNative.nativeGenerate(h, prompt, grammar?.ifEmpty { null }, temperature, topP, minP, seed, maxTokens) { bytes ->
+                    try {
+                        callback.onPiece(String(bytes, Charsets.UTF_8))
+                    } catch (e: RemoteException) {
+                        alive = false // The app went away: stop.
+                    }
+                    alive
+                }
+                if (produced < 0) callback.safe { onError(LlamaNative.nativeLastError()) } else callback.safe { onDone(produced) }
+            }
+        }
+
+        // Runs on the binder thread so it can interrupt the worker.
+        override fun cancel() {
+            val h = handle.get()
+            if (h != 0L) LlamaNative.nativeCancel(h)
+        }
+
+        override fun unload() = onWorker { freeModel() }
+    }
+
+    private fun freeModel() {
+        val h = handle.getAndSet(0)
+        if (h != 0L) LlamaNative.nativeFree(h)
+    }
+
+    override fun onBind(intent: Intent?): IBinder = binder
+
+    override fun onDestroy() {
+        worker.execute { freeModel() }
+        worker.shutdown()
+        super.onDestroy()
+    }
+
+    private inline fun ILlmCallback.safe(block: ILlmCallback.() -> Unit) {
+        try {
+            block()
+        } catch (_: RemoteException) {
+        }
+    }
+
+    private companion object {
+        const val TAG = "LlmService"
+    }
+}

@@ -40,6 +40,9 @@ import ir.roozban.feature.focus.FocusRoute
 import ir.roozban.feature.focus.focusScreen
 import ir.roozban.feature.habits.HabitRoute
 import ir.roozban.feature.habits.HabitsRoute
+import ir.roozban.feature.assistant.AssistantModelsRoute
+import ir.roozban.feature.assistant.AssistantRoute
+import ir.roozban.feature.assistant.assistantScreens
 import ir.roozban.feature.habits.habitsScreens
 import ir.roozban.feature.reports.ReportsRoute
 import ir.roozban.feature.reports.ReviewRoute
@@ -146,7 +149,9 @@ fun RoozbanApp(
                 onOpenSettings = openSettings,
                 onOpenProject = { navController.navigate(ProjectRoute(it)) },
                 onBack = back,
+                onOpenAssistant = { navController.navigate(AssistantRoute) },
             )
+            assistantScreens(onOpenModels = { navController.navigate(AssistantModelsRoute) }, onBack = back)
             habitsScreens(
                 onOpenHabit = { navController.navigate(HabitRoute(it)) },
                 onOpenSettings = openSettings,
@@ -156,6 +161,7 @@ fun RoozbanApp(
             reportsScreens(onOpenReview = { navController.navigate(ReviewRoute(it)) }, onBack = back)
             composable<MoreRoute> {
                 MoreScreen(
+                    onAssistant = { navController.navigate(AssistantRoute) },
                     onFocus = { navController.navigate(FocusRoute()) },
                     onInbox = { navController.navigate(InboxRoute) },
                     onProjects = { navController.navigate(ProjectsRoute) },

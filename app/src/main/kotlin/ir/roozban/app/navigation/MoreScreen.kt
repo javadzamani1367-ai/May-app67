@@ -40,6 +40,7 @@ data object MoreRoute
 /** Everything that is not a daily tab, grouped, each entry with its own color. */
 @Composable
 internal fun MoreScreen(
+    onAssistant: () -> Unit,
     onFocus: () -> Unit,
     onInbox: () -> Unit,
     onProjects: () -> Unit,
@@ -58,6 +59,7 @@ internal fun MoreScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             SectionTitle(stringResource(R.string.more_group_work))
+            Entry(DsR.drawable.ic_assistant, R.string.more_assistant, R.string.more_assistant_desc, c.focus, onAssistant)
             Entry(DsR.drawable.ic_timer, R.string.more_focus, R.string.more_focus_desc, c.focus, onFocus)
             Entry(DsR.drawable.ic_inbox, R.string.more_inbox, R.string.more_inbox_desc, c.info, onInbox)
             Entry(DsR.drawable.ic_folder, R.string.more_projects, R.string.more_projects_desc, c.warning, onProjects)

@@ -16,6 +16,8 @@
     <string name="tab_habits">عادت‌ها</string>
     <string name="tab_more">بیشتر</string>
     <string name="more_title">بیشتر</string>
+    <string name="more_assistant">دستیار هوشمند</string>
+    <string name="more_assistant_desc">با زبان فارسی کار بساز، جابه‌جا کن و برنامه بریز؛ کاملاً آفلاین</string>
     <string name="more_focus">تمرکز</string>
     <string name="more_focus_desc">پومودورو با بی‌صدا کردن اعلان‌ها</string>
     <string name="more_inbox">صندوق ورودی</string>

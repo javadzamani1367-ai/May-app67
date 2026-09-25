@@ -13,9 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - uses: actions/setup-java@v4
         with:
@@ -23,18 +25,6 @@ jobs:
           java-version: 21
 
       - uses: gradle/actions/setup-gradle@v4
-
-      - name: Probe model files (sizes and sha256)
-        continue-on-error: true
-        run: |
-          for u in \
-            https://huggingface.co/unsloth/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q4_K_M.gguf \
-            https://huggingface.co/unsloth/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q4_K_M.gguf \
-            https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-Q4_K_M.gguf \
-            https://huggingface.co/unsloth/gemma-3-4b-it-GGUF/resolve/main/gemma-3-4b-it-Q4_K_M.gguf \
-            https://huggingface.co/unsloth/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf; do
-            echo "=== MODEL $u"; curl -sI "$u" | grep -iE "^HTTP|x-linked-etag|x-linked-size" || true
-          done
 
       - name: Unit tests (JVM modules + all Android variants)
         run: ./gradlew test --continue
