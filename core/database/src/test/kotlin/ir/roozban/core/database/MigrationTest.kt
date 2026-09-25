@@ -117,4 +117,22 @@ class MigrationTest {
         assertThat(db.eventDao().all().single().title).isEqualTo("تولد")
         db.close()
     }
+
+    @Test
+    fun `migrates 4 to 5 keeping events and adding memory facts`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val file = context.getDatabasePath("migration-test-4.db").apply { parentFile?.mkdirs(); delete() }
+        createFromSchema(file, 4)
+        SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READWRITE).use { v4 ->
+            v4.execSQL(
+                """INSERT INTO personal_event (id, title, kind, color, calendar, month, day, year, yearly, remind_days, reminder_minute, notes, created_at, updated_at)
+                   VALUES ('e', 'تولد', 'BIRTHDAY', 0, 'JALALI', 7, 15, NULL, 1, '0', 540, '', 1, 1)""",
+            )
+        }
+        val db = Room.databaseBuilder(context, RoozbanDatabase::class.java, file.path).allowMainThreadQueries().build()
+        assertThat(db.eventDao().all().single().title).isEqualTo("تولد")
+        db.memoryDao().upsert(MemoryFactEntity("m", "pref:gym", "باشگاه عصرها", "USER", 1f, false, 1, 1))
+        assertThat(db.memoryDao().byKey("pref:gym")?.text).isEqualTo("باشگاه عصرها")
+        db.close()
+    }
 }

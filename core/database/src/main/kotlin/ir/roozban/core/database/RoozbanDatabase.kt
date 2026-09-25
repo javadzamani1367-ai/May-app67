@@ -17,8 +17,9 @@ import androidx.room.RoomDatabase
         HabitEntity::class,
         HabitLogEntity::class,
         PersonalEventEntity::class,
+        MemoryFactEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
     autoMigrations = [
         // v2: projects, labels, subtasks.
@@ -27,6 +28,8 @@ import androidx.room.RoomDatabase
         AutoMigration(from = 2, to = 3),
         // v4: personal occasions (birthdays, anniversaries).
         AutoMigration(from = 3, to = 4),
+        // v5: personal memory (what Roozban learned about the user).
+        AutoMigration(from = 4, to = 5),
     ],
 )
 abstract class RoozbanDatabase : RoomDatabase() {
@@ -38,6 +41,7 @@ abstract class RoozbanDatabase : RoomDatabase() {
     abstract fun focusDao(): FocusDao
     abstract fun habitDao(): HabitDao
     abstract fun eventDao(): EventDao
+    abstract fun memoryDao(): MemoryDao
 
     companion object {
         const val NAME = "roozban.db"

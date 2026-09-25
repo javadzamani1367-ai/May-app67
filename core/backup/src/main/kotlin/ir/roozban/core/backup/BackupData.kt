@@ -21,6 +21,8 @@ data class BackupData(
     val habits: List<BackupHabit> = emptyList(),
     val habitLogs: List<BackupHabitLog> = emptyList(),
     val events: List<BackupEvent> = emptyList(),
+    /** Null in backups made before personal memory existed: restoring keeps what the phone learned. */
+    val memory: List<BackupFact>? = null,
 ) {
     companion object {
         const val FORMAT_VERSION = 1
@@ -105,6 +107,11 @@ data class BackupSettings(
     val startScreen: String? = null,
     val dateNotification: Boolean = true,
     val prayerCity: String? = null,
+    val planDayStartMinute: Int = 8 * 60,
+    val planDayEndMinute: Int = 22 * 60,
+    val planMorningMinute: Int? = null,
+    val planAuto: Boolean = false,
+    val learningEnabled: Boolean = true,
 )
 
 @Serializable
@@ -153,6 +160,18 @@ data class BackupEvent(
     val remindDays: String = "0,1",
     val reminderMinute: Int = 540,
     val notes: String = "",
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
+@Serializable
+data class BackupFact(
+    val id: String,
+    val key: String,
+    val text: String,
+    val source: String = "USER",
+    val confidence: Float = 1f,
+    val pinned: Boolean = false,
     val createdAt: Long,
     val updatedAt: Long,
 )

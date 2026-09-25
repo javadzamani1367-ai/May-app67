@@ -208,3 +208,15 @@ data class PersonalEventEntity(
     @ColumnInfo(name = "created_at") val createdAt: Long,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
 )
+
+@Entity(tableName = "memory_fact", indices = [Index(value = ["key"], unique = true)])
+data class MemoryFactEntity(
+    @PrimaryKey val id: String,
+    val key: String,
+    val text: String,
+    val source: String,
+    val confidence: Float,
+    val pinned: Boolean,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+    @ColumnInfo(name = "updated_at") val updatedAt: Long,
+)

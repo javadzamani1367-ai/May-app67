@@ -8,6 +8,7 @@ dependencies {
     api(projects.core.recurrence)
     api(libs.kotlinx.coroutines.core)
     api(libs.javax.inject)
+    api(projects.learning)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(projects.core.testing)
 }

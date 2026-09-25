@@ -68,6 +68,11 @@ object BackupMerger {
             timeEntries = (local.timeEntries + incoming.timeEntries).distinctBy { it.id },
             habits = habits,
             events = newest(local.events, incoming.events, { it.id }, { it.updatedAt }),
+            memory = if (local.memory == null && incoming.memory == null) {
+                null
+            } else {
+                newest(local.memory.orEmpty(), incoming.memory.orEmpty(), { it.key }, { it.updatedAt })
+            },
             habitLogs = (local.habitLogs + incoming.habitLogs)
                 .filter { it.habitId in habitIds }
                 .groupBy { it.habitId to it.date }.values.map { versions -> versions.maxBy { it.updatedAt } },

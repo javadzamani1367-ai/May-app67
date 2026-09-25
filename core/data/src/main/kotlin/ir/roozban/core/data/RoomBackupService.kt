@@ -4,6 +4,7 @@ import ir.roozban.core.backup.BackupCodec
 import ir.roozban.core.backup.BackupCompletion
 import ir.roozban.core.backup.BackupData
 import ir.roozban.core.backup.BackupEvent
+import ir.roozban.core.backup.BackupFact
 import ir.roozban.core.backup.BackupFocusSession
 import ir.roozban.core.backup.BackupHabit
 import ir.roozban.core.backup.BackupHabitLog
@@ -21,6 +22,7 @@ import ir.roozban.core.database.FocusSessionEntity
 import ir.roozban.core.database.HabitEntity
 import ir.roozban.core.database.PersonalEventEntity
 import ir.roozban.core.database.HabitLogEntity
+import ir.roozban.core.database.MemoryFactEntity
 import ir.roozban.core.database.LabelEntity
 import ir.roozban.core.database.ProjectEntity
 import ir.roozban.core.database.TaskEntity
@@ -34,6 +36,7 @@ import ir.roozban.core.domain.RestoreResult
 import ir.roozban.core.domain.RoutineReminders
 import ir.roozban.core.domain.SettingsRepository
 import ir.roozban.core.model.FocusSettings
+import ir.roozban.core.model.PlanningSettings
 import ir.roozban.core.model.ReminderKind
 import ir.roozban.core.model.StartScreen
 import ir.roozban.core.model.ThemeMode
@@ -109,6 +112,9 @@ class RoomBackupService @Inject constructor(
                     it.remindDays, it.reminderMinute, it.notes, it.createdAt, it.updatedAt,
                 )
             },
+            memory = dao.memoryFacts().map {
+                BackupFact(it.id, it.key, it.text, it.source, it.confidence, it.pinned, it.createdAt, it.updatedAt)
+            },
         )
     }
 
@@ -135,6 +141,9 @@ class RoomBackupService @Inject constructor(
                     it.id, it.title, it.kind, it.color, it.calendar, it.month.coerceIn(1, 12), it.day.coerceIn(1, 31), it.year, it.yearly,
                     it.remindDays, it.reminderMinute.coerceIn(0, 24 * 60 - 1), it.notes, it.createdAt, it.updatedAt,
                 )
+            },
+            memoryFacts = data.memory?.map {
+                MemoryFactEntity(it.id, it.key, it.text, it.source, it.confidence.coerceIn(0f, 1f), it.pinned, it.createdAt, it.updatedAt)
             },
         )
     }
@@ -185,6 +194,11 @@ class RoomBackupService @Inject constructor(
         startScreen = startScreen.name,
         dateNotification = dateNotification,
         prayerCity = prayerCity,
+        planDayStartMinute = planning.dayStart.let { it.hour * 60 + it.minute },
+        planDayEndMinute = planning.dayEnd.let { it.hour * 60 + it.minute },
+        planMorningMinute = planning.morningTime?.let { it.hour * 60 + it.minute },
+        planAuto = planning.autoPlan,
+        learningEnabled = planning.learningEnabled,
     )
 
     private fun BackupSettings.toModel() = UserSettings(
@@ -220,5 +234,14 @@ class RoomBackupService @Inject constructor(
         startScreen = StartScreen.entries.firstOrNull { it.name == startScreen } ?: StartScreen.TODAY,
         dateNotification = dateNotification,
         prayerCity = prayerCity,
+        planning = PlanningSettings(
+            dayStart = minuteTime(planDayStartMinute),
+            dayEnd = minuteTime(planDayEndMinute),
+            morningTime = planMorningMinute?.let(::minuteTime),
+            autoPlan = planAuto,
+            learningEnabled = learningEnabled,
+        ),
     )
+
+    private fun minuteTime(minute: Int): LocalTime = minute.coerceIn(0, 24 * 60 - 1).let { LocalTime.of(it / 60, it % 60) }
 }

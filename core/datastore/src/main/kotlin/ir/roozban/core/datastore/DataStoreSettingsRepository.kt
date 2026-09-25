@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import ir.roozban.core.domain.SettingsRepository
 import ir.roozban.core.model.FocusSettings
+import ir.roozban.core.model.PlanningSettings
 import ir.roozban.core.model.ReminderKind
 import ir.roozban.core.model.ReminderSetting
 import ir.roozban.core.model.UserSettings
@@ -69,6 +70,12 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
         /** Absent = default sound. */
         val HABIT_SOUND = stringPreferencesKey("habit_sound")
         val EVENT_SOUND = stringPreferencesKey("event_sound")
+        val PLAN_DAY_START = intPreferencesKey("plan_day_start_minute")
+        val PLAN_DAY_END = intPreferencesKey("plan_day_end_minute")
+        /** Minute of day, or -1 for off. */
+        val PLAN_MORNING = intPreferencesKey("plan_morning_minute")
+        val PLAN_AUTO = booleanPreferencesKey("plan_auto")
+        val LEARNING = booleanPreferencesKey("learning_enabled")
     }
 
     private companion object {
@@ -120,6 +127,13 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
                 prayerCity = this[Keys.PRAYER_CITY]?.let { it.ifEmpty { null } } ?: DEFAULTS.prayerCity,
                 habitSound = this[Keys.HABIT_SOUND],
                 eventSound = this[Keys.EVENT_SOUND],
+                planning = PlanningSettings(
+                    dayStart = minuteOrDefault(this[Keys.PLAN_DAY_START], null) ?: DEFAULTS.planning.dayStart,
+                    dayEnd = minuteOrDefault(this[Keys.PLAN_DAY_END], null) ?: DEFAULTS.planning.dayEnd,
+                    morningTime = minuteOrDefault(this[Keys.PLAN_MORNING], DEFAULTS.planning.morningTime),
+                    autoPlan = this[Keys.PLAN_AUTO] ?: DEFAULTS.planning.autoPlan,
+                    learningEnabled = this[Keys.LEARNING] ?: DEFAULTS.planning.learningEnabled,
+                ),
             )
         }
 
@@ -155,6 +169,11 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
             this[Keys.PRAYER_CITY] = s.prayerCity.orEmpty()
             s.habitSound.let { if (it == null) remove(Keys.HABIT_SOUND) else this[Keys.HABIT_SOUND] = it }
             s.eventSound.let { if (it == null) remove(Keys.EVENT_SOUND) else this[Keys.EVENT_SOUND] = it }
+            this[Keys.PLAN_DAY_START] = s.planning.dayStart.toMinute()
+            this[Keys.PLAN_DAY_END] = s.planning.dayEnd.toMinute()
+            this[Keys.PLAN_MORNING] = s.planning.morningTime.toMinute()
+            this[Keys.PLAN_AUTO] = s.planning.autoPlan
+            this[Keys.LEARNING] = s.planning.learningEnabled
         }
 
         inline fun <reified E : Enum<E>> enumOr(name: String?, default: E): E =

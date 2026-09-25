@@ -41,6 +41,7 @@ data class UserSettings(
     val habitSound: String? = null,
     /** Notification sound for personal occasions (same encoding as [habitSound]). */
     val eventSound: String? = null,
+    val planning: PlanningSettings = PlanningSettings(),
 ) {
     companion object {
         const val BACKGROUND_IMAGE = "image"
@@ -53,3 +54,16 @@ enum class ThemeMode { LIGHT, DARK, SYSTEM }
 enum class ThemePalette { INDIGO, OCEAN, VIOLET, ROSE, CORAL, AMBER, TEAL, SLATE, GREEN }
 
 enum class StartScreen { TODAY, CALENDAR }
+
+/** Day planner and learning (phase 6). */
+data class PlanningSettings(
+    /** Working window the planner fills. */
+    val dayStart: LocalTime = LocalTime.of(8, 0),
+    val dayEnd: LocalTime = LocalTime.of(22, 0),
+    /** Morning rollover of overdue tasks and a proposed plan; null = off. */
+    val morningTime: LocalTime? = null,
+    /** Apply the morning plan without asking (it can still be undone). */
+    val autoPlan: Boolean = false,
+    /** Nightly statistics and inferred facts; off = nothing new is learned. */
+    val learningEnabled: Boolean = true,
+)

@@ -2,11 +2,13 @@ package ir.roozban.core.database
 
 import ir.roozban.core.model.EventCalendar
 import ir.roozban.core.model.EventKind
+import ir.roozban.core.model.FactSource
 import ir.roozban.core.model.FocusSession
 import ir.roozban.core.model.Habit
 import ir.roozban.core.model.HabitLog
 import ir.roozban.core.model.HabitSchedule
 import ir.roozban.core.model.Label
+import ir.roozban.core.model.MemoryFact
 import ir.roozban.core.model.PersonalEvent
 import ir.roozban.core.model.Project
 import ir.roozban.core.model.Reminder
@@ -172,6 +174,28 @@ fun PersonalEvent.toEntity() = PersonalEventEntity(
     remindDays = remindDaysBefore.sorted().joinToString(","),
     reminderMinute = reminderTime.hour * 60 + reminderTime.minute,
     notes = notes,
+    createdAt = createdAt.toEpochMilli(),
+    updatedAt = updatedAt.toEpochMilli(),
+)
+
+fun MemoryFactEntity.toModel() = MemoryFact(
+    id = id,
+    key = key,
+    text = text,
+    source = FactSource.entries.firstOrNull { it.name == source } ?: FactSource.USER,
+    confidence = confidence,
+    pinned = pinned,
+    createdAt = Instant.ofEpochMilli(createdAt),
+    updatedAt = Instant.ofEpochMilli(updatedAt),
+)
+
+fun MemoryFact.toEntity() = MemoryFactEntity(
+    id = id,
+    key = key,
+    text = text,
+    source = source.name,
+    confidence = confidence,
+    pinned = pinned,
     createdAt = createdAt.toEpochMilli(),
     updatedAt = updatedAt.toEpochMilli(),
 )

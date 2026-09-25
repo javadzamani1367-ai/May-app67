@@ -271,6 +271,33 @@ interface EventDao {
     suspend fun delete(id: String)
 }
 
+@Dao
+interface MemoryDao {
+    @Query("SELECT * FROM memory_fact ORDER BY pinned DESC, updated_at DESC")
+    fun observeAll(): Flow<List<MemoryFactEntity>>
+
+    @Query("SELECT * FROM memory_fact ORDER BY pinned DESC, updated_at DESC")
+    suspend fun all(): List<MemoryFactEntity>
+
+    @Query("SELECT * FROM memory_fact WHERE `key` = :key")
+    suspend fun byKey(key: String): MemoryFactEntity?
+
+    @Query("SELECT * FROM memory_fact WHERE id = :id")
+    suspend fun get(id: String): MemoryFactEntity?
+
+    @Upsert
+    suspend fun upsert(fact: MemoryFactEntity)
+
+    @Query("DELETE FROM memory_fact WHERE id = :id")
+    suspend fun delete(id: String)
+
+    @Query("DELETE FROM memory_fact")
+    suspend fun clear()
+
+    @Query("DELETE FROM memory_fact WHERE source = :source AND pinned = 0 AND `key` NOT IN (:keep)")
+    suspend fun deleteSourceExcept(source: String, keep: List<String>)
+}
+
 /** Whole-database export and import for backups. */
 @Dao
 interface BackupDao {
@@ -306,6 +333,15 @@ interface BackupDao {
 
     @Query("DELETE FROM personal_event")
     suspend fun clearEvents()
+
+    @Query("SELECT * FROM memory_fact")
+    suspend fun memoryFacts(): List<MemoryFactEntity>
+
+    @Query("DELETE FROM memory_fact")
+    suspend fun clearMemoryFacts()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMemoryFacts(facts: List<MemoryFactEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvents(events: List<PersonalEventEntity>)
@@ -371,6 +407,7 @@ interface BackupDao {
         habits: List<HabitEntity> = emptyList(),
         habitLogs: List<HabitLogEntity> = emptyList(),
         events: List<PersonalEventEntity> = emptyList(),
+        memoryFacts: List<MemoryFactEntity>? = null,
     ) {
         clearReminders()
         clearEvents()
@@ -393,5 +430,10 @@ interface BackupDao {
         val habitIds = habits.mapTo(HashSet()) { it.id }
         insertHabitLogs(habitLogs.filter { it.habitId in habitIds })
         insertEvents(events)
+        // Null keeps what the phone learned (backups made before memory existed).
+        if (memoryFacts != null) {
+            clearMemoryFacts()
+            insertMemoryFacts(memoryFacts.distinctBy { it.key })
+        }
     }
 }
