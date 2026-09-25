@@ -33,12 +33,28 @@ class ModelsViewModel @Inject constructor(
         manager.refresh()
     }
 
-    /** Checks space and network first; returns a problem to show, or null when it started. */
-    fun download(spec: ModelSpec) {
+    /** A download waiting for the user to accept using mobile data. */
+    private val _confirmMobile = MutableStateFlow<ModelSpec?>(null)
+    val confirmMobile: StateFlow<ModelSpec?> = _confirmMobile.asStateFlow()
+
+    fun dismissMobile() {
+        _confirmMobile.value = null
+    }
+
+    /**
+     * Checks space and network first. On mobile data the size is confirmed with the user
+     * before anything is downloaded ([confirmedMobile]).
+     */
+    fun download(spec: ModelSpec, confirmedMobile: Boolean = false) {
+        _confirmMobile.value = null
         val needed = spec.sizeBytes - manager.store.partialBytes(spec) + ModelManager.SPACE_MARGIN
         _message.value = when {
             manager.freeSpaceBytes() < needed -> "فضای خالی کافی نیست؛ دست‌کم ${formatSize(needed)} لازم است."
             !manager.networkAllowed() -> if (state.value.wifiOnly) "به وای‌فای وصل شو یا گزینهٔ «فقط با وای‌فای» را خاموش کن." else "اینترنت در دسترس نیست."
+            manager.isMetered() && !confirmedMobile -> {
+                _confirmMobile.value = spec
+                null
+            }
             else -> {
                 manager.startDownload(spec)
                 null

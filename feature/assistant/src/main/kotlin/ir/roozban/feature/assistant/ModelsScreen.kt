@@ -64,6 +64,7 @@ internal fun ModelsScreen(onBack: () -> Unit, viewModel: ModelsViewModel = hiltV
     val state by viewModel.state.collectAsStateWithLifecycle()
     val importing by viewModel.importing.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
+    val confirmMobile by viewModel.confirmMobile.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     var confirmDelete by remember { mutableStateOf<InstalledModel?>(null) }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(viewModel::import) }
@@ -140,6 +141,16 @@ internal fun ModelsScreen(onBack: () -> Unit, viewModel: ModelsViewModel = hiltV
                 )
             }
         }
+    }
+    confirmMobile?.let { spec ->
+        val left = spec.sizeBytes - ((state.downloads[spec.id] as? DownloadState.Failed)?.partialBytes ?: 0L)
+        AlertDialog(
+            onDismissRequest = viewModel::dismissMobile,
+            title = { Text("دانلود با اینترنت همراه") },
+            text = { Text("به وای‌فای وصل نیستی. حدود ${formatSize(left)} از بستهٔ اینترنت همراهت مصرف می‌شود. ادامه می‌دهی؟") },
+            confirmButton = { TextButton(onClick = { viewModel.download(spec, confirmedMobile = true) }) { Text("دانلود") } },
+            dismissButton = { TextButton(onClick = viewModel::dismissMobile) { Text("انصراف") } },
+        )
     }
     confirmDelete?.let { m ->
         AlertDialog(

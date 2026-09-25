@@ -40,7 +40,8 @@ data class ModelsState(
     val activeId: String? = null,
     /** Catalog id → an ongoing or failed download. */
     val downloads: Map<String, DownloadState> = emptyMap(),
-    val wifiOnly: Boolean = true,
+    /** Off by default: mobile data is allowed, with a size confirmation in the model screen. */
+    val wifiOnly: Boolean = false,
 ) {
     val active: InstalledModel? get() = installed.firstOrNull { it.id == activeId } ?: installed.firstOrNull()
 
@@ -73,7 +74,7 @@ class ModelManager @Inject constructor(
             s.copy(
                 installed = installed,
                 activeId = prefs.getString(KEY_ACTIVE, null),
-                wifiOnly = prefs.getBoolean(KEY_WIFI_ONLY, true),
+                wifiOnly = prefs.getBoolean(KEY_WIFI_ONLY, false),
                 downloads = failed + s.downloads.filterValues { it is DownloadState.Running },
             )
         }
@@ -95,6 +96,13 @@ class ModelManager @Inject constructor(
         val caps = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false
         if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) return false
         return !_state.value.wifiOnly || caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+    }
+
+    /** True on mobile data or another metered network. */
+    fun isMetered(): Boolean {
+        val cm = context.getSystemService(ConnectivityManager::class.java) ?: return false
+        val caps = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false
+        return !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
     }
 
     fun freeSpaceBytes(): Long = store.dir.apply { mkdirs() }.usableSpace

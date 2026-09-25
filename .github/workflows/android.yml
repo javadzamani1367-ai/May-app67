@@ -59,8 +59,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cp app/build/outputs/apk/dev/debug/*.apk roozban-dev.apk
-          gh release delete roozban-dev --cleanup-tag --yes || true
-          gh release create roozban-dev roozban-dev.apk \
-            --prerelease --latest=false --target "$GITHUB_SHA" \
-            --title "روزبان — نسخه‌ی آزمایشی" \
-            --notes "نسخه‌ی آزمایشی (debug) از commit ${GITHUB_SHA::7}. فقط برای بررسی."
+          notes="نسخه‌ی آزمایشی (debug) از commit ${GITHUB_SHA::7}. فقط برای بررسی."
+          # Replace the file in place so the download link never disappears between builds.
+          if gh release view roozban-dev > /dev/null 2>&1; then
+            gh release upload roozban-dev roozban-dev.apk --clobber
+            gh release edit roozban-dev --notes "$notes"
+          else
+            gh release create roozban-dev roozban-dev.apk \
+              --prerelease --latest=false --target "$GITHUB_SHA" \
+              --title "روزبان — نسخه‌ی آزمایشی" --notes "$notes"
+          fi
