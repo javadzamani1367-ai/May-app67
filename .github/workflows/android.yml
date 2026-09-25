@@ -26,6 +26,14 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Probe speech model files (sizes and sha256)
+        continue-on-error: true
+        run: |
+          for f in ggml-base-q5_1.bin ggml-base-q8_0.bin ggml-small-q5_1.bin ggml-small-q8_0.bin ggml-large-v3-turbo-q5_0.bin ggml-large-v3-turbo-q8_0.bin; do
+            u="https://huggingface.co/ggerganov/whisper.cpp/resolve/main/$f"
+            echo "=== MODEL $u"; curl -sI "$u" | grep -iE "^HTTP|x-linked-etag|x-linked-size" || true
+          done
+
       - name: Unit tests (JVM modules + all Android variants)
         run: ./gradlew test --continue
 
