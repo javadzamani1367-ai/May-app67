@@ -253,6 +253,24 @@ interface LabelDao {
     suspend fun delete(id: String)
 }
 
+@Dao
+interface EventDao {
+    @Query("SELECT * FROM personal_event ORDER BY month, day, title")
+    fun observeAll(): Flow<List<PersonalEventEntity>>
+
+    @Query("SELECT * FROM personal_event WHERE id = :id")
+    suspend fun get(id: String): PersonalEventEntity?
+
+    @Query("SELECT * FROM personal_event")
+    suspend fun all(): List<PersonalEventEntity>
+
+    @Upsert
+    suspend fun upsert(event: PersonalEventEntity)
+
+    @Query("DELETE FROM personal_event WHERE id = :id")
+    suspend fun delete(id: String)
+}
+
 /** Whole-database export and import for backups. */
 @Dao
 interface BackupDao {
@@ -282,6 +300,15 @@ interface BackupDao {
 
     @Query("SELECT * FROM habit_log")
     suspend fun habitLogs(): List<HabitLogEntity>
+
+    @Query("SELECT * FROM personal_event")
+    suspend fun events(): List<PersonalEventEntity>
+
+    @Query("DELETE FROM personal_event")
+    suspend fun clearEvents()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertEvents(events: List<PersonalEventEntity>)
 
     @Query("DELETE FROM focus_session")
     suspend fun clearFocusSessions()
@@ -343,8 +370,10 @@ interface BackupDao {
         timeEntries: List<TimeEntryEntity> = emptyList(),
         habits: List<HabitEntity> = emptyList(),
         habitLogs: List<HabitLogEntity> = emptyList(),
+        events: List<PersonalEventEntity> = emptyList(),
     ) {
         clearReminders()
+        clearEvents()
         clearFocusSessions()
         clearTimeEntries()
         clearHabits() // cascades to habit_log
@@ -363,5 +392,6 @@ interface BackupDao {
         insertHabits(habits)
         val habitIds = habits.mapTo(HashSet()) { it.id }
         insertHabitLogs(habitLogs.filter { it.habitId in habitIds })
+        insertEvents(events)
     }
 }

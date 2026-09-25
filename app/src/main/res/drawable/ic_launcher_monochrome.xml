@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed-icon silhouette: page outline, rings and the rising sun. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M40,36h28a8,8 0,0 1,8 8v26a8,8 0,0 1,-8 8h-28a8,8 0,0 1,-8 -8v-26a8,8 0,0 1,8 -8zM40,50v20a3,3 0,0 0,3 3h22a3,3 0,0 0,3 -3v-20z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M45,30a2.2,2.2 0,0 1,2.2 2.2v7.6a2.2,2.2 0,0 1,-4.4 0v-7.6a2.2,2.2 0,0 1,2.2 -2.2zM63,30a2.2,2.2 0,0 1,2.2 2.2v7.6a2.2,2.2 0,0 1,-4.4 0v-7.6a2.2,2.2 0,0 1,2.2 -2.2z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M46,70a8,8 0,0 1,16 0z" />
+</vector>

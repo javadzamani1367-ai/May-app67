@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="date_accent">#BAC3FF</color>
+    <color name="date_holiday">#FF8A80</color>
+</resources>

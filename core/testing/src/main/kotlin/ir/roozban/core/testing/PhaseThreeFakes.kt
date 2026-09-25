@@ -1,5 +1,6 @@
 package ir.roozban.core.testing
 
+import ir.roozban.core.domain.EventRepository
 import ir.roozban.core.domain.FocusRepository
 import ir.roozban.core.domain.FocusStateStore
 import ir.roozban.core.domain.FocusSystem
@@ -12,6 +13,7 @@ import ir.roozban.core.model.FocusSession
 import ir.roozban.core.model.FocusState
 import ir.roozban.core.model.Habit
 import ir.roozban.core.model.HabitLog
+import ir.roozban.core.model.PersonalEvent
 import ir.roozban.core.model.TimeEntry
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -135,6 +137,15 @@ class FakeHabitRepository : HabitRepository {
 class FakeRoutineAlarms : RoutineAlarms {
     val habits = mutableMapOf<String, LocalDateTime>()
     val reviews = mutableMapOf<ReviewKind, LocalDateTime>()
+    val events = mutableMapOf<String, LocalDateTime>()
+
+    override fun scheduleEvent(eventId: String, atEpochMillis: Long) {
+        events[eventId] = local(atEpochMillis)
+    }
+
+    override fun cancelEvent(eventId: String) {
+        events -= eventId
+    }
 
     override fun scheduleHabit(habitId: String, atEpochMillis: Long) {
         habits[habitId] = local(atEpochMillis)
@@ -153,4 +164,17 @@ class FakeRoutineAlarms : RoutineAlarms {
     }
 
     private fun local(ms: Long) = LocalDateTime.ofInstant(Instant.ofEpochMilli(ms), TEHRAN)
+}
+
+class FakeEventRepository : EventRepository {
+    val events = MutableStateFlow<Map<String, PersonalEvent>>(emptyMap())
+    override fun observeEvents(): Flow<List<PersonalEvent>> = events.map { it.values.sortedBy { e -> e.title } }
+    override suspend fun get(id: String) = events.value[id]
+    override suspend fun all() = events.value.values.toList()
+    override suspend fun upsert(event: PersonalEvent) {
+        events.value = events.value + (event.id to event)
+    }
+    override suspend fun delete(id: String) {
+        events.value = events.value - id
+    }
 }

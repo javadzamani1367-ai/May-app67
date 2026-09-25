@@ -1,15 +1,18 @@
 package ir.roozban.core.data
 
+import ir.roozban.core.database.EventDao
 import ir.roozban.core.database.FocusDao
 import ir.roozban.core.database.HabitDao
 import ir.roozban.core.database.toEntity
 import ir.roozban.core.database.toModel
+import ir.roozban.core.domain.EventRepository
 import ir.roozban.core.domain.FocusRepository
 import ir.roozban.core.domain.HabitRepository
 import ir.roozban.core.domain.TrackedTime
 import ir.roozban.core.model.FocusSession
 import ir.roozban.core.model.Habit
 import ir.roozban.core.model.HabitLog
+import ir.roozban.core.model.PersonalEvent
 import ir.roozban.core.model.TimeEntry
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -59,4 +62,16 @@ class RoomHabitRepository @Inject constructor(private val dao: HabitDao) : Habit
     override suspend fun setLog(log: HabitLog) {
         if (log.count <= 0) dao.deleteLog(log.habitId, log.date.toEpochDay()) else dao.upsertLog(log.toEntity())
     }
+}
+
+class RoomEventRepository @Inject constructor(private val dao: EventDao) : EventRepository {
+    override fun observeEvents(): Flow<List<PersonalEvent>> = dao.observeAll().map { list -> list.map { it.toModel() } }
+
+    override suspend fun get(id: String): PersonalEvent? = dao.get(id)?.toModel()
+
+    override suspend fun all(): List<PersonalEvent> = dao.all().map { it.toModel() }
+
+    override suspend fun upsert(event: PersonalEvent) = dao.upsert(event.toEntity())
+
+    override suspend fun delete(id: String) = dao.delete(id)
 }

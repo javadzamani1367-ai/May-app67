@@ -205,4 +205,19 @@ class DaoTest {
         habits.delete("h")
         assertThat(habits.observeHabitLogs("h").first()).isEmpty()
     }
+
+    @Test
+    fun `personal events map round-trip`() = runTest {
+        val event = ir.roozban.core.model.PersonalEvent(
+            id = "e", title = "سالگرد ازدواج", kind = ir.roozban.core.model.EventKind.WEDDING, color = 4,
+            calendar = ir.roozban.core.model.EventCalendar.GREGORIAN, month = 6, day = 12, year = 2015,
+            remindDaysBefore = setOf(0, 7, 1), reminderTime = LocalTime.of(20, 15), notes = "رستوران",
+            createdAt = Instant.ofEpochMilli(1), updatedAt = Instant.ofEpochMilli(2),
+        )
+        db.eventDao().upsert(event.toEntity())
+        assertThat(db.eventDao().get("e")!!.toModel()).isEqualTo(event)
+        assertThat(db.eventDao().observeAll().first()).hasSize(1)
+        db.eventDao().delete("e")
+        assertThat(db.eventDao().all()).isEmpty()
+    }
 }

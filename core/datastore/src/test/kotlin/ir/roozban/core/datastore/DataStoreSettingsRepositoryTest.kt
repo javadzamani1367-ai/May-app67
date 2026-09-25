@@ -7,6 +7,9 @@ import ir.roozban.core.model.FocusSettings
 import ir.roozban.core.model.FocusState
 import ir.roozban.core.model.ReminderKind
 import ir.roozban.core.model.ReminderSetting
+import ir.roozban.core.model.StartScreen
+import ir.roozban.core.model.ThemeMode
+import ir.roozban.core.model.ThemePalette
 import ir.roozban.core.model.UserSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -63,6 +66,24 @@ class DataStoreSettingsRepositoryTest {
         assertThat(s.weeklyReviewDay).isEqualTo(DayOfWeek.THURSDAY)
         repo.update { it.copy(dailyReviewTime = null) }
         assertThat(repo.current().dailyReviewTime).isNull()
+
+        repo.update {
+            it.copy(
+                themeMode = ThemeMode.DARK, palette = ThemePalette.ROSE, background = "preset:dawn", backgroundVeil = 0.6f,
+                startScreen = StartScreen.CALENDAR, dateNotification = false, prayerCity = "tehran",
+            )
+        }
+        val a = repo.current()
+        assertThat(a.themeMode).isEqualTo(ThemeMode.DARK)
+        assertThat(a.palette).isEqualTo(ThemePalette.ROSE)
+        assertThat(a.background).isEqualTo("preset:dawn")
+        assertThat(a.backgroundVeil).isEqualTo(0.6f)
+        assertThat(a.startScreen).isEqualTo(StartScreen.CALENDAR)
+        assertThat(a.dateNotification).isFalse()
+        assertThat(a.prayerCity).isEqualTo("tehran")
+        repo.update { it.copy(background = null, prayerCity = null) }
+        assertThat(repo.current().background).isNull()
+        assertThat(repo.current().prayerCity).isNull()
         scope.cancel()
     }
 

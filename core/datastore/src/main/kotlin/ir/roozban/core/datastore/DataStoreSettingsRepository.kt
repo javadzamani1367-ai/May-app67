@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import ir.roozban.core.domain.SettingsRepository
@@ -56,6 +57,15 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
         val WEEKLY_REVIEW = intPreferencesKey("weekly_review_minute")
         /** ISO day of week. */
         val WEEKLY_REVIEW_DAY = intPreferencesKey("weekly_review_day")
+        val THEME_MODE = stringPreferencesKey("theme_mode")
+        val PALETTE = stringPreferencesKey("palette")
+        /** "" = none. */
+        val BACKGROUND = stringPreferencesKey("background")
+        val BACKGROUND_VEIL = floatPreferencesKey("background_veil")
+        val START_SCREEN = stringPreferencesKey("start_screen")
+        val DATE_NOTIFICATION = booleanPreferencesKey("date_notification")
+        /** "" = off. */
+        val PRAYER_CITY = stringPreferencesKey("prayer_city")
     }
 
     private companion object {
@@ -98,6 +108,13 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
                 dailyReviewTime = minuteOrDefault(this[Keys.DAILY_REVIEW], DEFAULTS.dailyReviewTime),
                 weeklyReviewTime = minuteOrDefault(this[Keys.WEEKLY_REVIEW], DEFAULTS.weeklyReviewTime),
                 weeklyReviewDay = this[Keys.WEEKLY_REVIEW_DAY]?.takeIf { it in 1..7 }?.let(DayOfWeek::of) ?: DEFAULTS.weeklyReviewDay,
+                themeMode = enumOr(this[Keys.THEME_MODE], DEFAULTS.themeMode),
+                palette = enumOr(this[Keys.PALETTE], DEFAULTS.palette),
+                background = this[Keys.BACKGROUND]?.let { it.ifEmpty { null } } ?: DEFAULTS.background,
+                backgroundVeil = this[Keys.BACKGROUND_VEIL] ?: DEFAULTS.backgroundVeil,
+                startScreen = enumOr(this[Keys.START_SCREEN], DEFAULTS.startScreen),
+                dateNotification = this[Keys.DATE_NOTIFICATION] ?: DEFAULTS.dateNotification,
+                prayerCity = this[Keys.PRAYER_CITY]?.let { it.ifEmpty { null } } ?: DEFAULTS.prayerCity,
             )
         }
 
@@ -124,7 +141,17 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
             this[Keys.DAILY_REVIEW] = s.dailyReviewTime.toMinute()
             this[Keys.WEEKLY_REVIEW] = s.weeklyReviewTime.toMinute()
             this[Keys.WEEKLY_REVIEW_DAY] = s.weeklyReviewDay.value
+            this[Keys.THEME_MODE] = s.themeMode.name
+            this[Keys.PALETTE] = s.palette.name
+            this[Keys.BACKGROUND] = s.background.orEmpty()
+            this[Keys.BACKGROUND_VEIL] = s.backgroundVeil
+            this[Keys.START_SCREEN] = s.startScreen.name
+            this[Keys.DATE_NOTIFICATION] = s.dateNotification
+            this[Keys.PRAYER_CITY] = s.prayerCity.orEmpty()
         }
+
+        inline fun <reified E : Enum<E>> enumOr(name: String?, default: E): E =
+            name?.let { n -> enumValues<E>().firstOrNull { it.name == n } } ?: default
 
         fun minuteOrDefault(value: Int?, default: LocalTime?): LocalTime? = when (value) {
             null -> default

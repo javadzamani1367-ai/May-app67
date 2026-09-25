@@ -37,4 +37,14 @@
     <string name="review_daily_text">دو دقیقه: کارهای مانده را جابه‌جا کنید و فردا را ببینید</string>
     <string name="review_weekly_title">مرور هفته</string>
     <string name="review_weekly_text">هفته‌ای که گذشت و هفته‌ی پیش رو</string>
+    <string name="focus_next_started">%1$s شروع شد</string>
+    <string name="focus_next_ready">برای شروع %1$s بزنید</string>
+    <string name="channel_events">مناسبت‌های من</string>
+    <string name="channel_events_desc">یادآوری تولدها، سالگردها و مناسبت‌های شخصی</string>
+    <string name="event_count">%1$s سالگی</string>
+    <string name="event_today">امروز است</string>
+    <string name="event_tomorrow">فردا است</string>
+    <string name="event_in_days">%1$s روز دیگر</string>
+    <string name="channel_date">تاریخ امروز</string>
+    <string name="channel_date_desc">تاریخ شمسی، میلادی و قمری امروز در نوار اعلان و عدد روز در نوار وضعیت</string>
 </resources>

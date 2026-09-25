@@ -11,6 +11,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import ir.roozban.core.data.RoomBackupService
+import ir.roozban.core.data.RoomEventRepository
 import ir.roozban.core.data.RoomFocusRepository
 import ir.roozban.core.data.RoomHabitRepository
 import ir.roozban.core.data.RoomLabelRepository
@@ -18,6 +19,7 @@ import ir.roozban.core.data.RoomProjectRepository
 import ir.roozban.core.data.RoomReminderRepository
 import ir.roozban.core.data.RoomTaskRepository
 import ir.roozban.core.database.BackupDao
+import ir.roozban.core.database.EventDao
 import ir.roozban.core.database.FocusDao
 import ir.roozban.core.database.HabitDao
 import ir.roozban.core.database.LabelDao
@@ -29,6 +31,7 @@ import ir.roozban.core.datastore.DataStoreFocusStateStore
 import ir.roozban.core.datastore.DataStoreSettingsRepository
 import ir.roozban.core.domain.BackupService
 import ir.roozban.core.domain.Entitlements
+import ir.roozban.core.domain.EventRepository
 import ir.roozban.core.domain.FocusRepository
 import ir.roozban.core.domain.FocusStateStore
 import ir.roozban.core.domain.HabitRepository
@@ -65,6 +68,9 @@ abstract class DataModule {
     abstract fun habitRepository(impl: RoomHabitRepository): HabitRepository
 
     @Binds
+    abstract fun eventRepository(impl: RoomEventRepository): EventRepository
+
+    @Binds
     abstract fun entitlements(impl: ProvisionalEntitlements): Entitlements
 
     companion object {
@@ -93,6 +99,9 @@ abstract class DataModule {
 
         @Provides
         fun habitDao(db: RoozbanDatabase): HabitDao = db.habitDao()
+
+        @Provides
+        fun eventDao(db: RoozbanDatabase): EventDao = db.eventDao()
 
         @Provides
         @Singleton

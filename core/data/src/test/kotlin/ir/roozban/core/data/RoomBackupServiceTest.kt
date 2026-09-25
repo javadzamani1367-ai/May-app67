@@ -5,7 +5,11 @@ import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import ir.roozban.core.database.RoozbanDatabase
 import ir.roozban.core.domain.AddTaskUseCase
+import ir.roozban.core.domain.EventReminders
+import ir.roozban.core.domain.EventUseCases
 import ir.roozban.core.domain.HabitUseCases
+import ir.roozban.core.model.EventCalendar
+import ir.roozban.core.model.EventKind
 import ir.roozban.core.domain.RoutineReminders
 import ir.roozban.core.model.FocusSession
 import ir.roozban.core.model.HabitSchedule
@@ -48,7 +52,10 @@ class RoomBackupServiceTest {
     private val routines = RoutineReminders(habitRepo, settings, routineAlarms, clock)
     private val habits = HabitUseCases(habitRepo, routines, clock)
     private val focus = RoomFocusRepository(db.focusDao())
-    private val backup = RoomBackupService(db.backupDao(), settings, sync, routines, clock)
+    private val eventRepo = RoomEventRepository(db.eventDao())
+    private val eventReminders = EventReminders(eventRepo, settings, routineAlarms, clock)
+    private val events = EventUseCases(eventRepo, eventReminders, clock)
+    private val backup = RoomBackupService(db.backupDao(), settings, sync, routines, eventReminders, clock)
     private val password = "رمز۱۲۳۴".toCharArray()
 
     @After
@@ -116,5 +123,19 @@ class RoomBackupServiceTest {
         assertThat(focus.observeTaskSeconds("none").first()).isEqualTo(0L)
         assertThat(settings.current().focus.workMinutes).isEqualTo(50)
         assertThat(routineAlarms.habits).containsKey(habit.id)
+    }
+
+    @Test
+    fun `personal events survive a restore with their reminders`() = runTest {
+        val ev = events.create(
+            "تولد سارا", EventKind.BIRTHDAY, 3, jalali("1375-07-15"), EventCalendar.JALALI, true, setOf(0, 7), LocalTime.of(8, 30),
+        )!!
+        val file = backup.createBackup(password)
+        events.delete(ev)
+        routineAlarms.events.clear()
+        backup.restore(file, password, RestoreMode.REPLACE)
+        val restored = eventRepo.all().single()
+        assertThat(restored).isEqualTo(ev)
+        assertThat(routineAlarms.events).containsKey(ev.id)
     }
 }

@@ -25,4 +25,19 @@ object HijriDates {
     } catch (e: DateTimeException) {
         null // Outside the supported Umm al-Qura range.
     }
+
+    /**
+     * The Gregorian date of a Hijri date (inverse of [from] with the same offset). A day past the
+     * month's end (30 in a 29-day month) falls back to the last day. Null outside the supported range.
+     */
+    fun toLocalDate(year: Int, month: Int, day: Int, offsetDays: Int = 0): LocalDate? {
+        for (d in day downTo maxOf(1, day - 2)) {
+            try {
+                return LocalDate.from(HijrahDate.of(year, month, d)).minusDays(offsetDays.toLong())
+            } catch (e: DateTimeException) {
+                // Day out of range for this month: try one less.
+            }
+        }
+        return null
+    }
 }

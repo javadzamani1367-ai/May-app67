@@ -33,6 +33,13 @@ class ReminderNotifier @Inject constructor(
 
     fun createChannels() {
         val system = context.getSystemService(NotificationManager::class.java)
+        // Channels are immutable once created: replaced ones get new ids and the old ones go.
+        LEGACY_CHANNELS.forEach { system.deleteNotificationChannel(it) }
+        val notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val eventAudio = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
         val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         system.createNotificationChannels(
@@ -49,11 +56,36 @@ class ReminderNotifier @Inject constructor(
                 NotificationChannel(CHANNEL_FOCUS, context.getString(R.string.channel_focus), NotificationManager.IMPORTANCE_LOW).apply {
                     description = context.getString(R.string.channel_focus_desc)
                     setShowBadge(false)
+                    lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 },
-                NotificationChannel(CHANNEL_FOCUS_END, context.getString(R.string.channel_focus_end), NotificationManager.IMPORTANCE_HIGH)
-                    .apply { description = context.getString(R.string.channel_focus_end_desc) },
-                NotificationChannel(CHANNEL_HABITS, context.getString(R.string.channel_habits), NotificationManager.IMPORTANCE_DEFAULT)
-                    .apply { description = context.getString(R.string.channel_habits_desc) },
+                // Alerting channels carry an explicit sound and vibration: some OEMs create
+                // default-importance channels silent, which made habit reminders go unnoticed.
+                NotificationChannel(CHANNEL_FOCUS_END, context.getString(R.string.channel_focus_end), NotificationManager.IMPORTANCE_HIGH).apply {
+                    description = context.getString(R.string.channel_focus_end_desc)
+                    setSound(notificationSound, eventAudio)
+                    enableVibration(true)
+                    vibrationPattern = longArrayOf(0, 400, 200, 400)
+                    lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                },
+                NotificationChannel(CHANNEL_DATE, context.getString(R.string.channel_date), NotificationManager.IMPORTANCE_LOW).apply {
+                    description = context.getString(R.string.channel_date_desc)
+                    setShowBadge(false)
+                    setSound(null, null)
+                    enableVibration(false)
+                    lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                },
+                NotificationChannel(CHANNEL_EVENTS, context.getString(R.string.channel_events), NotificationManager.IMPORTANCE_HIGH).apply {
+                    description = context.getString(R.string.channel_events_desc)
+                    setSound(notificationSound, eventAudio)
+                    enableVibration(true)
+                    lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                },
+                NotificationChannel(CHANNEL_HABITS, context.getString(R.string.channel_habits), NotificationManager.IMPORTANCE_HIGH).apply {
+                    description = context.getString(R.string.channel_habits_desc)
+                    setSound(notificationSound, eventAudio)
+                    enableVibration(true)
+                    lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                },
             ),
         )
     }
@@ -115,8 +147,11 @@ class ReminderNotifier @Inject constructor(
         const val CHANNEL_ALARMS = "alarms"
         const val CHANNEL_MISSED = "missed"
         const val CHANNEL_FOCUS = "focus"
-        const val CHANNEL_FOCUS_END = "focus_end"
-        const val CHANNEL_HABITS = "habits"
+        const val CHANNEL_FOCUS_END = "focus_alerts"
+        const val CHANNEL_HABITS = "habit_reminders"
+        const val CHANNEL_EVENTS = "personal_events"
+        const val CHANNEL_DATE = "today_date"
+        private val LEGACY_CHANNELS = listOf("focus_end", "habits")
 
         fun notificationId(taskId: String): Int = taskId.hashCode()
     }

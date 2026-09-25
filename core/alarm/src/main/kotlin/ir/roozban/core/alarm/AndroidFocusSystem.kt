@@ -50,8 +50,43 @@ class AndroidFocusSystem @Inject constructor(
 
     override fun show(state: FocusState, taskTitle: String?) = post(state, taskTitle, alert = null)
 
-    override fun announcePhaseEnd(finished: FocusPhase, next: FocusState, taskTitle: String?) =
-        post(next, taskTitle, alert = finished)
+    /**
+     * A separate, alerting notification (sound, vibration, heads-up, shown on the lock screen)
+     * says the phase is over; the ongoing one is updated silently.
+     */
+    override fun announcePhaseEnd(finished: FocusPhase, next: FocusState, taskTitle: String?) {
+        post(next, taskTitle, alert = null)
+        if (!notifier.canPost()) return
+        val nextPhase = when (next) {
+            is FocusState.Running -> next.phase
+            is FocusState.Paused -> next.phase
+            is FocusState.Ready -> next.phase
+            FocusState.Idle -> null
+        }
+        val text = nextPhase?.let {
+            context.getString(if (next is FocusState.Running) R.string.focus_next_started else R.string.focus_next_ready, phaseName(it))
+        }
+        val builder = NotificationCompat.Builder(context, ReminderNotifier.CHANNEL_FOCUS_END)
+            .setSmallIcon(R.drawable.ic_stat_focus)
+            .setContentTitle(context.getString(if (finished == FocusPhase.WORK) R.string.focus_done_title else R.string.focus_break_over_title))
+            .setContentText(text)
+            .setSubText(taskTitle)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setAutoCancel(true)
+            .setTimeoutAfter(ALERT_TIMEOUT_MS)
+            .setContentIntent(AppLinks.open(context, AppLinks.FOCUS))
+        if (next is FocusState.Ready) {
+            builder.addAction(0, context.getString(R.string.focus_start), action(RoutineReceiver.ACTION_FOCUS_NEXT))
+        }
+        try {
+            manager.notify(ALERT_ID, builder.build())
+        } catch (e: SecurityException) {
+            // Notification permission revoked.
+        }
+    }
 
     override fun setSilenced(on: Boolean): Boolean = dnd.set(on)
 
@@ -62,6 +97,8 @@ class AndroidFocusSystem @Inject constructor(
             manager.cancel(NOTIFICATION_ID)
             return
         }
+        // Starting, pausing or stopping by hand clears a stale «تمرکز تمام شد».
+        if (alert == null && state !is FocusState.Ready) manager.cancel(ALERT_ID)
         if (!notifier.canPost()) return
         val channel = if (alert != null) ReminderNotifier.CHANNEL_FOCUS_END else ReminderNotifier.CHANNEL_FOCUS
         val builder = NotificationCompat.Builder(context, channel)
@@ -72,6 +109,7 @@ class AndroidFocusSystem @Inject constructor(
             .setSilent(alert == null)
             .setPriority(if (alert != null) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_LOW)
             .setSubText(taskTitle)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
         val phase = when (state) {
             is FocusState.Running -> state.phase
             is FocusState.Paused -> state.phase
@@ -144,5 +182,7 @@ class AndroidFocusSystem @Inject constructor(
 
     private companion object {
         const val NOTIFICATION_ID = 0x0F0C05
+        const val ALERT_ID = 0x0F0C06
+        const val ALERT_TIMEOUT_MS = 10 * 60_000L
     }
 }

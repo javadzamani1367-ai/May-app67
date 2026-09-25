@@ -10,6 +10,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import ir.roozban.app.R
 import ir.roozban.core.designsystem.theme.RoozbanTheme
+import ir.roozban.core.designsystem.theme.isDark
+import ir.roozban.core.model.ThemeMode
+import ir.roozban.core.model.ThemePalette
 import ir.roozban.core.domain.SettingsRepository
 import ir.roozban.feature.tasks.StandaloneQuickAdd
 import javax.inject.Inject
@@ -35,7 +38,12 @@ class QuickAddActivity : AppCompatActivity() {
         }
         setContent {
             val userSettings by settings.settings.collectAsStateWithLifecycle(initialValue = null)
-            RoozbanTheme(dynamicColor = userSettings?.dynamicColor == true) {
+            val s = userSettings
+            RoozbanTheme(
+                darkTheme = (s?.themeMode ?: ThemeMode.LIGHT).isDark(),
+                palette = s?.palette ?: ThemePalette.INDIGO,
+                dynamicColor = s?.dynamicColor == true,
+            ) {
                 StandaloneQuickAdd(
                     initialText = shared,
                     onDone = { saved ->

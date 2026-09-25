@@ -29,6 +29,21 @@ class AndroidRoutineAlarms @Inject constructor(
 
     override fun cancelReview(kind: ReviewKind) = cancel(reviewIntent(kind, PendingIntent.FLAG_NO_CREATE))
 
+    override fun scheduleEvent(eventId: String, atEpochMillis: Long) =
+        schedule(eventIntent(eventId, PendingIntent.FLAG_UPDATE_CURRENT)!!, atEpochMillis)
+
+    override fun cancelEvent(eventId: String) = cancel(eventIntent(eventId, PendingIntent.FLAG_NO_CREATE))
+
+    private fun eventIntent(eventId: String, flags: Int): PendingIntent? = PendingIntent.getBroadcast(
+        context,
+        0,
+        Intent(context, RoutineReceiver::class.java)
+            .setAction(RoutineReceiver.ACTION_EVENT_FIRE)
+            .setData(Uri.parse("roozban://event/$eventId"))
+            .putExtra(RoutineReceiver.EXTRA_ID, eventId),
+        flags or PendingIntent.FLAG_IMMUTABLE,
+    )
+
     private fun schedule(operation: PendingIntent, at: Long) {
         try {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()) {

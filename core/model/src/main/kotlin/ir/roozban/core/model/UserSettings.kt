@@ -26,4 +26,26 @@ data class UserSettings(
     /** Weekly review reminder; null time = off. */
     val weeklyReviewDay: DayOfWeek = DayOfWeek.FRIDAY,
     val weeklyReviewTime: LocalTime? = null,
-)
+    val themeMode: ThemeMode = ThemeMode.LIGHT,
+    val palette: ThemePalette = ThemePalette.INDIGO,
+    /** Screen background: null = plain, `preset:<id>` or [BACKGROUND_IMAGE] (a picture from the gallery). */
+    val background: String? = null,
+    /** How strongly the background is veiled so text stays readable, 0.3..0.95. */
+    val backgroundVeil: Float = 0.8f,
+    val startScreen: StartScreen = StartScreen.TODAY,
+    /** Ongoing notification with today's date and the day number in the status bar. */
+    val dateNotification: Boolean = true,
+    /** City for prayer times (see `IranCities`); null = not shown. */
+    val prayerCity: String? = null,
+) {
+    companion object {
+        const val BACKGROUND_IMAGE = "image"
+    }
+}
+
+enum class ThemeMode { LIGHT, DARK, SYSTEM }
+
+/** Accent color families; neutrals stay white/near-black so text is always black on white. */
+enum class ThemePalette { INDIGO, OCEAN, VIOLET, ROSE, CORAL, AMBER, TEAL, SLATE, GREEN }
+
+enum class StartScreen { TODAY, CALENDAR }

@@ -3,7 +3,6 @@ package ir.roozban.feature.settings
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -94,17 +93,18 @@ internal fun SettingsScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            AppearanceCard(
+                s,
+                viewModel,
+                section = { title, content -> SettingsCard(title) { content() } },
+                switchRow = { label, checked, onChange -> SwitchRow(label, checked, onChange) },
+            )
             HealthCard(onOpenBatteryGuide)
             DefaultReminderCard(s, viewModel)
             AllDayCard(s, viewModel)
             WordsCard(s, viewModel)
             CalendarCard(s, viewModel)
             BackupCard(viewModel, snackbar)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                SettingsCard(stringResource(R.string.settings_appearance)) {
-                    SwitchRow(stringResource(R.string.settings_dynamic_color), s.dynamicColor, viewModel::setDynamicColor)
-                }
-            }
             AboutCard()
         }
     }
@@ -224,6 +224,12 @@ private fun AllDayCard(s: UserSettings, vm: SettingsViewModel) {
 @Composable
 private fun CalendarCard(s: UserSettings, vm: SettingsViewModel) {
     SettingsCard(stringResource(R.string.settings_calendar)) {
+        SwitchRow(stringResource(R.string.settings_date_notification), s.dateNotification, vm::setDateNotification)
+        Text(
+            stringResource(R.string.settings_date_notification_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         SwitchRow(stringResource(R.string.settings_show_gregorian), s.showGregorian, vm::setShowGregorian)
         SwitchRow(stringResource(R.string.settings_show_hijri), s.showHijri, vm::setShowHijri)
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {

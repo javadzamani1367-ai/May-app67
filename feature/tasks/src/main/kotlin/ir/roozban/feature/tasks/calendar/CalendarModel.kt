@@ -1,12 +1,18 @@
 package ir.roozban.feature.tasks.calendar
 
 import ir.roozban.core.calendar.HijriDates
-import ir.roozban.core.calendar.IranHolidays
+import ir.roozban.core.calendar.IranOccasions
 import ir.roozban.core.calendar.JalaliDate
+import ir.roozban.core.calendar.Occasion
 import ir.roozban.core.calendar.PersianDigits
 import ir.roozban.core.calendar.PersianNames
 import ir.roozban.core.calendar.PersianWeek
+import ir.roozban.core.calendar.PrayerDay
+import ir.roozban.core.calendar.City
 import ir.roozban.core.calendar.toJalali
+import ir.roozban.core.domain.EventDates
+import ir.roozban.core.domain.EventOccurrence
+import ir.roozban.core.model.PersonalEvent
 import ir.roozban.core.model.Quadrant
 import ir.roozban.core.model.Task
 import ir.roozban.core.model.TaskDue
@@ -28,6 +34,10 @@ data class CalendarDay(
     val holidayNames: List<String>,
     val allDay: List<CalendarTask>,
     val timed: List<CalendarTask>,
+    /** Non-holiday occasions of the official calendar. */
+    val occasions: List<Occasion> = emptyList(),
+    /** Personal events (birthdays, anniversaries) on this day. */
+    val events: List<EventOccurrence> = emptyList(),
 )
 
 data class CalendarTask(
@@ -42,12 +52,26 @@ data class CalendarTask(
 )
 
 data class CalendarUiState(
-    val mode: CalendarMode = CalendarMode.WEEK,
+    val mode: CalendarMode = CalendarMode.MONTH,
     val anchor: LocalDate,
     val title: String = "",
     val days: List<CalendarDay> = emptyList(),
     val selected: LocalDate = anchor,
-)
+    val today: LocalDate = anchor,
+    /** Every occasion of the shown Jalali month (holidays included). */
+    val monthOccasions: List<Occasion> = emptyList(),
+    /** Personal events falling in the shown month. */
+    val monthEvents: List<EventOccurrence> = emptyList(),
+    /** All personal events with their next occurrence, soonest first. */
+    val upcoming: List<EventOccurrence> = emptyList(),
+    val city: City? = null,
+    val prayer: PrayerDay? = null,
+    val hijriOffset: Int = 0,
+    val showGregorian: Boolean = true,
+    val showHijri: Boolean = true,
+) {
+    val selectedDay: CalendarDay? get() = days.firstOrNull { it.date == selected }
+}
 
 /** Pure building of calendar days; unit-tested. */
 internal object CalendarBuilder {
@@ -90,12 +114,16 @@ internal object CalendarBuilder {
         showGregorian: Boolean,
         showHijri: Boolean,
         hijriOffset: Int,
+        events: List<PersonalEvent> = emptyList(),
     ): List<CalendarDay> {
         val month = anchor.toJalali().let { it.year to it.month }
         val byDate = tasks.filter { it.due != null }.groupBy { it.due!!.date }
-        return range(mode, anchor).map { date ->
+        val dates = range(mode, anchor)
+        val eventsByDate = events.flatMap { EventDates.between(it, dates.first(), dates.last(), hijriOffset) }.groupBy { it.date }
+        return dates.map { date ->
             val j = date.toJalali()
-            val holidays = IranHolidays.on(date, hijriOffset)
+            val occasions = IranOccasions.on(date, hijriOffset)
+            val holidays = occasions.filter { it.holiday }
             val dayTasks = byDate[date].orEmpty()
             CalendarDay(
                 date = date,
@@ -108,6 +136,8 @@ internal object CalendarBuilder {
                 holidayNames = holidays.map { it.title },
                 allDay = dayTasks.filter { it.due is TaskDue.AllDay }.map { it.toCalendarTask() },
                 timed = layoutLanes(dayTasks.filter { it.due is TaskDue.At }.map { it.toCalendarTask() }),
+                occasions = occasions.filter { !it.holiday },
+                events = eventsByDate[date].orEmpty(),
             )
         }
     }

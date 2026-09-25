@@ -20,6 +20,7 @@ data class BackupData(
     val timeEntries: List<BackupTimeEntry> = emptyList(),
     val habits: List<BackupHabit> = emptyList(),
     val habitLogs: List<BackupHabitLog> = emptyList(),
+    val events: List<BackupEvent> = emptyList(),
 ) {
     companion object {
         const val FORMAT_VERSION = 1
@@ -96,6 +97,14 @@ data class BackupSettings(
     val dailyReviewMinute: Int? = null,
     val weeklyReviewDay: Int = 5,
     val weeklyReviewMinute: Int? = null,
+    val themeMode: String? = null,
+    val palette: String? = null,
+    /** Only presets travel in backups; a gallery picture stays on the device. */
+    val background: String? = null,
+    val backgroundVeil: Float = 0.8f,
+    val startScreen: String? = null,
+    val dateNotification: Boolean = true,
+    val prayerCity: String? = null,
 )
 
 @Serializable
@@ -129,3 +138,21 @@ data class BackupHabit(
 
 @Serializable
 data class BackupHabitLog(val habitId: String, val date: Long, val count: Int, val updatedAt: Long)
+
+@Serializable
+data class BackupEvent(
+    val id: String,
+    val title: String,
+    val kind: String = "OTHER",
+    val color: Int = 0,
+    val calendar: String = "JALALI",
+    val month: Int,
+    val day: Int,
+    val year: Int? = null,
+    val yearly: Boolean = true,
+    val remindDays: String = "0,1",
+    val reminderMinute: Int = 540,
+    val notes: String = "",
+    val createdAt: Long,
+    val updatedAt: Long,
+)

@@ -6,3 +6,7 @@ plugins {
 android {
     namespace = "ir.roozban.core.designsystem"
 }
+
+dependencies {
+    api(projects.core.model)
+}

@@ -189,3 +189,22 @@ data class TrackedRow(
     @ColumnInfo(name = "task_title") val taskTitle: String?,
     @ColumnInfo(name = "task_project_id") val projectId: String?,
 )
+
+@Entity(tableName = "personal_event")
+data class PersonalEventEntity(
+    @PrimaryKey val id: String,
+    val title: String,
+    val kind: String,
+    val color: Int,
+    val calendar: String,
+    val month: Int,
+    val day: Int,
+    val year: Int?,
+    val yearly: Boolean,
+    /** Comma-separated days before, e.g. "0,1,7". */
+    @ColumnInfo(name = "remind_days") val remindDays: String,
+    @ColumnInfo(name = "reminder_minute") val reminderMinute: Int,
+    val notes: String,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+    @ColumnInfo(name = "updated_at") val updatedAt: Long,
+)

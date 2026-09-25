@@ -98,4 +98,23 @@ class MigrationTest {
         assertThat(db.focusDao().observeTracked(0, 2000).first().single().projectId).isEqualTo("p")
         db.close()
     }
+
+    @Test
+    fun `migrates 3 to 4 keeping habits and adding personal events`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val file = context.getDatabasePath("migration-test-3.db").apply { parentFile?.mkdirs(); delete() }
+        createFromSchema(file, 3)
+        SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READWRITE).use { v3 ->
+            v3.execSQL(
+                """INSERT INTO habit (id, name, color, schedule, target, reminder_minute, start_date, archived, sort_order, created_at, updated_at)
+                   VALUES ('h', 'ورزش', 0, 'D', 1, NULL, 20000, 0, 0, 1, 1)""",
+            )
+            v3.execSQL("INSERT INTO habit_log (habit_id, date, count, updated_at) VALUES ('h', 20001, 1, 1)")
+        }
+        val db = Room.databaseBuilder(context, RoozbanDatabase::class.java, file.path).allowMainThreadQueries().build()
+        assertThat(db.habitDao().log("h", 20001)?.count).isEqualTo(1)
+        db.eventDao().upsert(PersonalEventEntity("e", "تولد", "BIRTHDAY", 0, "JALALI", 7, 15, 1375, true, "0,1", 540, "", 1, 1))
+        assertThat(db.eventDao().all().single().title).isEqualTo("تولد")
+        db.close()
+    }
 }

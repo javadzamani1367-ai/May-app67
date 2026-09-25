@@ -16,14 +16,17 @@ import androidx.room.RoomDatabase
         TimeEntryEntity::class,
         HabitEntity::class,
         HabitLogEntity::class,
+        PersonalEventEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
     autoMigrations = [
         // v2: projects, labels, subtasks.
         AutoMigration(from = 1, to = 2),
         // v3: focus sessions, time entries, habits.
         AutoMigration(from = 2, to = 3),
+        // v4: personal occasions (birthdays, anniversaries).
+        AutoMigration(from = 3, to = 4),
     ],
 )
 abstract class RoozbanDatabase : RoomDatabase() {
@@ -34,6 +37,7 @@ abstract class RoozbanDatabase : RoomDatabase() {
     abstract fun backupDao(): BackupDao
     abstract fun focusDao(): FocusDao
     abstract fun habitDao(): HabitDao
+    abstract fun eventDao(): EventDao
 
     companion object {
         const val NAME = "roozban.db"

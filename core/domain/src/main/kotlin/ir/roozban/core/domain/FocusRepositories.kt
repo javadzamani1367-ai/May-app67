@@ -92,6 +92,10 @@ interface RoutineAlarms {
     fun scheduleReview(kind: ReviewKind, atEpochMillis: Long)
 
     fun cancelReview(kind: ReviewKind)
+
+    fun scheduleEvent(eventId: String, atEpochMillis: Long)
+
+    fun cancelEvent(eventId: String)
 }
 
 /** A task (or one occurrence of a recurring task) being completed; input for the reports. */

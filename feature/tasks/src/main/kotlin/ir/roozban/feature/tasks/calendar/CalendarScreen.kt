@@ -31,6 +31,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import ir.roozban.core.ui.JalaliDatePickerDialog
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -97,12 +101,24 @@ internal fun CalendarScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
+    var menu by remember { mutableStateOf(false) }
+    var converting by remember { mutableStateOf(false) }
+    var goingTo by remember { mutableStateOf(false) }
+    var pickingCity by remember { mutableStateOf(false) }
+    var eventDraft by remember { mutableStateOf<EventDraft?>(null) }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = { Text(state.title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = {
+                    Text(
+                        state.title,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.clickable { goingTo = true },
+                    )
+                },
                 actions = {
                     // Right-to-left: «previous» (pointing right) comes first, «next» (pointing left) after it.
                     IconButton(onClick = viewModel::previous) {
@@ -112,25 +128,64 @@ internal fun CalendarScreen(
                     IconButton(onClick = viewModel::next) {
                         Icon(painterResource(DsR.drawable.ic_chevron_left), stringResource(R.string.calendar_next))
                     }
-                    IconButton(onClick = onOpenSettings) {
-                        Icon(painterResource(DsR.drawable.ic_settings), stringResource(R.string.tasks_settings))
+                    Box {
+                        IconButton(onClick = { menu = true }) {
+                            Icon(painterResource(DsR.drawable.ic_more_vert), stringResource(R.string.calendar_more))
+                        }
+                        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.calendar_go_to)) },
+                                leadingIcon = { Icon(painterResource(DsR.drawable.ic_calendar_month), null) },
+                                onClick = { menu = false; goingTo = true },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.converter_title)) },
+                                leadingIcon = { Icon(painterResource(DsR.drawable.ic_swap), null) },
+                                onClick = { menu = false; converting = true },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.calendar_prayer_title)) },
+                                leadingIcon = { Icon(painterResource(DsR.drawable.ic_mosque), null) },
+                                onClick = { menu = false; pickingCity = true },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.tasks_settings)) },
+                                leadingIcon = { Icon(painterResource(DsR.drawable.ic_settings), null) },
+                                onClick = { menu = false; onOpenSettings() },
+                            )
+                        }
                     }
                 },
             )
         },
+        floatingActionButton = {
+            if (state.mode == CalendarMode.MONTH) {
+                ExtendedFloatingActionButton(
+                    onClick = { eventDraft = EventDraft(date = state.selected) },
+                    icon = { Icon(painterResource(DsR.drawable.ic_event_star), null) },
+                    text = { Text(stringResource(R.string.event_new)) },
+                )
+            }
+        },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ModeChip(CalendarMode.DAY, R.string.calendar_day, state.mode, viewModel::setMode)
-                ModeChip(CalendarMode.WEEK, R.string.calendar_week, state.mode, viewModel::setMode)
                 ModeChip(CalendarMode.MONTH, R.string.calendar_month, state.mode, viewModel::setMode)
+                ModeChip(CalendarMode.WEEK, R.string.calendar_week, state.mode, viewModel::setMode)
+                ModeChip(CalendarMode.DAY, R.string.calendar_day, state.mode, viewModel::setMode)
             }
             when (state.mode) {
                 CalendarMode.MONTH -> MonthView(
-                    days = state.days,
-                    selected = state.selected,
-                    onSelect = { if (it == state.selected) viewModel.openDay(it) else viewModel.select(it) },
+                    state = state,
+                    onSelect = viewModel::select,
+                    onOpenDay = viewModel::openDay,
+                    onSwipe = { next -> if (next) viewModel.next() else viewModel.previous() },
                     onOpenTask = { editingId = it },
+                    onOpenEvent = { event ->
+                        val date = ir.roozban.core.domain.EventDates.next(event, state.today, state.hijriOffset)?.date ?: state.today
+                        eventDraft = EventDraft.of(event, date)
+                    },
+                    onPickCity = { pickingCity = true },
                 )
                 else -> TimelineView(
                     days = state.days,
@@ -144,95 +199,45 @@ internal fun CalendarScreen(
     editingId?.let { id ->
         TaskEditorSheet(taskId = id, onClose = { editingId = null }, onDeleted = { editingId = null })
     }
+    eventDraft?.let { draft ->
+        EventEditorSheet(
+            initial = draft,
+            today = state.today,
+            hijriOffset = state.hijriOffset,
+            onSave = { viewModel.saveEvent(it); eventDraft = null },
+            onDelete = draft.id?.let { id ->
+                {
+                    viewModel.deleteEvent(id)
+                    eventDraft = null
+                }
+            },
+            onDismiss = { eventDraft = null },
+        )
+    }
+    if (converting) {
+        DateConverterDialog(
+            today = state.today,
+            hijriOffset = state.hijriOffset,
+            onGoTo = { viewModel.goTo(it); converting = false },
+            onDismiss = { converting = false },
+        )
+    }
+    if (goingTo) {
+        JalaliDatePickerDialog(
+            initial = state.selected,
+            today = state.today,
+            onConfirm = { d -> if (d != null) viewModel.goTo(d); goingTo = false },
+            onDismiss = { goingTo = false },
+        )
+    }
+    if (pickingCity) {
+        CityPickerDialog(current = state.city, onPick = { viewModel.setPrayerCity(it); pickingCity = false }, onDismiss = { pickingCity = false })
+    }
 }
 
 @Composable
 private fun ModeChip(mode: CalendarMode, label: Int, current: CalendarMode, onSelect: (CalendarMode) -> Unit) {
     FilterChip(selected = mode == current, onClick = { onSelect(mode) }, label = { Text(stringResource(label)) })
-}
-
-// ---------------------------------------------------------------- month
-
-@Composable
-private fun MonthView(days: List<CalendarDay>, selected: LocalDate, onSelect: (LocalDate) -> Unit, onOpenTask: (String) -> Unit) {
-    Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
-            PersianNames.WEEKDAYS_SHORT.forEachIndexed { i, label ->
-                Text(
-                    label,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (i == 6) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-        days.chunked(7).forEach { week ->
-            Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
-                week.forEach { day -> MonthCell(day, day.date == selected, Modifier.weight(1f)) { onSelect(day.date) } }
-            }
-        }
-        HorizontalDivider(Modifier.padding(top = 4.dp))
-        val day = days.firstOrNull { it.date == selected }
-        if (day != null) {
-            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp)) {
-                item {
-                    Text(PersianDateFormatter.fullDate(JalaliDate.from(day.date)), style = MaterialTheme.typography.titleMedium)
-                    day.holidayNames.forEach {
-                        Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
-                    }
-                    Spacer(Modifier.height(8.dp))
-                }
-                items(day.allDay + day.timed.sortedBy { it.start }, key = { it.id }) { task ->
-                    Card(
-                        onClick = { onOpenTask(task.id) },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    ) {
-                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(10.dp).clip(CircleShape).background(quadrantColor(task.quadrant)))
-                            Spacer(Modifier.width(10.dp))
-                            Text(task.title, modifier = Modifier.weight(1f))
-                            task.start?.let { Text(PersianDateFormatter.time(it), color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MonthCell(day: CalendarDay, isSelected: Boolean, modifier: Modifier, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    Column(
-        modifier = modifier
-            .aspectRatio(0.8f)
-            .padding(2.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(if (isSelected) colors.primaryContainer else Color.Transparent)
-            .then(if (day.isToday) Modifier.border(1.5.dp, colors.primary, RoundedCornerShape(10.dp)) else Modifier)
-            .clickable(onClick = onClick)
-            .padding(2.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        val alpha = if (day.inMonth) 1f else 0.35f
-        Text(
-            day.jalaliDay,
-            style = MaterialTheme.typography.titleSmall,
-            color = (if (day.isHoliday) colors.error else colors.onSurface).copy(alpha = alpha),
-        )
-        val secondary = listOfNotNull(day.gregorianDay, day.hijriDay).joinToString(" ")
-        if (secondary.isNotEmpty()) {
-            Text(secondary, fontSize = 9.sp, color = colors.onSurfaceVariant.copy(alpha = alpha), maxLines = 1)
-        }
-        Spacer(Modifier.weight(1f))
-        val tasks = day.allDay + day.timed
-        Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
-            tasks.take(3).forEach { Box(Modifier.size(5.dp).clip(CircleShape).background(quadrantColor(it.quadrant))) }
-            if (tasks.size > 3) Text("+", fontSize = 9.sp, color = colors.onSurfaceVariant)
-        }
-    }
 }
 
 // ---------------------------------------------------------------- day / week timeline

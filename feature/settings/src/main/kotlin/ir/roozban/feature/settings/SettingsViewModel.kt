@@ -10,6 +10,10 @@ import ir.roozban.core.domain.RestoreResult
 import ir.roozban.core.domain.SettingsRepository
 import ir.roozban.core.model.ReminderKind
 import ir.roozban.core.model.ReminderSetting
+import ir.roozban.core.designsystem.theme.Backgrounds
+import ir.roozban.core.model.StartScreen
+import ir.roozban.core.model.ThemeMode
+import ir.roozban.core.model.ThemePalette
 import ir.roozban.core.model.UserSettings
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +29,8 @@ class SettingsViewModel @Inject constructor(
     private val repository: SettingsRepository,
     private val reminders: ReminderSync,
     private val backup: BackupService,
+    private val images: BackgroundImageStore,
+    private val clock: java.time.Clock,
 ) : ViewModel() {
 
     val settings: StateFlow<UserSettings?> =
@@ -60,6 +66,34 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setDynamicColor(enabled: Boolean) = update { it.copy(dynamicColor = enabled) }
+
+    fun setThemeMode(mode: ThemeMode) = update { it.copy(themeMode = mode) }
+
+    fun setPalette(palette: ThemePalette) = update { it.copy(palette = palette, dynamicColor = false) }
+
+    /** [presetId] null = plain background. */
+    fun setBackgroundPreset(presetId: String?) {
+        viewModelScope.launch {
+            repository.update { it.copy(background = presetId?.let { id -> Backgrounds.PRESET_PREFIX + id }) }
+            images.clear()
+        }
+    }
+
+    /** Uses a picture from the gallery. Returns false via [onResult] when it could not be read. */
+    fun setBackgroundImage(uri: android.net.Uri, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val ok = images.save(uri)
+            // A new value each time so the screen reloads the picture.
+            if (ok) repository.update { it.copy(background = UserSettings.BACKGROUND_IMAGE + ":" + clock.millis()) }
+            onResult(ok)
+        }
+    }
+
+    fun setBackgroundVeil(value: Float) = update { it.copy(backgroundVeil = value.coerceIn(0.3f, 0.95f)) }
+
+    fun setStartScreen(screen: StartScreen) = update { it.copy(startScreen = screen) }
+
+    fun setDateNotification(enabled: Boolean) = update { it.copy(dateNotification = enabled) }
 
     fun setShowGregorian(show: Boolean) = update { it.copy(showGregorian = show) }
 

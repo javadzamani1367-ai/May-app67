@@ -1,10 +1,13 @@
 package ir.roozban.core.database
 
+import ir.roozban.core.model.EventCalendar
+import ir.roozban.core.model.EventKind
 import ir.roozban.core.model.FocusSession
 import ir.roozban.core.model.Habit
 import ir.roozban.core.model.HabitLog
 import ir.roozban.core.model.HabitSchedule
 import ir.roozban.core.model.Label
+import ir.roozban.core.model.PersonalEvent
 import ir.roozban.core.model.Project
 import ir.roozban.core.model.Reminder
 import ir.roozban.core.model.ReminderKind
@@ -138,3 +141,37 @@ fun Habit.toEntity() = HabitEntity(
 fun HabitLogEntity.toModel() = HabitLog(habitId, LocalDate.ofEpochDay(date), count, Instant.ofEpochMilli(updatedAt))
 
 fun HabitLog.toEntity() = HabitLogEntity(habitId, date.toEpochDay(), count, updatedAt.toEpochMilli())
+
+fun PersonalEventEntity.toModel() = PersonalEvent(
+    id = id,
+    title = title,
+    kind = EventKind.entries.firstOrNull { it.name == kind } ?: EventKind.OTHER,
+    color = color,
+    calendar = EventCalendar.entries.firstOrNull { it.name == calendar } ?: EventCalendar.JALALI,
+    month = month,
+    day = day,
+    year = year,
+    yearly = yearly,
+    remindDaysBefore = remindDays.split(',').mapNotNull { it.trim().toIntOrNull() }.toSet(),
+    reminderTime = LocalTime.of(reminderMinute / 60, reminderMinute % 60),
+    notes = notes,
+    createdAt = Instant.ofEpochMilli(createdAt),
+    updatedAt = Instant.ofEpochMilli(updatedAt),
+)
+
+fun PersonalEvent.toEntity() = PersonalEventEntity(
+    id = id,
+    title = title,
+    kind = kind.name,
+    color = color,
+    calendar = calendar.name,
+    month = month,
+    day = day,
+    year = year,
+    yearly = yearly,
+    remindDays = remindDaysBefore.sorted().joinToString(","),
+    reminderMinute = reminderTime.hour * 60 + reminderTime.minute,
+    notes = notes,
+    createdAt = createdAt.toEpochMilli(),
+    updatedAt = updatedAt.toEpochMilli(),
+)

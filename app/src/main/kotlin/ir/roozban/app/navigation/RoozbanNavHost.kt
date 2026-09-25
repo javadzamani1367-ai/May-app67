@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -26,6 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import ir.roozban.app.R
 import ir.roozban.core.alarm.AppLinks
 import ir.roozban.core.designsystem.R as DsR
+import ir.roozban.core.model.StartScreen
 import ir.roozban.feature.focus.FocusMiniBar
 import ir.roozban.feature.focus.FocusRoute
 import ir.roozban.feature.focus.focusScreen
@@ -61,10 +63,13 @@ private val moreChildren: List<KClass<*>> = listOf(InboxRoute::class, ProjectsRo
 
 @Composable
 fun RoozbanApp(
+    startScreen: StartScreen = StartScreen.TODAY,
     openRequest: String? = null,
     onOpenHandled: () -> Unit = {},
     navController: NavHostController = rememberNavController(),
 ) {
+    // Read once: changing the setting applies from the next launch, not by rebuilding the graph.
+    val initialStart: Any = remember { if (startScreen == StartScreen.CALENDAR) CalendarRoute else TodayRoute }
     val entry by navController.currentBackStackEntryAsState()
     val destination = entry?.destination
     val current = Tab.entries.firstOrNull { tab -> destination?.hasRoute(tab.routeClass) == true }
@@ -75,6 +80,7 @@ fun RoozbanApp(
         when (target) {
             AppLinks.FOCUS -> navController.navigate(FocusRoute()) { launchSingleTop = true }
             AppLinks.HABITS -> navController.navigate(HabitsRoute) { launchSingleTop = true }
+            AppLinks.CALENDAR -> navController.navigate(CalendarRoute) { launchSingleTop = true }
             AppLinks.DAILY_REVIEW -> navController.navigate(ReviewRoute(weekly = false)) { launchSingleTop = true }
             AppLinks.WEEKLY_REVIEW -> navController.navigate(ReviewRoute(weekly = true)) { launchSingleTop = true }
         }
@@ -111,7 +117,7 @@ fun RoozbanApp(
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = TodayRoute,
+            startDestination = initialStart,
             modifier = Modifier.padding(padding),
         ) {
             val openSettings = { navController.navigate(SettingsRoute) }

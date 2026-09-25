@@ -67,6 +67,7 @@ object BackupMerger {
             focusSessions = (local.focusSessions + incoming.focusSessions).distinctBy { it.id },
             timeEntries = (local.timeEntries + incoming.timeEntries).distinctBy { it.id },
             habits = habits,
+            events = newest(local.events, incoming.events, { it.id }, { it.updatedAt }),
             habitLogs = (local.habitLogs + incoming.habitLogs)
                 .filter { it.habitId in habitIds }
                 .groupBy { it.habitId to it.date }.values.map { versions -> versions.maxBy { it.updatedAt } },
