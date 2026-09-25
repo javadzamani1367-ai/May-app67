@@ -12,6 +12,7 @@ on:
       - 'ai/runtime/src/main/cpp/*.h'
       - 'ai/runtime/src/main/cpp/CMakeLists.txt'
       - 'tools/eval/**'
+      - 'tools/speech_eval/**'
       - '.github/workflows/eval.yml'
 
 concurrency:
@@ -132,3 +133,10 @@ jobs:
           cp ai/runtime/src/main/cpp/whisper.cpp/samples/jfk.wav sample-en.wav
           ./bench-build/roozban-speech-bench speech.bin 4 sample-en.wav | tee speech-${{ matrix.model }}.txt
           { echo '```'; cat speech-${{ matrix.model }}.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+  speech-discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: tools/speech_eval/discover.sh
