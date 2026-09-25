@@ -19,11 +19,21 @@ enum class ChatTemplate {
     GEMMA,
     ;
 
-    fun render(messages: List<ChatMessage>): String = when (this) {
+    /**
+     * [openAnswer] false renders only the given turns, e.g. a fixed prefix to pre-compute; the
+     * full prompt then starts with exactly that text.
+     */
+    fun render(messages: List<ChatMessage>, openAnswer: Boolean = true): String = when (this) {
         CHATML, CHATML_NO_THINK -> buildString {
-            messages.forEach { append("<|im_start|>").append(it.role.chatMl).append('\n').append(it.content).append("<|im_end|>\n") }
-            append("<|im_start|>assistant\n")
-            if (this@ChatTemplate == CHATML_NO_THINK) append("<think>\n\n</think>\n\n")
+            messages.forEach {
+                append("<|im_start|>").append(it.role.chatMl).append('\n')
+                if (it.role == Role.ASSISTANT && this@ChatTemplate == CHATML_NO_THINK) append("<think>\n\n</think>\n\n")
+                append(it.content).append("<|im_end|>\n")
+            }
+            if (openAnswer) {
+                append("<|im_start|>assistant\n")
+                if (this@ChatTemplate == CHATML_NO_THINK) append("<think>\n\n</think>\n\n")
+            }
         }
         GEMMA -> buildString {
             val system = messages.filter { it.role == Role.SYSTEM }.joinToString("\n\n") { it.content }
@@ -37,7 +47,7 @@ enum class ChatTemplate {
                 }
                 append(it.content).append("<end_of_turn>\n")
             }
-            append("<start_of_turn>model\n")
+            if (openAnswer) append("<start_of_turn>model\n")
         }
     }
 

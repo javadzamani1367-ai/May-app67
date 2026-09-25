@@ -9,7 +9,7 @@ enum class DeviceTier(val maxModelBytes: Long, val contextTokens: Int) {
     UNSUPPORTED(0, 0),
 
     /** 3–4 GB: the smallest model with a short context. */
-    LIGHT(850L * 1024 * 1024, 2048),
+    LIGHT(850L * 1024 * 1024, 4096),
 
     /** 4–8 GB: the default model. */
     STANDARD(1_600L * 1024 * 1024, 4096),

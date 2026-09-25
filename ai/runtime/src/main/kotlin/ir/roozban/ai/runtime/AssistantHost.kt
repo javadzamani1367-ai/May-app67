@@ -45,12 +45,25 @@ class AssistantHost @Inject constructor(
         return LoadedModel(model, config)
     }
 
+    private var warmedPath: String? = null
+
+    /**
+     * Computes the fixed prompt [prefix] ahead of the first message (while the user types), so
+     * the first answer only processes the new part. Done once per loaded model.
+     */
+    suspend fun warmUp(loaded: LoadedModel, prefix: String) {
+        if (warmedPath == loaded.model.file.path && engine.state.value is ir.roozban.ai.core.EngineState.Ready) return
+        engine.generate(ir.roozban.ai.core.GenerationRequest(prefix, grammar = null, maxTokens = 0)).collect {}
+        warmedPath = loaded.model.file.path
+    }
+
     /** Call when a screen using the model goes away. */
     fun release() {
         idleJob?.cancel()
         idleJob = scope.launch {
             delay(IDLE_MILLIS)
             engine.unload()
+            warmedPath = null
         }
     }
 

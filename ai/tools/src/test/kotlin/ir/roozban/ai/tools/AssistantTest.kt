@@ -26,9 +26,8 @@ class AssistantTest {
         assertThat(defined).containsAtLeastElementsIn(used)
         // For checking with llama.cpp's test-gbnf-validator (see docs/PHASE_4.md).
         java.io.File("build/gbnf").apply { mkdirs() }.resolve("tools.gbnf").writeText(g)
-        PromptBuilder.EXAMPLES.lines().filter { it.startsWith("{") }.forEachIndexed { i, ex ->
-            java.io.File("build/gbnf/example$i.json").writeText(ex)
-        }
+        PromptBuilder.EXAMPLES.forEachIndexed { i, ex -> java.io.File("build/gbnf/example$i.json").writeText(ex.answer) }
+        java.io.File("build/gbnf/prefix.txt").writeText(PromptBuilder(ChatTemplate.CHATML_NO_THINK, 4096).prefix())
     }
 
     @Test
@@ -38,10 +37,12 @@ class AssistantTest {
         val builder = PromptBuilder(ChatTemplate.CHATML, contextTokens = 4096)
         val prompt = builder.build(f.context(), listOf(Turn("سلام", """{"actions":[],"reply":"سلام"}""")), "کار ۱ رو انجام دادم")
         assertThat(prompt).contains("#1 خرید نان — امروز ۱۸:۰۰")
-        assertThat(prompt).contains("Habits: ورزش")
+        assertThat(prompt).contains("عادت‌ها: ورزش")
         assertThat(prompt).contains("پنجشنبه ۲ مهر ۱۴۰۵")
         assertThat(prompt).contains("- create_task {\"title\":text,\"when\":text|null")
-        assertThat(prompt).endsWith("<|im_start|>user\nکار ۱ رو انجام دادم<|im_end|>\n<|im_start|>assistant\n")
+        assertThat(prompt).endsWith("پیام: کار ۱ رو انجام دادم<|im_end|>\n<|im_start|>assistant\n")
+        assertThat(prompt).startsWith(builder.prefix())
+        assertThat(prompt).contains("<|im_start|>user\nپیام: سلام<|im_end|>")
         assertThat(TokenEstimate.of(prompt)).isAtMost(4096 - PromptBuilder.ANSWER_TOKENS)
     }
 
@@ -52,11 +53,12 @@ class AssistantTest {
         val full = PromptBuilder(ChatTemplate.CHATML, 100_000).build(f.context(), history, "سلام")
         assertThat(full).contains("پیام قبلی 0")
         assertThat(full).contains("#40 ")
-        val tight = PromptBuilder(ChatTemplate.CHATML, 2048).build(f.context(), history, "سلام")
+        val budget = TokenEstimate.of(PromptBuilder(ChatTemplate.CHATML, 4096).prefix()) + PromptBuilder.ANSWER_TOKENS + 400
+        val tight = PromptBuilder(ChatTemplate.CHATML, budget).build(f.context(), history, "سلام")
         assertThat(tight).doesNotContain("پیام قبلی")
         assertThat(tight).doesNotContain("#40 ")
         assertThat(tight).contains("#1 ")
-        assertThat(TokenEstimate.of(tight)).isAtMost(2048 - PromptBuilder.ANSWER_TOKENS)
+        assertThat(TokenEstimate.of(tight)).isAtMost(budget - PromptBuilder.ANSWER_TOKENS)
     }
 
     @Test

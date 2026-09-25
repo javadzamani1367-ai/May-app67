@@ -58,4 +58,18 @@ class ParsingTest {
         listOf("{\"actions\":[],\"re", "ply\":\"a\\", "\"b\\u06", "33c\"}").forEach { s.feed(it) }
         assertThat(s.text).isEqualTo("a\"bسc")
     }
+
+    @Test
+    fun `every prompt example is a clean answer with known tools and all arguments`() {
+        PromptBuilder.EXAMPLES.forEach { ex ->
+            val r = ResponseParser.parse(ex.answer)
+            assertThat(r.damaged).isFalse()
+            assertThat(r.reply).isNotEmpty()
+            r.actions.forEach { call ->
+                val spec = Tools.get(call.tool)
+                assertThat(spec).isNotNull()
+                assertThat(call.args.keys.toList()).isEqualTo(spec!!.args.map { it.name })
+            }
+        }
+    }
 }

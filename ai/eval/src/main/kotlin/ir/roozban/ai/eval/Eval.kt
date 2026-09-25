@@ -64,6 +64,7 @@ fun main(args: Array<String>) {
         if (problems.isEmpty()) passed++
         val mark = if (problems.isEmpty()) "✅" else "❌"
         println("$mark ${case.id} (${millis}ms) ${problems.joinToString("; ")}")
+        if (problems.isNotEmpty()) println("    output: $content")
         rows += "| $mark | ${case.id} | ${case.input} | ${problems.joinToString("<br>").ifEmpty { "—" }.replace("|", "\\|")} | `${content.replace("|", "\\|").take(300)}` | $millis |"
     }
     val accuracy = passed.toDouble() / cases.size

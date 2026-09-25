@@ -13,6 +13,7 @@ import ir.roozban.ai.tools.AssistantContext
 import ir.roozban.ai.tools.AssistantEvent
 import ir.roozban.ai.tools.Plan
 import ir.roozban.ai.tools.PlannedAction
+import ir.roozban.ai.tools.PromptBuilder
 import ir.roozban.ai.tools.ToolExecutor
 import ir.roozban.ai.tools.Turn
 import ir.roozban.core.domain.Access
@@ -96,7 +97,12 @@ class AssistantViewModel @Inject constructor(
     init {
         // Warm the model up while the user types.
         if (models.state.value.active != null && models.tier.supported) {
-            viewModelScope.launch { runCatching { host.ensureLoaded() } }
+            viewModelScope.launch {
+                runCatching {
+                    val loaded = host.ensureLoaded()
+                    host.warmUp(loaded, PromptBuilder(loaded.model.template, loaded.config.contextTokens).prefix())
+                }
+            }
         }
     }
 
