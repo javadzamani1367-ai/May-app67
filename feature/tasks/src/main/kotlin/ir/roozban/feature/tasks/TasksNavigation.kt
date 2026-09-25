@@ -31,8 +31,11 @@ fun NavGraphBuilder.tasksScreens(
     onBack: () -> Unit,
     onOpenAssistant: (() -> Unit)? = null,
     onOpenVoiceModels: (() -> Unit)? = null,
+    onOpenPlanner: (() -> Unit)? = null,
 ) {
-    composable<TodayRoute> { TaskListRoute(ListMode.TODAY, onOpenSettings, onOpenAssistant = onOpenAssistant, onOpenVoiceModels = onOpenVoiceModels) }
+    composable<TodayRoute> {
+        TaskListRoute(ListMode.TODAY, onOpenSettings, onOpenAssistant = onOpenAssistant, onOpenVoiceModels = onOpenVoiceModels, onOpenPlanner = onOpenPlanner)
+    }
     composable<UpcomingRoute> { TaskListRoute(ListMode.UPCOMING, onOpenSettings, onOpenVoiceModels = onOpenVoiceModels) }
     composable<InboxRoute> { TaskListRoute(ListMode.INBOX, onOpenSettings, onOpenVoiceModels = onOpenVoiceModels) }
     composable<CalendarRoute> { CalendarScreen(onOpenSettings = onOpenSettings) }

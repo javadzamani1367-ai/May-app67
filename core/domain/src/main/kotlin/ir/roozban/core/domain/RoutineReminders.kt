@@ -40,6 +40,21 @@ class RoutineReminders @Inject constructor(
             val next = nextReview(kind, s, after)
             if (next == null) alarms.cancelReview(kind) else alarms.scheduleReview(kind, millis(next))
         }
+        val morning = nextMorning(s, after)
+        if (morning == null) alarms.cancelMorning() else alarms.scheduleMorning(millis(morning))
+    }
+
+    /** The morning-plan alarm fired; arms tomorrow's. Returns whether it is still on. */
+    suspend fun onMorningAlarm(): Boolean {
+        val now = LocalDateTime.now(clock)
+        val enabled = nextMorning(settings.current(), now) != null
+        syncReviews(after = now.plusMinutes(1))
+        return enabled
+    }
+
+    private fun nextMorning(s: UserSettings, after: LocalDateTime): LocalDateTime? = s.planning.morningTime?.let { t ->
+        val today = after.toLocalDate().atTime(t)
+        if (today.isAfter(after)) today else today.plusDays(1)
     }
 
     /**

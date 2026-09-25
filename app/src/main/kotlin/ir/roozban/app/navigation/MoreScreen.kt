@@ -41,6 +41,8 @@ data object MoreRoute
 @Composable
 internal fun MoreScreen(
     onAssistant: () -> Unit,
+    onPlanner: () -> Unit,
+    onMemory: () -> Unit,
     onFocus: () -> Unit,
     onInbox: () -> Unit,
     onProjects: () -> Unit,
@@ -60,6 +62,7 @@ internal fun MoreScreen(
         ) {
             SectionTitle(stringResource(R.string.more_group_work))
             Entry(DsR.drawable.ic_assistant, R.string.more_assistant, R.string.more_assistant_desc, c.focus, onAssistant)
+            Entry(DsR.drawable.ic_schedule, R.string.more_planner, R.string.more_planner_desc, c.success, onPlanner)
             Entry(DsR.drawable.ic_timer, R.string.more_focus, R.string.more_focus_desc, c.focus, onFocus)
             Entry(DsR.drawable.ic_inbox, R.string.more_inbox, R.string.more_inbox_desc, c.info, onInbox)
             Entry(DsR.drawable.ic_folder, R.string.more_projects, R.string.more_projects_desc, c.warning, onProjects)
@@ -67,6 +70,7 @@ internal fun MoreScreen(
             Entry(DsR.drawable.ic_bar_chart, R.string.more_reports, R.string.more_reports_desc, c.success, onReports)
             Entry(DsR.drawable.ic_review, R.string.more_daily_review, R.string.more_daily_review_desc, c.completed) { onReview(false) }
             Entry(DsR.drawable.ic_review, R.string.more_weekly_review, R.string.more_weekly_review_desc, c.streak) { onReview(true) }
+            Entry(DsR.drawable.ic_memory, R.string.more_memory, R.string.more_memory_desc, c.info, onMemory)
             SectionTitle(stringResource(R.string.more_group_app), modifier = Modifier.padding(top = 8.dp))
             Entry(DsR.drawable.ic_settings, R.string.more_settings, R.string.more_settings_desc, primary, onSettings)
             Spacer(Modifier.size(24.dp))

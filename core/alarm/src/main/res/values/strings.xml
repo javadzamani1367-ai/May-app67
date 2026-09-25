@@ -33,6 +33,10 @@
     <string name="focus_dnd_rule">تمرکز روزبان</string>
     <string name="focus_dnd_summary">در حال تمرکز</string>
     <string name="habit_reminder_text">وقت عادت امروز است</string>
+    <string name="morning_title">برنامه‌ی امروز</string>
+    <string name="morning_proposed">%1$s کار برای امروز پیشنهاد شد؛ بزنید تا ببینید و تأیید کنید</string>
+    <string name="morning_applied">%1$s کار در برنامه‌ی امروز چیده شد؛ بزنید تا ببینید</string>
+    <string name="morning_rolled">%1$s کار عقب‌افتاده به امروز آمد</string>
     <string name="review_daily_title">مرور امروز</string>
     <string name="review_daily_text">دو دقیقه: کارهای مانده را جابه‌جا کنید و فردا را ببینید</string>
     <string name="review_weekly_title">مرور هفته</string>

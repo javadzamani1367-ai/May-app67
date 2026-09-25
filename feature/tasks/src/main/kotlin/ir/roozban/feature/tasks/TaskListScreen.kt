@@ -84,6 +84,7 @@ internal fun TaskListRoute(
     onBack: (() -> Unit)? = null,
     onOpenAssistant: (() -> Unit)? = null,
     onOpenVoiceModels: (() -> Unit)? = null,
+    onOpenPlanner: (() -> Unit)? = null,
     viewModel: TaskListViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(mode, projectId) { viewModel.setMode(mode, projectId) }
@@ -124,6 +125,7 @@ internal fun TaskListRoute(
         onOpenSettings = onOpenSettings,
         onBack = onBack,
         onOpenAssistant = onOpenAssistant,
+        onOpenPlanner = onOpenPlanner,
     )
 
     if (sheetOpen) {
@@ -162,6 +164,7 @@ internal fun TaskListScreen(
     onOpenSettings: () -> Unit,
     onBack: (() -> Unit)? = null,
     onOpenAssistant: (() -> Unit)? = null,
+    onOpenPlanner: (() -> Unit)? = null,
 ) {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -185,6 +188,11 @@ internal fun TaskListScreen(
                     }
                 },
                 actions = {
+                    if (onOpenPlanner != null) {
+                        IconButton(onClick = onOpenPlanner) {
+                            Icon(painterResource(DsR.drawable.ic_schedule), stringResource(R.string.tasks_planner), tint = Roozban.colors.success.color)
+                        }
+                    }
                     if (onOpenAssistant != null) {
                         IconButton(onClick = onOpenAssistant) {
                             Icon(painterResource(DsR.drawable.ic_assistant), stringResource(R.string.tasks_assistant), tint = Roozban.colors.focus.color)

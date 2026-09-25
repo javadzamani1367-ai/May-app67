@@ -8,9 +8,11 @@ import dagger.hilt.android.HiltAndroidApp
 import ir.roozban.app.entry.Shortcuts
 import ir.roozban.app.widget.TodayWidget
 import ir.roozban.core.alarm.DateNotifier
+import ir.roozban.core.alarm.LearningJobService
 import ir.roozban.core.alarm.ReminderNotifier
 import ir.roozban.core.alarm.ReminderReconciler
 import ir.roozban.core.data.RoomTaskRepository
+import ir.roozban.core.domain.RoutineReminders
 import ir.roozban.core.domain.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +33,7 @@ class RoozbanApplication : Application() {
     @Inject lateinit var tasks: RoomTaskRepository
     @Inject lateinit var settings: SettingsRepository
     @Inject lateinit var dateNotifier: DateNotifier
+    @Inject lateinit var routines: RoutineReminders
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -43,6 +46,7 @@ class RoozbanApplication : Application() {
         }
         notifier.createChannels()
         Shortcuts.publish(this)
+        LearningJobService.ensureScheduled(this)
         appScope.launch {
             // Keep the home-screen widget in step with the task list.
             tasks.observeOpenTasks().drop(1).conflate().collect {
@@ -60,6 +64,12 @@ class RoozbanApplication : Application() {
             // The date notification follows its switch and the Hijri offset.
             settings.settings.map { it.dateNotification to it.hijriOffset }.distinctUntilChanged().drop(1).collect {
                 dateNotifier.refresh()
+            }
+        }
+        appScope.launch {
+            // The morning-plan alarm follows its time in settings.
+            settings.settings.map { it.planning.morningTime }.distinctUntilChanged().drop(1).collect {
+                routines.syncReviews()
             }
         }
         appScope.launch {

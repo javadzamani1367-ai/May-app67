@@ -34,6 +34,20 @@ class AndroidRoutineAlarms @Inject constructor(
 
     override fun cancelEvent(eventId: String) = cancel(eventIntent(eventId, PendingIntent.FLAG_NO_CREATE))
 
+    override fun scheduleMorning(atEpochMillis: Long) =
+        schedule(morningIntent(PendingIntent.FLAG_UPDATE_CURRENT)!!, atEpochMillis)
+
+    override fun cancelMorning() = cancel(morningIntent(PendingIntent.FLAG_NO_CREATE))
+
+    private fun morningIntent(flags: Int): PendingIntent? = PendingIntent.getBroadcast(
+        context,
+        0,
+        Intent(context, RoutineReceiver::class.java)
+            .setAction(RoutineReceiver.ACTION_MORNING_FIRE)
+            .setData(Uri.parse("roozban://morning")),
+        flags or PendingIntent.FLAG_IMMUTABLE,
+    )
+
     private fun eventIntent(eventId: String, flags: Int): PendingIntent? = PendingIntent.getBroadcast(
         context,
         0,

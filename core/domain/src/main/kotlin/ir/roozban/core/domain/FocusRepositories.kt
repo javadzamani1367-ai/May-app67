@@ -96,6 +96,11 @@ interface RoutineAlarms {
     fun scheduleEvent(eventId: String, atEpochMillis: Long)
 
     fun cancelEvent(eventId: String)
+
+    /** The morning plan (rollover + proposed day). */
+    fun scheduleMorning(atEpochMillis: Long)
+
+    fun cancelMorning()
 }
 
 /** A task (or one occurrence of a recurring task) being completed; input for the reports. */

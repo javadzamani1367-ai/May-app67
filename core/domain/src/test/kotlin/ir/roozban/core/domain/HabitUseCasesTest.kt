@@ -108,4 +108,18 @@ class HabitUseCasesTest {
         t.routines.syncReviews()
         assertThat(t.alarms.reviews).doesNotContainKey(ReviewKind.DAILY)
     }
+
+    @Test
+    fun `the morning plan alarm follows its setting`() = runTest {
+        val t = H()
+        val day = t.today
+        t.routines.syncReviews()
+        assertThat(t.alarms.morning).isNull()
+        t.h.settings.update { it.copy(planning = it.planning.copy(morningTime = LocalTime.of(7, 30))) }
+        t.routines.syncReviews()
+        assertThat(t.alarms.morning).isEqualTo(day.plusDays(1).atTime(7, 30))
+        t.h.clock.now = day.plusDays(1).atTime(7, 30)
+        assertThat(t.routines.onMorningAlarm()).isTrue()
+        assertThat(t.alarms.morning).isEqualTo(day.plusDays(2).atTime(7, 30))
+    }
 }

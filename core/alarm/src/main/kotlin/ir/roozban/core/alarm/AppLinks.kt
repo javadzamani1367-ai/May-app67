@@ -12,6 +12,7 @@ object AppLinks {
     const val DAILY_REVIEW = "review_daily"
     const val WEEKLY_REVIEW = "review_weekly"
     const val CALENDAR = "calendar"
+    const val PLANNER = "planner"
 
     fun open(context: Context, target: String): PendingIntent? =
         context.packageManager.getLaunchIntentForPackage(context.packageName)?.let {

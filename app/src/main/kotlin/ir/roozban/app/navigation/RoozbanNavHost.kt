@@ -44,6 +44,9 @@ import ir.roozban.feature.assistant.AssistantModelsRoute
 import ir.roozban.feature.assistant.AssistantRoute
 import ir.roozban.feature.assistant.assistantScreens
 import ir.roozban.feature.habits.habitsScreens
+import ir.roozban.feature.planner.MemoryRoute
+import ir.roozban.feature.planner.PlannerRoute
+import ir.roozban.feature.planner.plannerScreens
 import ir.roozban.feature.reports.ReportsRoute
 import ir.roozban.feature.reports.ReviewRoute
 import ir.roozban.feature.reports.reportsScreens
@@ -91,6 +94,7 @@ fun RoozbanApp(
             AppLinks.FOCUS -> navController.navigate(FocusRoute()) { launchSingleTop = true }
             AppLinks.HABITS -> navController.navigate(HabitsRoute) { launchSingleTop = true }
             AppLinks.CALENDAR -> navController.navigate(CalendarRoute) { launchSingleTop = true }
+            AppLinks.PLANNER -> navController.navigate(PlannerRoute) { launchSingleTop = true }
             AppLinks.DAILY_REVIEW -> navController.navigate(ReviewRoute(weekly = false)) { launchSingleTop = true }
             AppLinks.WEEKLY_REVIEW -> navController.navigate(ReviewRoute(weekly = true)) { launchSingleTop = true }
         }
@@ -151,7 +155,9 @@ fun RoozbanApp(
                 onBack = back,
                 onOpenAssistant = { navController.navigate(AssistantRoute) },
                 onOpenVoiceModels = { navController.navigate(AssistantModelsRoute) },
+                onOpenPlanner = { navController.navigate(PlannerRoute) },
             )
+            plannerScreens(onOpenMemory = { navController.navigate(MemoryRoute) }, onBack = back)
             assistantScreens(onOpenModels = { navController.navigate(AssistantModelsRoute) }, onBack = back)
             habitsScreens(
                 onOpenHabit = { navController.navigate(HabitRoute(it)) },
@@ -163,6 +169,8 @@ fun RoozbanApp(
             composable<MoreRoute> {
                 MoreScreen(
                     onAssistant = { navController.navigate(AssistantRoute) },
+                    onPlanner = { navController.navigate(PlannerRoute) },
+                    onMemory = { navController.navigate(MemoryRoute) },
                     onFocus = { navController.navigate(FocusRoute()) },
                     onInbox = { navController.navigate(InboxRoute) },
                     onProjects = { navController.navigate(ProjectsRoute) },

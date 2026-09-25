@@ -16,6 +16,8 @@ import ir.roozban.core.domain.EventReminders
 import ir.roozban.core.domain.FocusService
 import ir.roozban.core.domain.HabitRepository
 import ir.roozban.core.domain.HabitUseCases
+import ir.roozban.core.domain.MorningPlanUseCase
+import ir.roozban.core.domain.MorningResult
 import ir.roozban.core.domain.ReviewKind
 import ir.roozban.core.domain.RoutineReminders
 import ir.roozban.core.model.Habit
@@ -39,6 +41,7 @@ class RoutineReceiver : BroadcastReceiver() {
     @Inject lateinit var clock: Clock
     @Inject lateinit var events: EventReminders
     @Inject lateinit var dateNotifier: DateNotifier
+    @Inject lateinit var morningPlan: MorningPlanUseCase
 
     override fun onReceive(context: Context, intent: Intent) {
         val id = intent.getStringExtra(EXTRA_ID)
@@ -62,6 +65,7 @@ class RoutineReceiver : BroadcastReceiver() {
                     }
                     ACTION_DATE_REFRESH -> dateNotifier.refresh()
                     ACTION_EVENT_FIRE -> if (id != null) events.onAlarm(id)?.let { showEvent(context, it) }
+                    ACTION_MORNING_FIRE -> if (routines.onMorningAlarm()) showMorning(context, morningPlan())
                     ACTION_REVIEW_FIRE -> {
                         val kind = id?.let { runCatching { ReviewKind.valueOf(it) }.getOrNull() }
                         if (kind != null && routines.onReviewAlarm(kind)) showReview(context, kind)
@@ -127,6 +131,27 @@ class RoutineReceiver : BroadcastReceiver() {
         notify(context, ("event:" + event.id).hashCode(), notification)
     }
 
+    private fun showMorning(context: Context, result: MorningResult) {
+        if (!notifier.canPost()) return
+        val count = if (result.autoApplied > 0) result.autoApplied else result.plan.placements.size
+        if (count == 0 && result.rolledOver == 0) return
+        val lines = buildList {
+            if (count > 0) {
+                add(context.getString(if (result.autoApplied > 0) R.string.morning_applied else R.string.morning_proposed, PersianDigits.format(count)))
+            }
+            if (result.rolledOver > 0) add(context.getString(R.string.morning_rolled, PersianDigits.format(result.rolledOver)))
+        }
+        val notification = NotificationCompat.Builder(context, notifier.habitChannel())
+            .setSmallIcon(R.drawable.ic_stat_reminder)
+            .setContentTitle(context.getString(R.string.morning_title))
+            .setContentText(lines.first())
+            .setStyle(NotificationCompat.BigTextStyle().bigText(lines.joinToString("\n")))
+            .setAutoCancel(true)
+            .setContentIntent(AppLinks.open(context, AppLinks.PLANNER))
+            .build()
+        notify(context, MORNING_NOTIFICATION_ID, notification)
+    }
+
     private fun showReview(context: Context, kind: ReviewKind) {
         if (!notifier.canPost()) return
         val daily = kind == ReviewKind.DAILY
@@ -160,6 +185,8 @@ class RoutineReceiver : BroadcastReceiver() {
         const val ACTION_REVIEW_FIRE = "ir.roozban.action.REVIEW_FIRE"
         const val ACTION_EVENT_FIRE = "ir.roozban.action.EVENT_FIRE"
         const val ACTION_DATE_REFRESH = "ir.roozban.action.DATE_REFRESH"
+        const val ACTION_MORNING_FIRE = "ir.roozban.action.MORNING_FIRE"
+        private const val MORNING_NOTIFICATION_ID = 6_002
         const val EXTRA_ID = "id"
 
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)

@@ -138,6 +138,15 @@ class FakeRoutineAlarms : RoutineAlarms {
     val habits = mutableMapOf<String, LocalDateTime>()
     val reviews = mutableMapOf<ReviewKind, LocalDateTime>()
     val events = mutableMapOf<String, LocalDateTime>()
+    var morning: LocalDateTime? = null
+
+    override fun scheduleMorning(atEpochMillis: Long) {
+        morning = local(atEpochMillis)
+    }
+
+    override fun cancelMorning() {
+        morning = null
+    }
 
     override fun scheduleEvent(eventId: String, atEpochMillis: Long) {
         events[eventId] = local(atEpochMillis)

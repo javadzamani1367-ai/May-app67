@@ -23,6 +23,11 @@
             android:name=".RoutineReceiver"
             android:exported="false" />
 
+        <service
+            android:name=".LearningJobService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
         <!-- Only protected system broadcasts; they restore alarms after reboot, update or clock change. -->
         <receiver
             android:name=".SystemEventsReceiver"
