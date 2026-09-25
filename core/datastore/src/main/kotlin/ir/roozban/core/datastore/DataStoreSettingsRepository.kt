@@ -153,8 +153,8 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
             this[Keys.START_SCREEN] = s.startScreen.name
             this[Keys.DATE_NOTIFICATION] = s.dateNotification
             this[Keys.PRAYER_CITY] = s.prayerCity.orEmpty()
-            if (s.habitSound == null) remove(Keys.HABIT_SOUND) else this[Keys.HABIT_SOUND] = s.habitSound
-            if (s.eventSound == null) remove(Keys.EVENT_SOUND) else this[Keys.EVENT_SOUND] = s.eventSound
+            s.habitSound.let { if (it == null) remove(Keys.HABIT_SOUND) else this[Keys.HABIT_SOUND] = it }
+            s.eventSound.let { if (it == null) remove(Keys.EVENT_SOUND) else this[Keys.EVENT_SOUND] = it }
         }
 
         inline fun <reified E : Enum<E>> enumOr(name: String?, default: E): E =

@@ -269,5 +269,3 @@ internal fun StreakBadge(stats: HabitStats) {
         }
     }
 }
-    }
-}
