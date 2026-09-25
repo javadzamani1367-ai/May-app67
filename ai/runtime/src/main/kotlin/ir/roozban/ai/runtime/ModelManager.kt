@@ -52,7 +52,12 @@ data class ModelsState(
 
     val available: List<ModelSpec> get() = ModelCatalog.availableFor(tier)
 
-    val activeSpeech: InstalledModel? get() = speechInstalled.firstOrNull { it.id == activeSpeechId } ?: speechInstalled.firstOrNull()
+    /** The speech model voice input uses; models from before the Persian fine-tunes are never used. */
+    val activeSpeech: InstalledModel?
+        get() {
+            val usable = speechInstalled.filter { !ModelCatalog.isLegacySpeech(it.id) || ModelCatalog.get(it.id) != null }
+            return usable.firstOrNull { it.id == activeSpeechId } ?: usable.firstOrNull()
+        }
 
     val speechAvailable: List<ModelSpec> get() = ModelCatalog.speechFor(tier)
 }

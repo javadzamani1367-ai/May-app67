@@ -88,47 +88,42 @@ object ModelCatalog {
         ),
     )
 
-    private const val WHISPER = "$HF/ggerganov/whisper.cpp/resolve/main"
+    private const val SPEECH_RELEASE = "https://github.com/javadzamani1367-ai/May-app67/releases/download/speech-models"
 
-    /** Speech models: whisper.cpp, Persian quality grows with size. */
+    /**
+     * Speech models: Persian fine-tunes of Whisper converted to whisper.cpp (tools/speech_eval,
+     * published by the speech-models workflow). Chosen by word/character error rate on Persian
+     * FLEURS: the Persian Base beats the original Small on accuracy at a quarter of the time.
+     */
     val speech: List<ModelSpec> = listOf(
         ModelSpec(
-            id = "whisper-small-q5",
-            name = "Whisper Small",
-            description = "پیشنهادی: دقت خوب فارسی با سرعت مناسب",
-            url = "$WHISPER/ggml-small-q5_1.bin",
-            sizeBytes = SPEECH_SMALL_SIZE,
-            sha256 = SPEECH_SMALL_SHA,
-            template = ChatTemplate.CHATML,
-            minTier = DeviceTier.LIGHT,
-            license = "MIT",
-            kind = ModelKind.SPEECH,
-        ),
-        ModelSpec(
-            id = "whisper-base-q5",
-            name = "Whisper Base",
-            description = "سبک و سریع، دقت کمتر",
-            url = "$WHISPER/ggml-base-q5_1.bin",
+            id = "whisper-base-fa",
+            name = "گفتار فارسی (پایه)",
+            description = "پیشنهادی: دقیق برای فارسی، سبک و سریع",
+            url = "$SPEECH_RELEASE/roozban-whisper-base-fa-q5_1.bin",
             sizeBytes = SPEECH_BASE_SIZE,
             sha256 = SPEECH_BASE_SHA,
             template = ChatTemplate.CHATML,
             minTier = DeviceTier.LIGHT,
-            license = "MIT",
+            license = "Apache-2.0 (C1Tech/whisper_base_persian)",
             kind = ModelKind.SPEECH,
         ),
         ModelSpec(
-            id = "whisper-turbo-q5",
-            name = "Whisper Large v3 Turbo",
-            description = "بهترین دقت فارسی، کندتر؛ برای گوشی‌های قوی",
-            url = "$WHISPER/ggml-large-v3-turbo-q5_0.bin",
+            id = "whisper-turbo-fa",
+            name = "گفتار فارسی (بزرگ)",
+            description = "دقیق‌ترین در جمله‌های طولانی، ولی چند برابر کندتر؛ برای گوشی‌های قوی",
+            url = "$SPEECH_RELEASE/roozban-whisper-turbo-fa-q5_0.bin",
             sizeBytes = SPEECH_TURBO_SIZE,
             sha256 = SPEECH_TURBO_SHA,
             template = ChatTemplate.CHATML,
             minTier = DeviceTier.HIGH,
-            license = "MIT",
+            license = "MIT (nezamisafa/whisper-v3-turbo-persian-v1.0)",
             kind = ModelKind.SPEECH,
         ),
     )
+
+    /** Speech models from before the Persian fine-tunes; still recognized when installed. */
+    fun isLegacySpeech(id: String) = id.startsWith("whisper-")
 
     fun get(id: String): ModelSpec? = all.firstOrNull { it.id == id } ?: speech.firstOrNull { it.id == id }
 
@@ -139,10 +134,10 @@ object ModelCatalog {
 
     /** Speech models the device can run, the recommended one first. Voice input works on every tier. */
     fun speechFor(tier: DeviceTier): List<ModelSpec> =
-        speech.filter { it.minTier <= tier || tier == DeviceTier.UNSUPPORTED && it.id == "whisper-base-q5" }
+        speech.filter { it.minTier <= tier || tier == DeviceTier.UNSUPPORTED && it.id == "whisper-base-fa" }
             .sortedBy { if (it.id == recommendedSpeechIdFor(tier)) 0 else 1 }
 
-    fun recommendedSpeechIdFor(tier: DeviceTier): String = if (tier <= DeviceTier.LIGHT) "whisper-base-q5" else "whisper-small-q5"
+    fun recommendedSpeechIdFor(@Suppress("UNUSED_PARAMETER") tier: DeviceTier): String = "whisper-base-fa"
 
     fun recommendedIdFor(tier: DeviceTier): String? = when (tier) {
         DeviceTier.UNSUPPORTED -> null
@@ -151,10 +146,8 @@ object ModelCatalog {
     }
 }
 
-// Filled from the files' LFS metadata (x-linked-size / x-linked-etag).
-private const val SPEECH_SMALL_SIZE = 190_085_487L
-private const val SPEECH_SMALL_SHA = "ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb"
-private const val SPEECH_BASE_SIZE = 59_707_625L
-private const val SPEECH_BASE_SHA = "422f1ae452ade6f30a004d7e5c6a43195e4433bc370bf23fac9cc591f01a8898"
+// Size and sha256 of the files the speech-models workflow published.
+private const val SPEECH_BASE_SIZE = 59_707_642L
+private const val SPEECH_BASE_SHA = "c1aeb942ffa72af49d2383e96060b8a57c3353205d6dabd40f484470946c3185"
 private const val SPEECH_TURBO_SIZE = 574_041_195L
-private const val SPEECH_TURBO_SHA = "394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2"
+private const val SPEECH_TURBO_SHA = "c638c825876db2347fbfaaafad292dec2eccf2c701f5396d8497e2a65dab4260"
