@@ -30,6 +30,9 @@ internal object LlamaNative {
 
     external fun nativeCancel(handle: Long)
 
+    /** 1 = restored from [cachePath], 0 = computed (and saved), -1 = error. */
+    external fun nativeWarmUp(handle: Long, prefix: String, cachePath: String, sink: PieceSink): Int
+
     external fun nativeGenerate(
         handle: Long,
         prompt: String,

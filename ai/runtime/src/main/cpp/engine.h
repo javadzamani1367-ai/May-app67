@@ -50,6 +50,14 @@ void free(Engine * e);
 int count_tokens(Engine * e, const std::string & text);
 
 /**
+ * Computes the fixed prompt [prefix] so later prompts starting with it only process the rest.
+ * With [cache_path], the computed state is saved there and restored on the next load instead of
+ * recomputed. Returns 1 when restored, 0 when computed, -1 with [error] set.
+ */
+int warm_up(Engine * e, const std::string & prefix, const std::string & cache_path,
+    const std::function<void(int)> & on_progress, std::string & error);
+
+/**
  * Generates after [prompt]. [on_progress] gets 0..100 while the prompt is read; [on_piece] gets
  * complete UTF-8 pieces and returns false to stop. Returns the number of generated tokens, or -1
  * with [error] set.

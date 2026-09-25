@@ -82,6 +82,27 @@ class LlmService : Service() {
             }
         }
 
+        override fun warmUp(prefix: String, cachePath: String, callback: ILlmCallback) {
+            worker.execute {
+                val h = handle.get()
+                if (h == 0L) {
+                    callback.safe { onError("no model loaded") }
+                    return@execute
+                }
+                val sink = object : LlamaNative.PieceSink {
+                    override fun onPiece(bytes: ByteArray) = true
+
+                    override fun onProgress(percent: Int) {
+                        callback.safe { onProgress(percent) }
+                    }
+                }
+                val start = android.os.SystemClock.elapsedRealtime()
+                val rc = LlamaNative.nativeWarmUp(h, prefix, cachePath, sink)
+                Log.i(TAG, "warm-up rc=$rc in ${android.os.SystemClock.elapsedRealtime() - start} ms")
+                if (rc < 0) callback.safe { onError(LlamaNative.nativeLastError()) } else callback.safe { onDone(rc) }
+            }
+        }
+
         // Runs on the binder thread so it can interrupt the worker.
         override fun cancel() {
             val h = handle.get()

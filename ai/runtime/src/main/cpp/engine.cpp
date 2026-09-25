@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdio>
 
 #include "ggml-backend.h"
 #include "llama.h"
@@ -111,6 +112,10 @@ Engine * load(const std::string & path, int n_ctx, int n_threads, int n_batch, s
     cp.n_threads = n_threads;
     cp.n_threads_batch = n_threads;
     cp.no_perf = true;
+    // 8-bit keys/values: half the memory and half the size of the saved prompt state.
+    cp.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_ENABLED;
+    cp.type_k = GGML_TYPE_Q8_0;
+    cp.type_v = GGML_TYPE_Q8_0;
     llama_context * ctx = llama_init_from_model(model, cp);
     if (ctx == nullptr) {
         llama_model_free(model);
@@ -130,6 +135,42 @@ void free(Engine * e) {
     llama_free(e->ctx);
     llama_model_free(e->model);
     delete e;
+}
+
+int warm_up(Engine * e, const std::string & prefix, const std::string & cache_path,
+    const std::function<void(int)> & on_progress, std::string & error) {
+    std::vector<llama_token> tokens = tokenize(e->vocab, prefix);
+    if (tokens.empty()) return 0;
+    llama_memory_t mem = llama_get_memory(e->ctx);
+    if (!cache_path.empty()) {
+        std::vector<llama_token> loaded(tokens.size() + 16);
+        size_t count = 0;
+        llama_memory_clear(mem, true);
+        if (llama_state_seq_load_file(e->ctx, cache_path.c_str(), 0, loaded.data(), loaded.size(), &count) > 0 &&
+            count == tokens.size() && std::equal(tokens.begin(), tokens.end(), loaded.begin())) {
+            e->cached.assign(tokens.begin(), tokens.end());
+            if (on_progress) on_progress(100);
+            return 1;
+        }
+        llama_memory_clear(mem, true);
+        e->cached.clear();
+    }
+    GenParams p;
+    p.max_tokens = 0;
+    int rc = generate(e, prefix, "", p, on_progress, [](const char *, size_t) { return true; }, error);
+    if (rc < 0) return -1;
+    if (e->cancel.load()) return 0;
+    if (!cache_path.empty()) {
+        // generate() keeps the last prompt token for fresh logits; the saved state is the full prefix.
+        std::string tmp = cache_path + ".tmp";
+        if (llama_state_seq_save_file(e->ctx, tmp.c_str(), 0, e->cached.data(), e->cached.size()) > 0 &&
+            e->cached.size() == tokens.size()) {
+            std::rename(tmp.c_str(), cache_path.c_str());
+        } else {
+            std::remove(tmp.c_str());
+        }
+    }
+    return 0;
 }
 
 int count_tokens(Engine * e, const std::string & text) { return (int) tokenize(e->vocab, text).size(); }

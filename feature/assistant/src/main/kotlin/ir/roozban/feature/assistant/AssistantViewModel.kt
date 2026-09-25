@@ -65,6 +65,8 @@ data class AssistantUiState(
     val modelName: String? = null,
     val busy: Boolean = false,
     val access: Access = Access.FULL,
+    /** 0..100 while the assistant prepares itself after opening; null when ready. */
+    val preparing: Int? = null,
 )
 
 @HiltViewModel
@@ -85,7 +87,7 @@ class AssistantViewModel @Inject constructor(
     private var job: Job? = null
     private val access = entitlements.access(ProFeature.ASSISTANT)
 
-    val state: StateFlow<AssistantUiState> = combine(items, busy, host.engine.state, models.state) { items, busy, engine, m ->
+    val state: StateFlow<AssistantUiState> = combine(items, busy, host.engine.state, models.state, host.warmProgress) { items, busy, engine, m, warm ->
         val status = when {
             !m.tier.supported -> EngineStatus.UNSUPPORTED
             m.active == null -> EngineStatus.NO_MODEL
@@ -94,7 +96,7 @@ class AssistantViewModel @Inject constructor(
             engine is EngineState.Failed -> EngineStatus.FAILED
             else -> EngineStatus.IDLE
         }
-        AssistantUiState(items, status, m.active?.name, busy, access)
+        AssistantUiState(items, status, m.active?.name, busy, access, warm)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AssistantUiState(access = access))
 
     init {

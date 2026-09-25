@@ -88,6 +88,7 @@ class ModelStore(val dir: File) {
     }
 
     fun delete(id: String) {
+        dir.listFiles { f -> f.name.startsWith("$id.gguf.prefix-") }?.forEach { it.delete() }
         File(dir, "$id.gguf").delete()
         File(dir, "$id.gguf.part").delete()
         sidecar(id).delete()

@@ -122,10 +122,7 @@ class PromptBuilder(
             appendLine(if (tasks.isEmpty()) "ندارد" else tasks.joinToString("، ") { n -> "#$n" + (context?.tasks?.getOrNull(n - 1)?.let { " ${it.title}" } ?: "") })
             if (h.habits.isNotEmpty()) appendLine("عادت مرتبط: " + h.habits.joinToString("، "))
             appendLine("زمان در پیام: " + (listOfNotNull(h.repeat, h.time).joinToString(" ").ifEmpty { "ندارد" }))
-            if (context != null) {
-                val overdue = context.tasks.any { t -> t.due?.let { it.date < context.today } == true }
-                appendLine("ابزارهای ممکن: " + MessageGrammar.tools(h, message, overdue).joinToString("، ") { it.name })
-            }
+
         }
 
         private val TOOLS_TEXT = Tools.all.joinToString("\n") { toolLine(it) }

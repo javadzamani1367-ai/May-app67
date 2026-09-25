@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <chrono>
+#include <cstdio>
 
 #include "engine.h"
 
@@ -41,16 +43,26 @@ int main(int argc, char ** argv) {
         closedir(d);
     }
     std::sort(names.begin(), names.end());
-    if (!names.empty()) {
-        // Warm-up as the app does: the fixed prefix first.
-        std::string prefix = read(dir + "/prefix.txt");
-        if (!prefix.empty()) {
-            roozban::GenStats s;
-            roozban::GenParams p;
-            p.max_tokens = 0;
-            roozban::generate(e, prefix, "", p, nullptr, [](const char *, size_t) { return true; }, error, &s);
-            std::printf("BENCH warmup prompt=%d tokens %.0f ms (%.1f tok/s)\n", s.prompt_tokens, s.prompt_ms, s.prompt_tokens * 1000.0 / s.prompt_ms);
-        }
+    std::string prefix = read(dir + "/prefix.txt");
+    if (!prefix.empty()) {
+        // As the app does: compute the fixed prefix and save it, then restore it in a fresh engine.
+        std::string cache = dir + "/prefix.kv";
+        std::remove(cache.c_str());
+        auto t0 = std::chrono::steady_clock::now();
+        int rc = roozban::warm_up(e, prefix, cache, nullptr, error);
+        auto t1 = std::chrono::steady_clock::now();
+        std::printf("BENCH warmup computed rc=%d prefix=%d tokens %.0f ms\n", rc, roozban::count_tokens(e, prefix),
+            std::chrono::duration<double, std::milli>(t1 - t0).count());
+        roozban::free(e);
+        e = roozban::load(argv[1], 4096, std::atoi(argv[2]), 256, error);
+        t0 = std::chrono::steady_clock::now();
+        rc = roozban::warm_up(e, prefix, cache, nullptr, error);
+        t1 = std::chrono::steady_clock::now();
+        std::FILE * f = std::fopen(cache.c_str(), "rb");
+        long size = 0;
+        if (f) { std::fseek(f, 0, SEEK_END); size = std::ftell(f); std::fclose(f); }
+        std::printf("BENCH warmup restored rc=%d %.0f ms, cache file %.1f MB\n", rc,
+            std::chrono::duration<double, std::milli>(t1 - t0).count(), size / 1048576.0);
     }
     for (const auto & name : names) {
         std::string out;

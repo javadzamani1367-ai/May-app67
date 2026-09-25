@@ -48,8 +48,8 @@ object Tools {
     const val RANGE_ALL = "all"
     val RANGES = listOf(RANGE_TODAY, RANGE_TOMORROW, RANGE_WEEK, RANGE_OVERDUE, RANGE_ALL)
 
-    private val TASK_REF = Arg("task", ArgType.Text(), "task number from the list like \"#2\", or its title")
-    private val WHEN_HINT = "Persian time phrase as the user said it, e.g. \"فردا ساعت ۹\", \"پنجشنبه عصر\", \"۱۴۰۵/۰۸/۱۰\""
+    private val TASK_REF = Arg("task", ArgType.Text(), "task number like \"#2\"")
+    private val WHEN_HINT = "time words from the message"
 
     val createTask = ToolSpec(
         "create_task", "Add a new task or reminder.", Risk.WRITE,

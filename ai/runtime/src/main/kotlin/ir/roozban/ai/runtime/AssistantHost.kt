@@ -1,6 +1,7 @@
 package ir.roozban.ai.runtime
 
 import ir.roozban.ai.core.EngineConfig
+import ir.roozban.ai.core.EngineState
 import ir.roozban.ai.core.LlmException
 import ir.roozban.ai.models.InstalledModel
 import kotlinx.coroutines.CoroutineScope
@@ -8,7 +9,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
+import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -45,17 +51,36 @@ class AssistantHost @Inject constructor(
         return LoadedModel(model, config)
     }
 
-    private var warmedPath: String? = null
+    private var warmedKey: String? = null
+
+    private val _warmProgress = MutableStateFlow<Int?>(null)
+
+    /** 0..100 while the fixed prompt is being prepared; null otherwise. */
+    val warmProgress: StateFlow<Int?> = _warmProgress.asStateFlow()
 
     /**
-     * Computes the fixed prompt [prefix] ahead of the first message (while the user types), so
-     * the first answer only processes the new part. Done once per loaded model.
+     * Prepares the fixed prompt [prefix] ahead of the first message (while the user types), so
+     * each answer only processes the new part. The result is kept in a file next to the model,
+     * so later sessions restore it in about a second instead of recomputing it.
      */
     suspend fun warmUp(loaded: LoadedModel, prefix: String) {
-        if (warmedPath == loaded.model.file.path && engine.state.value is ir.roozban.ai.core.EngineState.Ready) return
-        engine.generate(ir.roozban.ai.core.GenerationRequest(prefix, grammar = null, maxTokens = 0)).collect {}
-        warmedPath = loaded.model.file.path
+        val key = sha256(prefix + "|" + loaded.config).take(16)
+        if (warmedKey == key && engine.state.value is EngineState.Ready) return
+        val model = loaded.model.file
+        val cache = File(model.path + ".prefix-" + key + ".kv")
+        // Older caches of this model (from an earlier prompt version) are dead weight.
+        model.parentFile?.listFiles { f -> f.name.startsWith(model.name + ".prefix-") && f != cache }?.forEach { it.delete() }
+        _warmProgress.value = 0
+        try {
+            engine.warmUp(prefix, cache.path) { _warmProgress.value = it }
+            warmedKey = key
+        } finally {
+            _warmProgress.value = null
+        }
     }
+
+    private fun sha256(text: String) = MessageDigest.getInstance("SHA-256").digest(text.toByteArray())
+        .joinToString("") { "%02x".format(it) }
 
     /** Call when a screen using the model goes away. */
     fun release() {
@@ -63,11 +88,12 @@ class AssistantHost @Inject constructor(
         idleJob = scope.launch {
             delay(IDLE_MILLIS)
             engine.unload()
-            warmedPath = null
+            warmedKey = null
         }
     }
 
     private companion object {
-        const val IDLE_MILLIS = 90_000L
+        /** Five minutes: coming back to the assistant soon should not reload the model. */
+        const val IDLE_MILLIS = 5 * 60_000L
     }
 }

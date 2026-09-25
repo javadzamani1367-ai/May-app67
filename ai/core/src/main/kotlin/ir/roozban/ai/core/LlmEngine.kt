@@ -19,6 +19,16 @@ interface LlmEngine {
      */
     fun generate(request: GenerationRequest): Flow<String>
 
+    /**
+     * Pre-computes the fixed start of every prompt so each message only processes the rest.
+     * With [cacheFile] the result is saved and later restored instead of recomputed.
+     * Returns true when it was restored.
+     */
+    suspend fun warmUp(prefix: String, cacheFile: String?, onProgress: (Int) -> Unit = {}): Boolean {
+        generate(GenerationRequest(prefix, maxTokens = 0, onPromptProgress = onProgress)).collect {}
+        return false
+    }
+
     /** Token count of [text] with the loaded model's tokenizer, or null when unavailable. */
     suspend fun countTokens(text: String): Int?
 

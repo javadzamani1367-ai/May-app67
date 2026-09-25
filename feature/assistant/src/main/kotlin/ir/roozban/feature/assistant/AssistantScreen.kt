@@ -154,7 +154,9 @@ internal fun AssistantScreen(onBack: () -> Unit, onOpenModels: () -> Unit, viewM
     }
 }
 
-private fun statusText(state: AssistantUiState): String = when (state.status) {
+private fun statusText(state: AssistantUiState): String = state.preparing?.let {
+    "در حال آماده‌سازی دستیار… ${ir.roozban.core.calendar.PersianDigits.format(it)}٪"
+} ?: when (state.status) {
     EngineStatus.UNSUPPORTED -> "پشتیبانی نمی‌شود"
     EngineStatus.NO_MODEL -> "مدلی نصب نیست"
     EngineStatus.LOADING -> "در حال آماده‌سازی ${state.modelName.orEmpty()}…"

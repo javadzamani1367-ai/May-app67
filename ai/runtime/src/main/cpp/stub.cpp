@@ -8,5 +8,6 @@ JNIEXPORT jlong JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeLoad(JNIEnv
 JNIEXPORT void JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeFree(JNIEnv *, jobject, jlong) {}
 JNIEXPORT jint JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeCountTokens(JNIEnv *, jobject, jlong, jstring) { return 0; }
 JNIEXPORT void JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeCancel(JNIEnv *, jobject, jlong) {}
+JNIEXPORT jint JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeWarmUp(JNIEnv *, jobject, jlong, jstring, jstring, jobject) { return -1; }
 JNIEXPORT jint JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeGenerate(JNIEnv *, jobject, jlong, jstring, jstring, jfloat, jfloat, jfloat, jint, jint, jobject) { return -1; }
 }

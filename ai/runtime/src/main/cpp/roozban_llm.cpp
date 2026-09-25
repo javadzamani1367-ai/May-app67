@@ -56,6 +56,16 @@ Java_ir_roozban_ai_runtime_LlamaNative_nativeCancel(JNIEnv *, jobject, jlong han
     if (handle != 0) engine(handle)->cancel.store(true);
 }
 
+/** Returns 1 restored from [cache_path], 0 computed, -1 on error. sink.onProgress(int) gets 0..100. */
+JNIEXPORT jint JNICALL
+Java_ir_roozban_ai_runtime_LlamaNative_nativeWarmUp(JNIEnv * env, jobject, jlong handle, jstring prefix, jstring cache_path, jobject sink) {
+    jclass cls = env->GetObjectClass(sink);
+    jmethodID on_progress = env->GetMethodID(cls, "onProgress", "(I)V");
+    return roozban::warm_up(
+        engine(handle), to_string(env, prefix), to_string(env, cache_path),
+        [&](int percent) { env->CallVoidMethod(sink, on_progress, (jint) percent); }, g_error);
+}
+
 /** sink: onPiece(byte[]): boolean, onProgress(int). Returns generated tokens or -1. */
 JNIEXPORT jint JNICALL
 Java_ir_roozban_ai_runtime_LlamaNative_nativeGenerate(

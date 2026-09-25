@@ -103,6 +103,31 @@ class RemoteLlmEngine @Inject constructor(
         }
     }.buffer(Channel.UNLIMITED).flowOn(Dispatchers.IO)
 
+    override suspend fun warmUp(prefix: String, cacheFile: String?, onProgress: (Int) -> Unit): Boolean {
+        val s = service ?: throw LlmException("no model loaded")
+        return suspendCancellableCoroutine { cont ->
+            val callback = object : ILlmCallback.Stub() {
+                override fun onProgress(percent: Int) = onProgress(percent)
+
+                override fun onPiece(piece: String) = Unit
+
+                override fun onDone(tokens: Int) {
+                    if (cont.isActive) cont.resume(tokens == 1)
+                }
+
+                override fun onError(message: String) {
+                    if (cont.isActive) cont.resumeWith(Result.failure(LlmException(message)))
+                }
+            }
+            try {
+                s.warmUp(prefix, cacheFile.orEmpty(), callback)
+            } catch (e: Exception) {
+                cont.resumeWith(Result.failure(LlmException("service error", e)))
+            }
+            cont.invokeOnCancellation { runCatching { s.cancel() } }
+        }
+    }
+
     override suspend fun countTokens(text: String): Int? = withContext(Dispatchers.IO) {
         runCatching { service?.countTokens(text) }.getOrNull()?.takeIf { it >= 0 }
     }
