@@ -8,6 +8,8 @@ on:
     paths:
       - 'ai/tools/**'
       - 'ai/eval/**'
+      - 'ai/runtime/src/main/cpp/*.cpp'
+      - 'ai/runtime/src/main/cpp/*.h'
       - 'tools/eval/**'
       - '.github/workflows/eval.yml'
 
@@ -74,9 +76,19 @@ jobs:
       - name: Run eval
         run: ./gradlew :ai:eval:run --args="--server http://127.0.0.1:8080 --template ${{ matrix.template }} --label ${{ matrix.name }} --out build/eval-${{ matrix.name }}.md"
 
+      # The app's own engine code (fast grammar sampling, prefix reuse) on 4 threads, like a phone.
+      - name: Engine benchmark
+        run: |
+          cmake -S ai/runtime/src/main/cpp -B bench-build -DGGML_NATIVE=OFF > /dev/null
+          cmake --build bench-build --target roozban-bench -j "$(nproc)"
+          ./gradlew -q :ai:eval:run --args="--template ${{ matrix.template }} --dump build/bench"
+          ./bench-build/roozban-bench model.gguf 4 build/bench | tee build/bench-${{ matrix.name }}.txt
+
       - name: Summary
         if: always()
-        run: cat build/eval-${{ matrix.name }}.md >> "$GITHUB_STEP_SUMMARY" || tail -50 server.log
+        run: |
+          cat build/eval-${{ matrix.name }}.md >> "$GITHUB_STEP_SUMMARY" || tail -50 server.log
+          { echo; echo '```'; cat build/bench-${{ matrix.name }}.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
 
       - uses: actions/upload-artifact@v4
         if: always()

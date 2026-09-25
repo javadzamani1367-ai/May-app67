@@ -10,9 +10,12 @@ internal object LlamaNative {
         e.message ?: "native library missing"
     }
 
-    fun interface PieceSink {
+    interface PieceSink {
         /** A complete UTF-8 piece; return false to stop. */
         fun onPiece(bytes: ByteArray): Boolean
+
+        /** 0..100 while the prompt is being read. */
+        fun onProgress(percent: Int)
     }
 
     external fun nativeInit(libDir: String): Boolean

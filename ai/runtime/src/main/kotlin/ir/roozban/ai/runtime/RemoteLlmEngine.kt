@@ -74,6 +74,10 @@ class RemoteLlmEngine @Inject constructor(
         if (s == null || _state.value !is EngineState.Ready) throw LlmException("no model loaded")
         val finished = AtomicBoolean(false)
         val callback = object : ILlmCallback.Stub() {
+            override fun onProgress(percent: Int) {
+                request.onPromptProgress?.invoke(percent)
+            }
+
             override fun onPiece(piece: String) {
                 trySend(piece)
             }

@@ -60,6 +60,8 @@ data class GenerationRequest(
     val grammar: String? = null,
     val sampling: SamplingParams = SamplingParams.Greedy,
     val maxTokens: Int = 512,
+    /** Called with 0..100 while the engine reads the prompt (before the first piece). */
+    val onPromptProgress: ((Int) -> Unit)? = null,
 )
 
 class LlmException(message: String, cause: Throwable? = null) : Exception(message, cause)

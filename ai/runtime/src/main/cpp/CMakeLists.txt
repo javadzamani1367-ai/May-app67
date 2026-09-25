@@ -8,6 +8,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # The model is useless unoptimized, so debug builds compile llama.cpp as release too.
 set(CMAKE_BUILD_TYPE Release)
 
+if(NOT ANDROID)
+    # Host build for the CI benchmark: the app's engine code against a native llama.cpp.
+    set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(LLAMA_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+    set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
+    set(LLAMA_CURL OFF CACHE BOOL "" FORCE)
+    set(LLAMA_OPENSSL OFF CACHE BOOL "" FORCE)
+    add_subdirectory(llama.cpp build-llama)
+    add_executable(roozban-bench bench.cpp engine.cpp)
+    target_link_libraries(roozban-bench llama ggml)
+    return()
+endif()
+
 if(ANDROID_ABI STREQUAL "armeabi-v7a")
     # 32-bit phones cannot hold these models; a stub keeps the app installable there and
     # the assistant reports itself unsupported.
@@ -42,5 +56,5 @@ endif()
 
 add_subdirectory(llama.cpp build-llama)
 
-add_library(roozban_llm SHARED roozban_llm.cpp)
+add_library(roozban_llm SHARED roozban_llm.cpp engine.cpp)
 target_link_libraries(roozban_llm llama ggml log)

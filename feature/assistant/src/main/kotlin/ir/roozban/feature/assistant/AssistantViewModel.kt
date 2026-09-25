@@ -16,6 +16,7 @@ import ir.roozban.ai.tools.PlannedAction
 import ir.roozban.ai.tools.PromptBuilder
 import ir.roozban.ai.tools.ToolExecutor
 import ir.roozban.ai.tools.Turn
+import ir.roozban.core.calendar.PersianDigits
 import ir.roozban.core.domain.Access
 import ir.roozban.core.domain.Entitlements
 import ir.roozban.core.domain.HabitRepository
@@ -43,6 +44,8 @@ data class ChatItem(
     val role: ChatRole,
     val text: String,
     val streaming: Boolean = false,
+    /** What the model is doing before the reply shows, e.g. «در حال خواندن… ۴۰٪». */
+    val stage: String? = null,
     /** Actions waiting for the user's approval. */
     val pending: Plan? = null,
     val results: List<ActionResult> = emptyList(),
@@ -126,7 +129,9 @@ class AssistantViewModel @Inject constructor(
                     .ask(context, history.toList(), message)
                     .collect { event ->
                         when (event) {
-                            is AssistantEvent.Partial -> edit(answerId) { it.copy(text = event.reply) }
+                            is AssistantEvent.Reading -> edit(answerId) { it.copy(stage = "در حال خواندن پیام… ${PersianDigits.format(event.percent)}٪") }
+                            AssistantEvent.Writing -> edit(answerId) { it.copy(stage = "در حال نوشتن پاسخ…") }
+                            is AssistantEvent.Partial -> edit(answerId) { it.copy(text = event.reply, stage = null) }
                             is AssistantEvent.Complete -> {
                                 history += Turn(message, event.raw)
                                 while (history.size > MAX_HISTORY) history.removeAt(0)

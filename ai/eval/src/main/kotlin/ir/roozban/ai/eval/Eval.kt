@@ -34,6 +34,19 @@ fun main(args: Array<String>) {
     val min = opts["min"]?.toDouble() ?: 0.0
     val label = opts["label"] ?: template.name
 
+    // --dump DIR: write the app's prompts and grammars for the engine benchmark, no server.
+    opts["dump"]?.let { dir ->
+        val d = File(dir).apply { mkdirs() }
+        val b = PromptBuilder(template, contextTokens = 4096)
+        d.resolve("prefix.txt").writeText(b.prefix())
+        cases.take(opts["dump-count"]?.toInt() ?: 6).forEach { case ->
+            d.resolve("${case.id}.prompt").writeText(runBlocking { b.build(Scenario.context(), emptyList(), case.input) })
+            d.resolve("${case.id}.gbnf").writeText(MessageGrammar.grammar(Scenario.context(), case.input))
+        }
+        println("dumped to $dir")
+        return
+    }
+
     val http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build()
     val context = Scenario.context()
     val builder = PromptBuilder(template, contextTokens = 4096)

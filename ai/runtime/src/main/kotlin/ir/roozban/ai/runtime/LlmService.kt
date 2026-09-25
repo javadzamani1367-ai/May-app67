@@ -61,14 +61,23 @@ class LlmService : Service() {
                     return@execute
                 }
                 var alive = true
-                val produced = LlamaNative.nativeGenerate(h, prompt, grammar?.ifEmpty { null }, temperature, topP, minP, seed, maxTokens) { bytes ->
-                    try {
-                        callback.onPiece(String(bytes, Charsets.UTF_8))
-                    } catch (e: RemoteException) {
-                        alive = false // The app went away: stop.
+                val sink = object : LlamaNative.PieceSink {
+                    override fun onPiece(bytes: ByteArray): Boolean {
+                        try {
+                            callback.onPiece(String(bytes, Charsets.UTF_8))
+                        } catch (e: RemoteException) {
+                            alive = false // The app went away: stop.
+                        }
+                        return alive
                     }
-                    alive
+
+                    override fun onProgress(percent: Int) {
+                        callback.safe { onProgress(percent) }
+                    }
                 }
+                val start = android.os.SystemClock.elapsedRealtime()
+                val produced = LlamaNative.nativeGenerate(h, prompt, grammar?.ifEmpty { null }, temperature, topP, minP, seed, maxTokens, sink)
+                Log.i(TAG, "generated $produced tokens in ${android.os.SystemClock.elapsedRealtime() - start} ms")
                 if (produced < 0) callback.safe { onError(LlamaNative.nativeLastError()) } else callback.safe { onDone(produced) }
             }
         }

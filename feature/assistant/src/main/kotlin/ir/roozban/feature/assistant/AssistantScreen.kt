@@ -214,7 +214,7 @@ private fun AnswerBubble(item: ChatItem, viewModel: AssistantViewModel) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                         Spacer(Modifier.width(8.dp))
-                        Text("در حال فکر کردن…", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(item.stage ?: "در حال آماده‌سازی…", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 } else if (item.text.isNotEmpty()) {
                     Text(item.text, color = if (item.error) Roozban.colors.error.color else MaterialTheme.colorScheme.onSurface)

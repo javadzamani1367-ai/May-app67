@@ -5,9 +5,15 @@ import ir.roozban.ai.core.GenerationRequest
 import ir.roozban.ai.core.LlmEngine
 import ir.roozban.ai.core.SamplingParams
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.channelFlow
 
 sealed interface AssistantEvent {
+    /** The model is reading the prompt: 0..100. */
+    data class Reading(val percent: Int) : AssistantEvent
+
+    /** The model has started writing its answer (actions come before the reply text). */
+    data object Writing : AssistantEvent
+
     /** The reply text so far, while the model writes. */
     data class Partial(val reply: String) : AssistantEvent
 
@@ -21,17 +27,23 @@ class Assistant(
     private val template: ChatTemplate,
     private val contextTokens: Int,
 ) {
-    fun ask(context: AssistantContext, history: List<Turn>, message: String): Flow<AssistantEvent> = flow {
+    fun ask(context: AssistantContext, history: List<Turn>, message: String): Flow<AssistantEvent> = channelFlow {
         val builder = PromptBuilder(template, contextTokens) { engine.countTokens(it) ?: ir.roozban.ai.core.TokenEstimate.of(it) }
         val prompt = builder.build(context, history, message)
         val raw = StringBuilder()
         val reply = ReplyStream()
-        engine.generate(GenerationRequest(prompt, MessageGrammar.grammar(context, message), SamplingParams.Greedy, PromptBuilder.ANSWER_TOKENS)).collect { piece ->
+        send(AssistantEvent.Reading(0))
+        val request = GenerationRequest(
+            prompt, MessageGrammar.grammar(context, message), SamplingParams.Greedy, PromptBuilder.ANSWER_TOKENS,
+            onPromptProgress = { trySend(AssistantEvent.Reading(it)) },
+        )
+        engine.generate(request).collect { piece ->
+            if (raw.isEmpty()) send(AssistantEvent.Writing)
             raw.append(piece)
-            if (reply.feed(piece).isNotEmpty()) emit(AssistantEvent.Partial(reply.text))
+            if (reply.feed(piece).isNotEmpty()) send(AssistantEvent.Partial(reply.text))
         }
         val text = raw.toString().substringBefore(template.stop).trim()
         val response = ResponseParser.parse(text)
-        emit(AssistantEvent.Complete(text, response, ActionPlanner(context, message).plan(response)))
+        send(AssistantEvent.Complete(text, response, ActionPlanner(context, message).plan(response)))
     }
 }
