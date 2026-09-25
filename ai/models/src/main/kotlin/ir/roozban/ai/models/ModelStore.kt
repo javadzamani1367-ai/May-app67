@@ -17,6 +17,7 @@ data class InstalledModel(
     val sizeBytes: Long,
     val template: ChatTemplate,
     val source: ModelSource,
+    val kind: ModelKind = ModelKind.LLM,
 )
 
 /**
@@ -40,6 +41,7 @@ class ModelStore(val dir: File) {
                 template = props.getProperty("template")?.let { runCatching { ChatTemplate.valueOf(it) }.getOrNull() }
                     ?: spec?.template ?: ChatTemplate.CHATML,
                 source = if (props.getProperty("source") == ModelSource.IMPORTED.name) ModelSource.IMPORTED else ModelSource.CATALOG,
+                kind = spec?.kind ?: ModelKind.LLM,
             )
         }.sortedBy { it.name }
     }

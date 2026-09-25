@@ -5,6 +5,8 @@ import android.content.Intent
 import android.os.IBinder
 import android.os.RemoteException
 import android.util.Log
+import ir.roozban.ai.core.audio.Pcm
+import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
 
@@ -15,6 +17,8 @@ import java.util.concurrent.atomic.AtomicLong
 class LlmService : Service() {
     private val worker = Executors.newSingleThreadExecutor { Thread(it, "llm").apply { priority = Thread.NORM_PRIORITY } }
     private val handle = AtomicLong(0)
+    private var speech = 0L
+    private var speechPath: String? = null
 
     @Volatile
     private var available: Boolean? = null
@@ -103,6 +107,24 @@ class LlmService : Service() {
             }
         }
 
+        override fun transcribe(modelPath: String, pcmPath: String, prompt: String?, threads: Int): String? = onWorker {
+            if (!ensureInit()) return@onWorker null.also { lastSpeechError = "unsupported device" }
+            if (speechPath != modelPath) {
+                if (speech != 0L) LlamaNative.nativeSpeechFree(speech)
+                speech = LlamaNative.nativeSpeechLoad(modelPath)
+                speechPath = if (speech != 0L) modelPath else null
+                if (speech == 0L) return@onWorker null.also { lastSpeechError = LlamaNative.nativeLastError() }
+            }
+            val pcm = Pcm.readRaw(File(pcmPath))
+            val start = android.os.SystemClock.elapsedRealtime()
+            val text = LlamaNative.nativeTranscribe(speech, pcm, "fa", prompt.orEmpty(), threads)
+            Log.i(TAG, "transcribed ${pcm.size / 16} ms of audio in ${android.os.SystemClock.elapsedRealtime() - start} ms")
+            if (text == null) lastSpeechError = LlamaNative.nativeLastError()
+            text
+        }
+
+        override fun lastError(): String = lastSpeechError ?: (if (LlamaNative.loadError == null) LlamaNative.nativeLastError() else "unsupported device")
+
         // Runs on the binder thread so it can interrupt the worker.
         override fun cancel() {
             val h = handle.get()
@@ -112,6 +134,9 @@ class LlmService : Service() {
         override fun unload() = onWorker { freeModel() }
     }
 
+    @Volatile
+    private var lastSpeechError: String? = null
+
     private fun freeModel() {
         val h = handle.getAndSet(0)
         if (h != 0L) LlamaNative.nativeFree(h)
@@ -120,7 +145,11 @@ class LlmService : Service() {
     override fun onBind(intent: Intent?): IBinder = binder
 
     override fun onDestroy() {
-        worker.execute { freeModel() }
+        worker.execute {
+            freeModel()
+            if (speech != 0L) LlamaNative.nativeSpeechFree(speech)
+            speech = 0L
+        }
         worker.shutdown()
         super.onDestroy()
     }

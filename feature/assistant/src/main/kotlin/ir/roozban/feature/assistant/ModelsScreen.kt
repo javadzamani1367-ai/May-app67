@@ -92,14 +92,14 @@ internal fun ModelsScreen(onBack: () -> Unit, viewModel: ModelsViewModel = hiltV
         ) {
             item { DeviceCard(state.tier, state.wifiOnly, viewModel::setWifiOnly) }
             if (state.installed.isNotEmpty()) {
-                item { SectionTitle("نصب‌شده", icon = DsR.drawable.ic_check, color = Roozban.colors.completed.color) }
+                item { SectionTitle("دستیار: نصب‌شده", icon = DsR.drawable.ic_check, color = Roozban.colors.completed.color) }
                 items(state.installed, key = { "i-" + it.id }) { m ->
                     InstalledCard(m, active = state.active?.id == m.id, onActivate = { viewModel.activate(m.id) }, onDelete = { confirmDelete = m })
                 }
             }
             val available = state.available.filter { spec -> state.installed.none { it.id == spec.id } }
             if (available.isNotEmpty()) {
-                item { SectionTitle("قابل دانلود", icon = DsR.drawable.ic_download) }
+                item { SectionTitle("دستیار: قابل دانلود", icon = DsR.drawable.ic_download) }
                 items(available, key = { "c-" + it.id }) { spec ->
                     CatalogCard(
                         spec,
@@ -110,6 +110,28 @@ internal fun ModelsScreen(onBack: () -> Unit, viewModel: ModelsViewModel = hiltV
                         onDiscard = { viewModel.discard(spec) },
                     )
                 }
+            }
+            item {
+                SectionTitle("ورودی صوتی (تبدیل صدا به متن)", icon = DsR.drawable.ic_mic, color = Roozban.colors.info.color)
+                Text(
+                    "با دکمهٔ میکروفون در افزودن سریع و گفتگو، به فارسی بگو؛ متن را قبل از ثبت می‌بینی و ویرایش می‌کنی.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
+            }
+            items(state.speechInstalled, key = { "si-" + it.id }) { m ->
+                InstalledCard(m, active = state.activeSpeech?.id == m.id, onActivate = { viewModel.activateSpeech(m.id) }, onDelete = { confirmDelete = m })
+            }
+            items(state.speechAvailable.filter { spec -> state.speechInstalled.none { it.id == spec.id } }, key = { "sc-" + it.id }) { spec ->
+                CatalogCard(
+                    spec,
+                    recommended = spec.id == ModelCatalog.recommendedSpeechIdFor(state.tier),
+                    download = state.downloads[spec.id],
+                    onDownload = { viewModel.download(spec) },
+                    onCancel = { viewModel.cancel(spec) },
+                    onDiscard = { viewModel.discard(spec) },
+                )
             }
             item {
                 AppCard {

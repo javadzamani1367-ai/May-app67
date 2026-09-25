@@ -51,6 +51,12 @@ class RemoteLlmEngine @Inject constructor(
         mutex.withLock { runCatching { connect().available() }.getOrDefault(false) }
     }
 
+    /** Runs [block] with the service, starting it if needed. For other users of the `:ai` process. */
+    internal suspend fun <T> withService(block: (ILlmService) -> T): T = withContext(Dispatchers.IO) {
+        val s = mutex.withLock { connect() }
+        block(s)
+    }
+
     override suspend fun load(path: String, config: EngineConfig) = withContext(Dispatchers.IO) {
         mutex.withLock {
             val current = _state.value

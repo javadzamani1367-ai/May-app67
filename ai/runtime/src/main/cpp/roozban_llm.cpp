@@ -6,6 +6,7 @@
 #include <string>
 
 #include "engine.h"
+#include "speech.h"
 
 namespace {
 
@@ -95,6 +96,31 @@ Java_ir_roozban_ai_runtime_LlamaNative_nativeGenerate(
             return go_on;
         },
         g_error);
+}
+
+JNIEXPORT jlong JNICALL
+Java_ir_roozban_ai_runtime_LlamaNative_nativeSpeechLoad(JNIEnv * env, jobject, jstring path) {
+    return reinterpret_cast<jlong>(roozban::speech_load(to_string(env, path), g_error));
+}
+
+JNIEXPORT void JNICALL
+Java_ir_roozban_ai_runtime_LlamaNative_nativeSpeechFree(JNIEnv *, jobject, jlong handle) {
+    roozban::speech_free(reinterpret_cast<roozban::Speech *>(handle));
+}
+
+/** PCM16 samples at 16 kHz → text, or null on error (see nativeLastError). */
+JNIEXPORT jstring JNICALL
+Java_ir_roozban_ai_runtime_LlamaNative_nativeTranscribe(JNIEnv * env, jobject, jlong handle, jshortArray pcm, jstring language, jstring prompt, jint n_threads) {
+    const jsize n = env->GetArrayLength(pcm);
+    std::vector<float> samples(n);
+    jshort * data = env->GetShortArrayElements(pcm, nullptr);
+    for (jsize i = 0; i < n; i++) samples[i] = data[i] / 32768.0f;
+    env->ReleaseShortArrayElements(pcm, data, JNI_ABORT);
+    std::string text;
+    if (!roozban::transcribe(reinterpret_cast<roozban::Speech *>(handle), samples, to_string(env, language), to_string(env, prompt), n_threads, text, g_error)) {
+        return nullptr;
+    }
+    return env->NewStringUTF(text.c_str());
 }
 
 }  // extern "C"

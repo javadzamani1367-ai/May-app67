@@ -184,6 +184,15 @@ class ModelsTest {
     }
 
     @Test
+    fun `installed speech models are told apart from assistant models`() {
+        val store = ModelStore(File(dir, "models"))
+        val spec = ModelCatalog.get("whisper-base-q5")!!
+        store.fileFor(spec).apply { parentFile.mkdirs() }.writeBytes(ByteArray(10))
+        store.recordDownload(spec)
+        assertThat(store.installed().single().kind).isEqualTo(ModelKind.SPEECH)
+    }
+
+    @Test
     fun `catalog offers what the device can run`() {
         assertThat(ModelCatalog.availableFor(DeviceTier.UNSUPPORTED)).isEmpty()
         assertThat(ModelCatalog.availableFor(DeviceTier.LIGHT).map { it.id }).containsExactly("qwen3-0.6b-q4km", "gemma3-1b-q4km").inOrder()
@@ -195,6 +204,16 @@ class ModelsTest {
             assertThat(it.url).startsWith("https://")
         }
         assertThat(ModelCatalog.all.map { it.id }.toSet()).hasSize(ModelCatalog.all.size)
+        ModelCatalog.speech.forEach {
+            assertThat(it.kind).isEqualTo(ModelKind.SPEECH)
+            assertThat(it.sha256).hasLength(64)
+            assertThat(it.sizeBytes).isGreaterThan(0)
+            assertThat(ModelCatalog.get(it.id)).isEqualTo(it)
+        }
+        assertThat(ModelCatalog.speechFor(DeviceTier.UNSUPPORTED).map { it.id }).containsExactly("whisper-base-q5")
+        assertThat(ModelCatalog.speechFor(DeviceTier.STANDARD).first().id).isEqualTo("whisper-small-q5")
+        assertThat(ModelCatalog.speechFor(DeviceTier.STANDARD).map { it.id }).doesNotContain("whisper-turbo-q5")
+        assertThat(ModelCatalog.speechFor(DeviceTier.HIGH).map { it.id }).contains("whisper-turbo-q5")
     }
 
     private fun gguf(arch: String, name: String): ByteArray {

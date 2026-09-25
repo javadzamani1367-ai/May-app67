@@ -14,6 +14,7 @@ import ir.roozban.ai.core.EngineConfig
 import ir.roozban.ai.core.LlmException
 import ir.roozban.ai.models.InstalledModel
 import ir.roozban.ai.models.ModelCatalog
+import ir.roozban.ai.models.ModelKind
 import ir.roozban.ai.models.ModelSpec
 import ir.roozban.ai.models.ModelStore
 import kotlinx.coroutines.Dispatchers
@@ -36,8 +37,12 @@ sealed interface DownloadState {
 
 data class ModelsState(
     val tier: DeviceTier,
+    /** Assistant (language) models on the phone. */
     val installed: List<InstalledModel> = emptyList(),
     val activeId: String? = null,
+    /** Speech models on the phone. */
+    val speechInstalled: List<InstalledModel> = emptyList(),
+    val activeSpeechId: String? = null,
     /** Catalog id → an ongoing or failed download. */
     val downloads: Map<String, DownloadState> = emptyMap(),
     /** Off by default: mobile data is allowed, with a size confirmation in the model screen. */
@@ -46,6 +51,10 @@ data class ModelsState(
     val active: InstalledModel? get() = installed.firstOrNull { it.id == activeId } ?: installed.firstOrNull()
 
     val available: List<ModelSpec> get() = ModelCatalog.availableFor(tier)
+
+    val activeSpeech: InstalledModel? get() = speechInstalled.firstOrNull { it.id == activeSpeechId } ?: speechInstalled.firstOrNull()
+
+    val speechAvailable: List<ModelSpec> get() = ModelCatalog.speechFor(tier)
 }
 
 /** Models on this device: catalog downloads, imports, and which one the assistant uses. */
@@ -65,15 +74,19 @@ class ModelManager @Inject constructor(
     }
 
     fun refresh() {
-        val installed = store.installed()
-        val failed = ModelCatalog.all.mapNotNull { spec ->
+        val all = store.installed()
+        val installed = all.filter { it.kind == ModelKind.LLM }
+        val speech = all.filter { it.kind == ModelKind.SPEECH }
+        val failed = (ModelCatalog.all + ModelCatalog.speech).mapNotNull { spec ->
             val part = store.partialBytes(spec)
-            if (part > 0 && installed.none { it.id == spec.id }) spec.id to DownloadState.Failed("", part) else null
+            if (part > 0 && all.none { it.id == spec.id }) spec.id to DownloadState.Failed("", part) else null
         }.toMap()
         _state.update { s ->
             s.copy(
                 installed = installed,
                 activeId = prefs.getString(KEY_ACTIVE, null),
+                speechInstalled = speech,
+                activeSpeechId = prefs.getString(KEY_ACTIVE_SPEECH, null),
                 wifiOnly = prefs.getBoolean(KEY_WIFI_ONLY, false),
                 downloads = failed + s.downloads.filterValues { it is DownloadState.Running },
             )
@@ -82,6 +95,11 @@ class ModelManager @Inject constructor(
 
     fun setActive(id: String) {
         prefs.edit { putString(KEY_ACTIVE, id) }
+        refresh()
+    }
+
+    fun setActiveSpeech(id: String) {
+        prefs.edit { putString(KEY_ACTIVE_SPEECH, id) }
         refresh()
     }
 
@@ -130,7 +148,8 @@ class ModelManager @Inject constructor(
     internal fun onFinished(spec: ModelSpec, error: String?) {
         if (error == null) {
             store.recordDownload(spec)
-            if (prefs.getString(KEY_ACTIVE, null) == null) prefs.edit { putString(KEY_ACTIVE, spec.id) }
+            val key = if (spec.kind == ModelKind.SPEECH) KEY_ACTIVE_SPEECH else KEY_ACTIVE
+            if (prefs.getString(key, null) == null) prefs.edit { putString(key, spec.id) }
             _state.update { it.copy(downloads = it.downloads - spec.id) }
         } else {
             _state.update { it.copy(downloads = it.downloads + (spec.id to DownloadState.Failed(error, store.partialBytes(spec)))) }
@@ -161,6 +180,7 @@ class ModelManager @Inject constructor(
     fun delete(id: String) {
         store.delete(id)
         if (prefs.getString(KEY_ACTIVE, null) == id) prefs.edit { remove(KEY_ACTIVE) }
+        if (prefs.getString(KEY_ACTIVE_SPEECH, null) == id) prefs.edit { remove(KEY_ACTIVE_SPEECH) }
         refresh()
     }
 
@@ -178,6 +198,7 @@ class ModelManager @Inject constructor(
 
     companion object {
         private const val KEY_ACTIVE = "active_model"
+        private const val KEY_ACTIVE_SPEECH = "active_speech_model"
         private const val KEY_WIFI_ONLY = "wifi_only"
 
         /** Kept free beyond the model itself. */

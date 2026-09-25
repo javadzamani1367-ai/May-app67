@@ -8,6 +8,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # The model is useless unoptimized, so debug builds compile llama.cpp as release too.
 set(CMAKE_BUILD_TYPE Release)
 
+
+# whisper.cpp compiled against llama.cpp's ggml: one copy of ggml for both engines.
+function(add_whisper_core)
+    add_library(whisper_core STATIC whisper.cpp/src/whisper.cpp)
+    set_target_properties(whisper_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_include_directories(whisper_core PUBLIC whisper.cpp/include PRIVATE whisper.cpp/src)
+    target_compile_definitions(whisper_core PRIVATE WHISPER_VERSION="1.9.4")
+    target_link_libraries(whisper_core PUBLIC ggml)
+endfunction()
+
 if(NOT ANDROID)
     # Host build for the CI benchmark: the app's engine code against a native llama.cpp.
     set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -19,6 +29,9 @@ if(NOT ANDROID)
     add_subdirectory(llama.cpp build-llama)
     add_executable(roozban-bench bench.cpp engine.cpp)
     target_link_libraries(roozban-bench llama ggml)
+    add_whisper_core()
+    add_executable(roozban-speech-bench speech_bench.cpp speech.cpp)
+    target_link_libraries(roozban-speech-bench whisper_core ggml)
     return()
 endif()
 
@@ -56,5 +69,6 @@ endif()
 
 add_subdirectory(llama.cpp build-llama)
 
-add_library(roozban_llm SHARED roozban_llm.cpp engine.cpp)
-target_link_libraries(roozban_llm llama ggml log)
+add_whisper_core()
+add_library(roozban_llm SHARED roozban_llm.cpp engine.cpp speech.cpp)
+target_link_libraries(roozban_llm llama whisper_core ggml log)

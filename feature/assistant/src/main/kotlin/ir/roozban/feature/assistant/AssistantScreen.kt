@@ -63,6 +63,7 @@ import ir.roozban.core.designsystem.components.RoozbanTopBar
 import ir.roozban.core.designsystem.components.StatusPill
 import ir.roozban.core.designsystem.theme.Roozban
 import ir.roozban.core.domain.Access
+import ir.roozban.feature.voice.VoiceButton
 import java.time.LocalDate
 import ir.roozban.core.designsystem.R as DsR
 
@@ -141,6 +142,7 @@ internal fun AssistantScreen(onBack: () -> Unit, onOpenModels: () -> Unit, viewM
                     InputBar(
                         value = input,
                         onChange = { input = it },
+                        onOpenModels = onOpenModels,
                         busy = state.busy,
                         onSend = {
                             viewModel.send(input)
@@ -299,7 +301,7 @@ private fun Confirmation(plan: Plan, onYes: () -> Unit, onNo: () -> Unit) {
 }
 
 @Composable
-private fun InputBar(value: String, onChange: (String) -> Unit, busy: Boolean, onSend: () -> Unit, onStop: () -> Unit) {
+private fun InputBar(value: String, onChange: (String) -> Unit, onOpenModels: () -> Unit, busy: Boolean, onSend: () -> Unit, onStop: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer).navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -312,7 +314,10 @@ private fun InputBar(value: String, onChange: (String) -> Unit, busy: Boolean, o
             maxLines = 4,
             shape = RoundedCornerShape(24.dp),
         )
-        Spacer(Modifier.width(8.dp))
+        if (!busy) {
+            VoiceButton(onText = { spoken -> onChange(if (value.isBlank()) spoken else value.trimEnd() + " " + spoken) }, onOpenModels = onOpenModels)
+        }
+        Spacer(Modifier.width(4.dp))
         if (busy) {
             FilledIconButton(onClick = onStop, shape = CircleShape) { Icon(painterResource(DsR.drawable.ic_stop), "توقف") }
         } else {

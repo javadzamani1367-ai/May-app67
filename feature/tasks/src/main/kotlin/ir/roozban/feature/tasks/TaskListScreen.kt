@@ -83,6 +83,7 @@ internal fun TaskListRoute(
     projectId: String? = null,
     onBack: (() -> Unit)? = null,
     onOpenAssistant: (() -> Unit)? = null,
+    onOpenVoiceModels: (() -> Unit)? = null,
     viewModel: TaskListViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(mode, projectId) { viewModel.setMode(mode, projectId) }
@@ -134,6 +135,7 @@ internal fun TaskListRoute(
                 viewModel.dismissQuickAdd()
                 sheetOpen = false
             },
+            onOpenVoiceModels = onOpenVoiceModels?.let { open -> { sheetOpen = false; open() } },
         )
     }
     editingId?.let { id ->

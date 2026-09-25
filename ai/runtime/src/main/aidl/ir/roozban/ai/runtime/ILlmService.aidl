@@ -18,6 +18,14 @@ interface ILlmService {
     /** Computes or restores the fixed prompt prefix; onDone(1) when restored from the cache file. */
     oneway void warmUp(String prefix, String cachePath, ILlmCallback callback);
 
+    /**
+     * Transcribes raw 16 kHz mono PCM16 from [pcmPath] with the speech model at [modelPath]
+     * (loaded on first use). Returns the text, or null with the reason in lastError().
+     */
+    String transcribe(String modelPath, String pcmPath, String prompt, int threads);
+
+    String lastError();
+
     oneway void cancel();
 
     void unload();

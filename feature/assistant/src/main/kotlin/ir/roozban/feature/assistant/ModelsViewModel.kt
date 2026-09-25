@@ -78,6 +78,8 @@ class ModelsViewModel @Inject constructor(
         }
     }
 
+    fun activateSpeech(id: String) = manager.setActiveSpeech(id)
+
     fun setWifiOnly(value: Boolean) = manager.setWifiOnly(value)
 
     fun import(uri: Uri) {

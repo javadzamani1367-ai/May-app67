@@ -24,6 +24,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import ir.roozban.feature.voice.VoiceButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -56,6 +57,7 @@ internal fun QuickAddSheet(
     onTextChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onDismiss: () -> Unit,
+    onOpenVoiceModels: (() -> Unit)? = null,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val focusRequester = remember { FocusRequester() }
@@ -99,6 +101,10 @@ internal fun QuickAddSheet(
                         unfocusedIndicatorColor = Color.Transparent,
                     ),
                     shape = MaterialTheme.shapes.medium,
+                )
+                VoiceButton(
+                    onText = { spoken -> onTextChange(if (state.text.isBlank()) spoken else state.text.trimEnd() + " " + spoken) },
+                    onOpenModels = onOpenVoiceModels,
                 )
                 FilledIconButton(
                     onClick = onSubmit,

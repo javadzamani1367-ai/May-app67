@@ -30,14 +30,15 @@ fun NavGraphBuilder.tasksScreens(
     onOpenProject: (String) -> Unit,
     onBack: () -> Unit,
     onOpenAssistant: (() -> Unit)? = null,
+    onOpenVoiceModels: (() -> Unit)? = null,
 ) {
-    composable<TodayRoute> { TaskListRoute(ListMode.TODAY, onOpenSettings, onOpenAssistant = onOpenAssistant) }
-    composable<UpcomingRoute> { TaskListRoute(ListMode.UPCOMING, onOpenSettings) }
-    composable<InboxRoute> { TaskListRoute(ListMode.INBOX, onOpenSettings) }
+    composable<TodayRoute> { TaskListRoute(ListMode.TODAY, onOpenSettings, onOpenAssistant = onOpenAssistant, onOpenVoiceModels = onOpenVoiceModels) }
+    composable<UpcomingRoute> { TaskListRoute(ListMode.UPCOMING, onOpenSettings, onOpenVoiceModels = onOpenVoiceModels) }
+    composable<InboxRoute> { TaskListRoute(ListMode.INBOX, onOpenSettings, onOpenVoiceModels = onOpenVoiceModels) }
     composable<CalendarRoute> { CalendarScreen(onOpenSettings = onOpenSettings) }
     composable<ProjectsRoute> { ProjectsScreen(onOpenProject = onOpenProject, onOpenSettings = onOpenSettings) }
     composable<ProjectRoute> { entry ->
         val route = entry.toRoute<ProjectRoute>()
-        TaskListRoute(ListMode.PROJECT, onOpenSettings, projectId = route.projectId, onBack = onBack)
+        TaskListRoute(ListMode.PROJECT, onOpenSettings, projectId = route.projectId, onBack = onBack, onOpenVoiceModels = onOpenVoiceModels)
     }
 }
