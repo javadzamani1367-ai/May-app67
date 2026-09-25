@@ -133,4 +133,17 @@ class PlannerTest {
         assertThat(many.needsConfirmation).isTrue()
         assertThat(planOf(call("list_tasks", "range" to "today"), call("list_tasks", "range" to "week"), call("create_task", "title" to "x")).needsConfirmation).isFalse()
     }
+
+    @Test
+    fun `times not taken from the message are replaced by the message's own time words`() = runTest {
+        f.task("گزارش")
+        val msg = "فردا ساعت ۵ عصر به مامان زنگ بزنم"
+        val copied = ActionPlanner(f.context(), msg).planOne(call("create_task", "title" to "زنگ به مامان", "when" to "سه‌شنبه ۳۱ شهریور"))
+        assertThat((copied.operation as Operation.CreateTask).due).isEqualTo(TaskDue.At(jalali("1405-07-03"), LocalTime.of(17, 0)))
+        val invented = ActionPlanner(f.context(), "خرید شیر").planOne(call("create_task", "title" to "خرید شیر", "when" to "یکشنبه"))
+        assertThat((invented.operation as Operation.CreateTask).due).isNull()
+        val hints = Hints.find(f.context(), "گزارش رو فردا بفرست")
+        assertThat(hints.tasks).containsExactly(1)
+        assertThat(hints.time).isEqualTo("فردا")
+    }
 }

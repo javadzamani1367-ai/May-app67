@@ -68,9 +68,23 @@ data class Plan(val actions: List<PlannedAction>, val reply: String) {
 }
 
 /** Checks the model's tool calls against the app's data and resolves references and times. */
-class ActionPlanner(private val context: AssistantContext) {
+class ActionPlanner(private val context: AssistantContext, private val message: String? = null) {
     private val times = WhenResolver(context.settings)
     private val now = context.now
+    private val hints = message?.let { Hints.find(context, it) }
+
+    /**
+     * Time words must come from the user's message. The model's text is kept when the message
+     * contains it; otherwise (a date copied from elsewhere, or invented) the time words the app
+     * found in the message replace it, or nothing when there were none.
+     */
+    private fun fromMessage(text: String?, detected: String?): String? {
+        val msg = message ?: return text
+        if (text != null && Matcher.normalize(msg).contains(Matcher.normalize(text))) return text
+        return detected
+    }
+
+    private fun ToolCall.time(name: String) = fromMessage(text(name), hints?.time)
 
     fun plan(response: AssistantResponse): Plan =
         Plan(response.actions.take(Tools.MAX_ACTIONS).map(::planOne), response.reply)
@@ -82,7 +96,7 @@ class ActionPlanner(private val context: AssistantContext) {
                 Tools.createTask -> createTask(call)
                 Tools.updateTask -> withTask(call, spec) { updateTask(call, it) }
                 Tools.reschedule -> withTask(call, spec) { task ->
-                    val due = resolveDue(call.text("when"), task.due) ?: return@withTask fail(call, spec, "«${task.title}» — زمان «${call.text("when").orEmpty()}» را نفهمیدم.")
+                    val due = resolveDue(call.time("when"), task.due) ?: return@withTask fail(call, spec, "«${task.title}» — زمان تازه‌اش را نفهمیدم.")
                     PlannedAction(call, spec.risk, "جابه‌جایی «${task.title}» به ${Describe.due(due, context.today)}", Operation.Reschedule(task, due))
                 }
                 Tools.completeTask -> withTask(call, spec) { PlannedAction(call, spec.risk, "انجام شد: «${it.title}»", Operation.CompleteTask(it)) }
@@ -93,7 +107,7 @@ class ActionPlanner(private val context: AssistantContext) {
                     PlannedAction(call, spec.risk, "نمایش کارها: ${rangeName(range)}", Operation.ListTasks(range))
                 }
                 Tools.findFreeSlot -> {
-                    val day = call.text("day")?.let { times.day(it, now) } ?: context.today
+                    val day = call.time("day")?.let { times.day(it, now) } ?: context.today
                     val minutes = (call.number("minutes") ?: 30).coerceIn(5, 600)
                     PlannedAction(call, spec.risk, "وقت آزاد ${PersianDigits.format(minutes)} دقیقه‌ای، ${Describe.day(day, context.today)}", Operation.FindFreeSlot(day, minutes))
                 }
@@ -117,10 +131,10 @@ class ActionPlanner(private val context: AssistantContext) {
     private fun createTask(call: ToolCall): PlannedAction {
         val spec = Tools.createTask
         val title = call.text("title") ?: return fail(call, spec, "عنوان کار مشخص نبود.")
-        val whenText = call.text("when")
+        val whenText = call.time("when")
         val due = whenText?.let { times.due(it, now) }
         if (whenText != null && due == null) return fail(call, spec, "زمان «$whenText» را نفهمیدم.")
-        val recurrence = call.text("repeat")?.let { times.recurrence(it, now) }
+        val recurrence = fromMessage(call.text("repeat"), hints?.repeat)?.let { times.recurrence(it, now) }
         val repeatDue = due ?: recurrence?.let { TaskDue.AllDay(context.today) }
         val summary = buildString {
             append("کار جدید: «").append(title).append('»')
@@ -159,7 +173,7 @@ class ActionPlanner(private val context: AssistantContext) {
     }
 
     private fun rescheduleOverdue(call: ToolCall, spec: ToolSpec): PlannedAction {
-        val date = call.text("when")?.let { times.day(it, now) } ?: return fail(call, spec, "روز مقصد را نفهمیدم.")
+        val date = call.time("when")?.let { times.day(it, now) } ?: return fail(call, spec, "روز مقصد را نفهمیدم.")
         val overdue = context.tasks.filter { t -> t.due?.let { it.date < context.today } == true }
         if (overdue.isEmpty()) return fail(call, spec, "کار عقب‌افتاده‌ای نداری.")
         return PlannedAction(
@@ -174,7 +188,7 @@ class ActionPlanner(private val context: AssistantContext) {
         val perWeek = call.number("per_week")?.takeIf { it in 1..6 }
         val schedule = if (perWeek == null) HabitSchedule.Daily else HabitSchedule.TimesPerWeek(perWeek)
         val perDay = (call.number("per_day") ?: 1).coerceIn(1, 20)
-        val reminderText = call.text("reminder")
+        val reminderText = call.time("reminder")
         val reminder = reminderText?.let { times.time(it, now) }
         if (reminderText != null && reminder == null) return fail(call, spec, "ساعت یادآوری «$reminderText» را نفهمیدم.")
         val summary = buildString {

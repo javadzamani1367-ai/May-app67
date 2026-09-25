@@ -34,6 +34,6 @@ class Assistant(
         }
         val text = raw.toString().substringBefore(template.stop).trim()
         val response = ResponseParser.parse(text)
-        emit(AssistantEvent.Complete(text, response, ActionPlanner(context).plan(response)))
+        emit(AssistantEvent.Complete(text, response, ActionPlanner(context, message).plan(response)))
     }
 }

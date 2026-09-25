@@ -47,6 +47,15 @@ object Matcher {
 
     fun normalize(s: String): String = unify(s).replace(" ", "")
 
+    /** How much of [title] the free text [message] mentions: the share of its words found there. */
+    fun mentions(message: String, title: String): Double {
+        val tw = words(title)
+        if (tw.isEmpty()) return 0.0
+        val mw = words(message)
+        val hit = tw.count { w -> mw.any { it == w || (minOf(it.length, w.length) >= 3 && (it.startsWith(w) || w.startsWith(it))) } }
+        return hit.toDouble() / tw.size
+    }
+
     private fun words(s: String): Set<String> = unify(s).split(' ').filter { it.length > 1 && it !in STOP }.toSet()
 
     private fun unify(s: String): String = PersianDigits.toAscii(s).lowercase()

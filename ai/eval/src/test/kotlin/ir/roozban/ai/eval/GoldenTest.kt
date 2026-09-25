@@ -14,7 +14,7 @@ class GoldenTest {
     @TestFactory
     fun golden() = cases.map { case ->
         DynamicTest.dynamicTest(case.id) {
-            val plan = ActionPlanner(Scenario.context()).plan(ResponseParser.parse(case.golden!!))
+            val plan = ActionPlanner(Scenario.context(), case.input).plan(ResponseParser.parse(case.golden!!))
             assertWithMessage(case.id).that(Judge.check(case, plan)).isEmpty()
         }
     }

@@ -1,6 +1,7 @@
 package ir.roozban.ai.tools
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.jupiter.api.Test
 
 class ParsingTest {
@@ -69,6 +70,17 @@ class ParsingTest {
                 val spec = Tools.get(call.tool)
                 assertThat(spec).isNotNull()
                 assertThat(call.args.keys.toList()).isEqualTo(spec!!.args.map { it.name })
+            }
+        }
+    }
+
+    @Test
+    fun `example times are copied from their messages`() {
+        Examples.all.forEach { (_, message, answer) ->
+            ResponseParser.parse(answer).actions.forEach { call ->
+                listOf("when", "day", "reminder", "repeat").mapNotNull { call.text(it) }.forEach { t ->
+                    assertWithMessage(message).that(Matcher.normalize(message)).contains(Matcher.normalize(t))
+                }
             }
         }
     }

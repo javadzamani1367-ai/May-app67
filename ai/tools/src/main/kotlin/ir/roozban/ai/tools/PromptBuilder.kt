@@ -48,7 +48,7 @@ class PromptBuilder(
 
     fun render(context: AssistantContext, taskCount: Int, turns: List<Turn>, message: String): String {
         val messages = fixedMessages() + turns.flatMap { listOf(ChatMessage(Role.USER, MESSAGE_LABEL + it.user), ChatMessage(Role.ASSISTANT, it.assistant)) } +
-            ChatMessage(Role.USER, state(context, taskCount) + "\n" + MESSAGE_LABEL + message)
+            ChatMessage(Role.USER, state(context, taskCount) + hints(context, message, taskCount) + MESSAGE_LABEL + message)
         return template.render(messages)
     }
 
@@ -60,37 +60,18 @@ class PromptBuilder(
         }
     }
 
-    private fun state(context: AssistantContext, taskCount: Int): String = buildString {
-        val today = context.today
-        appendLine("امروز: ${PersianDateFormatter.fullDate(today.toJalali())}، ساعت ${PersianDateFormatter.time(context.now.toLocalTime())}")
-        val shown = context.tasks.take(taskCount)
-        if (shown.isEmpty()) {
-            appendLine(if (context.tasks.isEmpty()) "کارها: ندارد" else "کارها: (فهرست جا نشد؛ با نام بگو)")
-        } else {
-            appendLine("کارها:")
-            shown.forEachIndexed { i, t ->
-                append('#').append(i + 1).append(' ').append(t.title)
-                t.due?.let { append(" — ").append(Describe.due(it, today)) }
-                if (t.due?.let { it.date < today } == true) append(" [عقب‌افتاده]")
-                if (t.important) append(" [مهم]")
-                if (t.urgent) append(" [فوری]")
-                if (t.recurrence != null) append(" [تکراری]")
-                appendLine()
-            }
-            if (context.tasks.size > shown.size) appendLine("(و ${PersianDigits.format(context.tasks.size - shown.size)} کار دیگر)")
+    internal fun exampleTurns(): List<Example> {
+        var world: AssistantContext? = null
+        return Examples.all.map { (ctx, message, answer) ->
+            val state = if (ctx !== world) stateOf(ctx, Int.MAX_VALUE) else ""
+            world = ctx
+            Example(state + hintLines(Hints.find(ctx, message), ctx) + MESSAGE_LABEL + message, answer)
         }
-        val habits = context.habits.filter { !it.archived }
-        append("عادت‌ها: ")
-        appendLine(
-            if (habits.isEmpty()) "ندارد" else habits.joinToString("، ") { h ->
-                h.name + when {
-                    h.targetPerDay > 1 -> " (${PersianDigits.format(h.targetPerDay)} بار در روز)"
-                    h.schedule is HabitSchedule.TimesPerWeek -> " (${PersianDigits.format((h.schedule as HabitSchedule.TimesPerWeek).times)} روز در هفته)"
-                    else -> ""
-                }
-            },
-        )
     }
+
+    private fun hints(context: AssistantContext, message: String, taskCount: Int): String = hintLines(Hints.find(context, message), context, taskCount)
+
+    private fun state(context: AssistantContext, taskCount: Int): String = stateOf(context, taskCount)
 
     companion object {
         const val ANSWER_TOKENS = 384
@@ -102,6 +83,47 @@ class PromptBuilder(
 
         const val MESSAGE_LABEL = "پیام: "
 
+        fun stateOf(context: AssistantContext, taskCount: Int): String = buildString {
+            val today = context.today
+            appendLine("امروز: ${PersianDateFormatter.fullDate(today.toJalali())}، ساعت ${PersianDateFormatter.time(context.now.toLocalTime())}")
+            val shown = context.tasks.take(taskCount)
+            if (shown.isEmpty()) {
+                appendLine(if (context.tasks.isEmpty()) "کارها: ندارد" else "کارها: (فهرست جا نشد؛ با نام بگو)")
+            } else {
+                appendLine("کارها:")
+                shown.forEachIndexed { i, t ->
+                    // No dates: small models copy them into their answers. Times come from the message.
+                    append('#').append(i + 1).append(' ').append(t.title)
+                    if (t.due?.let { it.date < today } == true) append(" [عقب‌افتاده]")
+                    if (t.important) append(" [مهم]")
+                    if (t.urgent) append(" [فوری]")
+                    if (t.recurrence != null) append(" [تکراری]")
+                    appendLine()
+                }
+                if (context.tasks.size > shown.size) appendLine("(و ${PersianDigits.format(context.tasks.size - shown.size)} کار دیگر)")
+            }
+            val habits = context.habits.filter { !it.archived }
+            append("عادت‌ها: ")
+            appendLine(
+                if (habits.isEmpty()) "ندارد" else habits.joinToString("، ") { h ->
+                    h.name + when {
+                        h.targetPerDay > 1 -> " (${PersianDigits.format(h.targetPerDay)} بار در روز)"
+                        h.schedule is HabitSchedule.TimesPerWeek -> " (${PersianDigits.format((h.schedule as HabitSchedule.TimesPerWeek).times)} روز در هفته)"
+                        else -> ""
+                    }
+                },
+            )
+        }
+
+        /** The guide lines before a message; the examples use the same format. */
+        fun hintLines(h: Hints, context: AssistantContext? = null, taskCount: Int = Int.MAX_VALUE): String = buildString {
+            val tasks = h.tasks.filter { it <= taskCount }
+            append("کار مرتبط در فهرست: ")
+            appendLine(if (tasks.isEmpty()) "ندارد" else tasks.joinToString("، ") { n -> "#$n" + (context?.tasks?.getOrNull(n - 1)?.let { " ${it.title}" } ?: "") })
+            if (h.habits.isNotEmpty()) appendLine("عادت مرتبط: " + h.habits.joinToString("، "))
+            appendLine("زمان در پیام: " + (listOfNotNull(h.repeat, h.time).joinToString(" ").ifEmpty { "ندارد" }))
+        }
+
         private val TOOLS_TEXT = Tools.all.joinToString("\n") { toolLine(it) }
 
         val SYSTEM: String = """
@@ -112,7 +134,7 @@ class PromptBuilder(
             - actions: the tool calls that do what the message asks, in order. Several requests mean several actions. Use [] only for greetings, thanks and questions no tool answers.
             - A new thing to do or remember is create_task. Something already in the task list is referenced by its number, like "#2".
             - Something done: an existing task → complete_task; a habit from the habit list → log_habit.
-            - Copy the user's own Persian time words into "when"/"day" (e.g. "فردا ساعت ۹", "شنبه عصر"). Never calculate dates. No time words → null.
+            - Before the message come guide lines from the app: "کار مرتبط در فهرست" (listed tasks the message mentions; "ندارد" means it is about something new), "عادت مرتبط" and "زمان در پیام" (the time words; copy them into "when"/"day", "ندارد" → null). Never calculate dates.
             - Write every argument; use null when unknown.
             - reply: short friendly Persian saying what you did or asking what is missing.
 
@@ -133,7 +155,7 @@ class PromptBuilder(
             return "- ${spec.name} {$args} — ${spec.description}" + if (hints.isNotEmpty()) " ($hints)" else ""
         }
 
-        val EXAMPLES: List<Example> = Examples.all
+        val EXAMPLES: List<Example> by lazy { PromptBuilder(ChatTemplate.CHATML, 0).exampleTurns() }
     }
 }
 

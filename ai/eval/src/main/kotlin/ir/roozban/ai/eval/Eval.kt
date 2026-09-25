@@ -59,7 +59,7 @@ fun main(args: Array<String>) {
         val millis = (System.nanoTime() - start) / 1_000_000
         totalMillis += millis
         val content = (Json.parseToJsonElement(response.body()).jsonObject["content"] as? JsonPrimitive)?.content.orEmpty()
-        val plan = ActionPlanner(context).plan(ResponseParser.parse(content))
+        val plan = ActionPlanner(context, case.input).plan(ResponseParser.parse(content))
         val problems = Judge.check(case, plan)
         if (problems.isEmpty()) passed++
         val mark = if (problems.isEmpty()) "✅" else "❌"
