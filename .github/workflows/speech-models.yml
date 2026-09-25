@@ -1,0 +1,50 @@
+name: Publish speech models
+
+# Converts the chosen Persian Whisper fine-tunes to quantized whisper.cpp files and attaches
+# them to the "speech-models" release of this repository, where the app downloads them.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/speech-models.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - { file: roozban-whisper-base-fa-q5_1.bin,  model: C1Tech/whisper_base_persian,              quant: q5_1 }
+          - { file: roozban-whisper-small-fa-q5_1.bin, model: AmirMohseni/whisper-small-persian,        quant: q5_1 }
+          - { file: roozban-whisper-turbo-fa-q5_0.bin, model: nezamisafa/whisper-v3-turbo-persian-v1.0, quant: q5_0 }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Build quantizer
+        run: |
+          cmake -S ai/runtime/src/main/cpp/whisper.cpp -B wbuild -DWHISPER_BUILD_TESTS=OFF -DGGML_NATIVE=OFF > /dev/null
+          cmake --build wbuild --target whisper-quantize -j "$(nproc)"
+
+      - name: Convert
+        run: |
+          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -q transformers huggingface_hub safetensors numpy
+          tools/speech_eval/convert.sh "${{ matrix.model }}" "${{ matrix.quant }}" "${{ matrix.file }}"
+          echo "PUBLISH ${{ matrix.file }} size=$(stat -c %s ${{ matrix.file }}) sha256=$(sha256sum ${{ matrix.file }} | cut -d' ' -f1)"
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view speech-models > /dev/null 2>&1 || gh release create speech-models --prerelease --latest=false \
+            --title "مدل‌های گفتار فارسی روزبان" \
+            --notes "Persian Whisper fine-tunes converted to whisper.cpp for Roozban's offline voice input. Sources: C1Tech/whisper_base_persian (Apache-2.0), AmirMohseni/whisper-small-persian (Apache-2.0), nezamisafa/whisper-v3-turbo-persian-v1.0 (MIT)."
+          gh release upload speech-models "${{ matrix.file }}" --clobber
