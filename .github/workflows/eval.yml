@@ -1,0 +1,86 @@
+name: Assistant eval
+
+# Runs tools/eval/cases.jsonl against real models with llama.cpp's server, using the app's own
+# prompt, grammar, parser and planner. Informational: it never blocks a build.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ai/tools/**'
+      - 'ai/eval/**'
+      - 'tools/eval/**'
+      - '.github/workflows/eval.yml'
+
+concurrency:
+  group: eval-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Qwen3-0.6B
+            url: https://huggingface.co/unsloth/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q4_K_M.gguf
+            sha256: ac2d97712095a558e31573f62f466a3f9d93990898b0ec79d7c974c1780d524a
+            template: CHATML_NO_THINK
+          - name: Qwen3-1.7B
+            url: https://huggingface.co/unsloth/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q4_K_M.gguf
+            sha256: b139949c5bd74937ad8ed8c8cf3d9ffb1e99c866c823204dc42c0d91fa181897
+            template: CHATML_NO_THINK
+          - name: Gemma3-1B
+            url: https://huggingface.co/unsloth/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf
+            sha256: 8270790f3ab69fdfe860b7b64008d9a19986d8df7e407bb018184caa08798ebd
+            template: GEMMA
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build llama-server
+        run: |
+          cmake -S ai/runtime/src/main/cpp/llama.cpp -B llama-build -DCMAKE_BUILD_TYPE=Release \
+            -DLLAMA_BUILD_SERVER=ON -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_CURL=OFF -DLLAMA_OPENSSL=OFF
+          cmake --build llama-build --target llama-server -j "$(nproc)"
+
+      - name: Cache model
+        uses: actions/cache@v4
+        with:
+          path: model.gguf
+          key: model-${{ matrix.sha256 }}
+
+      - name: Download model
+        run: |
+          if [ ! -f model.gguf ] || ! echo "${{ matrix.sha256 }}  model.gguf" | sha256sum -c -; then
+            curl -L --fail --retry 3 -o model.gguf "${{ matrix.url }}"
+            echo "${{ matrix.sha256 }}  model.gguf" | sha256sum -c -
+          fi
+
+      - name: Start server
+        run: |
+          ./llama-build/bin/llama-server -m model.gguf -c 4096 -np 1 -t "$(nproc)" --port 8080 > server.log 2>&1 &
+          for i in $(seq 1 120); do curl -sf http://127.0.0.1:8080/health && break; sleep 2; done
+
+      - name: Run eval
+        run: ./gradlew :ai:eval:run --args="--server http://127.0.0.1:8080 --template ${{ matrix.template }} --label ${{ matrix.name }} --out build/eval-${{ matrix.name }}.md"
+
+      - name: Summary
+        if: always()
+        run: cat build/eval-${{ matrix.name }}.md >> "$GITHUB_STEP_SUMMARY" || tail -50 server.log
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-${{ matrix.name }}
+          path: build/eval-${{ matrix.name }}.md
+          if-no-files-found: ignore
