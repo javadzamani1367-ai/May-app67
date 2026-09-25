@@ -21,6 +21,19 @@ sealed interface AssistantEvent {
     data class Complete(val raw: String, val response: AssistantResponse, val plan: Plan) : AssistantEvent
 }
 
+/**
+ * Requests the app answers itself, without the model (personal memory, see [MemoryIntent]).
+ * [AssistantEvent.Complete.raw] is a plain reply so later prompts see an ordinary turn.
+ */
+fun answerLocally(context: AssistantContext, message: String): AssistantEvent.Complete? {
+    val response = MemoryIntent.detect(context, message) ?: return null
+    val raw = kotlinx.serialization.json.buildJsonObject {
+        put("actions", kotlinx.serialization.json.JsonArray(emptyList()))
+        put("reply", kotlinx.serialization.json.JsonPrimitive(response.reply))
+    }.toString()
+    return AssistantEvent.Complete(raw, response, ActionPlanner(context, message).plan(response))
+}
+
 /** One question to the model: prompt, constrained generation, streaming reply, then the plan. */
 class Assistant(
     private val engine: LlmEngine,
@@ -28,6 +41,10 @@ class Assistant(
     private val contextTokens: Int,
 ) {
     fun ask(context: AssistantContext, history: List<Turn>, message: String): Flow<AssistantEvent> = channelFlow {
+        answerLocally(context, message)?.let {
+            send(it)
+            return@channelFlow
+        }
         val builder = PromptBuilder(template, contextTokens) { engine.countTokens(it) ?: ir.roozban.ai.core.TokenEstimate.of(it) }
         val prompt = builder.build(context, history, message)
         val raw = StringBuilder()

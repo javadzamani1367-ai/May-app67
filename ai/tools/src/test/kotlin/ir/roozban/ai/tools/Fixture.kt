@@ -5,6 +5,7 @@ import ir.roozban.core.domain.CompleteTaskUseCase
 import ir.roozban.core.domain.DeleteTaskUseCase
 import ir.roozban.core.domain.FocusService
 import ir.roozban.core.domain.HabitUseCases
+import ir.roozban.core.domain.MemoryUseCases
 import ir.roozban.core.domain.ReminderSync
 import ir.roozban.core.domain.RoutineReminders
 import ir.roozban.core.domain.TagResolver
@@ -22,6 +23,7 @@ import ir.roozban.core.testing.FakeProjectRepository
 import ir.roozban.core.testing.FakeReminderRepository
 import ir.roozban.core.testing.FakeRoutineAlarms
 import ir.roozban.core.testing.FakeSettingsRepository
+import ir.roozban.core.testing.FakeMemoryRepository
 import ir.roozban.core.testing.FakeTaskRepository
 import ir.roozban.core.testing.TestClock
 import ir.roozban.core.testing.jalali
@@ -40,11 +42,12 @@ class Fixture {
     val add = AddTaskUseCase(tasks, settings, sync, TagResolver(projects, FakeLabelRepository(), clock), clock)
     val habits = FakeHabitRepository()
     val habitUseCases = HabitUseCases(habits, RoutineReminders(habits, settings, FakeRoutineAlarms(), clock), clock)
+    val memory = FakeMemoryRepository()
     val focusStore = FakeFocusStateStore()
     val focus = FocusService(focusStore, FakeFocusRepository(tasks), FakeFocusSystem(), tasks, settings, clock)
     val executor = ToolExecutor(
         tasks, add, UpdateTaskUseCase(tasks, sync, clock), CompleteTaskUseCase(tasks, sync, clock),
-        DeleteTaskUseCase(tasks, sync), habits, habitUseCases, focus, clock,
+        DeleteTaskUseCase(tasks, sync), habits, habitUseCases, focus, MemoryUseCases(memory, clock), clock,
     )
 
     suspend fun task(title: String, due: TaskDue? = null, minutes: Int? = null): Task {
@@ -57,7 +60,7 @@ class Fixture {
     suspend fun habit(name: String, perDay: Int = 1): Habit =
         habitUseCases.create(name, 0, ir.roozban.core.model.HabitSchedule.Daily, perDay, null)!!
 
-    suspend fun context() = AssistantContext(clock.now, tasks.observeOpenTasks().first(), habits.all(), settings.current())
+    suspend fun context() = AssistantContext(clock.now, tasks.observeOpenTasks().first(), habits.all(), settings.current(), memory.all())
 
     fun at(days: Long, h: Int, m: Int = 0) = TaskDue.At(today.plusDays(days), LocalTime.of(h, m))
 }

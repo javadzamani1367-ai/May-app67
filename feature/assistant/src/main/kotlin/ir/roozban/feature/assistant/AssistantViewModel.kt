@@ -16,10 +16,12 @@ import ir.roozban.ai.tools.PlannedAction
 import ir.roozban.ai.tools.PromptBuilder
 import ir.roozban.ai.tools.ToolExecutor
 import ir.roozban.ai.tools.Turn
+import ir.roozban.ai.tools.answerLocally
 import ir.roozban.core.calendar.PersianDigits
 import ir.roozban.core.domain.Access
 import ir.roozban.core.domain.Entitlements
 import ir.roozban.core.domain.HabitRepository
+import ir.roozban.core.domain.MemoryRepository
 import ir.roozban.core.domain.ProFeature
 import ir.roozban.core.domain.SettingsRepository
 import ir.roozban.core.domain.TaskRepository
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -77,6 +80,7 @@ class AssistantViewModel @Inject constructor(
     private val tasks: TaskRepository,
     private val habits: HabitRepository,
     private val settings: SettingsRepository,
+    private val memory: MemoryRepository,
     entitlements: Entitlements,
     private val clock: Clock,
 ) : ViewModel() {
@@ -120,15 +124,19 @@ class AssistantViewModel @Inject constructor(
         busy.value = true
         job = viewModelScope.launch {
             try {
-                val loaded = host.ensureLoaded()
                 val context = AssistantContext(
                     now = LocalDateTime.now(clock),
                     tasks = tasks.observeOpenTasks().first().filter { it.parentId == null },
                     habits = habits.all(),
                     settings = settings.current(),
+                    facts = memory.all(),
                 )
-                Assistant(host.engine, loaded.model.template, loaded.config.contextTokens)
-                    .ask(context, history.toList(), message)
+                // Memory requests are answered by the app itself, without loading the model.
+                val events = answerLocally(context, message)?.let { flowOf(it) } ?: run {
+                    val loaded = host.ensureLoaded()
+                    Assistant(host.engine, loaded.model.template, loaded.config.contextTokens).ask(context, history.toList(), message)
+                }
+                events
                     .collect { event ->
                         when (event) {
                             is AssistantEvent.Reading -> edit(answerId) { it.copy(stage = "در حال خواندن پیام… ${PersianDigits.format(event.percent)}٪") }

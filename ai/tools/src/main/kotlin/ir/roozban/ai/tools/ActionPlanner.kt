@@ -3,6 +3,7 @@ package ir.roozban.ai.tools
 import ir.roozban.core.calendar.PersianDigits
 import ir.roozban.core.model.Habit
 import ir.roozban.core.model.HabitSchedule
+import ir.roozban.core.model.MemoryFact
 import ir.roozban.core.model.Task
 import ir.roozban.core.model.TaskDue
 import ir.roozban.core.recurrence.RecurrenceSpec
@@ -40,6 +41,10 @@ sealed interface Operation {
     data class CreateHabit(val name: String, val schedule: HabitSchedule, val perDay: Int, val reminder: LocalTime?) : Operation
 
     data class LogHabit(val habit: Habit, val count: Int?) : Operation
+
+    data class Remember(val fact: String) : Operation
+
+    data class Forget(val facts: List<MemoryFact>) : Operation
 }
 
 /**
@@ -121,6 +126,11 @@ class ActionPlanner(private val context: AssistantContext, private val message: 
                 }
                 Tools.createHabit -> createHabit(call, spec)
                 Tools.logHabit -> logHabit(call, spec)
+                Tools.rememberPreference -> {
+                    val fact = call.text("fact") ?: return fail(call, spec, "چه چیزی را به خاطر بسپارم؟")
+                    PlannedAction(call, spec.risk, "به خاطر سپردم: «$fact»", Operation.Remember(fact))
+                }
+                Tools.forgetPreference -> forget(call, spec)
                 else -> fail(call, spec, "این کار را بلد نیستم.")
             }
         } catch (e: IllegalArgumentException) {
@@ -211,6 +221,17 @@ class ActionPlanner(private val context: AssistantContext, private val message: 
         }
     }
 
+    private fun forget(call: ToolCall, spec: ToolSpec): PlannedAction {
+        val ref = call.text("fact") ?: return fail(call, spec, "چه چیزی را فراموش کنم؟")
+        // Either the words of the fact are in the request, or the request's words are in the fact («باشگاه»).
+        val scored = context.facts.map { it to maxOf(Matcher.mentions(ref, it.text), Matcher.mentions(it.text, ref)) }
+            .filter { it.second >= MIN_FACT_SHARE }
+        val best = scored.maxOfOrNull { it.second } ?: return fail(call, spec, "چیزی به این مضمون به خاطر ندارم.")
+        val facts = scored.filter { it.second >= best - 0.05 }.map { it.first }
+        val summary = if (facts.size == 1) "فراموش کردن «${facts[0].text}»" else "فراموش کردن ${PersianDigits.format(facts.size)} مورد: " + facts.joinToString("، ") { "«${it.text}»" }
+        return PlannedAction(call, spec.risk, summary, Operation.Forget(facts))
+    }
+
     private inline fun withTask(call: ToolCall, spec: ToolSpec, block: (Task) -> PlannedAction): PlannedAction {
         val ref = call.text("task") ?: return fail(call, spec, "کدام کار؟")
         return when (val m = Matcher.find(ref, context.tasks) { it.title }) {
@@ -234,6 +255,7 @@ class ActionPlanner(private val context: AssistantContext, private val message: 
 
     private companion object {
         val TIME_WORDS = listOf("ساعت", "صبح", "ظهر", "عصر", "شب", ":")
+        const val MIN_FACT_SHARE = 0.5
 
         fun rangeName(range: String) = when (range) {
             Tools.RANGE_TODAY -> "امروز"

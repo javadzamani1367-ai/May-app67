@@ -6,6 +6,7 @@ import ir.roozban.core.domain.DeleteTaskUseCase
 import ir.roozban.core.domain.FocusService
 import ir.roozban.core.domain.HabitRepository
 import ir.roozban.core.domain.HabitUseCases
+import ir.roozban.core.domain.MemoryUseCases
 import ir.roozban.core.domain.QuickAddResult
 import ir.roozban.core.domain.TaskRepository
 import ir.roozban.core.domain.Undo
@@ -45,6 +46,7 @@ class ToolExecutor @Inject constructor(
     private val habits: HabitRepository,
     private val habitUseCases: HabitUseCases,
     private val focus: FocusService,
+    private val memory: MemoryUseCases,
     private val clock: Clock,
 ) {
     suspend fun execute(plan: Plan): List<ActionResult> = plan.actions.map { execute(it) }
@@ -122,6 +124,18 @@ class ToolExecutor @Inject constructor(
             } else {
                 ActionResult(action, true, action.summary, undo = Undo { habitUseCases.delete(habit) })
             }
+        }
+        is Operation.Remember -> {
+            val fact = memory.remember(op.fact)
+            if (fact == null) {
+                ActionResult(action, false, "چیزی برای به خاطر سپردن نبود.")
+            } else {
+                ActionResult(action, true, action.summary, undo = Undo { memory.delete(fact) })
+            }
+        }
+        is Operation.Forget -> {
+            val undos = op.facts.map { memory.delete(it) }
+            ActionResult(action, true, action.summary, undo = Undo { undos.forEach { it() } })
         }
         is Operation.LogHabit -> {
             val today = LocalDate.now(clock)

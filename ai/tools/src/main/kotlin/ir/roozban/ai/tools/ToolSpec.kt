@@ -117,7 +117,22 @@ object Tools {
 
     val all = listOf(createTask, updateTask, reschedule, completeTask, deleteTask, rescheduleOverdue, listTasks, findFreeSlot, startFocus, createHabit, logHabit)
 
-    fun get(name: String): ToolSpec? = all.firstOrNull { it.name == name }
+    /**
+     * Personal memory. The app recognizes these requests itself ([MemoryIntent]) instead of the
+     * model: «یادت باشه …» is far more often a reminder than a fact, and the fixed prompt stays
+     * as the eval measured it.
+     */
+    val rememberPreference = ToolSpec(
+        "remember_preference", "Remember something about the user.", Risk.WRITE,
+        listOf(Arg("fact", ArgType.Text(), "the fact, in the user's words")),
+    )
+    val forgetPreference = ToolSpec(
+        "forget_preference", "Forget something remembered about the user.", Risk.DESTRUCTIVE,
+        listOf(Arg("fact", ArgType.Text(), "words of the fact to forget")),
+    )
+    val memory = listOf(rememberPreference, forgetPreference)
+
+    fun get(name: String): ToolSpec? = all.firstOrNull { it.name == name } ?: memory.firstOrNull { it.name == name }
 
     /** More writes than this in one answer need confirmation too. */
     const val MAX_UNCONFIRMED_WRITES = 3

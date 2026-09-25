@@ -47,6 +47,9 @@ object Matcher {
 
     fun normalize(s: String): String = unify(s).replace(" ", "")
 
+    /** Like [normalize] but keeps single spaces between words. */
+    fun normalizeSpaced(s: String): String = unify(s)
+
     /** How much of [title] the free text [message] mentions: the share of its words found there. */
     fun mentions(message: String, title: String): Double {
         val all = words(title)

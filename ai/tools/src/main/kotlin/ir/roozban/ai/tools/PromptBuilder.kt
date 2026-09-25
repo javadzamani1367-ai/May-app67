@@ -82,6 +82,9 @@ class PromptBuilder(
         private const val MAX_MESSAGE_CHARS = 1000
 
         const val MESSAGE_LABEL = "پیام: "
+        private const val MAX_FACTS = 5
+        private const val MAX_FACT_CHARS = 80
+        private const val MIN_FACT_CONFIDENCE = 0.5f
 
         fun stateOf(context: AssistantContext, taskCount: Int): String = buildString {
             val today = context.today
@@ -113,6 +116,9 @@ class PromptBuilder(
                     }
                 },
             )
+            // What the user told Roozban about themselves; absent (as in the examples) when empty.
+            val facts = context.facts.filter { it.pinned || it.confidence >= MIN_FACT_CONFIDENCE }.take(MAX_FACTS)
+            if (facts.isNotEmpty()) appendLine("درباره‌ی کاربر: " + facts.joinToString("؛ ") { it.text.take(MAX_FACT_CHARS) })
         }
 
         /** The guide lines before a message; the examples use the same format. */

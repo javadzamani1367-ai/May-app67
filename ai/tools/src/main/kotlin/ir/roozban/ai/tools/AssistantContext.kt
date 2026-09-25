@@ -3,6 +3,7 @@ package ir.roozban.ai.tools
 import ir.roozban.core.calendar.PersianDateFormatter
 import ir.roozban.core.calendar.toJalali
 import ir.roozban.core.model.Habit
+import ir.roozban.core.model.MemoryFact
 import ir.roozban.core.model.Task
 import ir.roozban.core.model.TaskDue
 import ir.roozban.core.model.UserSettings
@@ -18,6 +19,8 @@ data class AssistantContext(
     val tasks: List<Task>,
     val habits: List<Habit>,
     val settings: UserSettings = UserSettings(),
+    /** What Roozban knows about the user (pinned and user-stated first). */
+    val facts: List<MemoryFact> = emptyList(),
 ) {
     val today: LocalDate get() = now.toLocalDate()
 
