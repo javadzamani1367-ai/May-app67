@@ -146,4 +146,13 @@ class PlannerTest {
         assertThat(hints.tasks).containsExactly(1)
         assertThat(hints.time).isEqualTo("فردا")
     }
+
+    @Test
+    fun `words of a mentioned task title are not times`() = runTest {
+        f.task("گزارش ماهانه")
+        val hints = Hints.find(f.context(), "گزارش ماهانه رو فوری کن")
+        assertThat(hints.tasks).containsExactly(1)
+        assertThat(hints.time).isNull()
+        assertThat(hints.repeat).isNull()
+    }
 }

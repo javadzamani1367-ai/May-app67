@@ -31,7 +31,7 @@ object MessageGrammar {
         // An edit or a removal is not a completion unless the message also says it was done.
         val canComplete = !(says(UPDATE_WORDS) || says(DELETE_WORDS)) || says(DONE_WORDS)
         return buildList {
-            add(Tools.createTask.pin("when" to whenOptional, "repeat" to ArgType.Choice(repeat, nullable = true), "project" to ArgType.Choice(project, nullable = true)))
+            add(Tools.createTask.pin("when" to whenOptional, "repeat" to ArgType.Choice(repeat, nullable = true), "project" to ArgType.Choice(project, nullable = project.isEmpty())))
             if (hasTask) {
                 if (canComplete) add(Tools.completeTask.pin("task" to taskChoice))
                 if (time.isNotEmpty()) add(Tools.reschedule.pin("task" to taskChoice, "when" to whenRequired))

@@ -34,7 +34,10 @@ data class Hints(
             val tasks = (byNumber + byTitle).distinct().sorted()
             val habits = context.habits.filter { !it.archived && Matcher.mentions(message, it.name) >= MIN_HABIT_SHARE }.map { it.name }.take(MAX)
             val parsed = PersianTimeParser(context.settings.toParserPrefs()).parse(message, context.now)
-            fun spans(kind: SpanKind) = parsed.spans.filter { it.kind == kind }.sortedBy { it.start }
+            // «ماهانه» in «گزارش ماهانه» names the task; it is not a time.
+            val names = tasks.mapNotNull { context.tasks.getOrNull(it - 1)?.title } + habits
+            fun inName(text: String) = names.any { Matcher.normalize(it).contains(Matcher.normalize(text)) }
+            fun spans(kind: SpanKind) = parsed.spans.filter { it.kind == kind && !inName(message.substring(it.start, it.end)) }.sortedBy { it.start }
                 .joinToString(" ") { message.substring(it.start, it.end).trim() }.ifBlank { null }
             return Hints(tasks, habits, spans(SpanKind.TIME), spans(SpanKind.RECURRENCE), parsed.estimate?.toMinutes()?.toInt())
         }
