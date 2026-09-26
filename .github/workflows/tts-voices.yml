@@ -40,17 +40,18 @@ jobs:
         run: |
           set -e
           mkdir -p out
-          for v in amir ganji ganji_adabi gyro reza_ibrahim; do
+          for v in amir ganji ganji_adabi reza_ibrahim; do
             name=vits-piper-fa_IR-$v-medium
             curl -sSfL -o $name.tar.bz2 "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$name.tar.bz2"
             tar xjf $name.tar.bz2
             ls -la $name
-            (cd $name && zip -q -9 ../out/roozban-tts-fa-$v.zip fa_IR-$v-medium.onnx tokens.txt)
-            if [ ! -f out/roozban-tts-espeak-ng-data.zip ]; then (cd $name && zip -q -r -9 ../out/roozban-tts-espeak-ng-data.zip espeak-ng-data); fi
+            # One download per voice: the model, its tokens and the phonemizer data (shared on the phone).
+            (cd $name && mv fa_IR-$v-medium.onnx model.onnx && zip -q -r -9 ../out/roozban-tts-fa-$v.zip model.onnx tokens.txt espeak-ng-data)
           done
           cd out && for f in *.zip; do echo "ASSET $f $(stat -c %s "$f") $(sha256sum "$f" | cut -d' ' -f1)"; done
 
       - name: Speed
+        if: false
         run: |
           pip install -q sherpa-onnx
           cat > speed.py <<'EOF'
@@ -78,4 +79,5 @@ jobs:
         run: |
           gh release view tts-voices -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
             gh release create tts-voices -R "$GITHUB_REPOSITORY" --title "TTS voices" --notes "Persian Piper voices (sherpa-onnx packaging) for Roozban's offline read-aloud." --prerelease
+          for old in roozban-tts-espeak-ng-data.zip roozban-tts-fa-gyro.zip sample-gyro.wav; do gh release delete-asset tts-voices "$old" -R "$GITHUB_REPOSITORY" -y || true; done
           gh release upload tts-voices out/* -R "$GITHUB_REPOSITORY" --clobber
