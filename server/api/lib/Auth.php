@@ -54,6 +54,26 @@ final class Auth
         return $row;
     }
 
+    /**
+     * کد دستگاه، به یک شکل واحد.
+     *
+     * گوشی کد را با خط تیره و ارقام فارسی نشان می‌دهد تا خواندنش آسان باشد:
+     * «FD۴۲-۰۲۴۳-ABAC-۴۸۵۶». مدیری که همان را عیناً تایپ کند، با صفحه‌کلید
+     * فارسی، رشته‌ای ثبت می‌کرد که هرگز با کد خام گوشی یکی نمی‌شد و کارشناس
+     * برای همیشه پیام «دستگاه دیگر» می‌گرفت. پس ارقام لاتین می‌شوند و هر چیزی
+     * جز حرف و رقم کنار می‌رود.
+     */
+    public static function normaliseDevice(?string $code): string
+    {
+        $code = strtr((string) $code, [
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+            '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+        ]);
+        return strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', $code));
+    }
+
     public static function login(string $userCode, string $password, ?string $deviceCode): array
     {
         $user = Db::one('SELECT * FROM users WHERE user_code = ? AND active = 1', [$userCode]);
@@ -70,12 +90,12 @@ final class Auth
 
         // قفل دستگاه: حساب کارشناس به همان نصبی بسته است که مدیر ثبت کرده.
         if ((int) $user['role'] === self::ROLE_EXPERT) {
-            $registered = (string) ($user['device_code'] ?? '');
+            $registered = self::normaliseDevice($user['device_code'] ?? '');
             if ($registered === '') {
                 Response::fail(403, 'device_unregistered',
                     'کد دستگاه شما هنوز توسط مدیر ثبت نشده است.');
             }
-            if ($deviceCode === null || strcasecmp($registered, $deviceCode) !== 0) {
+            if ($deviceCode === null || $registered !== self::normaliseDevice($deviceCode)) {
                 Response::fail(403, 'device_mismatch',
                     'این حساب روی دستگاه دیگری ثبت شده است. برای ثبت دستگاه جدید با مدیر تماس بگیرید.');
             }

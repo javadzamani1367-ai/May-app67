@@ -5,9 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Switch
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,7 +21,11 @@ import androidx.compose.ui.unit.dp
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.sync.ServerCaseSync
+import ir.ilam.inspection.ui.common.PrimaryButton
 import ir.ilam.inspection.ui.common.SectionCard
+import ir.ilam.inspection.ui.common.StatusBadge
+import ir.ilam.inspection.ui.theme.Tavan
+import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.PersianNumbers
 
@@ -42,7 +49,18 @@ fun ServerSyncCard(
     onAutoSyncChange: (Boolean) -> Unit,
     onSync: () -> Unit
 ) {
-    SectionCard(title = stringResource(R.string.server_sync_title)) {
+    SectionCard(
+        title = stringResource(R.string.server_sync_title),
+        icon = if (configured) Icons.Filled.CloudSync else Icons.Filled.CloudOff,
+        tone = when {
+            !configured -> Tone.NEUTRAL
+            pending > 0 -> Tone.WARNING
+            else -> Tone.SUCCESS
+        },
+        trailing = {
+            if (configured && pending > 0) StatusBadge(PersianNumbers.toPersian(pending), tone = Tone.WARNING)
+        }
+    ) {
         Column {
             if (!configured) {
                 Text(
@@ -73,14 +91,13 @@ fun ServerSyncCard(
                 modifier = Modifier.padding(vertical = 6.dp)
             )
 
-            if (busy) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
-            }
-            Button(
+            PrimaryButton(
+                text = stringResource(R.string.server_sync_now),
                 onClick = onSync,
-                enabled = !busy,
+                busy = busy,
+                icon = Icons.Filled.Sync,
                 modifier = Modifier.fillMaxWidth()
-            ) { Text(stringResource(R.string.server_sync_now)) }
+            )
 
             // Wi-Fi only, and the label says so: an expert paying for data on
             // their own SIM has to be able to see that from the switch itself,
@@ -101,7 +118,11 @@ fun ServerSyncCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Switch(checked = autoSync, onCheckedChange = onAutoSyncChange)
+                Switch(
+                    checked = autoSync,
+                    onCheckedChange = onAutoSyncChange,
+                    colors = SwitchDefaults.colors(checkedTrackColor = Tavan.colors.accent.strong)
+                )
             }
 
             lastRun?.let {

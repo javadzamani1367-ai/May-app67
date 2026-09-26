@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -23,6 +26,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import ir.ilam.inspection.R
+import ir.ilam.inspection.ui.common.AppCard
+import ir.ilam.inspection.ui.common.PrimaryButton
+import ir.ilam.inspection.ui.common.SecondaryButton
+import ir.ilam.inspection.ui.common.ToneIcon
+import ir.ilam.inspection.ui.theme.Tavan
+import ir.ilam.inspection.ui.theme.Tone
 
 /**
  * Shown once after a crash. The expert cannot read a stack trace, but they can
@@ -34,20 +43,23 @@ fun CrashScreen(report: String, onDismiss: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemBars)
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
+        ToneIcon(icon = Icons.Filled.BugReport, tone = Tone.DANGER, size = 56.dp)
         Text(
             text = stringResource(R.string.crash_title),
             style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.error
+            color = Tavan.colors.danger.strong,
+            modifier = Modifier.padding(top = 12.dp)
         )
         Text(
             text = stringResource(R.string.crash_hint),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(vertical = 12.dp)
         )
-        Card(modifier = Modifier.fillMaxWidth()) {
+        AppCard(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = report,
                 style = MaterialTheme.typography.bodySmall.copy(
@@ -64,15 +76,13 @@ fun CrashScreen(report: String, onDismiss: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(
+            PrimaryButton(
+                text = stringResource(R.string.crash_share),
                 onClick = { shareReport(context, report) },
+                icon = Icons.Filled.Share,
                 modifier = Modifier.weight(1f)
-            ) {
-                Text(stringResource(R.string.crash_share))
-            }
-            OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.crash_dismiss))
-            }
+            )
+            SecondaryButton(stringResource(R.string.crash_dismiss), onClick = onDismiss, modifier = Modifier.weight(1f))
         }
     }
 }

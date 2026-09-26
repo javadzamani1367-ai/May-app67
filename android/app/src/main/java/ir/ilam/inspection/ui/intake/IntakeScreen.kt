@@ -40,6 +40,7 @@ import ir.ilam.inspection.container
 import ir.ilam.inspection.ui.common.AppTextField
 import ir.ilam.inspection.ui.common.BottomActionBar
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
+import ir.ilam.inspection.ui.common.DateRow
 import ir.ilam.inspection.ui.common.DropdownField
 import ir.ilam.inspection.ui.common.JalaliDatePickerDialog
 import ir.ilam.inspection.ui.common.NumberField
@@ -167,26 +168,5 @@ fun IntakeScreen(onBack: () -> Unit, onCreated: (String) -> Unit) {
                 pickingDate = false
             }
         )
-    }
-}
-
-/** A date shown the way a field is shown, which opens the Jalali picker when touched. */
-@Composable
-fun DateRow(label: String, value: String, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)),
-        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp).heightIn(min = 56.dp)
-    ) {
-        Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Filled.CalendarMonth, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(value, style = MaterialTheme.typography.titleMedium)
-            }
-            Icon(Icons.Filled.EditCalendar, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
     }
 }

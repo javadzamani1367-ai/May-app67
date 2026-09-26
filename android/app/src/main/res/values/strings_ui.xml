@@ -181,4 +181,49 @@
     <string name="map_view_title">موقعیت پرونده روی نقشه</string>
     <string name="map_view_hint">نقطه قرمز محل ثبت‌شده پرونده است؛ نقطه آبی موقعیت فعلی شما</string>
     <string name="action_close">بستن</string>
+
+    <!-- ارسال مدارک -->
+    <string name="dispatch_unit_hint">مدارک برای کدام واحد فرستاده می‌شود</string>
+    <string name="dispatch_items_hint">فرم گزارش، تصاویر و مدارک را تک‌تک انتخاب کنید؛ فیلم و مدارک جداگانه کنار گزارش می‌روند</string>
+    <string name="dispatch_note_section">توضیح و مهلت پاسخ</string>
+    <string name="dispatch_format_hint">قالب فایل گزارش</string>
+    <string name="dispatch_selected">%1$s مورد انتخاب شده</string>
+    <string name="dispatch_media_group">تصاویر و فیلم‌ها</string>
+    <string name="dispatch_documents_group">مدارک پیوست</string>
+    <string name="dispatch_days_chip">%1$s روز</string>
+
+    <!-- تنظیمات -->
+    <string name="settings_subtitle">حساب، ظاهر، همگام‌سازی و امنیت</string>
+    <string name="settings_account">حساب و دستگاه</string>
+    <string name="settings_appearance">ظاهر برنامه</string>
+    <string name="settings_appearance_hint">حالت روشن برای کار زیر آفتاب؛ حالت تیره برای شب و فضای کم‌نور</string>
+    <string name="theme_light">روشن</string>
+    <string name="theme_dark">تیره</string>
+    <string name="theme_system">مطابق گوشی</string>
+    <string name="settings_work">تنظیمات کار</string>
+    <string name="settings_security">رمز ورود</string>
+    <string name="sync_direct_hint">انتقال مستقیم پرونده‌ها به آرشیو ویندوز با وای‌فای، کابل یا بسته آفلاین</string>
+
+    <!-- آمار -->
+    <string name="stats_subtitle">شمارش پرونده‌ها و خروجی اکسل با فیلتر</string>
+    <string name="stats_performance_hint">ارسال‌ها، پاسخ‌ها و مهلت‌های هر واحد</string>
+    <string name="stats_by_county_empty">هنوز پرونده‌ای با شهرستان ثبت نشده است</string>
+    <string name="stats_export_hint">پرونده‌ها را بر اساس وضعیت، نوع، شهرستان و بازه تاریخ فیلتر کنید و فایل اکسل بگیرید</string>
+
+    <!-- گزارش عملکرد -->
+    <string name="perf_period_days">%1$s روز اخیر</string>
+    <string name="perf_answer_rate">درصد پاسخ</string>
+    <string name="perf_on_time_rate">پاسخ در مهلت</string>
+    <string name="perf_avg_hours">میانگین زمان پاسخ: %1$s ساعت</string>
+    <string name="perf_no_answers">هنوز پاسخی ثبت نشده</string>
+    <string name="perf_percent">%1$s٪</string>
+    <string name="perf_exports">خروجی گزارش</string>
+
+    <!-- ورود -->
+    <string name="lock_welcome">ورود به سامانه</string>
+    <string name="lock_sign_in">ورود</string>
+    <string name="lock_role_expert">نسخه کارشناس</string>
+    <string name="lock_role_manager">نسخه مدیر</string>
+    <string name="users_subtitle">کارشناسان، کد دستگاه و درخواست‌های ثبت</string>
+    <string name="approval_subtitle">%1$s پرونده منتظر تصمیم شما</string>
 </resources>

@@ -1,7 +1,10 @@
 package ir.ilam.inspection.ui.lock
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -12,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import ir.ilam.inspection.R
 import ir.ilam.inspection.ui.common.AppTextField
 
@@ -39,6 +43,7 @@ fun ServerAddressDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Filled.Dns, contentDescription = null) },
         title = { Text(stringResource(R.string.lock_server_address)) },
         text = {
             Column {
@@ -51,7 +56,9 @@ fun ServerAddressDialog(
                     label = stringResource(R.string.settings_sync_target),
                     value = address,
                     onValueChange = { address = it },
-                    imeAction = ImeAction.Done
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Uri,
+                    ltr = true
                 )
             }
         },

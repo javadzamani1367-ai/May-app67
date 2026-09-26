@@ -12,7 +12,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -20,7 +19,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +36,21 @@ import ir.ilam.inspection.data.db.UserEntity
 import ir.ilam.inspection.ui.common.ConfirmDeleteButton
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
 import ir.ilam.inspection.ui.common.SectionCard
+import ir.ilam.inspection.ui.common.HeaderAction
+import ir.ilam.inspection.ui.common.StatusBadge
+import ir.ilam.inspection.ui.common.TavanTopBar
+import ir.ilam.inspection.ui.common.ToneIcon
+import ir.ilam.inspection.ui.theme.Spacing
+import ir.ilam.inspection.ui.theme.Tone
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.PhonelinkSetup
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.ui.text.style.TextDirection
 import ir.ilam.inspection.util.PersianNumbers
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.TextButton
@@ -48,7 +61,6 @@ import ir.ilam.inspection.sync.ServerApi
  * their mobile number; both are recorded here against a name, a county and the
  * user code that will appear on every report they file.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UsersScreen(onBack: () -> Unit) {
     val appContainer = LocalContext.current.container
@@ -69,22 +81,22 @@ fun UsersScreen(onBack: () -> Unit) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.users_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
-                        )
-                    }
-                }
-            )
+            TavanTopBar(
+                title = stringResource(R.string.users_title),
+                subtitle = stringResource(R.string.users_subtitle),
+                onBack = onBack
+            ) {
+                HeaderAction(Icons.Filled.Refresh, stringResource(R.string.users_refresh), viewModel::refresh)
+            }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = viewModel::startNew) {
-                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.users_add))
-            }
+            ExtendedFloatingActionButton(
+                onClick = viewModel::startNew,
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary,
+                icon = { Icon(Icons.Filled.PersonAdd, contentDescription = null) },
+                text = { Text(stringResource(R.string.users_add)) }
+            )
         }
     ) { padding ->
         Column(
@@ -93,7 +105,7 @@ fun UsersScreen(onBack: () -> Unit) {
                 .padding(padding)
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
+                .padding(start = Spacing.screen, end = Spacing.screen, top = Spacing.sm, bottom = 96.dp)
         ) {
             if (state.busy) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
@@ -134,7 +146,16 @@ fun UsersScreen(onBack: () -> Unit) {
 
             // The waiting installations come first: registering one is the
             // reason the manager opened this screen.
-            SectionCard(title = stringResource(R.string.users_requests)) {
+            SectionCard(
+                title = stringResource(R.string.users_requests),
+                icon = Icons.Filled.PhonelinkSetup,
+                tone = if (state.requests.isEmpty()) Tone.NEUTRAL else Tone.WARNING,
+                trailing = {
+                    if (state.requests.isNotEmpty()) {
+                        StatusBadge(PersianNumbers.toPersian(state.requests.size), tone = Tone.WARNING, solid = true)
+                    }
+                }
+            ) {
                 Column {
                     if (state.requests.isEmpty()) {
                         Text(
@@ -146,13 +167,14 @@ fun UsersScreen(onBack: () -> Unit) {
                     state.requests.forEach { request ->
                         DeviceRequestRow(request = request, onAdopt = { viewModel.adopt(request) })
                     }
-                    TextButton(onClick = viewModel::refresh) {
-                        Text(stringResource(R.string.users_refresh))
-                    }
                 }
             }
 
-            SectionCard(title = stringResource(R.string.users_registered)) {
+            SectionCard(
+                title = stringResource(R.string.users_registered),
+                icon = Icons.Filled.Groups,
+                trailing = { StatusBadge(PersianNumbers.toPersian(users.size), tone = Tone.BRAND) }
+            ) {
                 Column {
                     if (users.isEmpty()) {
                         Text(
@@ -162,7 +184,7 @@ fun UsersScreen(onBack: () -> Unit) {
                         )
                     }
                     users.forEachIndexed { index, user ->
-                        if (index > 0) HorizontalDivider()
+                        if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         UserRow(
                             user = user,
                             onEdit = { viewModel.edit(user) },
@@ -178,24 +200,25 @@ fun UsersScreen(onBack: () -> Unit) {
 @Composable
 private fun UserRow(user: UserEntity, onEdit: () -> Unit, onDelete: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onEdit).padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f).clickable(onClick = onEdit)) {
-            Text(text = user.fullName, style = MaterialTheme.typography.bodyLarge)
+        ToneIcon(icon = Icons.Filled.Person, tone = if (user.active == 1) Tone.ACCENT else Tone.NEUTRAL, size = 40.dp)
+        Column(modifier = Modifier.weight(1f).padding(horizontal = Spacing.md)) {
+            Text(text = user.fullName, style = MaterialTheme.typography.titleSmall)
             Text(
                 text = listOfNotNull(
                     PersianNumbers.toPersian(user.userCode).ifBlank { null },
                     user.county,
                     PersianNumbers.toPersian(user.phone).ifBlank { null }
-                ).joinToString(" — "),
+                ).joinToString(" · "),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             user.deviceCode?.takeIf { it.isNotBlank() }?.let {
                 Text(
-                    text = stringResource(R.string.users_device, PersianNumbers.toPersian(it)),
-                    style = MaterialTheme.typography.bodySmall,
+                    text = stringResource(R.string.users_device, it.chunked(4).joinToString("-")),
+                    style = MaterialTheme.typography.labelSmall.copy(textDirection = TextDirection.Ltr),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -208,31 +231,29 @@ private fun UserRow(user: UserEntity, onEdit: () -> Unit, onDelete: () -> Unit) 
 @Composable
 private fun DeviceRequestRow(request: ServerApi.DeviceRequest, onAdopt: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        ToneIcon(icon = Icons.Filled.PhoneAndroid, tone = Tone.WARNING, size = 40.dp)
+        Column(modifier = Modifier.weight(1f).padding(horizontal = Spacing.md)) {
             Text(
                 text = request.fullName.ifBlank { stringResource(R.string.users_full_name) },
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.titleSmall
             )
             Text(
                 text = listOfNotNull(
                     PersianNumbers.toPersian(request.phone).ifBlank { null },
                     request.county.ifBlank { null }
-                ).joinToString(" — "),
+                ).joinToString(" · "),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = stringResource(
-                    R.string.users_device,
-                    PersianNumbers.toPersian(request.deviceCode.chunked(4).joinToString("-"))
-                ),
-                style = MaterialTheme.typography.bodySmall,
+                text = stringResource(R.string.users_device, request.deviceCode.chunked(4).joinToString("-")),
+                style = MaterialTheme.typography.labelSmall.copy(textDirection = TextDirection.Ltr),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        TextButton(onClick = onAdopt) { Text(stringResource(R.string.users_adopt)) }
+        FilledTonalButton(onClick = onAdopt) { Text(stringResource(R.string.users_adopt)) }
     }
 }

@@ -54,7 +54,7 @@ final class UserController
                 $request->int('unit'),
                 $request->str('county'),
                 $request->str('phone'),
-                strtoupper($request->str('device_code')),
+                Auth::normaliseDevice($request->str('device_code')),
                 $hash,
                 $request->int('active', 1),
                 $existing['created_at'] ?? $now,
@@ -65,7 +65,7 @@ final class UserController
 
         // ثبت دستگاه، درخواست در صف را می‌بندد: وگرنه مدیر برای همیشه یک
         // درخواست باز می‌بیند که قبلاً به آن رسیدگی کرده.
-        $device = strtoupper($request->str('device_code'));
+        $device = Auth::normaliseDevice($request->str('device_code'));
         if ($device !== '') {
             Db::run(
                 'UPDATE device_requests SET status = 1, decided_at = ?, decided_by = ?
@@ -104,7 +104,7 @@ final class UserController
     public function decideRequest(Request $request): void
     {
         $manager = Auth::require($request, Auth::ROLE_MANAGER);
-        $device = strtoupper($request->str('device_code'));
+        $device = Auth::normaliseDevice($request->str('device_code'));
         $status = $request->int('status', 2);
         if ($device === '') {
             Response::fail(400, 'missing_device', 'کد دستگاه ارسال نشده است.');

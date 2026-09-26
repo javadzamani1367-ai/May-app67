@@ -22,7 +22,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.ui.text.style.TextDirection
@@ -58,11 +65,14 @@ fun AppTextField(
     /** Addresses of servers, codes, anything in Latin script: typed and shown left to right. */
     ltr: Boolean = false,
     leadingIcon: (@Composable () -> Unit)? = null,
-    trailingIcon: (@Composable () -> Unit)? = null
+    trailingIcon: (@Composable () -> Unit)? = null,
+    /** Masked, with an eye to show it — for the sign-in password. */
+    password: Boolean = false
 ) {
     // The keyboard's action key has to actually do something: without these
     // handlers "next" looks broken, because nothing moves.
     val focusManager = LocalFocusManager.current
+    var revealed by remember { mutableStateOf(false) }
     val textStyle = MaterialTheme.typography.bodyLarge
     OutlinedTextField(
         value = value,
@@ -75,10 +85,20 @@ fun AppTextField(
         supportingText = error?.let { { Text(it) } },
         textStyle = if (ltr) textStyle.copy(textDirection = TextDirection.Ltr) else textStyle,
         leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
+        trailingIcon = if (password) {
+            {
+                IconButton(onClick = { revealed = !revealed }) {
+                    Icon(if (revealed) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, contentDescription = null)
+                }
+            }
+        } else trailingIcon,
+        visualTransformation = if (password && !revealed) PasswordVisualTransformation() else VisualTransformation.None,
         shape = MaterialTheme.shapes.medium,
         colors = appFieldColors(),
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = if (password) KeyboardType.Password else keyboardType,
+            imeAction = imeAction
+        ),
         keyboardActions = KeyboardActions(
             onNext = { focusManager.moveFocus(FocusDirection.Next) },
             onDone = { focusManager.clearFocus() }

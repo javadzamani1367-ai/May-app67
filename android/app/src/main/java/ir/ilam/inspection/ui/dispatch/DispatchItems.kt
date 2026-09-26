@@ -5,7 +5,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,11 +24,11 @@ import ir.ilam.inspection.data.db.MediaEntity
 import ir.ilam.inspection.data.model.AttachmentCategory
 import ir.ilam.inspection.data.model.MediaType
 import ir.ilam.inspection.data.model.ReportDetail
-import ir.ilam.inspection.ui.common.MediaThumbnail
 import ir.ilam.inspection.ui.common.SectionCard
 import ir.ilam.inspection.ui.common.attachmentCategoryLabel
+import ir.ilam.inspection.ui.theme.Tavan
+import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.util.FileStore
-import ir.ilam.inspection.util.PersianDate
 
 /**
  * What the chosen unit will receive. Photos carry their own preview, because
@@ -41,7 +47,12 @@ fun DispatchItems(
     onToggleMedia: (String) -> Unit,
     onToggleAttachment: (String) -> Unit
 ) {
-    SectionCard(title = stringResource(R.string.dispatch_items)) {
+    SectionCard(
+        title = stringResource(R.string.dispatch_items),
+        subtitle = stringResource(R.string.dispatch_items_hint),
+        icon = Icons.Filled.Checklist,
+        tone = Tone.ACCENT
+    ) {
         Column {
             CheckRow(
                 label = stringResource(R.string.dispatch_report_form),
@@ -57,32 +68,41 @@ fun DispatchItems(
                 )
             }
 
-            detail.photos.forEach { photo ->
-                PhotoRow(
-                    photo = photo,
-                    files = files,
-                    checked = photo.id in state.mediaIds,
-                    onToggle = { onToggleMedia(photo.id) }
+            // Videos travel as their own files beside the report; a report
+            // cannot contain one, and before this a ticked video simply never
+            // left the phone.
+            val media = detail.photos + detail.videos
+            if (media.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.dispatch_media_group),
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 12.dp, bottom = 6.dp)
                 )
-            }
-
-            // Videos travel as their own files; a report cannot contain one,
-            // and before this a ticked video simply never left the phone.
-            detail.videos.forEach { video ->
-                PhotoRow(
-                    photo = video,
-                    files = files,
-                    checked = video.id in state.mediaIds,
-                    onToggle = { onToggleMedia(video.id) }
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    media.chunked(3).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            row.forEach { item ->
+                                SelectableMediaTile(
+                                    media = item,
+                                    label = mediaLabel(item),
+                                    files = files,
+                                    checked = item.id in state.mediaIds,
+                                    onToggle = { onToggleMedia(item.id) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            repeat(3 - row.size) { Box(modifier = Modifier.weight(1f)) }
+                        }
+                    }
+                }
             }
 
             if (isManager) {
                 Text(
                     text = stringResource(R.string.dispatch_all_categories),
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = 12.dp)
+                    modifier = Modifier.padding(top = 14.dp)
                 )
             }
 
@@ -120,53 +140,34 @@ fun DispatchItems(
     }
 }
 
-/** A photo row: preview, its caption, and when it was taken. */
 @Composable
-private fun PhotoRow(
-    photo: MediaEntity,
-    files: FileStore,
-    checked: Boolean,
-    onToggle: () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Checkbox(checked = checked, onCheckedChange = { onToggle() })
-        MediaThumbnail(media = photo, files = files, sizeDp = 56)
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = photo.caption?.takeIf { it.isNotBlank() }
-                    ?: stringResource(
-                        if (photo.type == MediaType.VIDEO.code) {
-                            R.string.dispatch_video_unnamed
-                        } else {
-                            R.string.dispatch_photo_unnamed
-                        }
-                    ),
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = PersianDate.formatWithTime(photo.capturedAt),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
+private fun mediaLabel(media: MediaEntity): String = media.caption?.takeIf { it.isNotBlank() }
+    ?: stringResource(
+        if (media.type == MediaType.VIDEO.code) R.string.dispatch_video_unnamed else R.string.dispatch_photo_unnamed
+    )
 
+/** A tickable line, tinted when ticked so a long list shows at a glance what is going. */
 @Composable
 internal fun CheckRow(label: String, checked: Boolean, onToggle: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically
+    val accent = Tavan.colors.accent
+    Surface(
+        onClick = onToggle,
+        shape = MaterialTheme.shapes.small,
+        color = if (checked) accent.container else Color.Transparent,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
     ) {
-        Checkbox(checked = checked, onCheckedChange = { onToggle() })
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(start = 4.dp)
-        )
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 8.dp)) {
+            Checkbox(
+                checked = checked,
+                onCheckedChange = { onToggle() },
+                colors = CheckboxDefaults.colors(checkedColor = accent.strong)
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (checked) accent.onContainer else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+        }
     }
 }

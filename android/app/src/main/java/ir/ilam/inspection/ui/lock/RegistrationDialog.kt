@@ -1,7 +1,10 @@
 package ir.ilam.inspection.ui.lock
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AppRegistration
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -33,6 +36,7 @@ fun RegistrationDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Filled.AppRegistration, contentDescription = null) },
         title = { Text(stringResource(R.string.lock_registration_title)) },
         text = {
             Column {

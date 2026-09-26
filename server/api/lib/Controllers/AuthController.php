@@ -51,7 +51,7 @@ final class AuthController
      */
     public function requestDevice(Request $request): void
     {
-        $device = $request->str('device_code');
+        $device = Auth::normaliseDevice($request->str('device_code'));
         if ($device === '') {
             Response::fail(400, 'missing_device', 'کد دستگاه ارسال نشده است.');
         }

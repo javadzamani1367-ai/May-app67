@@ -17,6 +17,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import ir.ilam.inspection.R
+import ir.ilam.inspection.ui.common.PrimaryButton
+import ir.ilam.inspection.ui.common.SecondaryButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ManageAccounts
+import androidx.compose.material.icons.filled.Save
+import ir.ilam.inspection.util.PersianNumbers
 import ir.ilam.inspection.data.CountyCatalog
 import ir.ilam.inspection.data.db.UserEntity
 import ir.ilam.inspection.ui.common.AppTextField
@@ -44,7 +50,7 @@ fun UserEditor(
     // recomposes on every keystroke in the form.
     val counties = remember { CountyCatalog(context).defaults.map { it.name }.distinct() }
 
-    SectionCard(title = stringResource(R.string.users_editor)) {
+    SectionCard(title = stringResource(R.string.users_editor), icon = Icons.Filled.ManageAccounts) {
         Column {
             AppTextField(
                 label = stringResource(R.string.users_full_name),
@@ -71,12 +77,19 @@ fun UserEditor(
             AppTextField(
                 label = stringResource(R.string.users_device_code),
                 value = user.deviceCode.orEmpty(),
-                onValueChange = { onChange(user.copy(deviceCode = it.uppercase())) }
+                // Stored the way the phone reports it: Latin digits, no dashes.
+                // The code is shown as «FD۴۲-۰۲۴۳-…» to be readable, and typing
+                // it in exactly as shown must still match.
+                onValueChange = {
+                    onChange(user.copy(deviceCode = PersianNumbers.toLatin(it).filter(Char::isLetterOrDigit).uppercase()))
+                },
+                ltr = true
             )
             AppTextField(
                 label = stringResource(R.string.users_password),
                 value = password,
-                onValueChange = onPasswordChange
+                onValueChange = onPasswordChange,
+                password = true
             )
             Text(
                 text = stringResource(R.string.users_password_hint),
@@ -99,12 +112,13 @@ fun UserEditor(
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-                Button(onClick = onSave, modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.action_save))
-                }
+                SecondaryButton(stringResource(R.string.action_cancel), onClick = onCancel, modifier = Modifier.weight(1f))
+                PrimaryButton(
+                    stringResource(R.string.action_save),
+                    onClick = onSave,
+                    icon = Icons.Filled.Save,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
