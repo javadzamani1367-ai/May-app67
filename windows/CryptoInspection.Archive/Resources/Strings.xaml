@@ -4,7 +4,9 @@
 
     <!-- Every visible word lives here, exactly as strings.xml does on Android. -->
 
-    <sys:String x:Key="app_title">آرشیو مرکزی بازدید مراکز رمزارز</sys:String>
+    <sys:String x:Key="app_title">توان‌کاو — آرشیو مرکزی</sys:String>
+    <sys:String x:Key="app_brand">توان‌کاو</sys:String>
+    <sys:String x:Key="app_subtitle">آرشیو مرکزی بازدید مراکز رمزارز</sys:String>
     <sys:String x:Key="tab_archive">بایگانی</sys:String>
     <sys:String x:Key="tab_receive">دریافت از گوشی</sys:String>
     <sys:String x:Key="tab_reports">گزارش‌گیری</sys:String>

@@ -5,18 +5,51 @@
         Title="{StaticResource app_title}"
         Height="760" Width="1180"
         WindowStartupLocation="CenterScreen">
-    <TabControl Margin="8">
-        <TabItem Header="{StaticResource tab_archive}">
-            <views:ArchiveView DataContext="{Binding Archive}" />
-        </TabItem>
-        <TabItem Header="{StaticResource tab_receive}">
-            <views:ReceiveView DataContext="{Binding Receive}" />
-        </TabItem>
-        <TabItem Header="{StaticResource tab_reports}">
-            <views:ReportsView DataContext="{Binding Reports}" />
-        </TabItem>
-        <TabItem Header="{StaticResource tab_settings}">
-            <views:SettingsView DataContext="{Binding Settings}" />
-        </TabItem>
-    </TabControl>
+    <DockPanel>
+        <!-- The header band: the TavanKav mark and name, as on the phone. -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource HeaderBrush}" Padding="16,10">
+            <StackPanel Orientation="Horizontal">
+                <!-- Drawn left to right: a mirrored mark would put the bolt
+                     the wrong way round. -->
+                <Viewbox Width="40" Height="40" FlowDirection="LeftToRight">
+                    <Canvas Width="64" Height="64">
+                        <Canvas.RenderTransform>
+                            <TranslateTransform X="-22" Y="-22" />
+                        </Canvas.RenderTransform>
+                        <Rectangle Canvas.Left="22" Canvas.Top="22" Width="64" Height="64"
+                                   RadiusX="14" RadiusY="14" Fill="#FF12305A" />
+                        <Path Stroke="#FF2DD4BF" StrokeThickness="4"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Data="M27,38 V32 Q27,27 32,27 H38 M70,27 H76 Q81,27 81,32 V38 M81,70 V76 Q81,81 76,81 H70 M38,81 H32 Q27,81 27,76 V70" />
+                        <Path Stroke="#FFE6EDF7" StrokeThickness="2.6"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              Data="M46,33.5 V38 M54,33.5 V38 M62,33.5 V38 M46,70 V74.5 M54,70 V74.5 M62,70 V74.5 M33.5,46 H38 M33.5,54 H38 M33.5,62 H38 M70,46 H74.5 M70,54 H74.5 M70,62 H74.5" />
+                        <Path Fill="#FF0B1F3A" Stroke="#FFE6EDF7" StrokeThickness="3.2"
+                              Data="M43,38 H65 Q70,38 70,43 V65 Q70,70 65,70 H43 Q38,70 38,65 V43 Q38,38 43,38 Z" />
+                        <Path Fill="#FFFBBF24" Stroke="#FFFBBF24" StrokeThickness="1" StrokeLineJoin="Round"
+                              Data="M57.5,41.5 L46.5,56.2 H53.2 L50.8,66.5 L61.8,51.3 H55.1 Z" />
+                    </Canvas>
+                </Viewbox>
+                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{StaticResource app_brand}" Foreground="White"
+                               FontSize="18" FontWeight="Bold" />
+                    <TextBlock Text="{StaticResource app_subtitle}" Foreground="#FFB9CDEB" FontSize="12" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+        <TabControl Margin="8">
+            <TabItem Header="{StaticResource tab_archive}">
+                <views:ArchiveView DataContext="{Binding Archive}" />
+            </TabItem>
+            <TabItem Header="{StaticResource tab_receive}">
+                <views:ReceiveView DataContext="{Binding Receive}" />
+            </TabItem>
+            <TabItem Header="{StaticResource tab_reports}">
+                <views:ReportsView DataContext="{Binding Reports}" />
+            </TabItem>
+            <TabItem Header="{StaticResource tab_settings}">
+                <views:SettingsView DataContext="{Binding Settings}" />
+            </TabItem>
+        </TabControl>
+    </DockPanel>
 </Window>

@@ -23,7 +23,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     }
 }
 
-portal_header('ورود واحد');
+portal_header('ورود واحد', false);
 ?>
 <div class="card">
   <h2>ورود به پرتال واحدها</h2>
