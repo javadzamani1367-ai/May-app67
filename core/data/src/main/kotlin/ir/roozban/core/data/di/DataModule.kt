@@ -17,6 +17,7 @@ import ir.roozban.core.data.RoomFocusRepository
 import ir.roozban.core.data.RoomHabitRepository
 import ir.roozban.core.data.RoomLabelRepository
 import ir.roozban.core.data.RoomMemoryRepository
+import ir.roozban.core.data.RoomNoteRepository
 import ir.roozban.core.data.RoomProjectRepository
 import ir.roozban.core.data.RoomReminderRepository
 import ir.roozban.core.data.RoomTaskRepository
@@ -26,6 +27,7 @@ import ir.roozban.core.database.FocusDao
 import ir.roozban.core.database.HabitDao
 import ir.roozban.core.database.LabelDao
 import ir.roozban.core.database.MemoryDao
+import ir.roozban.core.database.NoteDao
 import ir.roozban.core.database.ProjectDao
 import ir.roozban.core.database.ReminderDao
 import ir.roozban.core.database.RoozbanDatabase
@@ -41,6 +43,7 @@ import ir.roozban.core.domain.HabitRepository
 import ir.roozban.core.domain.LabelRepository
 import ir.roozban.core.domain.LearningStore
 import ir.roozban.core.domain.MemoryRepository
+import ir.roozban.core.domain.NoteRepository
 import ir.roozban.core.domain.ProjectRepository
 import ir.roozban.core.domain.ProvisionalEntitlements
 import ir.roozban.core.domain.ReminderRepository
@@ -77,6 +80,9 @@ abstract class DataModule {
 
     @Binds
     abstract fun memoryRepository(impl: RoomMemoryRepository): MemoryRepository
+
+    @Binds
+    abstract fun noteRepository(impl: RoomNoteRepository): NoteRepository
 
     @Binds
     abstract fun learningStore(impl: FileLearningStore): LearningStore
@@ -116,6 +122,9 @@ abstract class DataModule {
 
         @Provides
         fun memoryDao(db: RoozbanDatabase): MemoryDao = db.memoryDao()
+
+        @Provides
+        fun noteDao(db: RoozbanDatabase): NoteDao = db.noteDao()
 
         @Provides
         @Singleton

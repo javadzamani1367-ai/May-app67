@@ -135,4 +135,19 @@ class MigrationTest {
         assertThat(db.memoryDao().byKey("pref:gym")?.text).isEqualTo("باشگاه عصرها")
         db.close()
     }
+
+    @Test
+    fun `migrates 5 to 6 keeping memory and adding notes`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val file = context.getDatabasePath("migration-test-5.db").apply { parentFile?.mkdirs(); delete() }
+        createFromSchema(file, 5)
+        SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READWRITE).use { v5 ->
+            v5.execSQL("INSERT INTO memory_fact (id, `key`, text, source, confidence, pinned, created_at, updated_at) VALUES ('m', 'k', 'عصرها ورزش', 'USER', 1.0, 0, 1, 1)")
+        }
+        val db = Room.databaseBuilder(context, RoozbanDatabase::class.java, file.path).allowMainThreadQueries().build()
+        assertThat(db.memoryDao().byKey("k")?.text).isEqualTo("عصرها ورزش")
+        db.noteDao().upsert(NoteEntity("n", "جلسه", "متن یادداشت", 1, 2))
+        assertThat(db.noteDao().get("n")?.body).isEqualTo("متن یادداشت")
+        db.close()
+    }
 }

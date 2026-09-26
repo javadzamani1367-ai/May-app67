@@ -1,5 +1,7 @@
 package ir.roozban.feature.tasks
 
+import ir.roozban.core.designsystem.components.AppMenuButton
+import ir.roozban.core.designsystem.components.AssistantAction
 import androidx.compose.ui.text.font.FontWeight
 import ir.roozban.core.designsystem.theme.Roozban
 import ir.roozban.core.designsystem.components.EmptyState
@@ -79,7 +81,9 @@ internal fun ProjectsScreen(
         topBar = {
             RoozbanTopBar(
                 title = { Text(stringResource(R.string.projects_title)) },
+                navigationIcon = { AppMenuButton() },
                 actions = {
+                    AssistantAction()
                     IconButton(onClick = onOpenSettings) {
                         Icon(painterResource(DsR.drawable.ic_settings), stringResource(R.string.tasks_settings))
                     }

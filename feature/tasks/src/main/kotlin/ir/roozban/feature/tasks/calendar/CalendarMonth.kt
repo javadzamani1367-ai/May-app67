@@ -35,6 +35,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.layout
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -85,9 +93,37 @@ internal fun MonthView(
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     val swipe by rememberUpdatedState(onSwipe)
-    Column(Modifier.fillMaxSize()) {
+    // Scrolling a list up slides the month grid away so the list gets the whole screen;
+    // scrolling back to the list's top brings it back.
+    var gridHeight by remember { mutableIntStateOf(0) }
+    var gridOffset by remember { mutableFloatStateOf(0f) }
+    val collapse = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (available.y >= 0 || gridHeight == 0) return Offset.Zero
+                val before = gridOffset
+                gridOffset = (gridOffset + available.y).coerceIn(-gridHeight.toFloat(), 0f)
+                return Offset(0f, gridOffset - before)
+            }
+
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                if (available.y <= 0) return Offset.Zero
+                val before = gridOffset
+                gridOffset = (gridOffset + available.y).coerceIn(-gridHeight.toFloat(), 0f)
+                return Offset(0f, gridOffset - before)
+            }
+        }
+    }
+    Column(Modifier.fillMaxSize().nestedScroll(collapse)) {
         Column(
             Modifier
+                .clipToBounds()
+                .layout { measurable, constraints ->
+                    val placeable = measurable.measure(constraints)
+                    gridHeight = placeable.height
+                    val shift = gridOffset.toInt().coerceIn(-placeable.height, 0)
+                    layout(placeable.width, placeable.height + shift) { placeable.placeRelative(0, shift) }
+                }
                 .padding(horizontal = 10.dp)
                 .clip(MaterialTheme.shapes.large)
                 .background(MaterialTheme.colorScheme.surfaceContainer)
@@ -125,6 +161,12 @@ internal fun MonthView(
                         }
                     }
                 }
+            }
+        }
+        if (gridOffset < 0f) {
+            // Collapsed: a handle to bring the month back.
+            TextButton(onClick = { gridOffset = 0f }, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.calendar_show_month), style = MaterialTheme.typography.labelLarge)
             }
         }
         val tabs = listOf(R.string.calendar_tab_day, R.string.calendar_tab_occasions, R.string.calendar_tab_mine)

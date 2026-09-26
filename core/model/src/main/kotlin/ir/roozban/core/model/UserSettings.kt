@@ -42,6 +42,7 @@ data class UserSettings(
     /** Notification sound for personal occasions (same encoding as [habitSound]). */
     val eventSound: String? = null,
     val planning: PlanningSettings = PlanningSettings(),
+    val speech: SpeechSettings = SpeechSettings(),
 ) {
     companion object {
         const val BACKGROUND_IMAGE = "image"
@@ -67,3 +68,18 @@ data class PlanningSettings(
     /** Nightly statistics and inferred facts; off = nothing new is learned. */
     val learningEnabled: Boolean = true,
 )
+
+/** Reading aloud. */
+data class SpeechSettings(
+    /** `piper:<voice id>` or `system:<voice name>`; null = the first voice available. */
+    val voice: String? = null,
+    /** 0.6..1.6, 1 = normal. */
+    val rate: Float = 1f,
+    /** Read the assistant's replies aloud as they arrive. */
+    val readReplies: Boolean = false,
+) {
+    companion object {
+        const val MIN_RATE = 0.6f
+        const val MAX_RATE = 1.6f
+    }
+}

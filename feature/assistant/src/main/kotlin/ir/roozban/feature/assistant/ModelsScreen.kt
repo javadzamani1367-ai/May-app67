@@ -239,7 +239,7 @@ private fun InstalledCard(model: InstalledModel, active: Boolean, onActivate: ()
 }
 
 @Composable
-private fun CatalogCard(
+internal fun CatalogCard(
     spec: ModelSpec,
     recommended: Boolean,
     download: DownloadState?,

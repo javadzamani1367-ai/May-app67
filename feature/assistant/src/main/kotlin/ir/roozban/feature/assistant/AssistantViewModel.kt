@@ -17,6 +17,8 @@ import ir.roozban.ai.tools.PromptBuilder
 import ir.roozban.ai.tools.ToolExecutor
 import ir.roozban.ai.tools.Turn
 import ir.roozban.ai.tools.answerLocally
+import ir.roozban.ai.tts.SpeakState
+import ir.roozban.ai.tts.SpeechOutput
 import ir.roozban.core.calendar.PersianDigits
 import ir.roozban.core.domain.Access
 import ir.roozban.core.domain.Entitlements
@@ -70,6 +72,10 @@ data class AssistantUiState(
     val access: Access = Access.FULL,
     /** 0..100 while the assistant prepares itself after opening; null when ready. */
     val preparing: Int? = null,
+    /** The chat item being read aloud. */
+    val speakingId: Long? = null,
+    /** Reading aloud was asked for but there is no voice yet. */
+    val noVoice: Boolean = false,
 )
 
 @HiltViewModel
@@ -81,6 +87,7 @@ class AssistantViewModel @Inject constructor(
     private val habits: HabitRepository,
     private val settings: SettingsRepository,
     private val memory: MemoryRepository,
+    private val speech: SpeechOutput,
     entitlements: Entitlements,
     private val clock: Clock,
 ) : ViewModel() {
@@ -91,7 +98,7 @@ class AssistantViewModel @Inject constructor(
     private var job: Job? = null
     private val access = entitlements.access(ProFeature.ASSISTANT)
 
-    val state: StateFlow<AssistantUiState> = combine(items, busy, host.engine.state, models.state, host.warmProgress) { items, busy, engine, m, warm ->
+    private val core = combine(items, busy, host.engine.state, models.state, host.warmProgress) { items, busy, engine, m, warm ->
         val status = when {
             !m.tier.supported -> EngineStatus.UNSUPPORTED
             m.active == null -> EngineStatus.NO_MODEL
@@ -101,6 +108,15 @@ class AssistantViewModel @Inject constructor(
             else -> EngineStatus.IDLE
         }
         AssistantUiState(items, status, m.active?.name, busy, access, warm)
+    }
+
+    val state: StateFlow<AssistantUiState> = combine(core, speech.state) { s, speaking ->
+        val id = when (speaking) {
+            is SpeakState.Speaking -> speaking.id
+            is SpeakState.Preparing -> speaking.id
+            else -> null
+        }
+        s.copy(speakingId = id?.takeIf { it.startsWith(SPEECH_PREFIX) }?.removePrefix(SPEECH_PREFIX)?.toLongOrNull(), noVoice = speaking is SpeakState.NoVoice)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AssistantUiState(access = access))
 
     init {
@@ -171,7 +187,25 @@ class AssistantViewModel @Inject constructor(
         }
         val results = executor.execute(Plan(plan.actions.filter { it.runnable }, plan.reply))
         edit(id) { it.copy(text = reply, streaming = false, results = results, problems = problems) }
+        if (settings.current().speech.readReplies) readAloud(id)
     }
+
+    /** Reads an answer aloud (its reply and what was done), or stops it if it is being read. */
+    fun readAloud(id: Long) {
+        if (state.value.speakingId == id) {
+            speech.stop()
+            return
+        }
+        val item = items.value.firstOrNull { it.id == id } ?: return
+        val text = buildList {
+            if (item.text.isNotBlank()) add(item.text)
+            item.results.forEach { add(it.message) }
+            item.problems.forEach { add(it.problem ?: it.summary) }
+        }.joinToString("\n")
+        speech.speak(text, id = SPEECH_PREFIX + id)
+    }
+
+    fun noVoiceShown() = speech.clearNoVoice()
 
     fun confirm(id: Long) {
         val plan = items.value.firstOrNull { it.id == id }?.pending ?: return
@@ -208,10 +242,12 @@ class AssistantViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        if (state.value.speakingId != null) speech.stop()
         host.release()
     }
 
     private companion object {
+        const val SPEECH_PREFIX = "chat:"
         const val MAX_HISTORY = 4
     }
 }

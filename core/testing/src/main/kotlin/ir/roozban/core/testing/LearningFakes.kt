@@ -3,8 +3,10 @@ package ir.roozban.core.testing
 import ir.roozban.core.domain.LearningSnapshot
 import ir.roozban.core.domain.LearningStore
 import ir.roozban.core.domain.MemoryRepository
+import ir.roozban.core.domain.NoteRepository
 import ir.roozban.core.model.FactSource
 import ir.roozban.core.model.MemoryFact
+import ir.roozban.core.model.Note
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -39,5 +41,18 @@ class FakeLearningStore(var snapshot: LearningSnapshot? = null) : LearningStore 
     }
     override suspend fun clear() {
         snapshot = null
+    }
+}
+
+class FakeNoteRepository : NoteRepository {
+    val notes = MutableStateFlow<Map<String, Note>>(emptyMap())
+    override fun observeNotes(): Flow<List<Note>> = notes.map { m -> m.values.sortedByDescending { it.updatedAt } }
+    override fun observeNote(id: String): Flow<Note?> = notes.map { it[id] }
+    override suspend fun get(id: String) = notes.value[id]
+    override suspend fun upsert(note: Note) {
+        notes.value = notes.value + (note.id to note)
+    }
+    override suspend fun delete(id: String) {
+        notes.value = notes.value - id
     }
 }

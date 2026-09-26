@@ -13,6 +13,7 @@ import ir.roozban.core.model.FocusSettings
 import ir.roozban.core.model.PlanningSettings
 import ir.roozban.core.model.ReminderKind
 import ir.roozban.core.model.ReminderSetting
+import ir.roozban.core.model.SpeechSettings
 import ir.roozban.core.model.UserSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -76,6 +77,10 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
         val PLAN_MORNING = intPreferencesKey("plan_morning_minute")
         val PLAN_AUTO = booleanPreferencesKey("plan_auto")
         val LEARNING = booleanPreferencesKey("learning_enabled")
+        /** Absent = automatic. */
+        val SPEECH_VOICE = stringPreferencesKey("speech_voice")
+        val SPEECH_RATE = floatPreferencesKey("speech_rate")
+        val SPEECH_READ_REPLIES = booleanPreferencesKey("speech_read_replies")
     }
 
     private companion object {
@@ -134,6 +139,11 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
                     autoPlan = this[Keys.PLAN_AUTO] ?: DEFAULTS.planning.autoPlan,
                     learningEnabled = this[Keys.LEARNING] ?: DEFAULTS.planning.learningEnabled,
                 ),
+                speech = SpeechSettings(
+                    voice = this[Keys.SPEECH_VOICE],
+                    rate = (this[Keys.SPEECH_RATE] ?: DEFAULTS.speech.rate).coerceIn(SpeechSettings.MIN_RATE, SpeechSettings.MAX_RATE),
+                    readReplies = this[Keys.SPEECH_READ_REPLIES] ?: DEFAULTS.speech.readReplies,
+                ),
             )
         }
 
@@ -174,6 +184,9 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
             this[Keys.PLAN_MORNING] = s.planning.morningTime.toMinute()
             this[Keys.PLAN_AUTO] = s.planning.autoPlan
             this[Keys.LEARNING] = s.planning.learningEnabled
+            s.speech.voice.let { if (it == null) remove(Keys.SPEECH_VOICE) else this[Keys.SPEECH_VOICE] = it }
+            this[Keys.SPEECH_RATE] = s.speech.rate
+            this[Keys.SPEECH_READ_REPLIES] = s.speech.readReplies
         }
 
         inline fun <reified E : Enum<E>> enumOr(name: String?, default: E): E =

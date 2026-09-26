@@ -1,5 +1,6 @@
 package ir.roozban.feature.planner
 
+import ir.roozban.core.designsystem.components.AssistantAction
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -83,6 +84,7 @@ internal fun PlannerScreen(onOpenMemory: () -> Unit, onBack: () -> Unit, viewMod
                     IconButton(onClick = onBack) { Icon(painterResource(DsR.drawable.ic_arrow_back), stringResource(R.string.planner_back)) }
                 },
                 actions = {
+                    AssistantAction()
                     IconButton(onClick = onOpenMemory) { Icon(painterResource(DsR.drawable.ic_memory), stringResource(R.string.planner_memory)) }
                 },
             )

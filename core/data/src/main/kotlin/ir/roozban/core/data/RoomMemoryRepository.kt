@@ -3,14 +3,17 @@ package ir.roozban.core.data
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import ir.roozban.core.database.MemoryDao
+import ir.roozban.core.database.NoteDao
 import ir.roozban.core.database.toEntity
 import ir.roozban.core.database.toModel
 import ir.roozban.core.domain.LearningSnapshot
 import ir.roozban.core.domain.LearningSnapshotCodec
 import ir.roozban.core.domain.LearningStore
 import ir.roozban.core.domain.MemoryRepository
+import ir.roozban.core.domain.NoteRepository
 import ir.roozban.core.model.FactSource
 import ir.roozban.core.model.MemoryFact
+import ir.roozban.core.model.Note
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -39,6 +42,18 @@ class RoomMemoryRepository @Inject constructor(private val dao: MemoryDao) : Mem
     override suspend fun clear() = dao.clear()
 
     override suspend fun deleteSourceExcept(source: FactSource, keep: List<String>) = dao.deleteSourceExcept(source.name, keep)
+}
+
+class RoomNoteRepository @Inject constructor(private val dao: NoteDao) : NoteRepository {
+    override fun observeNotes(): Flow<List<Note>> = dao.observeAll().map { list -> list.map { it.toModel() } }
+
+    override fun observeNote(id: String): Flow<Note?> = dao.observe(id).map { it?.toModel() }
+
+    override suspend fun get(id: String): Note? = dao.get(id)?.toModel()
+
+    override suspend fun upsert(note: Note) = dao.upsert(note.toEntity())
+
+    override suspend fun delete(id: String) = dao.delete(id)
 }
 
 /** The learning snapshot as a small text file in the app's private storage. */

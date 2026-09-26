@@ -67,6 +67,7 @@ dependencies {
     implementation(projects.feature.reports)
     implementation(projects.feature.assistant)
     implementation(projects.feature.planner)
+    implementation(projects.feature.tools)
     implementation(projects.ai.runtime)
     implementation(projects.billing.api)
 

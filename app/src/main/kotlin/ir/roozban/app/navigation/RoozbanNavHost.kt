@@ -42,6 +42,14 @@ import ir.roozban.feature.habits.HabitRoute
 import ir.roozban.feature.habits.HabitsRoute
 import ir.roozban.feature.assistant.AssistantModelsRoute
 import ir.roozban.feature.assistant.AssistantRoute
+import ir.roozban.feature.assistant.AssistantVoicesRoute
+import ir.roozban.feature.tools.NoteRoute
+import ir.roozban.feature.tools.NotesRoute
+import ir.roozban.feature.tools.ToolsRoute
+import ir.roozban.feature.tools.toolsScreens
+import ir.roozban.core.designsystem.components.AppActions
+import ir.roozban.core.designsystem.components.LocalAppActions
+import androidx.compose.runtime.CompositionLocalProvider
 import ir.roozban.feature.assistant.assistantScreens
 import ir.roozban.feature.habits.habitsScreens
 import ir.roozban.feature.planner.MemoryRoute
@@ -101,6 +109,14 @@ fun RoozbanApp(
         onOpenHandled()
     }
 
+    val appActions = remember(navController) {
+        AppActions(
+            onAssistant = { navController.navigate(AssistantRoute) { launchSingleTop = true } },
+            onTools = { navController.navigate(ToolsRoute) { launchSingleTop = true } },
+            onSettings = { navController.navigate(SettingsRoute) { launchSingleTop = true } },
+        )
+    }
+    CompositionLocalProvider(LocalAppActions provides appActions) {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
@@ -153,12 +169,22 @@ fun RoozbanApp(
                 onOpenSettings = openSettings,
                 onOpenProject = { navController.navigate(ProjectRoute(it)) },
                 onBack = back,
-                onOpenAssistant = { navController.navigate(AssistantRoute) },
                 onOpenVoiceModels = { navController.navigate(AssistantModelsRoute) },
                 onOpenPlanner = { navController.navigate(PlannerRoute) },
             )
             plannerScreens(onOpenMemory = { navController.navigate(MemoryRoute) }, onBack = back)
-            assistantScreens(onOpenModels = { navController.navigate(AssistantModelsRoute) }, onBack = back)
+            assistantScreens(
+                onOpenModels = { navController.navigate(AssistantModelsRoute) },
+                onOpenVoices = { navController.navigate(AssistantVoicesRoute) },
+                onBack = back,
+            )
+            toolsScreens(
+                onOpenNotes = { navController.navigate(NotesRoute) },
+                onOpenNote = { navController.navigate(NoteRoute(it)) },
+                onOpenSpeechModels = { navController.navigate(AssistantModelsRoute) },
+                onOpenVoices = { navController.navigate(AssistantVoicesRoute) },
+                onBack = back,
+            )
             habitsScreens(
                 onOpenHabit = { navController.navigate(HabitRoute(it)) },
                 onOpenSettings = openSettings,
@@ -182,7 +208,10 @@ fun RoozbanApp(
             settingsScreens(
                 onBack = back,
                 onOpenBatteryGuide = { navController.navigate(BatteryGuideRoute) },
+                onOpenVoices = { navController.navigate(AssistantVoicesRoute) },
+                onOpenModels = { navController.navigate(AssistantModelsRoute) },
             )
         }
+    }
     }
 }

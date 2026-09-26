@@ -9,6 +9,7 @@ import ir.roozban.core.model.HabitLog
 import ir.roozban.core.model.HabitSchedule
 import ir.roozban.core.model.Label
 import ir.roozban.core.model.MemoryFact
+import ir.roozban.core.model.Note
 import ir.roozban.core.model.PersonalEvent
 import ir.roozban.core.model.Project
 import ir.roozban.core.model.Reminder
@@ -199,3 +200,7 @@ fun MemoryFact.toEntity() = MemoryFactEntity(
     createdAt = createdAt.toEpochMilli(),
     updatedAt = updatedAt.toEpochMilli(),
 )
+
+fun NoteEntity.toModel() = Note(id, title, body, Instant.ofEpochMilli(createdAt), Instant.ofEpochMilli(updatedAt))
+
+fun Note.toEntity() = NoteEntity(id, title, body, createdAt.toEpochMilli(), updatedAt.toEpochMilli())

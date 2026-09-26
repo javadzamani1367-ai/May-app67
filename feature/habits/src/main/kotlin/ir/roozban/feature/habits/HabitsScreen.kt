@@ -1,5 +1,7 @@
 package ir.roozban.feature.habits
 
+import ir.roozban.core.designsystem.components.AppMenuButton
+import ir.roozban.core.designsystem.components.AssistantAction
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
@@ -89,7 +91,9 @@ internal fun HabitsScreen(
                         }
                     }
                 },
+                navigationIcon = { AppMenuButton() },
                 actions = {
+                    AssistantAction()
                     IconButton(onClick = onOpenSettings) {
                         Icon(painterResource(DsR.drawable.ic_settings), stringResource(R.string.habits_settings))
                     }

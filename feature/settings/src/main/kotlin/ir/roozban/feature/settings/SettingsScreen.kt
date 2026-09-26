@@ -30,6 +30,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -72,8 +74,11 @@ internal fun Context.startSafely(intent: Intent) {
 internal fun SettingsScreen(
     onBack: () -> Unit,
     onOpenBatteryGuide: () -> Unit,
+    onOpenVoices: () -> Unit,
+    onOpenModels: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
+    val wifiOnly by viewModel.wifiOnly.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     Scaffold(
@@ -105,6 +110,7 @@ internal fun SettingsScreen(
                 switchRow = { label, checked, onChange -> SwitchRow(label, checked, onChange) },
             )
             HealthCard(onOpenBatteryGuide)
+            SpeechAndDownloadsCard(wifiOnly, viewModel::setWifiOnly, onOpenVoices, onOpenModels)
             SoundsCard(s, viewModel)
             DefaultReminderCard(s, viewModel)
             AllDayCard(s, viewModel)
@@ -137,6 +143,33 @@ internal fun SettingsCard(
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             content()
+        }
+    }
+}
+
+@Composable
+private fun SpeechAndDownloadsCard(wifiOnly: Boolean, onWifiOnly: (Boolean) -> Unit, onOpenVoices: () -> Unit, onOpenModels: () -> Unit) {
+    SettingsCard(
+        "صدا و دانلود مدل‌ها",
+        "مدل دستیار، مدل گفتار و گوینده‌ها یک بار دانلود می‌شوند و بعد همه‌چیز آفلاین است.",
+        icon = DsR.drawable.ic_download,
+        role = Roozban.colors.focus,
+    ) {
+        Text("دانلود از طریق", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { onWifiOnly(true) }) {
+            RadioButton(selected = wifiOnly, onClick = { onWifiOnly(true) })
+            Text("فقط وای‌فای")
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { onWifiOnly(false) }) {
+            RadioButton(selected = !wifiOnly, onClick = { onWifiOnly(false) })
+            Column {
+                Text("وای‌فای و اینترنت همراه")
+                Text("روی اینترنت همراه، پیش از هر دانلود حجمش را می‌پرسم.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = onOpenVoices) { Text("گوینده و خواندن متن") }
+            OutlinedButton(onClick = onOpenModels) { Text("مدل‌ها") }
         }
     }
 }

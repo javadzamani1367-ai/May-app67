@@ -23,6 +23,8 @@ data class BackupData(
     val events: List<BackupEvent> = emptyList(),
     /** Null in backups made before personal memory existed: restoring keeps what the phone learned. */
     val memory: List<BackupFact>? = null,
+    /** Null in backups made before the notes tool: restoring keeps the phone's notes. */
+    val notes: List<BackupNote>? = null,
 ) {
     companion object {
         const val FORMAT_VERSION = 1
@@ -163,6 +165,9 @@ data class BackupEvent(
     val createdAt: Long,
     val updatedAt: Long,
 )
+
+@Serializable
+data class BackupNote(val id: String, val title: String = "", val body: String = "", val createdAt: Long, val updatedAt: Long)
 
 @Serializable
 data class BackupFact(

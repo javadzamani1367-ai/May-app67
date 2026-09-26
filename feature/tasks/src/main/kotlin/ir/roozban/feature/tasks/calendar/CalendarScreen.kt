@@ -1,5 +1,7 @@
 package ir.roozban.feature.tasks.calendar
 
+import ir.roozban.core.designsystem.components.AppMenuButton
+import ir.roozban.core.designsystem.components.AssistantAction
 import ir.roozban.core.designsystem.components.RoozbanTopBar
 import ir.roozban.core.designsystem.components.RoozbanFab
 import androidx.compose.foundation.background
@@ -119,7 +121,9 @@ internal fun CalendarScreen(
                         modifier = Modifier.clickable { goingTo = true },
                     )
                 },
+                navigationIcon = { AppMenuButton() },
                 actions = {
+                    AssistantAction()
                     // Right-to-left: «previous» (pointing right) comes first, «next» (pointing left) after it.
                     IconButton(onClick = viewModel::previous) {
                         Icon(painterResource(DsR.drawable.ic_chevron_right), stringResource(R.string.calendar_previous))

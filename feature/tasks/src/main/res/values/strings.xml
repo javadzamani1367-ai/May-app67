@@ -118,6 +118,7 @@
     <string name="calendar_go_to">برو به تاریخ</string>
     <string name="calendar_tab_day">این روز</string>
     <string name="calendar_tab_occasions">مناسبت‌های ماه</string>
+    <string name="calendar_show_month">▾ نمایش جدول ماه</string>
     <string name="calendar_tab_mine">مناسبت‌های من</string>
     <string name="calendar_holiday">تعطیل رسمی</string>
     <string name="calendar_no_occasions">در این ماه مناسبتی ثبت نشده است.</string>

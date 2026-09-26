@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledIconButton
@@ -76,7 +77,7 @@ private val SUGGESTIONS = listOf(
 )
 
 @Composable
-internal fun AssistantScreen(onBack: () -> Unit, onOpenModels: () -> Unit, viewModel: AssistantViewModel = hiltViewModel()) {
+internal fun AssistantScreen(onBack: () -> Unit, onOpenModels: () -> Unit, onOpenVoices: () -> Unit, viewModel: AssistantViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var input by rememberSaveable { mutableStateOf("") }
     val listState = rememberLazyListState()
@@ -100,6 +101,7 @@ internal fun AssistantScreen(onBack: () -> Unit, onOpenModels: () -> Unit, viewM
                 navigationIcon = { IconButton(onClick = onBack) { Icon(painterResource(DsR.drawable.ic_arrow_back), "بازگشت") } },
                 actions = {
                     if (state.items.isNotEmpty()) IconButton(onClick = viewModel::clear) { Icon(painterResource(DsR.drawable.ic_delete), "پاک کردن گفتگو") }
+                    IconButton(onClick = onOpenVoices) { Icon(painterResource(DsR.drawable.ic_play), "گوینده") }
                     IconButton(onClick = onOpenModels) { Icon(painterResource(DsR.drawable.ic_memory), "مدل‌ها") }
                 },
             )
@@ -136,7 +138,7 @@ internal fun AssistantScreen(onBack: () -> Unit, onOpenModels: () -> Unit, viewM
                     ) {
                         if (state.items.isEmpty()) item { Intro(onPick = { input = it }) }
                         items(state.items, key = { it.id }) { item ->
-                            if (item.role == ChatRole.USER) UserBubble(item.text) else AnswerBubble(item, viewModel)
+                            if (item.role == ChatRole.USER) UserBubble(item.text) else AnswerBubble(item, speaking = state.speakingId == item.id, viewModel)
                         }
                     }
                     InputBar(
@@ -153,6 +155,20 @@ internal fun AssistantScreen(onBack: () -> Unit, onOpenModels: () -> Unit, viewM
                 }
             }
         }
+    }
+    if (state.noVoice) {
+        AlertDialog(
+            onDismissRequest = viewModel::noVoiceShown,
+            title = { Text("گوینده‌ای نصب نیست") },
+            text = { Text("گوشی‌ات صدای فارسی آفلاین ندارد. برای خواندن متن، یکی از گوینده‌های روزبان را دانلود کن.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.noVoiceShown()
+                    onOpenVoices()
+                }) { Text("انتخاب گوینده") }
+            },
+            dismissButton = { TextButton(onClick = viewModel::noVoiceShown) { Text("بعداً") } },
+        )
     }
 }
 
@@ -210,7 +226,7 @@ private fun UserBubble(text: String) {
 }
 
 @Composable
-private fun AnswerBubble(item: ChatItem, viewModel: AssistantViewModel) {
+private fun AnswerBubble(item: ChatItem, speaking: Boolean, viewModel: AssistantViewModel) {
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
         AppCard(modifier = Modifier.widthIn(max = 340.dp), accent = if (item.error) Roozban.colors.error.color else null) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -234,6 +250,13 @@ private fun AnswerBubble(item: ChatItem, viewModel: AssistantViewModel) {
                     }
                 } else if (item.undone) {
                     StatusPill("برگردانده شد", Roozban.colors.info)
+                }
+                if (!item.streaming && (item.text.isNotBlank() || item.results.isNotEmpty())) {
+                    TextButton(onClick = { viewModel.readAloud(item.id) }, contentPadding = PaddingValues(horizontal = 8.dp)) {
+                        Icon(painterResource(if (speaking) DsR.drawable.ic_stop else DsR.drawable.ic_play), null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(if (speaking) "توقف خواندن" else "بخوان")
+                    }
                 }
             }
         }

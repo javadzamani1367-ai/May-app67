@@ -272,6 +272,24 @@ interface EventDao {
 }
 
 @Dao
+interface NoteDao {
+    @Query("SELECT * FROM note ORDER BY updated_at DESC")
+    fun observeAll(): Flow<List<NoteEntity>>
+
+    @Query("SELECT * FROM note WHERE id = :id")
+    fun observe(id: String): Flow<NoteEntity?>
+
+    @Query("SELECT * FROM note WHERE id = :id")
+    suspend fun get(id: String): NoteEntity?
+
+    @Upsert
+    suspend fun upsert(note: NoteEntity)
+
+    @Query("DELETE FROM note WHERE id = :id")
+    suspend fun delete(id: String)
+}
+
+@Dao
 interface MemoryDao {
     @Query("SELECT * FROM memory_fact ORDER BY pinned DESC, updated_at DESC")
     fun observeAll(): Flow<List<MemoryFactEntity>>
@@ -333,6 +351,15 @@ interface BackupDao {
 
     @Query("DELETE FROM personal_event")
     suspend fun clearEvents()
+
+    @Query("SELECT * FROM note")
+    suspend fun notes(): List<NoteEntity>
+
+    @Query("DELETE FROM note")
+    suspend fun clearNotes()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertNotes(notes: List<NoteEntity>)
 
     @Query("SELECT * FROM memory_fact")
     suspend fun memoryFacts(): List<MemoryFactEntity>
@@ -408,6 +435,7 @@ interface BackupDao {
         habitLogs: List<HabitLogEntity> = emptyList(),
         events: List<PersonalEventEntity> = emptyList(),
         memoryFacts: List<MemoryFactEntity>? = null,
+        notes: List<NoteEntity>? = null,
     ) {
         clearReminders()
         clearEvents()
@@ -434,6 +462,11 @@ interface BackupDao {
         if (memoryFacts != null) {
             clearMemoryFacts()
             insertMemoryFacts(memoryFacts.distinctBy { it.key })
+        }
+        // Likewise for notes (backups made before the notes tool).
+        if (notes != null) {
+            clearNotes()
+            insertNotes(notes)
         }
     }
 }

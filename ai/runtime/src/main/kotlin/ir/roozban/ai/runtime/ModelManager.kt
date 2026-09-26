@@ -17,6 +17,8 @@ import ir.roozban.ai.models.ModelCatalog
 import ir.roozban.ai.models.ModelKind
 import ir.roozban.ai.models.ModelSpec
 import ir.roozban.ai.models.ModelStore
+import ir.roozban.ai.models.VoiceStore
+import ir.roozban.core.domain.DownloadSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -47,6 +49,8 @@ data class ModelsState(
     val downloads: Map<String, DownloadState> = emptyMap(),
     /** Off by default: mobile data is allowed, with a size confirmation in the model screen. */
     val wifiOnly: Boolean = false,
+    /** Ids of the Piper voices on the phone. */
+    val voicesInstalled: Set<String> = emptySet(),
 ) {
     val active: InstalledModel? get() = installed.firstOrNull { it.id == activeId } ?: installed.firstOrNull()
 
@@ -66,10 +70,14 @@ data class ModelsState(
 @Singleton
 class ModelManager @Inject constructor(
     @ApplicationContext private val context: Context,
-) {
+) : DownloadSettings {
     private val prefs = context.getSharedPreferences("ai", Context.MODE_PRIVATE)
     val store = ModelStore(File(context.filesDir, "models"))
+    val voices = VoiceStore(File(store.dir, "voices"))
     val tier: DeviceTier = DeviceTier.of(totalRam())
+
+    private val _wifiOnly = MutableStateFlow(prefs.getBoolean(KEY_WIFI_ONLY, false))
+    override val wifiOnly: StateFlow<Boolean> = _wifiOnly.asStateFlow()
 
     private val _state = MutableStateFlow(ModelsState(tier))
     val state: StateFlow<ModelsState> = _state.asStateFlow()
@@ -82,7 +90,7 @@ class ModelManager @Inject constructor(
         val all = store.installed()
         val installed = all.filter { it.kind == ModelKind.LLM }
         val speech = all.filter { it.kind == ModelKind.SPEECH }
-        val failed = (ModelCatalog.all + ModelCatalog.speech).mapNotNull { spec ->
+        val failed = (ModelCatalog.all + ModelCatalog.speech + ModelCatalog.voices).mapNotNull { spec ->
             val part = store.partialBytes(spec)
             if (part > 0 && all.none { it.id == spec.id }) spec.id to DownloadState.Failed("", part) else null
         }.toMap()
@@ -93,6 +101,7 @@ class ModelManager @Inject constructor(
                 speechInstalled = speech,
                 activeSpeechId = prefs.getString(KEY_ACTIVE_SPEECH, null),
                 wifiOnly = prefs.getBoolean(KEY_WIFI_ONLY, false),
+                voicesInstalled = voices.installed(),
                 downloads = failed + s.downloads.filterValues { it is DownloadState.Running },
             )
         }
@@ -108,8 +117,9 @@ class ModelManager @Inject constructor(
         refresh()
     }
 
-    fun setWifiOnly(value: Boolean) {
+    override fun setWifiOnly(value: Boolean) {
         prefs.edit { putBoolean(KEY_WIFI_ONLY, value) }
+        _wifiOnly.value = value
         refresh()
     }
 
@@ -150,7 +160,17 @@ class ModelManager @Inject constructor(
         _state.update { it.copy(downloads = it.downloads + (spec.id to DownloadState.Running(downloaded, total))) }
     }
 
-    internal fun onFinished(spec: ModelSpec, error: String?) {
+    internal fun onFinished(spec: ModelSpec, downloadError: String?) {
+        var error = downloadError
+        if (error == null && spec.kind == ModelKind.VOICE) {
+            // A voice arrives as a zip: unpack it next to the others.
+            error = runCatching { voices.install(spec.id, store.fileFor(spec)) }.exceptionOrNull()?.let { "فایل صدا سالم نبود؛ دوباره تلاش کن." }
+            if (error == null) {
+                _state.update { it.copy(downloads = it.downloads - spec.id) }
+                refresh()
+                return
+            }
+        }
         if (error == null) {
             store.recordDownload(spec)
             val key = if (spec.kind == ModelKind.SPEECH) KEY_ACTIVE_SPEECH else KEY_ACTIVE
@@ -183,6 +203,7 @@ class ModelManager @Inject constructor(
     }
 
     fun delete(id: String) {
+        if (ModelCatalog.get(id)?.kind == ModelKind.VOICE) voices.delete(id)
         store.delete(id)
         if (prefs.getString(KEY_ACTIVE, null) == id) prefs.edit { remove(KEY_ACTIVE) }
         if (prefs.getString(KEY_ACTIVE_SPEECH, null) == id) prefs.edit { remove(KEY_ACTIVE_SPEECH) }

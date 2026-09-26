@@ -209,6 +209,15 @@ data class PersonalEventEntity(
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
 )
 
+@Entity(tableName = "note", indices = [Index("updated_at")])
+data class NoteEntity(
+    @PrimaryKey val id: String,
+    val title: String,
+    val body: String,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+    @ColumnInfo(name = "updated_at") val updatedAt: Long,
+)
+
 @Entity(tableName = "memory_fact", indices = [Index(value = ["key"], unique = true)])
 data class MemoryFactEntity(
     @PrimaryKey val id: String,

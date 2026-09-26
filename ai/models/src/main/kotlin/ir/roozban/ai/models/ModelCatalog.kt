@@ -9,6 +9,9 @@ enum class ModelKind {
 
     /** A whisper.cpp speech model for voice input. */
     SPEECH,
+
+    /** A Piper voice for reading text aloud (a zip: model, tokens, phonemizer data). */
+    VOICE,
 }
 
 /** A downloadable model. [sha256] and [sizeBytes] are of the exact file at [url]. */
@@ -122,10 +125,36 @@ object ModelCatalog {
         ),
     )
 
+    private const val VOICE_RELEASE = "https://github.com/javadzamani1367-ai/May-app67/releases/download/tts-voices"
+
+    /**
+     * Persian Piper voices (rhasspy/piper-voices via sherpa-onnx, published by the tts-voices
+     * workflow). Their training data is CC0; «gyro» is left out because its terms are unclear.
+     */
+    val voices: List<ModelSpec> = listOf(
+        voice("tts-fa-amir", "امیر", "گوینده‌ی پیشنهادی", 67_374_891L, "d707857ee28f412d0964632d7baef1e79a47e80ff2f4afb5e60c724d96eba6b5"),
+        voice("tts-fa-ganji", "گنجی", "گوینده‌ی دوم", 67_374_418L, "e0600ee50b53f478f74328311f0ea4d8f8496654e68eb77d5b3e99663df6fdca"),
+        voice("tts-fa-ganji_adabi", "گنجی (ادبی)", "همان گوینده با لحن متن‌های ادبی", 67_373_547L, "43b89ccb9ebd251601ce8283a43c2bd9b15db973c2c59d70acf8dec47f58b797"),
+        voice("tts-fa-reza_ibrahim", "رضا", "آموزش‌دیده با صدای قرائت", 67_374_669L, "ef43089ba8f7f1645d593f8f1257bb62838af4e26b875722d9463763dac7939d"),
+    )
+
+    private fun voice(id: String, name: String, description: String, size: Long, sha: String) = ModelSpec(
+        id = id,
+        name = name,
+        description = description,
+        url = "$VOICE_RELEASE/roozban-${id}.zip",
+        sizeBytes = size,
+        sha256 = sha,
+        template = ChatTemplate.CHATML,
+        minTier = DeviceTier.UNSUPPORTED,
+        license = "CC0 data, Piper (MIT)",
+        kind = ModelKind.VOICE,
+    )
+
     /** Speech models from before the Persian fine-tunes; still recognized when installed. */
     fun isLegacySpeech(id: String) = id.startsWith("whisper-")
 
-    fun get(id: String): ModelSpec? = all.firstOrNull { it.id == id } ?: speech.firstOrNull { it.id == id }
+    fun get(id: String): ModelSpec? = all.firstOrNull { it.id == id } ?: speech.firstOrNull { it.id == id } ?: voices.firstOrNull { it.id == id }
 
     /** Assistant models the device can run, the recommended one first. */
     fun availableFor(tier: DeviceTier): List<ModelSpec> =

@@ -1,5 +1,6 @@
 package ir.roozban.feature.reports
 
+import ir.roozban.core.designsystem.components.AssistantAction
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.text.font.FontWeight
 import ir.roozban.core.designsystem.theme.Role
@@ -65,6 +66,7 @@ internal fun ReportsScreen(onOpenReview: (Boolean) -> Unit, onBack: () -> Unit, 
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(painterResource(DsR.drawable.ic_arrow_back), stringResource(R.string.reports_back)) }
                 },
+                actions = { AssistantAction() },
             )
         },
     ) { padding ->

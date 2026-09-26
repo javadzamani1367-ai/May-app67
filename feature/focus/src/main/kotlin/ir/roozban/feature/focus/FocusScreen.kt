@@ -1,5 +1,6 @@
 package ir.roozban.feature.focus
 
+import ir.roozban.core.designsystem.components.AssistantAction
 import androidx.compose.ui.graphics.Brush
 import ir.roozban.core.designsystem.theme.Roozban
 import ir.roozban.core.designsystem.components.SectionTitle
@@ -91,6 +92,7 @@ fun FocusScreen(taskId: String?, onBack: () -> Unit, viewModel: FocusViewModel =
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(painterResource(DsR.drawable.ic_arrow_back), stringResource(R.string.focus_back)) }
                 },
+                actions = { AssistantAction() },
             )
         },
     ) { padding ->

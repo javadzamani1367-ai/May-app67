@@ -1,5 +1,7 @@
 package ir.roozban.feature.tasks
 
+import ir.roozban.core.designsystem.components.AppMenuButton
+import ir.roozban.core.designsystem.components.AssistantAction
 import ir.roozban.core.calendar.PersianDigits
 import ir.roozban.core.designsystem.components.AppCard
 import ir.roozban.core.designsystem.theme.priorityColor
@@ -82,7 +84,6 @@ internal fun TaskListRoute(
     onOpenSettings: () -> Unit,
     projectId: String? = null,
     onBack: (() -> Unit)? = null,
-    onOpenAssistant: (() -> Unit)? = null,
     onOpenVoiceModels: (() -> Unit)? = null,
     onOpenPlanner: (() -> Unit)? = null,
     viewModel: TaskListViewModel = hiltViewModel(),
@@ -124,7 +125,6 @@ internal fun TaskListRoute(
         onOpen = { editingId = it },
         onOpenSettings = onOpenSettings,
         onBack = onBack,
-        onOpenAssistant = onOpenAssistant,
         onOpenPlanner = onOpenPlanner,
     )
 
@@ -163,7 +163,6 @@ internal fun TaskListScreen(
     onOpen: (String) -> Unit,
     onOpenSettings: () -> Unit,
     onBack: (() -> Unit)? = null,
-    onOpenAssistant: (() -> Unit)? = null,
     onOpenPlanner: (() -> Unit)? = null,
 ) {
     Scaffold(
@@ -185,6 +184,8 @@ internal fun TaskListScreen(
                         IconButton(onClick = onBack) {
                             Icon(painterResource(DsR.drawable.ic_arrow_back), stringResource(R.string.tasks_back))
                         }
+                    } else {
+                        AppMenuButton()
                     }
                 },
                 actions = {
@@ -193,11 +194,7 @@ internal fun TaskListScreen(
                             Icon(painterResource(DsR.drawable.ic_schedule), stringResource(R.string.tasks_planner), tint = Roozban.colors.success.color)
                         }
                     }
-                    if (onOpenAssistant != null) {
-                        IconButton(onClick = onOpenAssistant) {
-                            Icon(painterResource(DsR.drawable.ic_assistant), stringResource(R.string.tasks_assistant), tint = Roozban.colors.focus.color)
-                        }
-                    }
+                    AssistantAction()
                     IconButton(onClick = onOpenSettings) {
                         Icon(painterResource(DsR.drawable.ic_settings), stringResource(R.string.tasks_settings))
                     }

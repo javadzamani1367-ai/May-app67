@@ -1,5 +1,7 @@
 package ir.roozban.app.navigation
 
+import ir.roozban.core.designsystem.components.AppMenuButton
+import ir.roozban.core.designsystem.components.AssistantAction
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -54,7 +56,13 @@ internal fun MoreScreen(
     val primary = Role(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary, MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = { RoozbanTopBar(title = { Text(stringResource(R.string.more_title)) }) },
+        topBar = {
+            RoozbanTopBar(
+                title = { Text(stringResource(R.string.more_title)) },
+                navigationIcon = { AppMenuButton() },
+                actions = { AssistantAction() },
+            )
+        },
     ) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),

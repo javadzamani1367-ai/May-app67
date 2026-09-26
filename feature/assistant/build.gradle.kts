@@ -11,6 +11,7 @@ dependencies {
     implementation(projects.core.calendar)
     implementation(projects.ai.tools)
     implementation(projects.ai.runtime)
+    implementation(projects.ai.tts)
     implementation(projects.feature.voice)
     implementation(libs.androidx.activity.compose)
     testImplementation(projects.core.testing)

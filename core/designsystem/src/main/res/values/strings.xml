@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ds_assistant">دستیار هوشمند</string>
+    <string name="ds_menu">منو</string>
+    <string name="ds_tools">ابزارهای کاربردی</string>
+    <string name="ds_settings">تنظیمات</string>
+</resources>

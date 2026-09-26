@@ -29,6 +29,7 @@ dependencies {
     api(projects.ai.core)
     api(projects.ai.models)
     implementation(projects.core.common)
+    implementation(projects.core.domain)
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
 }

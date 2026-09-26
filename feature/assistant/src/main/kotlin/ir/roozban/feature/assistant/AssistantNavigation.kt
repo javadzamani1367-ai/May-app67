@@ -10,7 +10,11 @@ data object AssistantRoute
 @Serializable
 data object AssistantModelsRoute
 
-fun NavGraphBuilder.assistantScreens(onOpenModels: () -> Unit, onBack: () -> Unit) {
-    composable<AssistantRoute> { AssistantScreen(onBack = onBack, onOpenModels = onOpenModels) }
+@Serializable
+data object AssistantVoicesRoute
+
+fun NavGraphBuilder.assistantScreens(onOpenModels: () -> Unit, onOpenVoices: () -> Unit, onBack: () -> Unit) {
+    composable<AssistantRoute> { AssistantScreen(onBack = onBack, onOpenModels = onOpenModels, onOpenVoices = onOpenVoices) }
     composable<AssistantModelsRoute> { ModelsScreen(onBack = onBack) }
+    composable<AssistantVoicesRoute> { VoicesScreen(onBack = onBack) }
 }

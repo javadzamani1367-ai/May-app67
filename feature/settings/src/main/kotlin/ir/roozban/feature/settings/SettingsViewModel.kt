@@ -1,5 +1,6 @@
 package ir.roozban.feature.settings
 
+import ir.roozban.core.domain.DownloadSettings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,8 +31,14 @@ class SettingsViewModel @Inject constructor(
     private val reminders: ReminderSync,
     private val backup: BackupService,
     private val images: BackgroundImageStore,
+    private val downloads: DownloadSettings,
     private val clock: java.time.Clock,
 ) : ViewModel() {
+
+    /** Model and voice downloads: true = only on Wi-Fi, false = also on mobile data. */
+    val wifiOnly: StateFlow<Boolean> = downloads.wifiOnly
+
+    fun setWifiOnly(value: Boolean) = downloads.setWifiOnly(value)
 
     val settings: StateFlow<UserSettings?> =
         repository.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)

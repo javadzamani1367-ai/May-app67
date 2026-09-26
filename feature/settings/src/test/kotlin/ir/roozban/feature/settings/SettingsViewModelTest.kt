@@ -61,7 +61,7 @@ class SettingsViewModelTest {
 
     @Test
     fun `hours are clamped to sensible ranges`() = runTest {
-        val vm = SettingsViewModel(settings, sync, NoBackup, NoImages, clock)
+        val vm = SettingsViewModel(settings, sync, NoBackup, NoImages, NoDownloads, clock)
         repeat(10) { vm.adjustHour(DayPart.EVENING, +1) }
         assertThat(settings.current().eveningHour).isEqualTo(19)
         repeat(10) { vm.adjustHour(DayPart.MORNING, -1) }
@@ -70,7 +70,7 @@ class SettingsViewModelTest {
 
     @Test
     fun `default reminder kind keeps its offset`() = runTest {
-        val vm = SettingsViewModel(settings, sync, NoBackup, NoImages, clock)
+        val vm = SettingsViewModel(settings, sync, NoBackup, NoImages, NoDownloads, clock)
         vm.setDefaultReminderOffset(15)
         vm.setDefaultReminderKind(ReminderKind.ALARM)
         assertThat(settings.current().defaultReminder).isEqualTo(ReminderSetting(ReminderKind.ALARM, 15))
@@ -90,13 +90,13 @@ class SettingsViewModelTest {
         )
         tasks.upsert(task)
         sync.sync(task)
-        SettingsViewModel(settings, sync, NoBackup, NoImages, clock).setAllDayReminder(LocalTime.of(7, 30))
+        SettingsViewModel(settings, sync, NoBackup, NoImages, NoDownloads, clock).setAllDayReminder(LocalTime.of(7, 30))
         assertThat(scheduler.scheduled["t"]?.second).isEqualTo(jalali("1405-07-04").atTime(7, 30))
     }
 
     @Test
     fun `hijri offset is limited to two days`() = runTest {
-        val vm = SettingsViewModel(settings, sync, NoBackup, NoImages, clock)
+        val vm = SettingsViewModel(settings, sync, NoBackup, NoImages, NoDownloads, clock)
         repeat(5) { vm.adjustHijriOffset(+1) }
         assertThat(settings.current().hijriOffset).isEqualTo(2)
         vm.setShowHijri(false)
@@ -105,7 +105,7 @@ class SettingsViewModelTest {
 
     @Test
     fun `appearance choices are stored`() = runTest {
-        val vm = SettingsViewModel(settings, sync, NoBackup, NoImages, clock)
+        val vm = SettingsViewModel(settings, sync, NoBackup, NoImages, NoDownloads, clock)
         vm.setThemeMode(ThemeMode.DARK)
         vm.setPalette(ThemePalette.ROSE)
         vm.setBackgroundPreset("dawn")
@@ -125,5 +125,13 @@ class SettingsViewModelTest {
         vm.setEventSound("")
         assertThat(settings.current().habitSound).isEqualTo("content://media/internal/audio/media/7")
         assertThat(settings.current().eventSound).isEqualTo("")
+    }
+}
+
+private object NoDownloads : ir.roozban.core.domain.DownloadSettings {
+    override val wifiOnly = kotlinx.coroutines.flow.MutableStateFlow(false)
+
+    override fun setWifiOnly(value: Boolean) {
+        wifiOnly.value = value
     }
 }

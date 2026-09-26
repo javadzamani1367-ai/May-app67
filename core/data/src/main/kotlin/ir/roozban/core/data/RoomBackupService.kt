@@ -5,6 +5,7 @@ import ir.roozban.core.backup.BackupCompletion
 import ir.roozban.core.backup.BackupData
 import ir.roozban.core.backup.BackupEvent
 import ir.roozban.core.backup.BackupFact
+import ir.roozban.core.backup.BackupNote
 import ir.roozban.core.backup.BackupFocusSession
 import ir.roozban.core.backup.BackupHabit
 import ir.roozban.core.backup.BackupHabitLog
@@ -23,6 +24,7 @@ import ir.roozban.core.database.HabitEntity
 import ir.roozban.core.database.PersonalEventEntity
 import ir.roozban.core.database.HabitLogEntity
 import ir.roozban.core.database.MemoryFactEntity
+import ir.roozban.core.database.NoteEntity
 import ir.roozban.core.database.LabelEntity
 import ir.roozban.core.database.ProjectEntity
 import ir.roozban.core.database.TaskEntity
@@ -79,7 +81,12 @@ class RoomBackupService @Inject constructor(
                 RestoreMode.MERGE -> BackupMerger.merge(snapshot(), incoming)
             }
             write(result)
-            if (mode == RestoreMode.REPLACE) result.settings?.let { s -> settings.update { s.toModel() } }
+            // Sounds and voices are files and downloads of this phone: they stay as they are.
+            if (mode == RestoreMode.REPLACE) {
+                result.settings?.let { s ->
+                    settings.update { current -> s.toModel().copy(habitSound = current.habitSound, eventSound = current.eventSound, speech = current.speech) }
+                }
+            }
             reminders.syncAll()
             routines.syncAll()
             eventReminders.syncAll()
@@ -112,6 +119,7 @@ class RoomBackupService @Inject constructor(
                     it.remindDays, it.reminderMinute, it.notes, it.createdAt, it.updatedAt,
                 )
             },
+            notes = dao.notes().map { BackupNote(it.id, it.title, it.body, it.createdAt, it.updatedAt) },
             memory = dao.memoryFacts().map {
                 BackupFact(it.id, it.key, it.text, it.source, it.confidence, it.pinned, it.createdAt, it.updatedAt)
             },
@@ -142,6 +150,7 @@ class RoomBackupService @Inject constructor(
                     it.remindDays, it.reminderMinute.coerceIn(0, 24 * 60 - 1), it.notes, it.createdAt, it.updatedAt,
                 )
             },
+            notes = data.notes?.map { NoteEntity(it.id, it.title, it.body, it.createdAt, it.updatedAt) },
             memoryFacts = data.memory?.map {
                 MemoryFactEntity(it.id, it.key, it.text, it.source, it.confidence.coerceIn(0f, 1f), it.pinned, it.createdAt, it.updatedAt)
             },
