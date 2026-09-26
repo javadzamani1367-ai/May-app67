@@ -9,7 +9,6 @@ import android.media.AudioTrack
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
-import android.speech.tts.Voice
 import android.util.Log
 import com.k2fsa.sherpa.onnx.OfflineTts
 import com.k2fsa.sherpa.onnx.OfflineTtsConfig
@@ -246,7 +245,7 @@ class SpeechOutput @Inject constructor(
     private suspend fun systemEngine(): TextToSpeech? {
         system?.let { return it }
         return withContext(Dispatchers.Main) {
-            system ?: suspendCancellableCoroutine { cont ->
+            system ?: suspendCancellableCoroutine<TextToSpeech?> { cont ->
                 var engine: TextToSpeech? = null
                 engine = TextToSpeech(context.applicationContext) { status ->
                     if (status == TextToSpeech.SUCCESS) {
