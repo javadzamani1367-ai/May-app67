@@ -133,6 +133,10 @@ interface ReportDao {
     )
     fun recentVisits(limit: Int): Flow<List<ReportEntity>>
 
+    /** Every case with a recorded position, for the map of cases. */
+    @Query("SELECT * FROM reports WHERE latitude IS NOT NULL AND longitude IS NOT NULL ORDER BY updated_at DESC")
+    fun observeLocated(): Flow<List<ReportEntity>>
+
     /** Device count per case, so a case card can say what was found there. */
     @Query("SELECT report_id AS bucket, COUNT(*) AS total FROM devices GROUP BY report_id")
     fun deviceCounts(): Flow<List<TextBucket>>

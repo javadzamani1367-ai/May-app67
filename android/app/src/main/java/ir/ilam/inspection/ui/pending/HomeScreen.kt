@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FactCheck
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -50,7 +51,8 @@ fun HomeScreen(
     onContinueVisit: (String) -> Unit,
     onSettings: () -> Unit,
     onStats: () -> Unit,
-    onApprovals: () -> Unit
+    onApprovals: () -> Unit,
+    onMap: () -> Unit
 ) {
     val container = LocalContext.current.container
     val lists: CaseListViewModel = viewModel(
@@ -98,6 +100,7 @@ fun HomeScreen(
                         badge = summary.counts.awaitingApproval.toInt()
                     )
                 }
+                HeaderAction(Icons.Filled.Map, stringResource(R.string.cases_map_title), onMap)
                 HeaderAction(Icons.Filled.QueryStats, stringResource(R.string.nav_stats), onStats)
                 HeaderAction(Icons.Filled.Settings, stringResource(R.string.nav_settings), onSettings)
             }

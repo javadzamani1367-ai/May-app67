@@ -226,4 +226,18 @@
     <string name="lock_role_manager">نسخه مدیر</string>
     <string name="users_subtitle">کارشناسان، کد دستگاه و درخواست‌های ثبت</string>
     <string name="approval_subtitle">%1$s پرونده منتظر تصمیم شما</string>
+
+    <!-- نقشه پرونده‌ها -->
+    <string name="cases_map_title">نقشه پرونده‌ها</string>
+    <string name="cases_map_subtitle">%1$s پرونده با موقعیت ثبت‌شده</string>
+    <string name="cases_map_open">باز کردن پرونده</string>
+    <string name="cases_map_hint">روی هر نقطه بزنید تا پرونده‌اش را ببینید</string>
+    <string name="cases_map_empty">هنوز پرونده‌ای با موقعیت ثبت‌شده وجود ندارد</string>
+
+    <!-- فرم رسمی -->
+    <string name="form_summary">خلاصه یافته‌ها</string>
+    <string name="form_sign_expert">امضای کارشناس بازدیدکننده</string>
+    <string name="form_sign_attendee">امضای نماینده حاضر در محل</string>
+    <string name="form_sign_stamp">مهر و امضای واحد</string>
+    <string name="form_photo_count">تصاویر پیوست</string>
 </resources>

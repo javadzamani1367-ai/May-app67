@@ -18,6 +18,7 @@ import ir.ilam.inspection.util.TrackingCode
 class HtmlReportBuilder(private val context: Context, private val files: FileStore) {
 
     private val labels = ReportLabels(context)
+    private val frame = ReportFrameHtml(labels)
 
     /** [selectedMediaIds] null means every photo; used by selective dispatch. */
     fun build(
@@ -35,7 +36,8 @@ class HtmlReportBuilder(private val context: Context, private val files: FileSto
             append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">")
             append(style())
             append("</head><body>")
-            append(header(detail))
+            append(frame.letterhead(detail))
+            append(frame.summary(detail, photos.size))
             append(section(R.string.form_section_1, rows(caseRows(detail))))
             append(section(R.string.form_section_2, rows(locationRows(detail))))
             append(section(R.string.form_section_3, rows(ownerRows(detail))))
@@ -43,6 +45,7 @@ class HtmlReportBuilder(private val context: Context, private val files: FileSto
             append(section(R.string.form_section_5, deviceTable(detail)))
             append(section(R.string.form_section_6, attendeeTable(detail)))
             append(section(R.string.form_section_7, narrative(detail, attachments, dispatchNote)))
+            append(frame.signatures())
             if (photos.isNotEmpty()) append(photoAppendix(detail, photos))
             append("</body></html>")
         }
@@ -61,34 +64,19 @@ class HtmlReportBuilder(private val context: Context, private val files: FileSto
             @page { size: A4; margin: 14mm 12mm; }
             body { font-family: 'Vazirmatn', 'Tahoma', sans-serif; direction: rtl; text-align: right;
                    color: #17202a; font-size: 11pt; line-height: 1.9; }
-            h1 { font-size: 15pt; margin: 0; text-align: center; }
-            h2 { font-size: 12pt; margin: 0 0 4px; text-align: center; color: #444; }
-            h3 { font-size: 12pt; background: #eef3f5; border-right: 4px solid #00695c;
+            h3 { font-size: 11.5pt; background: #EEF3FA; border-right: 4px solid #0B1F3A; color: #0B1F3A;
                  padding: 4px 8px; margin: 14px 0 6px; }
             table { width: 100%; border-collapse: collapse; }
-            td, th { border: 1px solid #b9c2c7; padding: 4px 6px; vertical-align: top; }
-            th { background: #f2f5f7; font-weight: bold; }
-            td.label { background: #f7f9fa; width: 24%; color: #333; }
-            .header { border-bottom: 2px solid #00695c; padding-bottom: 6px; margin-bottom: 10px; }
-            .code { text-align: center; font-size: 14pt; font-weight: bold; letter-spacing: 1px; }
+            td, th { border: 1px solid #C9D3E0; padding: 4px 6px; vertical-align: top; }
+            th { background: #DCE6F5; color: #0B1F3A; font-weight: bold; }
+            td.label { background: #F4F7FB; width: 26%; color: #33415C; }
             .narrative { min-height: 60px; white-space: pre-wrap; }
-            .sign { margin-top: 26px; text-align: left; }
             .photo { page-break-inside: avoid; margin-bottom: 12px; }
-            .photo img { width: 100%; max-height: 105mm; object-fit: contain; border: 1px solid #b9c2c7; }
+            .photo img { width: 100%; max-height: 105mm; object-fit: contain; border: 1px solid #C9D3E0; }
             .photo .caption { font-size: 9pt; color: #333; padding-top: 2px; }
             .appendix { page-break-before: always; }
+            ${frame.css}
             </style>
-        """.trimIndent()
-    }
-
-    private fun header(detail: ReportDetail): String {
-        val code = TrackingCode.forDisplay(detail.report.displayCode)
-        return """
-            <div class="header">
-              <h2>${text(R.string.form_org)}</h2>
-              <h1>${text(R.string.form_title)}</h1>
-              <div class="code">${escape(code)}</div>
-            </div>
         """.trimIndent()
     }
 

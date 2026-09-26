@@ -183,7 +183,9 @@ if (UserRole.isManager) { /* صف تأیید، مدیریت کاربران، گ�
 | `ChildEntities.kt` | `devices`، `attendees`، `media`، `attachments`، `dispatches`، `settings` |
 | `SnippetEntity.kt` | متن‌های ذخیره‌شده پشت ستاره (فقط روی همین گوشی) |
 | `UserEntity.kt` | دفتر کاربران مدیر |
-| `ReportDao.kt` | پرس‌وجوهای پرونده، از جمله فیلترهای گزارش‌گیری |
+| `ServerSyncEntity.kt` | آخرین ارسال هر پرونده به سرور (فقط روی گوشی) |
+| `LocationFixEntity.kt` | زمان و منبع ثبت موقعیت هر پرونده (فقط روی گوشی) |
+| `ReportDao.kt` | پرس‌وجوهای پرونده، فیلترهای گزارش‌گیری، و شمارنده‌های داشبورد در یک پرس‌وجو |
 | `ChildDaos.kt` | DAO هر جدول فرزند |
 
 **منطق دامنه — `data/model/`** (اینجا تست‌پذیر است و اندروید نمی‌شناسد)
@@ -198,6 +200,8 @@ if (UserRole.isManager) { /* صف تأیید، مدیریت کاربران، گ�
 | `UnitPerformance.kt` | حساب‌وکتاب گزارش عملکرد واحدها |
 | `MediaCaptions.kt` | شرح‌های استاندارد تصاویر |
 | `UserRole.kt` | نقش، از روی flavor |
+| `Urgency.kt` | آستانه‌های «معطل» (۷ و ۱۵ روز) — کارت، نشان تب و داشبورد از همین می‌خوانند |
+| `LocationSource.kt` | منبع موقعیت: گیرنده، نقشه، ورود دستی |
 | `ReportDetail.kt` | پرونده + فرزندانش، همان چیزی که خروجی‌گیرها می‌گیرند |
 
 **ریپازیتوری — `data/repo/`**
@@ -217,7 +221,8 @@ if (UserRole.isManager) { /* صف تأیید، مدیریت کاربران، گ�
 
 | فایل | کار |
 |---|---|
-| `HtmlReportBuilder.kt` | فرم رسمی به HTML با فونت base64 جاسازی‌شده |
+| `HtmlReportBuilder.kt` | فرم رسمی به HTML با فونت base64 جاسازی‌شده — هفت بخش فرم |
+| `ReportFrameHtml.kt` | سربرگ سرمه‌ای، نوار مشخصات، خلاصه یافته‌ها و جای امضا و مهر |
 | `PdfExporter.kt` | HTML → WebView → PDF، با مسیر جایگزین پنجره چاپ سیستم |
 | `WordExporter.kt` + `WordDocumentXml.kt` | ساخت مستقیم `.docx` |
 | `ExcelExporter.kt` + `XlsxWriter.kt` | ساخت مستقیم `.xlsx` |
@@ -253,10 +258,27 @@ if (UserRole.isManager) { /* صف تأیید، مدیریت کاربران، گ�
 | `PowerCalc.kt` | توان هر فاز و مجموع |
 | `MediaProcessor.kt` | فشرده‌سازی و مهر تاریخ و مختصات روی تصویر |
 | `MediaImporter.kt`, `Thumbnails.kt` | ورود از گالری، بندانگشتی |
-| `LocationProvider.kt` | موقعیت، با جایگزین بومی بدون سرویس گوگل |
+| `LocationProvider.kt` | جریان پیوسته موقعیت از همه گیرنده‌ها، با جایگزین بومی بدون سرویس گوگل |
+| `LocationRefiner.kt` | دقیق‌سازی: نگه‌داشتن بهترین نمونه‌ها و میانگین وزنی — بدون اندروید، با تست |
 | `CryptoBox.kt` | رمزنگاری بسته `.cvz` |
 | `FileStore.kt` | مسیر فایل‌ها — **همیشه نسبی ذخیره می‌شود** |
 | `BiometricGate.kt`, `CrashReporter.kt`, `AppFonts.kt`, `MapConfig.kt` | ورود با اثر انگشت، ثبت خطا، فونت، نقشه |
+
+**رابط کاربری — `ui/`**
+
+| پوشه | کار |
+|---|---|
+| `theme/` | پالت (`Color.kt`)، رنگ معنایی (`Semantic.kt` — `Tone` و `Tavan.colors`)، تم روشن و تیره (`Theme.kt`)، انتخاب تم (`ThemePreference.kt`)، تایپوگرافی چهار وزن، شکل‌ها و فاصله‌ها |
+| `common/` | اجزای سیستم طراحی: `TavanTopBar` و `BrandMark`، `AppCard` و `SectionCard`، `StatusBadge` و `ToneIcon`، `KpiTile` و نمودارها، `PrimaryButton`/`SecondaryButton`/`BottomActionBar`، فیلدها و انتخاب‌ها |
+| `pending/` | داشبورد (`DashboardTab`, `DashboardCards`)، کارت پرونده، صف‌ها و ناوبری پایین |
+| `visit/` | گردش کار شش‌مرحله‌ای (`VisitSteps`, `WorkflowStepper`)، کارت موقعیت و نقشه، کارت دستگاه، گالری مستندات، دوربین، بررسی نهایی |
+| `archive/` | صفحه پرونده به شکل گزارش رسمی (`CaseSections`)، تأیید، پیوست‌ها، سوابق ارسال |
+| `map/` | نقشه همه پرونده‌های دارای موقعیت |
+| `dispatch/`, `stats/`, `performance/`, `settings/`, `lock/`, `users/`, `approvals/` | باقی صفحه‌ها، همه روی همان اجزا |
+
+قاعده: صفحه‌ها رنگ خام و دکمه Material خام نمی‌سازند. رنگ با `Tone` خواسته می‌شود
+(`Tavan.colors.of(Tone.WARNING)`)، دکمه‌ها `PrimaryButton`/`SecondaryButton` هستند و
+هر صفحه `TavanTopBar` دارد. این‌طور حالت تیره و روشن هر دو خودبه‌خود درست می‌مانند.
 
 یک فایل عمداً خارج از پکیج پروژه است:
 `android/app/src/main/java/android/print/PdfPrint.kt`. سازنده کلاس‌های callback

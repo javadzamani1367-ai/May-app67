@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import ir.ilam.inspection.ui.archive.CaseDetailScreen
 import ir.ilam.inspection.ui.dispatch.DispatchScreen
 import ir.ilam.inspection.ui.intake.IntakeScreen
+import ir.ilam.inspection.ui.map.CasesMapScreen
 import ir.ilam.inspection.ui.pending.HomeScreen
 import ir.ilam.inspection.ui.settings.SettingsScreen
 import ir.ilam.inspection.ui.approvals.ApprovalsScreen
@@ -30,6 +31,7 @@ object Routes {
     const val USERS = "users"
     const val APPROVALS = "approvals"
     const val PERFORMANCE = "performance"
+    const val MAP = "map"
 
     fun visit(id: String) = "visit/$id"
     fun detail(id: String) = "case/$id"
@@ -48,7 +50,16 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                 onContinueVisit = { navController.navigate(Routes.visit(it)) },
                 onSettings = { navController.navigate(Routes.SETTINGS) },
                 onApprovals = { navController.navigate(Routes.APPROVALS) },
-                onStats = { navController.navigate(Routes.STATS) }
+                onStats = { navController.navigate(Routes.STATS) },
+                onMap = { navController.navigate(Routes.MAP) }
+            )
+        }
+        composable(Routes.MAP) {
+            CasesMapScreen(
+                onBack = { navController.popBackStack() },
+                onOpenCase = { id, pending ->
+                    navController.navigate(if (pending) Routes.visit(id) else Routes.detail(id))
+                }
             )
         }
         composable(Routes.INTAKE) {

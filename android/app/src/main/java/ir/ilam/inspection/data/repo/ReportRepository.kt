@@ -272,6 +272,8 @@ class ReportRepository(
 
     fun recentVisits(limit: Int): Flow<List<ReportEntity>> = reports.recentVisits(limit)
 
+    fun observeLocated(): Flow<List<ReportEntity>> = reports.observeLocated()
+
     fun deviceCounts(): Flow<Map<String, Int>> = reports.deviceCounts().map { rows ->
         rows.associate { it.bucket to it.total }
     }
