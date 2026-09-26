@@ -78,7 +78,9 @@ fun MapPickerDialog(
     initialLatitude: Double?,
     initialLongitude: Double?,
     onDismiss: () -> Unit,
-    onConfirm: (Double, Double) -> Unit
+    onConfirm: (Double, Double) -> Unit,
+    /** False to show a recorded point rather than pick one: no pin, no confirm. */
+    pickable: Boolean = true
 ) {
     val context = LocalContext.current
     val provider = remember { LocationProvider(context) }
@@ -101,11 +103,17 @@ fun MapPickerDialog(
     var followPending by remember { mutableStateOf(!hasCase) }
 
     val dot = remember { DotOverlay(context, androidx.compose.ui.graphics.Color(0xFF2563EB)) }
+    val casePoint = remember {
+        DotOverlay(context, androidx.compose.ui.graphics.Color(0xFFDC2626)).apply {
+            if (!pickable && hasCase) point = GeoPoint(initialLatitude!!, initialLongitude!!)
+        }
+    }
     val map = remember {
         newMapView(context).apply {
             setMultiTouchControls(true)
             controller.setZoom(if (hasCase || quick != null) CLOSE_ZOOM else REGION_ZOOM)
             controller.setCenter(start)
+            overlays.add(casePoint)
             overlays.add(dot)
             addMapListener(object : MapListener {
                 override fun onScroll(event: ScrollEvent?): Boolean {
@@ -171,19 +179,21 @@ fun MapPickerDialog(
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             Column(modifier = Modifier.fillMaxSize()) {
                 TavanTopBar(
-                    title = stringResource(R.string.map_picker_title),
-                    subtitle = stringResource(R.string.map_picker_hint),
+                    title = stringResource(if (pickable) R.string.map_picker_title else R.string.map_view_title),
+                    subtitle = stringResource(if (pickable) R.string.map_picker_hint else R.string.map_view_hint),
                     onBack = onDismiss
                 )
                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                     AndroidView(factory = { map }, modifier = Modifier.fillMaxSize())
                     // The pin's tip, not its middle, marks the centre of the map.
-                    Icon(
-                        imageVector = Icons.Filled.Place,
-                        contentDescription = null,
-                        tint = Tavan.colors.danger.strong,
-                        modifier = Modifier.size(52.dp).align(Alignment.Center).offset(y = (-24).dp)
-                    )
+                    if (pickable) {
+                        Icon(
+                            imageVector = Icons.Filled.Place,
+                            contentDescription = null,
+                            tint = Tavan.colors.danger.strong,
+                            modifier = Modifier.size(52.dp).align(Alignment.Center).offset(y = (-24).dp)
+                        )
+                    }
                     MapControls(
                         locating = granted && me == null,
                         onZoomIn = { map.controller.zoomIn() },
@@ -193,86 +203,33 @@ fun MapPickerDialog(
                     )
                 }
                 BottomActionBar(
-                    note = { PickerReadout(centre, me) }
+                    note = {
+                        val target = if (pickable || !hasCase) centre else initialLatitude!! to initialLongitude!!
+                        PickerReadout(target, me)
+                    }
                 ) {
-                    SecondaryButton(
-                        text = stringResource(R.string.action_cancel),
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(0.8f)
-                    )
-                    PrimaryButton(
-                        text = stringResource(R.string.map_picker_confirm),
-                        onClick = { onConfirm(centre.first, centre.second) },
-                        icon = Icons.Filled.Check,
-                        modifier = Modifier.weight(1.2f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MapControls(
-    locating: Boolean,
-    onZoomIn: () -> Unit,
-    onZoomOut: () -> Unit,
-    onMyLocation: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        SmallFloatingActionButton(onClick = onZoomIn, containerColor = MaterialTheme.colorScheme.surface) {
-            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.map_zoom_in))
-        }
-        SmallFloatingActionButton(onClick = onZoomOut, containerColor = MaterialTheme.colorScheme.surface) {
-            Icon(Icons.Filled.Remove, contentDescription = stringResource(R.string.map_zoom_out))
-        }
-        FloatingActionButton(
-            onClick = onMyLocation,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = Tavan.colors.info.strong
-        ) {
-            if (locating) {
-                Box(contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(modifier = Modifier.size(34.dp), strokeWidth = 2.dp, color = Tavan.colors.info.strong)
-                    Icon(Icons.Filled.GpsNotFixed, contentDescription = stringResource(R.string.map_my_location))
-                }
-            } else {
-                Icon(Icons.Filled.MyLocation, contentDescription = stringResource(R.string.map_my_location))
-            }
-        }
-    }
-}
-
-@Composable
-private fun PickerReadout(centre: Pair<Double, Double>, me: Fix?) {
-    Column(modifier = Modifier.fillMaxWidth().padding(top = Spacing.xs)) {
-        Text(
-            text = formatCoordinates(centre.first, centre.second),
-            style = MaterialTheme.typography.titleSmall.copy(textDirection = TextDirection.Ltr),
-            modifier = Modifier.fillMaxWidth()
-        )
-        Row {
-            Text(
-                text = if (me == null) {
-                    stringResource(R.string.map_locating)
-                } else {
-                    stringResource(
-                        R.string.map_distance_to_you,
-                        PersianNumbers.toPersian(
-                            LocationRefiner.distanceMeters(me, Fix(centre.first, centre.second, 1.0)).toInt()
+                    if (pickable) {
+                        SecondaryButton(
+                            text = stringResource(R.string.action_cancel),
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(0.8f)
                         )
-                    )
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+                        PrimaryButton(
+                            text = stringResource(R.string.map_picker_confirm),
+                            onClick = { onConfirm(centre.first, centre.second) },
+                            icon = Icons.Filled.Check,
+                            modifier = Modifier.weight(1.2f)
+                        )
+                    } else {
+                        SecondaryButton(
+                            text = stringResource(R.string.action_close),
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
         }
-        Text(
-            text = stringResource(R.string.map_offline_hint),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.outline
-        )
     }
 }
 

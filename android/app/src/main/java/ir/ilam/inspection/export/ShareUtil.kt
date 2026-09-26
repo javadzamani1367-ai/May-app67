@@ -66,6 +66,16 @@ object ShareUtil {
         }.isSuccess
     }
 
+    /** Opens a file in whatever app the phone uses for its type — a video player, a PDF reader. */
+    fun view(context: Context, file: File): Boolean = runCatching {
+        val uri = FileProvider.getUriForFile(context, context.packageName + ".fileprovider", file)
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, mimeFor(file))
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+    }.isSuccess
+
     fun mimeFor(file: File): String = when (file.extension.lowercase()) {
         "pdf" -> "application/pdf"
         "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"

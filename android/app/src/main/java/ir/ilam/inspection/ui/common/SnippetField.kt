@@ -1,5 +1,6 @@
 package ir.ilam.inspection.ui.common
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.HorizontalDivider
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.ilam.inspection.R
 import ir.ilam.inspection.container
+import ir.ilam.inspection.ui.theme.Tavan
 import ir.ilam.inspection.data.db.SnippetEntity
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -69,39 +71,43 @@ fun SnippetField(
     var listOpen by remember { mutableStateOf(false) }
     val alreadySaved = saved.any { it.text == value.trim() }
 
-    Column(modifier = modifier.fillMaxWidth()) {
-        // Only the icons live above the box; the label stays where every other
-        // field in the app puts it, inside the field itself.
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.End
-        ) {
+    // The star and the list sit inside the field, at its end, where a phone
+    // user already looks for a field's own actions. Floating above it they
+    // read as belonging to whatever came before.
+    val actions: @Composable () -> Unit = {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(
                 onClick = { scope.launch { repository.save(fieldKey, value) } },
                 enabled = value.isNotBlank() && !alreadySaved
             ) {
                 Icon(
                     imageVector = if (alreadySaved) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                    contentDescription = stringResource(R.string.snippet_save)
+                    contentDescription = stringResource(R.string.snippet_save),
+                    tint = if (alreadySaved) Tavan.colors.warning.strong else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            IconButton(onClick = { listOpen = !listOpen }, enabled = saved.isNotEmpty()) {
-                Icon(
-                    imageVector = if (listOpen) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = stringResource(R.string.snippet_open)
-                )
+            if (saved.isNotEmpty()) {
+                IconButton(onClick = { listOpen = !listOpen }) {
+                    Icon(
+                        imageVector = if (listOpen) Icons.Filled.ExpandLess else Icons.AutoMirrored.Filled.List,
+                        contentDescription = stringResource(R.string.snippet_open),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
+    }
 
+    Column(modifier = modifier.fillMaxWidth()) {
         if (multiline) {
-            MultilineField(label = label, value = value, onValueChange = onValueChange)
+            MultilineField(label = label, value = value, onValueChange = onValueChange, trailingIcon = actions)
         } else {
             AppTextField(
                 label = label,
                 value = value,
                 onValueChange = onValueChange,
-                imeAction = imeAction
+                imeAction = imeAction,
+                trailingIcon = actions
             )
         }
 
@@ -127,7 +133,9 @@ private fun SavedPhrases(
     onDelete: (SnippetEntity) -> Unit
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = MaterialTheme.shapes.medium,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
     ) {
         Column(

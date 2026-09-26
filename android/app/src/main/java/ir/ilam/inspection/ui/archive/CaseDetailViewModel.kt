@@ -36,6 +36,10 @@ class CaseDetailViewModel(
         container.reportRepository.observeDispatches(reportId)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** How and when the position was recorded, for the location section. */
+    val locationFix = container.database.locationFixDao().observe(reportId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
     private val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
 

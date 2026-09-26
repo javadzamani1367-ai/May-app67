@@ -86,4 +86,99 @@
     <string name="map_open_full">نمایش روی نقشه</string>
     <string name="section_site">مشخصات محل</string>
     <string name="section_site_hint">شهرستان و ناحیه، آدرس و شماره‌های اشتراک و پرونده</string>
+
+    <!-- بررسی فنی -->
+    <string name="section_supply">برق‌رسانی و اندازه‌گیری</string>
+    <string name="section_supply_hint">محل برداشت، نوع انشعاب و آمپر و ولتاژ هر فاز — توان خودکار محاسبه می‌شود</string>
+    <string name="section_meter_hint">تعرفه، نوع کنتور و چهار پرسش سلامت کنتور</string>
+    <string name="power_panel_title">توان محاسبه‌شده</string>
+    <string name="power_panel_hint">توان هر فاز = ولتاژ همان فاز × جریان همان فاز</string>
+    <string name="phase_label">فاز %1$s</string>
+    <string name="section_owner_hint">اطلاعات مالک یا متصرف محل؛ کد ملی با رقم کنترل بررسی می‌شود</string>
+
+    <!-- تجهیزات -->
+    <string name="devices_hint">هر ماینر با مدل، سریال و توان؛ سریال را با اسکن بارکد ثبت کنید تا اشتباه تایپی پیش نیاید</string>
+    <string name="device_new">افزودن دستگاه جدید</string>
+    <string name="device_unnamed">دستگاه بدون مدل</string>
+    <string name="device_count_label">تعداد دستگاه</string>
+    <string name="device_power_label">مجموع توان دستگاه‌ها</string>
+    <string name="device_serial_value">سریال: %1$s</string>
+    <string name="attendees_hint">نمایندگان شرکت برق، پلیس امنیت و سایر نهادهای حاضر در بازدید</string>
+    <string name="attendee_new">افزودن حاضر جدید</string>
+
+    <!-- مستندات تصویری -->
+    <string name="media_section_hint">عکس و فیلم با تاریخ، ساعت و مختصات روی هر تصویر؛ برای هر مورد شرح استاندارد انتخاب کنید</string>
+    <string name="media_photos_quota">تصاویر</string>
+    <string name="media_videos_quota">فیلم‌ها</string>
+    <string name="media_quota_value">%1$s از %2$s</string>
+    <string name="media_capture">دوربین</string>
+    <string name="media_video_badge">ویدیو</string>
+    <string name="media_detail_title">جزئیات مستند</string>
+    <string name="media_captured_at">زمان ثبت</string>
+    <string name="media_position">مختصات</string>
+    <string name="media_size">حجم</string>
+    <string name="media_size_value">%1$s کیلوبایت</string>
+    <string name="media_play">پخش فیلم</string>
+    <string name="media_open">باز کردن</string>
+    <string name="narrative_title">شرح بازدید و اقدامات</string>
+    <string name="narrative_hint">آنچه دیده شد و آنچه انجام شد؛ متن‌های پرتکرار را با ستاره ذخیره کنید</string>
+
+    <!-- گردش کار بازدید -->
+    <string name="step_location">محل و موقعیت</string>
+    <string name="step_technical">بررسی فنی و کشف</string>
+    <string name="step_devices">تجهیزات و حاضرین</string>
+    <string name="step_media">مستندات و تصاویر</string>
+    <string name="step_owner">مالک و تکمیل اطلاعات</string>
+    <string name="step_review">بررسی نهایی</string>
+    <string name="step_short_location">موقعیت</string>
+    <string name="step_short_technical">بررسی فنی</string>
+    <string name="step_short_devices">تجهیزات</string>
+    <string name="step_short_media">مستندات</string>
+    <string name="step_short_owner">تکمیل</string>
+    <string name="step_short_review">بررسی</string>
+    <string name="visit_progress">مرحله %1$s از %2$s · ذخیره خودکار</string>
+    <string name="review_title">آمادگی برای پایان بازدید</string>
+    <string name="review_ready">همه موارد لازم تکمیل است. با «پایان بازدید» پرونده به «بازدید شده» می‌رود و گزارش رسمی آن آماده می‌شود.</string>
+    <string name="review_not_ready">برای پایان بازدید این موارد باید تکمیل شوند. روی هر مورد بزنید تا به همان مرحله بروید.</string>
+    <string name="review_item_gps">مختصات GIS</string>
+    <string name="review_item_measurement">اندازه‌گیری آمپر و ولتاژ</string>
+    <string name="review_item_photo">حداقل یک تصویر</string>
+    <string name="review_item_description">شرح بازدید</string>
+    <string name="review_summary">خلاصه پرونده</string>
+    <string name="review_owner">مالک یا متصرف</string>
+    <string name="review_devices">دستگاه‌ها</string>
+    <string name="review_attendees">حاضرین</string>
+    <string name="review_media">تصاویر و فیلم‌ها</string>
+    <string name="review_power">توان محاسبه‌شده</string>
+    <string name="review_after">پس از پایان بازدید، گزارش رسمی، ارسال مدارک و پیوست‌ها از صفحه پرونده در دسترس است.</string>
+    <string name="review_count">%1$s مورد</string>
+
+    <!-- ثبت گزارش -->
+    <string name="intake_subtitle">پرونده ثبت و وارد صف «در دست اقدام» می‌شود</string>
+    <string name="intake_section_type">منبع گزارش</string>
+    <string name="intake_section_place">محل</string>
+    <string name="intake_section_more">اطلاعات تکمیلی</string>
+    <string name="intake_submit">ثبت و شروع بازدید</string>
+    <string name="intake_code_letter">حرف کد: %1$s</string>
+    <string name="intake_code_manual">کد از سامانه</string>
+    <string name="approval_decided_at">آخرین تغییر: %1$s</string>
+    <string name="approval_manager_hint">پس از بررسی پرونده، آن را تأیید کنید یا با نوشتن علت، برای اصلاح برگردانید.</string>
+    <string name="attachments_hint">لاگ ماینر، صورتجلسه، صورتحساب و نامه‌ها — حتی پس از بایگانی قابل افزودن است</string>
+    <string name="attachment_new">افزودن مدرک جدید</string>
+    <string name="attachment_pick">انتخاب فایل و افزودن</string>
+    <string name="dispatch_history_hint">چه چیزی، کِی و به کدام واحد رفته و پاسخ آن چه بوده است</string>
+
+    <!-- صفحه پرونده -->
+    <string name="case_overview">خلاصه پرونده</string>
+    <string name="case_devices_tile">دستگاه‌ها</string>
+    <string name="case_device_power_tile">توان دستگاه‌ها</string>
+    <string name="case_measured_tile">توان اندازه‌گیری‌شده</string>
+    <string name="case_media_tile">مستندات</string>
+    <string name="case_findings">یافته‌ها</string>
+    <string name="case_media_title">پیوست تصاویر و فیلم‌ها</string>
+    <string name="case_continue_visit">ادامه بازدید</string>
+    <string name="case_expert_code">کد کارشناس</string>
+    <string name="map_view_title">موقعیت پرونده روی نقشه</string>
+    <string name="map_view_hint">نقطه قرمز محل ثبت‌شده پرونده است؛ نقطه آبی موقعیت فعلی شما</string>
+    <string name="action_close">بستن</string>
 </resources>

@@ -26,10 +26,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
 
-const val VISIT_STEP_COUNT = 5
+/** Every step of the workflow, the final review included. */
+val VISIT_STEP_COUNT = VisitStep.entries.size
 
 /**
- * The five step field wizard. Every edit is written straight to the database —
+ * The field workflow — location, technical, devices, media, owner, review. Every edit is written straight to the database —
  * an expert can be interrupted at any moment and must lose nothing.
  */
 class VisitViewModel(private val container: AppContainer, private val reportId: String) : ViewModel() {

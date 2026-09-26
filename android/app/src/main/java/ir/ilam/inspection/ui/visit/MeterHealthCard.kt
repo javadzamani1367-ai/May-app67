@@ -12,6 +12,7 @@ import ir.ilam.inspection.ui.common.ChoiceRow
 import ir.ilam.inspection.ui.common.YesNoRow
 import ir.ilam.inspection.ui.common.meterTypeLabel
 import ir.ilam.inspection.ui.common.tariffTypeLabel
+import ir.ilam.inspection.ui.theme.Tone
 
 /**
  * The tariff, the kind of meter, and the four questions that decide whether
@@ -26,7 +27,9 @@ fun MeterHealthCard(input: TechnicalInput, onChange: (TechnicalInput) -> Unit) {
             options = TariffType.entries.toList(),
             selected = input.tariffType,
             optionLabel = { tariffTypeLabel(it) },
-            onSelect = { onChange(input.copy(tariffType = it)) }
+            onSelect = { onChange(input.copy(tariffType = it)) },
+            // Taking power straight off the network is the finding itself.
+            toneOf = { if (it == TariffType.UNMETERED_ILLEGAL) Tone.DANGER else Tone.ACCENT }
         )
         ChoiceRow(
             label = stringResource(R.string.field_meter_type),
@@ -60,7 +63,10 @@ fun MeterHealthCard(input: TechnicalInput, onChange: (TechnicalInput) -> Unit) {
         YesNoRow(
             question = stringResource(R.string.question_tampered),
             answer = input.tampered,
-            onAnswer = { onChange(input.copy(tampered = it)) }
+            onAnswer = { onChange(input.copy(tampered = it)) },
+            // Here a "yes" is the finding and a "no" is the normal answer.
+            yesTone = Tone.DANGER,
+            noTone = Tone.SUCCESS
         )
     }
 }

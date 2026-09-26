@@ -212,3 +212,18 @@ fun EmptyState(
         }
     }
 }
+
+/** The form for adding one more, set apart from the list on a tinted panel. */
+@Composable
+fun AddPanel(title: String, content: @Composable () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier.fillMaxWidth().padding(top = Spacing.md)
+    ) {
+        Column(modifier = Modifier.padding(Spacing.md)) {
+            Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            content()
+        }
+    }
+}

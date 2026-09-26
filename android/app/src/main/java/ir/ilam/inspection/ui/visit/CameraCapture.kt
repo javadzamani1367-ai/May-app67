@@ -18,16 +18,12 @@ import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -76,8 +72,11 @@ fun CameraCapture(
     val executor = remember { Executors.newSingleThreadExecutor() }
     val previewView = remember { PreviewView(context) }
     val imageCapture = remember {
+        // Quality, not latency. The latency mode can fire before exposure has
+        // settled, and in a dim room that is a black frame — a photo that
+        // exists, counts towards the report, and shows nothing.
         ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
             .build()
     }
     val recorder = remember {
@@ -128,7 +127,7 @@ fun CameraCapture(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
             if (flashing) {
@@ -164,60 +163,46 @@ fun CameraCapture(
                 )
             }
         }
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Button(
-                onClick = {
-                    val target = photoTarget()
-                    imageCapture.takePicture(
-                        ImageCapture.OutputFileOptions.Builder(target).build(),
-                        executor,
-                        object : ImageCapture.OnImageSavedCallback {
-                            override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                                onPhoto(target)
-                                previewView.post {
-                                    taken += 1
-                                    flashes += 1
-                                }
+        CaptureControls(
+            canTakePhoto = !recordingActive && canTakePhoto,
+            canRecord = recordingActive || canRecordVideo,
+            recording = recordingActive,
+            onShutter = {
+                val target = photoTarget()
+                imageCapture.takePicture(
+                    ImageCapture.OutputFileOptions.Builder(target).build(),
+                    executor,
+                    object : ImageCapture.OnImageSavedCallback {
+                        override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                            onPhoto(target)
+                            previewView.post {
+                                taken += 1
+                                flashes += 1
                             }
+                        }
 
-                            override fun onError(exception: ImageCaptureException) {
-                                Log.e(TAG, "photo capture failed", exception)
-                            }
+                        override fun onError(exception: ImageCaptureException) {
+                            Log.e(TAG, "photo capture failed", exception)
                         }
-                    )
-                },
-                enabled = !recordingActive && canTakePhoto,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(stringResource(R.string.media_take_photo))
-            }
-            Button(
-                onClick = {
-                    if (recordingActive) {
-                        recording?.stop()
-                        recording = null
-                        recordingActive = false
-                    } else {
-                        val target = videoTarget()
-                        recording = startRecording(context, videoCapture, target, executor) {
-                            recordingActive = false
-                            onVideo(target)
-                        }
-                        recordingActive = true
                     }
-                },
-                enabled = recordingActive || canRecordVideo,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(stringResource(R.string.media_record_video))
-            }
-            OutlinedButton(onClick = onClose, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.action_back))
-            }
-        }
+                )
+            },
+            onRecord = {
+                if (recordingActive) {
+                    recording?.stop()
+                    recording = null
+                    recordingActive = false
+                } else {
+                    val target = videoTarget()
+                    recording = startRecording(context, videoCapture, target, executor) {
+                        recordingActive = false
+                        onVideo(target)
+                    }
+                    recordingActive = true
+                }
+            },
+            onClose = onClose
+        )
     }
 }
 

@@ -1,13 +1,16 @@
 package ir.ilam.inspection.ui.archive
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,7 +25,16 @@ import ir.ilam.inspection.data.db.ReportEntity
 import ir.ilam.inspection.data.model.ApprovalState
 import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.ui.common.MultilineField
+import ir.ilam.inspection.ui.common.PrimaryButton
+import ir.ilam.inspection.ui.common.SecondaryButton
 import ir.ilam.inspection.ui.common.SectionCard
+import ir.ilam.inspection.ui.common.StatusBadge
+import ir.ilam.inspection.ui.common.approvalLabel
+import ir.ilam.inspection.ui.common.icon
+import ir.ilam.inspection.ui.common.tone
+import ir.ilam.inspection.ui.theme.Spacing
+import ir.ilam.inspection.ui.theme.Tavan
+import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.util.PersianDate
 
 /**
@@ -42,30 +54,30 @@ fun ApprovalCard(
     val state = ApprovalState.of(report.approvalState)
     var comment by remember(report.id) { mutableStateOf("") }
 
-    SectionCard(title = stringResource(R.string.approval_state_label)) {
+    SectionCard(
+        title = stringResource(R.string.approval_state_label),
+        icon = state.icon(),
+        tone = state.tone(),
+        subtitle = report.approvalAt?.let { stringResource(R.string.approval_decided_at, PersianDate.formatWithTime(it)) },
+        trailing = { StatusBadge(text = approvalLabel(state), tone = state.tone(), solid = state == ApprovalState.RETURNED) }
+    ) {
         Column {
-            Text(
-                text = stringResource(stateLabel(state)),
-                style = MaterialTheme.typography.bodyLarge,
-                color = when (state) {
-                    ApprovalState.RETURNED -> MaterialTheme.colorScheme.error
-                    ApprovalState.APPROVED -> MaterialTheme.colorScheme.primary
-                    else -> MaterialTheme.colorScheme.onSurface
-                }
-            )
-            report.approvalAt?.let {
-                Text(
-                    text = PersianDate.formatWithTime(it),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
             report.approvalComment?.takeIf { it.isNotBlank() }?.let {
-                Text(
-                    text = stringResource(R.string.approval_comment) + ": " + it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 6.dp)
-                )
+                val colors = Tavan.colors.of(if (state == ApprovalState.RETURNED) Tone.DANGER else Tone.NEUTRAL)
+                Surface(
+                    color = colors.container,
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.sm)
+                ) {
+                    Column(modifier = Modifier.padding(Spacing.md)) {
+                        Text(
+                            stringResource(R.string.approval_comment),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = colors.strong
+                        )
+                        Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onContainer)
+                    }
+                }
             }
 
             if (UserRole.isManager) {
@@ -87,6 +99,12 @@ private fun ManagerDecision(
     onCommentChange: (String) -> Unit,
     onDecide: (ApprovalState) -> Unit
 ) {
+    Text(
+        stringResource(R.string.approval_manager_hint),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(vertical = 4.dp)
+    )
     MultilineField(
         label = stringResource(R.string.approval_comment),
         value = comment,
@@ -96,14 +114,20 @@ private fun ManagerDecision(
         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Button(
+        PrimaryButton(
+            text = stringResource(R.string.approval_approve),
             onClick = { onDecide(ApprovalState.APPROVED) },
+            icon = Icons.Filled.Verified,
+            tone = Tone.SUCCESS,
             modifier = Modifier.weight(1f)
-        ) { Text(stringResource(R.string.approval_approve)) }
-        OutlinedButton(
+        )
+        SecondaryButton(
+            text = stringResource(R.string.approval_return),
             onClick = { onDecide(ApprovalState.RETURNED) },
+            icon = Icons.Filled.Replay,
+            tone = Tone.DANGER,
             modifier = Modifier.weight(1f)
-        ) { Text(stringResource(R.string.approval_return)) }
+        )
     }
 }
 
@@ -117,16 +141,11 @@ private fun ExpertActions(state: ApprovalState, onSubmit: () -> Unit) {
             modifier = Modifier.padding(top = 6.dp)
         )
         ApprovalState.APPROVED -> Unit
-        else -> Button(
+        else -> PrimaryButton(
+            text = stringResource(R.string.approval_submit),
             onClick = onSubmit,
+            icon = Icons.AutoMirrored.Filled.Send,
             modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
-        ) { Text(stringResource(R.string.approval_submit)) }
+        )
     }
-}
-
-private fun stateLabel(state: ApprovalState): Int = when (state) {
-    ApprovalState.DRAFT -> R.string.approval_state_draft
-    ApprovalState.PENDING -> R.string.approval_state_pending
-    ApprovalState.APPROVED -> R.string.approval_state_approved
-    ApprovalState.RETURNED -> R.string.approval_state_returned
 }

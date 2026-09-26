@@ -17,7 +17,7 @@ import androidx.compose.material.icons.filled.FactCheck
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PendingActions
 import androidx.compose.material.icons.filled.WarningAmber
-import androidx.compose.material.icons.outlined.Assignment
+import androidx.compose.material.icons.automirrored.outlined.Assignment
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -58,7 +58,7 @@ fun DashboardTab(
         EmptyState(
             title = stringResource(R.string.dashboard_empty_title),
             message = stringResource(R.string.dashboard_empty),
-            icon = Icons.Outlined.Assignment,
+            icon = Icons.AutoMirrored.Outlined.Assignment,
             modifier = modifier,
             action = {
                 PrimaryButton(

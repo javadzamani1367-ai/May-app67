@@ -57,7 +57,8 @@ fun AppTextField(
     imeAction: ImeAction = ImeAction.Next,
     /** Addresses of servers, codes, anything in Latin script: typed and shown left to right. */
     ltr: Boolean = false,
-    leadingIcon: (@Composable () -> Unit)? = null
+    leadingIcon: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null
 ) {
     // The keyboard's action key has to actually do something: without these
     // handlers "next" looks broken, because nothing moves.
@@ -74,6 +75,7 @@ fun AppTextField(
         supportingText = error?.let { { Text(it) } },
         textStyle = if (ltr) textStyle.copy(textDirection = TextDirection.Ltr) else textStyle,
         leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
         shape = MaterialTheme.shapes.medium,
         colors = appFieldColors(),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
@@ -116,7 +118,8 @@ fun MultilineField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    error: String? = null
+    error: String? = null,
+    trailingIcon: (@Composable () -> Unit)? = null
 ) {
     AppTextField(
         label = label,
@@ -126,7 +129,8 @@ fun MultilineField(
         singleLine = false,
         minLines = 4,
         error = error,
-        imeAction = ImeAction.Default
+        imeAction = ImeAction.Default,
+        trailingIcon = trailingIcon
     )
 }
 

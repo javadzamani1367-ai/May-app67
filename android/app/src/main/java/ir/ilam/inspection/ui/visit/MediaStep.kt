@@ -10,9 +10,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,7 +37,12 @@ import ir.ilam.inspection.data.model.MediaCaptions
 import ir.ilam.inspection.data.model.MediaType
 import ir.ilam.inspection.data.model.ReportDetail
 import ir.ilam.inspection.ui.common.AutoSave
+import ir.ilam.inspection.ui.common.PrimaryButton
+import ir.ilam.inspection.ui.common.SecondaryButton
 import ir.ilam.inspection.ui.common.SectionCard
+import ir.ilam.inspection.ui.common.ToneProgress
+import ir.ilam.inspection.ui.theme.Spacing
+import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.util.PersianNumbers
 import ir.ilam.inspection.data.repo.SnippetFields
 import ir.ilam.inspection.ui.common.SnippetField
@@ -50,6 +58,7 @@ fun MediaStep(detail: ReportDetail, viewModel: VisitViewModel) {
 
     var capturing by rememberSaveable { mutableStateOf(false) }
     var notice by remember { mutableStateOf<String?>(null) }
+    var opened by rememberSaveable { mutableStateOf<String?>(null) }
 
     val photos = detail.media.filter { it.type == MediaType.IMAGE.code }
     val videos = detail.media.filter { it.type == MediaType.VIDEO.code }
@@ -106,24 +115,27 @@ fun MediaStep(detail: ReportDetail, viewModel: VisitViewModel) {
         }
     }
 
-    SectionCard(title = stringResource(R.string.media_title)) {
+    SectionCard(
+        title = stringResource(R.string.media_title),
+        subtitle = stringResource(R.string.media_section_hint),
+        icon = Icons.Filled.PhotoLibrary,
+        tone = Tone.INFO
+    ) {
         Column {
-            Text(
-                text = stringResource(
-                    R.string.media_photos_count,
-                    PersianNumbers.toPersian(photos.size),
-                    PersianNumbers.toPersian(MediaCaptions.MAX_PHOTOS)
-                ),
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = stringResource(
-                    R.string.media_videos_count,
-                    PersianNumbers.toPersian(videos.size),
-                    PersianNumbers.toPersian(MediaCaptions.MAX_VIDEOS)
-                ),
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.md), modifier = Modifier.padding(vertical = 6.dp)) {
+                Quota(
+                    label = stringResource(R.string.media_photos_quota),
+                    used = photos.size,
+                    limit = MediaCaptions.MAX_PHOTOS,
+                    modifier = Modifier.weight(1f)
+                )
+                Quota(
+                    label = stringResource(R.string.media_videos_quota),
+                    used = videos.size,
+                    limit = MediaCaptions.MAX_VIDEOS,
+                    modifier = Modifier.weight(1f)
+                )
+            }
             notice?.let {
                 Text(
                     text = it,
@@ -133,72 +145,87 @@ fun MediaStep(detail: ReportDetail, viewModel: VisitViewModel) {
                 )
             }
             if (photos.size >= MediaCaptions.MAX_PHOTOS) {
-                Text(
-                    text = photoLimit,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                Text(text = photoLimit, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
             if (videos.size >= MediaCaptions.MAX_VIDEOS) {
-                Text(
-                    text = videoLimit,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
+                Text(text = videoLimit, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                PrimaryButton(
+                    text = stringResource(R.string.media_capture),
+                    icon = Icons.Filled.PhotoCamera,
+                    onClick = {
+                        val granted = CAPTURE_PERMISSIONS.all {
+                            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+                        }
+                        if (granted) capturing = true else permissionLauncher.launch(CAPTURE_PERMISSIONS)
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+                SecondaryButton(
+                    text = stringResource(R.string.media_pick_gallery),
+                    icon = Icons.Filled.AddPhotoAlternate,
+                    onClick = {
+                        galleryPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
+                    },
+                    modifier = Modifier.weight(1f)
                 )
             }
 
-            detail.media.forEach { media ->
-                val standard = if (media.type == MediaType.VIDEO.code) videoCaptions else photoCaptions
-                val used = detail.media.filter { it.id != media.id }.map { it.caption }
-                MediaRow(
-                    media = media,
-                    files = appContainer.fileStore,
-                    standardCaptions = MediaCaptions.available(standard, used),
-                    onCaptionChange = { viewModel.setCaption(media, it) },
-                    onRemove = { viewModel.removeMedia(media) }
-                )
-            }
             if (detail.media.isEmpty()) {
                 Text(
                     text = stringResource(R.string.media_empty),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = {
-                        val granted = CAPTURE_PERMISSIONS.all {
-                            ContextCompat.checkSelfPermission(context, it) ==
-                                PackageManager.PERMISSION_GRANTED
-                        }
-                        if (granted) capturing = true else permissionLauncher.launch(CAPTURE_PERMISSIONS)
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(stringResource(R.string.media_take_photo))
-                }
-                OutlinedButton(
-                    onClick = {
-                        galleryPicker.launch(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageAndVideo
-                            )
-                        )
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(stringResource(R.string.media_pick_gallery))
-                }
+            } else {
+                MediaGrid(media = detail.media, files = appContainer.fileStore, onOpen = { opened = it.id })
             }
         }
     }
 
+    detail.media.firstOrNull { it.id == opened }?.let { media ->
+        val standard = if (media.type == MediaType.VIDEO.code) videoCaptions else photoCaptions
+        val used = detail.media.filter { it.id != media.id }.map { it.caption }
+        MediaDetailDialog(
+            media = media,
+            files = appContainer.fileStore,
+            standardCaptions = MediaCaptions.available(standard, used),
+            onCaptionChange = { viewModel.setCaption(media, it) },
+            onRemove = { viewModel.removeMedia(media) },
+            onDismiss = { opened = null }
+        )
+    }
+
     NarrativeSection(detail, viewModel)
+}
+
+/** How much of an allowance is used, as a bar that turns amber near the limit. */
+@Composable
+private fun Quota(label: String, used: Int, limit: Int, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Row {
+            Text(label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+            Text(
+                stringResource(R.string.media_quota_value, PersianNumbers.toPersian(used), PersianNumbers.toPersian(limit)),
+                style = MaterialTheme.typography.labelMedium
+            )
+        }
+        ToneProgress(
+            fraction = used.toFloat() / limit,
+            tone = when {
+                used >= limit -> Tone.DANGER
+                used >= limit - 1 -> Tone.WARNING
+                used > 0 -> Tone.SUCCESS
+                else -> Tone.NEUTRAL
+            },
+            modifier = Modifier.padding(top = 4.dp)
+        )
+    }
 }
 
 @Composable
@@ -211,7 +238,11 @@ private fun NarrativeSection(detail: ReportDetail, viewModel: VisitViewModel) {
         viewModel.setNarrative(description = description, actionsTaken = actions)
     }
 
-    SectionCard(title = stringResource(R.string.field_description)) {
+    SectionCard(
+        title = stringResource(R.string.narrative_title),
+        subtitle = stringResource(R.string.narrative_hint),
+        icon = Icons.Filled.Description
+    ) {
         Column {
             SnippetField(
                 label = stringResource(R.string.field_description),

@@ -4,9 +4,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -16,7 +20,12 @@ import ir.ilam.inspection.data.db.DispatchEntity
 import ir.ilam.inspection.data.model.DispatchChannel
 import ir.ilam.inspection.data.model.DispatchStatus
 import ir.ilam.inspection.data.model.DispatchUnit
+import ir.ilam.inspection.ui.common.StatusBadge
+import ir.ilam.inspection.ui.common.ToneIcon
 import ir.ilam.inspection.ui.common.dispatchUnitLabel
+import ir.ilam.inspection.ui.theme.Spacing
+import ir.ilam.inspection.ui.theme.Tavan
+import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.PersianNumbers
 import org.json.JSONArray
@@ -30,61 +39,65 @@ import org.json.JSONArray
 fun DispatchHistoryRow(dispatch: DispatchEntity, showDivider: Boolean) {
     val status = DispatchStatus.of(dispatch.status)
     val overdue = status.isOverdue(dispatch.deadlineAt)
+    val tone = when {
+        overdue -> Tone.DANGER
+        status == DispatchStatus.ANSWERED -> Tone.SUCCESS
+        status == DispatchStatus.SEEN -> Tone.ACCENT
+        else -> Tone.INFO
+    }
 
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-        if (showDivider) HorizontalDivider(modifier = Modifier.padding(bottom = 8.dp))
-
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = dispatchUnitLabel(DispatchUnit.of(dispatch.unit)),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                text = stringResource(
-                    if (overdue) R.string.dispatch_status_overdue else statusLabel(status)
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (overdue) {
-                    MaterialTheme.colorScheme.error
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                }
+        if (showDivider) {
+            HorizontalDivider(modifier = Modifier.padding(bottom = 10.dp), color = MaterialTheme.colorScheme.outlineVariant)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ToneIcon(icon = Icons.AutoMirrored.Filled.Send, tone = tone, size = 36.dp)
+            Column(modifier = Modifier.weight(1f).padding(horizontal = Spacing.md)) {
+                Text(
+                    text = dispatchUnitLabel(DispatchUnit.of(dispatch.unit)),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Text(
+                    text = listOfNotNull(
+                        PersianDate.formatWithTime(dispatch.dispatchedAt),
+                        stringResource(channelLabel(DispatchChannel.of(dispatch.channel))),
+                        stringResource(R.string.dispatch_item_count, itemCount(dispatch.includedItems))
+                    ).joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            StatusBadge(
+                text = stringResource(if (overdue) R.string.dispatch_status_overdue else statusLabel(status)),
+                tone = tone,
+                solid = overdue
             )
         }
-
-        Text(
-            text = listOfNotNull(
-                PersianDate.formatWithTime(dispatch.dispatchedAt),
-                stringResource(channelLabel(DispatchChannel.of(dispatch.channel))),
-                stringResource(R.string.dispatch_item_count, itemCount(dispatch.includedItems))
-            ).joinToString(" — "),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
 
         Text(
             text = stringResource(R.string.dispatch_deadline) + ": " + (
                 dispatch.deadlineAt?.let { PersianDate.format(it) }
                     ?: stringResource(R.string.dispatch_deadline_none)
                 ),
-            style = MaterialTheme.typography.bodySmall,
-            color = if (overdue) {
-                MaterialTheme.colorScheme.error
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            }
+            style = MaterialTheme.typography.labelSmall,
+            color = if (overdue) Tavan.colors.danger.strong else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 6.dp)
         )
-
         dispatch.note?.takeIf { it.isNotBlank() }?.let {
-            Text(text = it, style = MaterialTheme.typography.bodySmall)
+            Text(text = it, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 2.dp))
         }
         dispatch.answer?.takeIf { it.isNotBlank() }?.let { answer ->
-            Text(
-                text = stringResource(R.string.dispatch_answer) + ": " + answer,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 4.dp)
-            )
+            val success = Tavan.colors.success
+            Surface(
+                color = success.container,
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
+            ) {
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Text(stringResource(R.string.dispatch_answer), style = MaterialTheme.typography.labelMedium, color = success.strong)
+                    Text(answer, style = MaterialTheme.typography.bodyMedium, color = success.onContainer)
+                }
+            }
         }
     }
 }

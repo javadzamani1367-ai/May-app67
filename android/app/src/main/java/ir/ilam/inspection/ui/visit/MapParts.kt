@@ -6,6 +6,34 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.view.MotionEvent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.GpsNotFixed
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.dp
+import ir.ilam.inspection.R
+import ir.ilam.inspection.ui.theme.Spacing
+import ir.ilam.inspection.ui.theme.Tavan
+import ir.ilam.inspection.util.Fix
+import ir.ilam.inspection.util.LocationRefiner
+import ir.ilam.inspection.util.PersianNumbers
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -146,3 +174,68 @@ fun MiniMap(
 }
 
 private const val MINI_ZOOM = 17.0
+
+/** The zoom buttons and the my-location button, stacked at the map's corner. */
+@Composable
+fun MapControls(
+    locating: Boolean,
+    onZoomIn: () -> Unit,
+    onZoomOut: () -> Unit,
+    onMyLocation: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SmallFloatingActionButton(onClick = onZoomIn, containerColor = MaterialTheme.colorScheme.surface) {
+            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.map_zoom_in))
+        }
+        SmallFloatingActionButton(onClick = onZoomOut, containerColor = MaterialTheme.colorScheme.surface) {
+            Icon(Icons.Filled.Remove, contentDescription = stringResource(R.string.map_zoom_out))
+        }
+        FloatingActionButton(
+            onClick = onMyLocation,
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = Tavan.colors.info.strong
+        ) {
+            if (locating) {
+                Box(contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(modifier = Modifier.size(34.dp), strokeWidth = 2.dp, color = Tavan.colors.info.strong)
+                    Icon(Icons.Filled.GpsNotFixed, contentDescription = stringResource(R.string.map_my_location))
+                }
+            } else {
+                Icon(Icons.Filled.MyLocation, contentDescription = stringResource(R.string.map_my_location))
+            }
+        }
+    }
+}
+
+@Composable
+fun PickerReadout(centre: Pair<Double, Double>, me: Fix?) {
+    Column(modifier = Modifier.fillMaxWidth().padding(top = Spacing.xs)) {
+        Text(
+            text = formatCoordinates(centre.first, centre.second),
+            style = MaterialTheme.typography.titleSmall.copy(textDirection = TextDirection.Ltr),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Row {
+            Text(
+                text = if (me == null) {
+                    stringResource(R.string.map_locating)
+                } else {
+                    stringResource(
+                        R.string.map_distance_to_you,
+                        PersianNumbers.toPersian(
+                            LocationRefiner.distanceMeters(me, Fix(centre.first, centre.second, 1.0)).toInt()
+                        )
+                    )
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            text = stringResource(R.string.map_offline_hint),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.outline
+        )
+    }
+}

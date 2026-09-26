@@ -2,7 +2,10 @@ package ir.ilam.inspection.ui.common
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -15,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import ir.ilam.inspection.R
+import ir.ilam.inspection.ui.theme.Tavan
 
 /**
  * The only delete button in the app. Nothing an expert has recorded — a photo,
@@ -36,12 +40,17 @@ fun ConfirmDeleteButton(
     var asking by rememberSaveable { mutableStateOf(false) }
 
     IconButton(onClick = { asking = true }, modifier = modifier) {
-        Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.action_delete))
+        Icon(
+            Icons.Outlined.Delete,
+            contentDescription = stringResource(R.string.action_delete),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 
     if (asking) {
         AlertDialog(
             onDismissRequest = { asking = false },
+            icon = { Icon(Icons.Filled.Delete, contentDescription = null, tint = Tavan.colors.danger.strong) },
             title = { Text(stringResource(R.string.confirm_delete_title)) },
             text = {
                 Text(
@@ -57,7 +66,8 @@ fun ConfirmDeleteButton(
                     onClick = {
                         asking = false
                         onConfirm()
-                    }
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Tavan.colors.danger.strong)
                 ) {
                     Text(stringResource(R.string.answer_yes))
                 }
