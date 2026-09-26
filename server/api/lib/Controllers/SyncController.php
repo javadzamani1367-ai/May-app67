@@ -90,6 +90,7 @@ final class SyncController
         $this->replaceChildren('attachments', $report['attachments'] ?? [], (string) $report['id'], [
             'id', 'report_id', 'category', 'title', 'file_path', 'mime_type', 'added_at', 'note',
         ]);
+        $this->mergeDispatches($report['dispatches'] ?? [], (string) $report['id'], $user);
 
         Db::run(
             'INSERT INTO sync_log (device_code, user_id, last_seen_at, last_updated_at, report_count)
@@ -159,6 +160,80 @@ final class SyncController
         $report['media'] = Db::all('SELECT * FROM media WHERE report_id = ? ORDER BY captured_at', [$id]);
         $report['attachments'] = Db::all('SELECT * FROM attachments WHERE report_id = ? ORDER BY added_at', [$id]);
         Response::json(['report' => $report]);
+    }
+
+    /**
+     * ارسال‌هایی که گوشی به واحدها داشته است.
+     *
+     * تا پیش از این، گوشی این سطرها را همراه پرونده می‌فرستاد و سرور نادیده‌شان
+     * می‌گرفت. نتیجه‌اش دو چیز بود که هیچ‌کدام خطا نمی‌داد: گزارش عملکرد
+     * واحدها برای همیشه صفر بود، و صندوق واحد در پرتال هرگز چیزی دریافت
+     * نمی‌کرد.
+     *
+     * ادغام، نه جایگزینی: وضعیت «دیده‌شده»، زمان پاسخ و متن پاسخ را واحد
+     * مقصد روی همین سرور می‌نویسد و نسخه گوشی از آن‌ها خبر ندارد. جایگزین
+     * کردن یعنی هر بار که کارشناس پرونده را دوباره بفرستد، پاسخ واحد پاک شود.
+     */
+    private function mergeDispatches(array $rows, string $reportId, array $user): void
+    {
+        foreach ($rows as $row) {
+            if (!is_array($row) || empty($row['id']) || !isset($row['unit'])) {
+                continue;
+            }
+            $id = (string) $row['id'];
+            $deadline = isset($row['deadline_at']) ? (int) $row['deadline_at'] : null;
+            $note = isset($row['note']) ? (string) $row['note'] : null;
+
+            $known = Db::one('SELECT report_id FROM dispatches WHERE id = ?', [$id]);
+            if ($known !== null) {
+                // فقط آنچه گوشی مالکش است. سطری که به پرونده دیگری تعلق دارد
+                // دست نمی‌خورد.
+                Db::run(
+                    'UPDATE dispatches SET note = ?, deadline_at = ? WHERE id = ? AND report_id = ?',
+                    [$note, $deadline, $id, $reportId]
+                );
+                continue;
+            }
+
+            $items = $row['included_items'] ?? '[]';
+            $unit = (int) $row['unit'];
+            Db::run(
+                'INSERT INTO dispatches (id, report_id, unit, included_items, note, output_format,
+                                         dispatched_at, sent_by, channel, deadline_at, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    $id,
+                    $reportId,
+                    $unit,
+                    is_string($items) ? $items : json_encode($items, JSON_UNESCAPED_UNICODE),
+                    $note,
+                    (int) ($row['output_format'] ?? 0),
+                    (int) ($row['dispatched_at'] ?? Db::now()),
+                    $user['id'],
+                    (int) ($row['channel'] ?? 0),
+                    $deadline,
+                    DispatchController::SENT,
+                ]
+            );
+            Notifications::toUnit(
+                $unit,
+                'dispatch',
+                'مدارک جدید دریافت شد',
+                'پرونده ' . $this->codeOf($reportId) . ' برای واحد شما ارسال شد.',
+                $reportId
+            );
+        }
+    }
+
+    private function codeOf(string $reportId): string
+    {
+        $row = Db::one('SELECT tracking_code, temp_code FROM reports WHERE id = ?', [$reportId]);
+        foreach (['tracking_code', 'temp_code'] as $column) {
+            if (($row[$column] ?? '') !== '') {
+                return (string) $row[$column];
+            }
+        }
+        return $reportId;
     }
 
     /**

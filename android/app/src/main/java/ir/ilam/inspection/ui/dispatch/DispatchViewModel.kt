@@ -107,6 +107,15 @@ class DispatchViewModel(
                 deadlineDays = PersianNumbers.parseIntOrNull(current.deadlineDays)
             )
 
+            // Straight to the server, not at the next six-hourly sync: the
+            // unit's portal inbox and the performance report are both built
+            // from the server's copy, and a dispatch it does not hold is one
+            // the unit never sees. Best effort — offline, it goes with the
+            // next sync like any other change.
+            container.backgroundScope.launch {
+                runCatching { container.serverCaseSync.pushOne(reportId) }
+            }
+
             // The dispatch is already recorded above, so a hand-off that
             // cannot start is reported rather than hidden: the files are on
             // the phone and the expert can send them again from the case.

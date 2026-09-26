@@ -2,32 +2,28 @@ package ir.ilam.inspection.util
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Looper
+import android.os.SystemClock
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
-import com.google.android.gms.location.CurrentLocationRequest
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import kotlin.coroutines.resume
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withTimeoutOrNull
-
-/** A single fix with the accuracy the report has to record, and its source. */
-data class Fix(
-    val latitude: Double,
-    val longitude: Double,
-    val accuracy: Double,
-    val fromGoogle: Boolean = true
-)
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 
 /**
  * Location without a hard dependency on Google. The fused provider is used
- * where Play Services exists, because it is faster and more accurate; on the
- * phones that ship without it — common in this market — the platform's own
- * GPS and network providers answer instead, so a field expert is never left
- * unable to record a coordinate.
+ * where Play Services exists; the platform's own GPS always listens as well,
+ * because on the phones that ship without Google — common in this market — it
+ * is the only answer, and where both exist the raw GNSS fix is often the
+ * sharper of the two.
  */
 class LocationProvider(private val context: Context) {
 
@@ -36,97 +32,115 @@ class LocationProvider(private val context: Context) {
             .isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
     }.getOrDefault(false)
 
-    suspend fun currentFix(): Fix? =
-        (if (hasGooglePlayServices()) fusedFix() else null) ?: platformFix()
-
+    /**
+     * Every fix, from every source, for as long as it is collected.
+     *
+     * Collection is the switch: the receivers are released the moment the
+     * collector stops, so a screen that is closed never leaves the GPS running
+     * on a phone that has to last a whole day in the field.
+     *
+     * Fixes older than a few seconds are dropped. The fused provider likes to
+     * answer at once with whatever it had cached, and a cached fix from the
+     * road outside the village is exactly the twenty-metre error this exists
+     * to get rid of.
+     */
     @SuppressLint("MissingPermission")
-    private suspend fun fusedFix(): Fix? = suspendCancellableCoroutine { continuation ->
-        val request = CurrentLocationRequest.Builder()
-            .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
-            .setDurationMillis(TIMEOUT_MILLIS)
-            .setMaxUpdateAgeMillis(MAX_AGE_MILLIS)
-            .build()
-        var resumed = false
-        fun finish(fix: Fix?) {
-            if (!resumed && continuation.isActive) {
-                resumed = true
-                continuation.resume(fix)
+    fun fixes(): Flow<Fix> = callbackFlow {
+        val manager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+
+        fun fresh(location: Location): Boolean {
+            val ageNanos = SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos
+            return ageNanos in 0..MAX_AGE_NANOS
+        }
+
+        // Every method overridden, not a lambda: before Android 11 the other
+        // three were abstract in the platform's interface, and the platform
+        // calling one of them on a listener that lacks it is a crash.
+        val platformListener = object : LocationListener {
+            override fun onLocationChanged(location: Location) {
+                if (fresh(location)) {
+                    trySend(Fix(location.latitude, location.longitude, location.accuracy.toDouble(), false))
+                }
+            }
+
+            @Deprecated("Required on Android 10 and older")
+            override fun onStatusChanged(provider: String?, status: Int, extras: android.os.Bundle?) = Unit
+
+            override fun onProviderEnabled(provider: String) = Unit
+
+            override fun onProviderDisabled(provider: String) = Unit
+        }
+        val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
+            .filter { runCatching { manager?.isProviderEnabled(it) == true }.getOrDefault(false) }
+        providers.forEach { provider ->
+            runCatching {
+                manager?.requestLocationUpdates(provider, INTERVAL_MILLIS, 0f, platformListener, Looper.getMainLooper())
             }
         }
-        runCatching {
-            LocationServices.getFusedLocationProviderClient(context)
-                .getCurrentLocation(request, null)
-                .addOnSuccessListener { location ->
-                    finish(location?.let { Fix(it.latitude, it.longitude, it.accuracy.toDouble()) })
+
+        var fusedCallback: LocationCallback? = null
+        if (hasGooglePlayServices()) {
+            val callback = object : LocationCallback() {
+                override fun onLocationResult(result: LocationResult) {
+                    result.locations.filter(::fresh).forEach { location ->
+                        trySend(Fix(location.latitude, location.longitude, location.accuracy.toDouble(), true))
+                    }
                 }
-                .addOnFailureListener { finish(null) }
-        }.onFailure { finish(null) }
+            }
+            val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, INTERVAL_MILLIS)
+                .setMinUpdateIntervalMillis(INTERVAL_MILLIS / 2)
+                .setWaitForAccurateLocation(true)
+                .build()
+            runCatching {
+                LocationServices.getFusedLocationProviderClient(context)
+                    .requestLocationUpdates(request, callback, Looper.getMainLooper())
+                fusedCallback = callback
+            }
+        }
+
+        if (providers.isEmpty() && fusedCallback == null) {
+            // Location is switched off entirely. Closing tells the screen at
+            // once, instead of leaving it waiting for a fix that cannot come.
+            close()
+        }
+
+        awaitClose {
+            runCatching { manager?.removeUpdates(platformListener) }
+            fusedCallback?.let { callback ->
+                runCatching {
+                    LocationServices.getFusedLocationProviderClient(context).removeLocationUpdates(callback)
+                }
+            }
+        }
     }
 
     /**
-     * The platform path: the last known fix if it is recent, otherwise a single
-     * update from whichever provider answers first.
+     * Where the phone was a moment ago, without waiting for anything. Only for
+     * pointing the map somewhere sensible while a real fix is coming; never
+     * recorded in a report.
      */
     @SuppressLint("MissingPermission")
-    private suspend fun platformFix(): Fix? {
-        val manager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
-            ?: return null
-
-        lastKnown(manager)?.let { return it }
-
-        return withTimeoutOrNull(TIMEOUT_MILLIS) {
-            suspendCancellableCoroutine { continuation ->
-                var resumed = false
-                val listener = object : LocationListener {
-                    override fun onLocationChanged(location: android.location.Location) {
-                        if (!resumed && continuation.isActive) {
-                            resumed = true
-                            // Stop the GPS the moment the fix arrives: leaving
-                            // the listener attached would drain the battery of
-                            // a phone that spends the whole day in the field.
-                            runCatching { manager.removeUpdates(this) }
-                            continuation.resume(
-                                Fix(
-                                    location.latitude,
-                                    location.longitude,
-                                    location.accuracy.toDouble(),
-                                    fromGoogle = false
-                                )
-                            )
-                        }
-                    }
-                }
-
-                val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
-                    .filter { runCatching { manager.isProviderEnabled(it) }.getOrDefault(false) }
-                if (providers.isEmpty()) {
-                    continuation.resume(null)
-                    return@suspendCancellableCoroutine
-                }
-                providers.forEach { provider ->
-                    runCatching {
-                        manager.requestLocationUpdates(provider, 0L, 0f, listener, Looper.getMainLooper())
-                    }
-                }
-                continuation.invokeOnCancellation {
-                    runCatching { manager.removeUpdates(listener) }
-                }
-            }
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun lastKnown(manager: LocationManager): Fix? {
+    fun lastKnown(): Fix? {
+        val manager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return null
         val now = System.currentTimeMillis()
-        return listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
+        return listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER)
             .mapNotNull { provider -> runCatching { manager.getLastKnownLocation(provider) }.getOrNull() }
-            .filter { now - it.time <= MAX_AGE_MILLIS }
-            .maxByOrNull { it.time }
+            .filter { now - it.time <= LAST_KNOWN_MAX_AGE_MILLIS }
+            .minByOrNull { it.accuracy }
             ?.let { Fix(it.latitude, it.longitude, it.accuracy.toDouble(), fromGoogle = false) }
     }
 
+    fun isLocationEnabled(): Boolean {
+        val manager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return false
+        return runCatching {
+            manager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        }.getOrDefault(false)
+    }
+
     private companion object {
-        const val TIMEOUT_MILLIS = 20_000L
-        const val MAX_AGE_MILLIS = 30_000L
+        const val INTERVAL_MILLIS = 1_000L
+        const val MAX_AGE_NANOS = 10_000_000_000L
+        const val LAST_KNOWN_MAX_AGE_MILLIS = 10 * 60_000L
     }
 }

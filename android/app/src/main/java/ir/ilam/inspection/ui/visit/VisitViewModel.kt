@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.data.AppContainer
 import ir.ilam.inspection.data.db.AttendeeEntity
 import ir.ilam.inspection.data.db.DeviceEntity
+import ir.ilam.inspection.data.db.LocationFixEntity
 import ir.ilam.inspection.data.db.MediaEntity
 import ir.ilam.inspection.data.db.ReportEntity
 import ir.ilam.inspection.data.model.AttendeeOrg
 import ir.ilam.inspection.data.model.EntryMethod
+import ir.ilam.inspection.data.model.LocationSource
 import android.net.Uri
 import ir.ilam.inspection.data.model.MediaCaptions
 import ir.ilam.inspection.data.model.MediaType
@@ -94,8 +96,13 @@ class VisitViewModel(private val container: AppContainer, private val reportId: 
         }
     }
 
-    fun applyFix(fix: Fix) = edit {
-        it.copy(latitude = fix.latitude, longitude = fix.longitude, gpsAccuracy = fix.accuracy)
+    /** How and when the position was recorded, for the location card. */
+    val locationFix: StateFlow<LocationFixEntity?> = container.database.locationFixDao().observe(reportId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    fun applyFix(fix: Fix, samples: Int = 1) {
+        edit { it.copy(latitude = fix.latitude, longitude = fix.longitude, gpsAccuracy = fix.accuracy) }
+        recordSource(LocationSource.SENSOR, samples)
     }
 
     /**
@@ -104,8 +111,17 @@ class VisitViewModel(private val container: AppContainer, private val reportId: 
      * because inventing a metre figure would put a false precision into an
      * official report.
      */
-    fun setCoordinates(latitude: Double, longitude: Double) = edit {
-        it.copy(latitude = latitude, longitude = longitude, gpsAccuracy = null)
+    fun setCoordinates(latitude: Double, longitude: Double, source: LocationSource) {
+        edit { it.copy(latitude = latitude, longitude = longitude, gpsAccuracy = null) }
+        recordSource(source, samples = 0)
+    }
+
+    private fun recordSource(source: LocationSource, samples: Int) {
+        viewModelScope.launch {
+            container.database.locationFixDao().put(
+                LocationFixEntity(reportId, System.currentTimeMillis(), source.code, samples)
+            )
+        }
     }
 
     // ---- step 2: owner ----------------------------------------------------

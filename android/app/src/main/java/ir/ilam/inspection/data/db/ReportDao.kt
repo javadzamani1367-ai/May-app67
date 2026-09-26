@@ -98,6 +98,45 @@ interface ReportDao {
     )
     fun totalDiscoveredPower(): Flow<Double>
 
+    /**
+     * Everything the dashboard counts, in one pass over the table. One query
+     * rather than ten: each is a separate observer, and ten observers means the
+     * screen redraws ten times every time a case is saved.
+     */
+    @Query(
+        """
+        SELECT
+          COUNT(*) AS total,
+          TOTAL(status = 0) AS pending,
+          TOTAL(status = 1) AS visited,
+          TOTAL(status = 2) AS archived,
+          TOTAL(status = 0 AND report_date < :warnBefore) AS overdue,
+          TOTAL(status = 0 AND report_date < :lateBefore) AS late,
+          TOTAL(approval_state = 1) AS awaitingApproval,
+          TOTAL(approval_state = 2) AS approved,
+          TOTAL(approval_state = 3) AS returned,
+          TOTAL(visit_date >= :todayStart) AS visitedToday,
+          TOTAL(meter_tampered = 1) AS tampered,
+          TOTAL(tap_point = 0) AS bypass,
+          (SELECT COUNT(DISTINCT report_id) FROM devices) AS detected,
+          (SELECT COUNT(*) FROM devices) AS devices,
+          (SELECT TOTAL(power_watt) FROM devices) AS devicePower
+        FROM reports
+        """
+    )
+    fun dashboard(warnBefore: Long, lateBefore: Long, todayStart: Long): Flow<DashboardCounts>
+
+    /** The latest visits, newest first, for the dashboard's recent list. */
+    @Query(
+        "SELECT * FROM reports WHERE status <> 0 " +
+            "ORDER BY IFNULL(visit_date, updated_at) DESC LIMIT :limit"
+    )
+    fun recentVisits(limit: Int): Flow<List<ReportEntity>>
+
+    /** Device count per case, so a case card can say what was found there. */
+    @Query("SELECT report_id AS bucket, COUNT(*) AS total FROM devices GROUP BY report_id")
+    fun deviceCounts(): Flow<List<TextBucket>>
+
     @Query("SELECT COUNT(*) FROM reports WHERE tracking_code = :code")
     suspend fun countByTrackingCode(code: String): Int
 
@@ -125,6 +164,25 @@ interface ReportDao {
 }
 
 data class Bucket(val bucket: Int, val total: Int)
+
+/** The dashboard's counters. SQLite's TOTAL() returns a real, hence the doubles. */
+data class DashboardCounts(
+    val total: Int = 0,
+    val pending: Double = 0.0,
+    val visited: Double = 0.0,
+    val archived: Double = 0.0,
+    val overdue: Double = 0.0,
+    val late: Double = 0.0,
+    val awaitingApproval: Double = 0.0,
+    val approved: Double = 0.0,
+    val returned: Double = 0.0,
+    val visitedToday: Double = 0.0,
+    val tampered: Double = 0.0,
+    val bypass: Double = 0.0,
+    val detected: Int = 0,
+    val devices: Int = 0,
+    val devicePower: Double = 0.0
+)
 
 data class TextBucket(val bucket: String, val total: Int)
 

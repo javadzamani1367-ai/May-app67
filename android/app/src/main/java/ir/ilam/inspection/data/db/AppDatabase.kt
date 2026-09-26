@@ -21,7 +21,7 @@ const val SCHEMA_VERSION = 4
  * gains a table the archive has no business knowing about — a local typing
  * convenience must not make an up-to-date archive look incompatible.
  */
-const val DATABASE_VERSION = 7
+const val DATABASE_VERSION = 8
 
 @Database(
     entities = [
@@ -34,7 +34,8 @@ const val DATABASE_VERSION = 7
         SettingEntity::class,
         SnippetEntity::class,
         UserEntity::class,
-        ServerSyncEntity::class
+        ServerSyncEntity::class,
+        LocationFixEntity::class
     ],
     version = DATABASE_VERSION,
     exportSchema = true
@@ -51,6 +52,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun snippetDao(): SnippetDao
     abstract fun userDao(): UserDao
     abstract fun serverSyncDao(): ServerSyncDao
+    abstract fun locationFixDao(): LocationFixDao
 
     companion object {
         private const val DB_NAME = "inspection.db"
@@ -200,6 +202,19 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** How and when each case's position was recorded. Phone only. */
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS location_fix (" +
+                        "report_id TEXT NOT NULL PRIMARY KEY, " +
+                        "captured_at INTEGER NOT NULL, " +
+                        "source INTEGER NOT NULL, " +
+                        "samples INTEGER NOT NULL)"
+                )
+            }
+        }
+
         private fun build(context: Context): AppDatabase {
             System.loadLibrary("sqlcipher")
             val passphrase = KeyStoreVault(context).databasePassphrase()
@@ -212,7 +227,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_3_4,
                     MIGRATION_4_5,
                     MIGRATION_5_6,
-                    MIGRATION_6_7
+                    MIGRATION_6_7,
+                    MIGRATION_7_8
                 )
                 .build()
         }

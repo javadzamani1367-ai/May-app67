@@ -1,6 +1,8 @@
 package ir.ilam.inspection.ui.visit
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.HomeWork
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +61,11 @@ fun LocationStep(detail: ReportDetail, viewModel: VisitViewModel) {
     }
     AutoSave(subscription) { viewModel.setSubscriptionNumber(subscription) }
 
-    SectionCard(title = stringResource(R.string.visit_step_location)) {
+    SectionCard(
+        title = stringResource(R.string.section_site),
+        subtitle = stringResource(R.string.section_site_hint),
+        icon = Icons.Filled.HomeWork
+    ) {
         Column {
             DropdownField(
                 label = stringResource(R.string.field_county),
@@ -94,5 +100,5 @@ fun LocationStep(detail: ReportDetail, viewModel: VisitViewModel) {
         }
     }
 
-    CoordinatesCard(report = report, viewModel = viewModel)
+    LocationCard(report = report, viewModel = viewModel)
 }

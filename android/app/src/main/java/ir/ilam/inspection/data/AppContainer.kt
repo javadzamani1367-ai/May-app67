@@ -21,9 +21,19 @@ import ir.ilam.inspection.sync.ApprovalSync
 import ir.ilam.inspection.util.FileStore
 import ir.ilam.inspection.util.MediaImporter
 import ir.ilam.inspection.util.MediaProcessor
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 /** Single place where every long lived object is built, in dependency order. */
 class AppContainer(private val context: Context) {
+
+    /**
+     * Work that must outlive the screen that started it, such as sending a
+     * case to the server after a dispatch. A view model's scope ends when the
+     * expert leaves the screen, which is exactly when they tend to leave it.
+     */
+    val backgroundScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     val vault: KeyStoreVault by lazy { KeyStoreVault(context) }
     val database: AppDatabase by lazy { AppDatabase.get(context) }

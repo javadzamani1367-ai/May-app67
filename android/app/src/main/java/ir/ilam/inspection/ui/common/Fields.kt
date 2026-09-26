@@ -22,8 +22,26 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import ir.ilam.inspection.util.PersianNumbers
+
+/**
+ * One look for every input: white on the grey page, a quiet border until it
+ * is touched, and the brand colour on the field being typed in.
+ */
+@Composable
+fun appFieldColors(): TextFieldColors = OutlinedTextFieldDefaults.colors(
+    focusedContainerColor = MaterialTheme.colorScheme.surface,
+    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+    disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+    focusedBorderColor = MaterialTheme.colorScheme.primary,
+    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.55f),
+    focusedLabelColor = MaterialTheme.colorScheme.primary
+)
 
 /** Plain text field, full width, with the taller touch target the field work needs. */
 @Composable
@@ -36,11 +54,15 @@ fun AppTextField(
     minLines: Int = 1,
     error: String? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
-    imeAction: ImeAction = ImeAction.Next
+    imeAction: ImeAction = ImeAction.Next,
+    /** Addresses of servers, codes, anything in Latin script: typed and shown left to right. */
+    ltr: Boolean = false,
+    leadingIcon: (@Composable () -> Unit)? = null
 ) {
     // The keyboard's action key has to actually do something: without these
     // handlers "next" looks broken, because nothing moves.
     val focusManager = LocalFocusManager.current
+    val textStyle = MaterialTheme.typography.bodyLarge
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -50,6 +72,10 @@ fun AppTextField(
         minLines = minLines,
         isError = error != null,
         supportingText = error?.let { { Text(it) } },
+        textStyle = if (ltr) textStyle.copy(textDirection = TextDirection.Ltr) else textStyle,
+        leadingIcon = leadingIcon,
+        shape = MaterialTheme.shapes.medium,
+        colors = appFieldColors(),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
         keyboardActions = KeyboardActions(
             onNext = { focusManager.moveFocus(FocusDirection.Next) },
@@ -128,6 +154,8 @@ fun <T> DropdownField(
                 isError = error != null,
                 supportingText = error?.let { { Text(it) } },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                shape = MaterialTheme.shapes.medium,
+                colors = appFieldColors(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor()

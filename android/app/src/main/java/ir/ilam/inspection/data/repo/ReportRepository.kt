@@ -1,12 +1,14 @@
 package ir.ilam.inspection.data.repo
 
 import ir.ilam.inspection.data.db.AppDatabase
+import ir.ilam.inspection.data.db.DashboardCounts
 import ir.ilam.inspection.data.db.ReportEntity
 import ir.ilam.inspection.data.model.Completion
 import ir.ilam.inspection.data.model.ReportDetail
 import ir.ilam.inspection.data.model.ApprovalState
 import ir.ilam.inspection.data.model.ReportStatus
 import ir.ilam.inspection.data.model.ReportType
+import ir.ilam.inspection.data.model.Urgency
 import ir.ilam.inspection.util.FileStore
 import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.TrackingCode
@@ -227,6 +229,7 @@ class ReportRepository(
         if (!canDelete(detail.report)) return false
         detail.media.forEach { files.deleteQuietly(it.filePath) }
         detail.attachments.forEach { files.deleteQuietly(it.filePath) }
+        db.locationFixDao().forget(id)
         reports.delete(id)
         return true
     }
@@ -254,6 +257,25 @@ class ReportRepository(
     }
     fun totalPower(): Flow<Double> = reports.totalDiscoveredPower()
 
+    /**
+     * The dashboard's counters. The day boundaries match [daysWaiting], so a
+     * case the dashboard counts as overdue is the same one whose card is amber.
+     */
+    fun dashboard(now: Long = System.currentTimeMillis()): Flow<DashboardCounts> {
+        val today = PersianDate.startOfDay(now)
+        return reports.dashboard(
+            warnBefore = today - Urgency.WARN_DAYS * DAY_MILLIS,
+            lateBefore = today - Urgency.LATE_DAYS * DAY_MILLIS,
+            todayStart = today
+        )
+    }
+
+    fun recentVisits(limit: Int): Flow<List<ReportEntity>> = reports.recentVisits(limit)
+
+    fun deviceCounts(): Flow<Map<String, Int>> = reports.deviceCounts().map { rows ->
+        rows.associate { it.bucket to it.total }
+    }
+
     /** How long a pending case has been waiting, in whole days. */
     fun daysWaiting(report: ReportEntity): Int =
         PersianDate.daysBetween(report.reportDate, System.currentTimeMillis()).coerceAtLeast(0)
@@ -266,5 +288,6 @@ class ReportRepository(
     companion object {
         const val MISSING_MANUAL_CODE = "manual_tracking_code_required"
         const val DUPLICATE_CODE = "duplicate_tracking_code"
+        private const val DAY_MILLIS = 24L * 60 * 60 * 1000
     }
 }

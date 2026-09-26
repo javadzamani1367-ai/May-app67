@@ -46,6 +46,10 @@ class CaseListViewModel(container: AppContainer) : ViewModel() {
     val pendingCount: StateFlow<Int> = repository.countPending()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
+    /** Devices per case, so each card can say what was found there. */
+    val deviceCounts: StateFlow<Map<String, Int>> = repository.deviceCounts()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
     fun selectTab(status: ReportStatus) {
         _tab.value = status
     }

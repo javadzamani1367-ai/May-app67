@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The Compose theme owns the real colours; this style only paints the
-         window before the first frame and keeps the layout right-to-left. -->
     <style name="Theme.Inspection" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/background</item>
         <item name="android:statusBarColor">@color/primary_dark</item>
@@ -9,9 +7,9 @@
         <item name="android:textDirection">rtl</item>
     </style>
 
-    <!-- Only while the app starts: the navy splash with the mark. MainActivity
-         switches to Theme.Inspection before drawing anything. -->
+    <!-- Android 12+ draws its own splash from these two. -->
     <style name="Theme.Inspection.Starting" parent="Theme.Inspection">
-        <item name="android:windowBackground">@drawable/splash</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
     </style>
 </resources>

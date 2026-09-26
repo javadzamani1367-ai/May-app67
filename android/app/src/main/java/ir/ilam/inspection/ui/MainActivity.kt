@@ -2,6 +2,7 @@ package ir.ilam.inspection.ui
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -14,11 +15,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.activity.ComponentActivity
+import ir.ilam.inspection.R
 import ir.ilam.inspection.container
 import ir.ilam.inspection.data.repo.SettingsRepository
 import ir.ilam.inspection.ui.lock.LockScreen
 import ir.ilam.inspection.util.CrashReporter
 import ir.ilam.inspection.ui.theme.InspectionTheme
+import ir.ilam.inspection.ui.theme.ThemePreference
 
 /**
  * ComponentActivity, never FragmentActivity: FragmentActivity refuses the
@@ -28,10 +31,16 @@ import ir.ilam.inspection.ui.theme.InspectionTheme
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // The manifest starts on the navy splash; the real theme takes over
+        // before anything is drawn.
+        setTheme(R.style.Theme_Inspection)
         super.onCreate(savedInstanceState)
+        ThemePreference.load(this)
         val crashReporter = CrashReporter(applicationContext).apply { install() }
         val lastCrash = crashReporter.pending()
-        enableEdgeToEdge()
+        // Light status bar icons always: every screen's header is deep navy,
+        // in the light theme as much as the dark one.
+        enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
         setContent {
             InspectionTheme {
                 Surface(

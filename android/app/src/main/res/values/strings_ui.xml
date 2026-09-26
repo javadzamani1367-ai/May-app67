@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- برند -->
+    <string name="brand_name">توان‌کاو</string>
+    <string name="brand_latin">TavanKav</string>
+    <string name="brand_tagline">سامانه بازرسی میدانی و کشف استخراج غیرمجاز رمزارز</string>
+
+    <!-- داشبورد -->
+    <string name="tab_dashboard">داشبورد</string>
+    <string name="dashboard_greeting">خلاصه عملیات</string>
+    <string name="kpi_visits">بازدیدهای انجام‌شده</string>
+    <string name="kpi_visits_today">%1$s بازدید امروز</string>
+    <string name="kpi_pending">در دست اقدام</string>
+    <string name="kpi_pending_caption">%1$s مورد معطل</string>
+    <string name="kpi_detected">مراکز کشف‌شده</string>
+    <string name="kpi_detected_caption">دارای دستگاه استخراج</string>
+    <string name="kpi_devices">دستگاه‌های ثبت‌شده</string>
+    <string name="kpi_power">توان کشف‌شده</string>
+    <string name="kpi_alerts">موارد دارای هشدار</string>
+    <string name="kpi_alerts_caption">%1$s معطل · %2$s برگشتی</string>
+    <string name="dashboard_report_status">وضعیت پرونده‌ها</string>
+    <string name="dashboard_total_cases">کل پرونده‌ها</string>
+    <string name="dashboard_approval_row">چرخه تأیید مدیر</string>
+    <string name="dashboard_findings">یافته‌های فنی</string>
+    <string name="dashboard_tampered">دستکاری کنتور</string>
+    <string name="dashboard_bypass">برداشت قبل از کنتور</string>
+    <string name="dashboard_by_type">تفکیک نوع گزارش</string>
+    <string name="dashboard_recent">آخرین بازدیدها</string>
+    <string name="dashboard_attention">نیازمند اقدام</string>
+    <string name="dashboard_see_all">مشاهده همه</string>
+    <string name="dashboard_empty_title">هنوز پرونده‌ای ثبت نشده</string>
+    <string name="dashboard_empty">با دکمه «بازدید جدید» اولین گزارش را ثبت کنید.</string>
+    <string name="dashboard_operations">وضعیت عملیات</string>
+    <string name="ops_server_off">سرور تنظیم نشده — کار کاملاً آفلاین</string>
+    <string name="ops_server_synced">همه پرونده‌ها به سرور رسیده‌اند</string>
+    <string name="ops_server_pending">%1$s پرونده در صف ارسال به سرور</string>
+    <string name="ops_auto_on">ارسال خودکار روی وای‌فای روشن است</string>
+    <string name="ops_auto_off">ارسال خودکار خاموش است</string>
+    <string name="ops_awaiting">%1$s پرونده در انتظار تصمیم مدیر</string>
+    <string name="action_new_visit">بازدید جدید</string>
+    <string name="case_devices_found">%1$s دستگاه</string>
+    <string name="case_waiting_days">%1$s روز</string>
+    <string name="case_no_address">بدون آدرس</string>
+    <string name="kpi_power_unit">کیلووات</string>
+    <string name="home_subtitle_expert">کارشناس %1$s · %2$s</string>
+    <string name="home_subtitle_manager">پنل مدیر · %1$s</string>
+    <string name="home_subtitle_no_code">%1$s</string>
+    <string name="cases_count">%1$s پرونده</string>
+    <string name="search_empty">پرونده‌ای با این مشخصات پیدا نشد</string>
+
+    <!-- موقعیت مکانی -->
+    <string name="location_title">موقعیت مکانی</string>
+    <string name="location_coordinates">مختصات</string>
+    <string name="location_accuracy">دقت</string>
+    <string name="location_accuracy_value">±%1$s متر</string>
+    <string name="location_captured_at">زمان ثبت</string>
+    <string name="location_source">منبع</string>
+    <string name="location_source_sensor">گیرنده موقعیت گوشی</string>
+    <string name="location_source_map">انتخاب از نقشه</string>
+    <string name="location_source_manual">ورود دستی</string>
+    <string name="location_samples">%1$s نمونه</string>
+    <string name="location_quality_excellent">دقت عالی</string>
+    <string name="location_quality_good">دقت خوب</string>
+    <string name="location_quality_fair">دقت متوسط</string>
+    <string name="location_quality_poor">دقت ضعیف</string>
+    <string name="location_quality_unknown">دقت نامشخص</string>
+    <string name="location_not_recorded_title">موقعیت ثبت نشده</string>
+    <string name="location_not_recorded_hint">در محل بایستید و «ثبت موقعیت دقیق» را بزنید. گوشی چند ثانیه به ماهواره‌ها گوش می‌دهد تا دقیق‌ترین نقطه را پیدا کند.</string>
+    <string name="action_capture_precise">ثبت موقعیت دقیق</string>
+    <string name="action_recapture">دریافت دوباره موقعیت</string>
+    <string name="fix_refining">در حال دقیق‌سازی موقعیت</string>
+    <string name="fix_hint">گوشی را ثابت نگه دارید و اگر می‌توانید در فضای باز بایستید؛ زیر سقف یا کنار دیوار دقت کم می‌شود.</string>
+    <string name="fix_waiting_first">در انتظار اولین موقعیت…</string>
+    <string name="fix_elapsed">%1$s ثانیه · %2$s نمونه</string>
+    <string name="fix_accept">ثبت همین موقعیت</string>
+    <string name="fix_stop">توقف</string>
+    <string name="fix_done">موقعیت با دقت ±%1$s متر ثبت شد</string>
+    <string name="fix_timeout_coarse">دقتی بهتر از ±%1$s متر به‌دست نیامد. برای دقت بیشتر در فضای باز دوباره تلاش کنید.</string>
+    <string name="fix_location_off">موقعیت‌یاب گوشی خاموش است. آن را از تنظیمات گوشی روشن کنید.</string>
+    <string name="map_my_location">موقعیت من</string>
+    <string name="map_zoom_in">بزرگ‌نمایی</string>
+    <string name="map_zoom_out">کوچک‌نمایی</string>
+    <string name="map_locating">در حال یافتن موقعیت شما…</string>
+    <string name="map_distance_to_you">فاصله تا موقعیت شما: %1$s متر</string>
+    <string name="map_open_full">نمایش روی نقشه</string>
+    <string name="section_site">مشخصات محل</string>
+    <string name="section_site_hint">شهرستان و ناحیه، آدرس و شماره‌های اشتراک و پرونده</string>
+</resources>

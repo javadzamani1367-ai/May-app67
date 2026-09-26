@@ -14,6 +14,10 @@ object AppFonts {
     const val ASSET_PATH = "fonts/Vazirmatn-Regular.ttf"
     const val BOLD_ASSET_PATH = "fonts/Vazirmatn-Bold.ttf"
 
+    /** Optional weights. The app looks right without them, and better with. */
+    const val MEDIUM_ASSET_PATH = "fonts/Vazirmatn-Medium.ttf"
+    const val EXTRA_BOLD_ASSET_PATH = "fonts/Vazirmatn-ExtraBold.ttf"
+
     @Volatile
     private var cachedTypeface: Typeface? = null
 
@@ -44,6 +48,8 @@ object AppFonts {
             }
         }.getOrNull()?.also { cachedBase64 = it }
     }
+
+    fun has(context: Context, path: String): Boolean = context.assets.exists(path)
 
     private fun android.content.res.AssetManager.exists(path: String): Boolean =
         runCatching { open(path).close(); true }.getOrDefault(false)

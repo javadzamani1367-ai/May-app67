@@ -57,14 +57,14 @@ android {
             dimension = "role"
             applicationIdSuffix = ".expert"
             versionNameSuffix = "-expert"
-            resValue("string", "app_name", "بازدید رمزارز — کارشناس")
+            resValue("string", "app_name", "توان‌کاو")
             buildConfigField("boolean", "MANAGER", "false")
         }
         create("manager") {
             dimension = "role"
             applicationIdSuffix = ".manager"
             versionNameSuffix = "-manager"
-            resValue("string", "app_name", "بازدید رمزارز — مدیر")
+            resValue("string", "app_name", "توان‌کاو مدیر")
             buildConfigField("boolean", "MANAGER", "true")
         }
     }

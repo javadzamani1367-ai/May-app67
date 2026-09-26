@@ -1,22 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The TavanKav mark. One drawing, used as the launcher icon, the splash and
+  the header mark in the app.
+
+  Four ideas, each one shape:
+    - a mining chip (the ASIC): a rounded square with pins on every side
+    - power: the lightning bolt at its centre, in amber — energy, and the
+      quiet warning that this power is being taken where it should not be
+    - inspection: the viewfinder corners around it, in teal — something
+      being found and framed, without resorting to a magnifying glass
+    - technology: the circuit geometry of the whole
+
+  Everything sits inside the adaptive icon's 66dp safe zone, so no launcher
+  mask crops it.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- A clipboard with a magnifier: a field inspection record. -->
+
+    <!-- Viewfinder corners -->
     <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M40,28h28a4,4 0 0 1 4,4v44a4,4 0 0 1 -4,4H40a4,4 0 0 1 -4,-4V32a4,4 0 0 1 4,-4z" />
+        android:pathData="M27,38V32Q27,27 32,27H38M70,27H76Q81,27 81,32V38M81,70V76Q81,81 76,81H70M38,81H32Q27,81 27,76V70"
+        android:strokeWidth="4"
+        android:strokeColor="#FF2DD4BF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Pins -->
     <path
-        android:fillColor="#FF00695C"
-        android:pathData="M46,24h16v8h-16z" />
+        android:pathData="M46,33.5V38M54,33.5V38M62,33.5V38M46,70V74.5M54,70V74.5M62,70V74.5M33.5,46H38M33.5,54H38M33.5,62H38M70,46H74.5M70,54H74.5M70,62H74.5"
+        android:strokeWidth="2.6"
+        android:strokeColor="#FFE6EDF7"
+        android:strokeLineCap="round" />
+
+    <!-- Chip body -->
     <path
-        android:fillColor="#FF00695C"
-        android:pathData="M54,44m-9,0a9,9 0 1,0 18,0a9,9 0 1,0 -18,0" />
+        android:pathData="M43,38H65Q70,38 70,43V65Q70,70 65,70H43Q38,70 38,65V43Q38,38 43,38Z"
+        android:fillColor="#FF12305A"
+        android:strokeWidth="3.2"
+        android:strokeColor="#FFE6EDF7" />
+
+    <!-- Power -->
     <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M54,44m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
-    <path
-        android:fillColor="#FF00695C"
-        android:pathData="M60,50l8,8l-4,4l-8,-8z" />
+        android:pathData="M57.5,41.5L46.5,56.2H53.2L50.8,66.5L61.8,51.3H55.1Z"
+        android:fillColor="#FFFBBF24"
+        android:strokeWidth="1"
+        android:strokeColor="#FFFBBF24"
+        android:strokeLineJoin="round" />
 </vector>

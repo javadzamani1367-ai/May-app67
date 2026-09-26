@@ -8,12 +8,16 @@ import sys
 root = pathlib.Path("android/app/src/main")
 problems = []
 
-# 1. duplicate resource names — the merger refuses these
-for f in (root / "res").rglob("*.xml"):
-    names = re.findall(r'<(?:string|string-array|plurals) name="([\w_]+)"', f.read_text(encoding="utf-8"))
-    for name, count in collections.Counter(names).items():
-        if count > 1:
-            problems.append(f"duplicate resource {name} in {f}")
+# 1. duplicate resource names — the merger refuses these, within one file and
+#    across the files of one values folder (strings.xml and strings_ui.xml).
+for folder in (root / "res").glob("values*"):
+    seen = collections.defaultdict(list)
+    for f in folder.glob("*.xml"):
+        for name in re.findall(r'<(?:string|string-array|plurals) name="([\w_]+)"', f.read_text(encoding="utf-8")):
+            seen[name].append(f.name)
+    for name, files in seen.items():
+        if len(files) > 1:
+            problems.append(f"duplicate resource {name} in {folder.name}: {', '.join(files)}")
 
 # 2. references to resources that do not exist
 defined = set()
