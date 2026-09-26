@@ -131,7 +131,7 @@ class SpeechOutput @Inject constructor(
     suspend fun systemVoices(): List<VoiceOption> {
         val tts = systemEngine() ?: return emptyList()
         val voices = runCatching { tts.voices }.getOrNull().orEmpty()
-            .filter { it.locale.language in PERSIAN && !it.isNetworkConnectionRequired && Voice.FEATURE_NOT_INSTALLED !in it.features.orEmpty() }
+            .filter { it.locale.language in PERSIAN && !it.isNetworkConnectionRequired && TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in it.features.orEmpty() }
             .sortedBy { it.name }
         if (voices.isNotEmpty()) return voices.mapIndexed { i, v -> VoiceOption("system:${v.name}", "صدای گوشی ${persian(i + 1)}", system = true) }
         val lang = runCatching { tts.isLanguageAvailable(Locale("fa", "IR")) }.getOrDefault(TextToSpeech.LANG_NOT_SUPPORTED)
