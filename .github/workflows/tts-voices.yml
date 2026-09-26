@@ -1,0 +1,81 @@
+name: Publish TTS voices
+
+# Persian Piper voices (via sherpa-onnx packaging) for the offline "read aloud" feature:
+# prints each voice's license, measures synthesis speed on 4 threads, repackages them as zip
+# (the app unzips with java.util.zip) and attaches them to the "tts-voices" release.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/tts-voices.yml'
+
+permissions:
+  contents: write
+
+env:
+  SHERPA_VERSION: v1.13.8
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Android runtime package
+        run: |
+          set -e
+          f=sherpa-onnx-${SHERPA_VERSION}-android.tar.bz2
+          curl -sSfL -o "$f" "https://github.com/k2-fsa/sherpa-onnx/releases/download/${SHERPA_VERSION}/$f"
+          echo "RUNTIME $f $(stat -c %s "$f") $(sha256sum "$f" | cut -d' ' -f1)"
+          tar tjvf "$f" | awk '{print $3, $6}'
+
+      - name: Licenses
+        run: |
+          for v in amir ganji ganji_adabi gyro reza_ibrahim; do
+            echo "=== LICENSE $v"
+            curl -sSfL "https://huggingface.co/rhasspy/piper-voices/raw/main/fa/fa_IR/$v/medium/MODEL_CARD" || echo "(no model card)"
+            echo
+          done
+
+      - name: Download and repackage
+        run: |
+          set -e
+          mkdir -p out
+          for v in amir ganji ganji_adabi gyro reza_ibrahim; do
+            name=vits-piper-fa_IR-$v-medium
+            curl -sSfL -o $name.tar.bz2 "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$name.tar.bz2"
+            tar xjf $name.tar.bz2
+            ls -la $name
+            (cd $name && zip -q -9 ../out/roozban-tts-fa-$v.zip fa_IR-$v-medium.onnx tokens.txt)
+            if [ ! -f out/roozban-tts-espeak-ng-data.zip ]; then (cd $name && zip -q -r -9 ../out/roozban-tts-espeak-ng-data.zip espeak-ng-data); fi
+          done
+          cd out && for f in *.zip; do echo "ASSET $f $(stat -c %s "$f") $(sha256sum "$f" | cut -d' ' -f1)"; done
+
+      - name: Speed
+        run: |
+          pip install -q sherpa-onnx
+          cat > speed.py <<'EOF'
+          import sys, time, sherpa_onnx
+          v = sys.argv[1]
+          d = f"vits-piper-fa_IR-{v}-medium"
+          cfg = sherpa_onnx.OfflineTtsConfig(model=sherpa_onnx.OfflineTtsModelConfig(
+              vits=sherpa_onnx.OfflineTtsVitsModelConfig(model=f"{d}/fa_IR-{v}-medium.onnx", tokens=f"{d}/tokens.txt", data_dir=f"{d}/espeak-ng-data"),
+              num_threads=4))
+          tts = sherpa_onnx.OfflineTts(cfg)
+          text = "فردا ساعت نه صبح جلسه با مدیرعامل داری. سه کار عقب‌افتاده هم به امروز منتقل شد."
+          t = time.time(); a = tts.generate(text, sid=0, speed=1.0); dt = time.time() - t
+          sec = len(a.samples) / a.sample_rate
+          print(f"SPEED {v} synth={dt:.2f}s audio={sec:.2f}s rtf={dt/sec:.3f}")
+          import wave, struct
+          with wave.open(f"out/sample-{v}.wav", "wb") as w:
+              w.setnchannels(1); w.setsampwidth(2); w.setframerate(a.sample_rate)
+              w.writeframes(b"".join(struct.pack("<h", int(max(-1, min(1, s)) * 32767)) for s in a.samples))
+          EOF
+          for v in amir ganji ganji_adabi gyro reza_ibrahim; do python speed.py $v; done
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view tts-voices -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create tts-voices -R "$GITHUB_REPOSITORY" --title "TTS voices" --notes "Persian Piper voices (sherpa-onnx packaging) for Roozban's offline read-aloud." --prerelease
+          gh release upload tts-voices out/* -R "$GITHUB_REPOSITORY" --clobber
