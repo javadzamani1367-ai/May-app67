@@ -102,7 +102,7 @@ internal fun AssistantScreen(onBack: () -> Unit, onOpenModels: () -> Unit, onOpe
                 actions = {
                     if (state.items.isNotEmpty()) IconButton(onClick = viewModel::clear) { Icon(painterResource(DsR.drawable.ic_delete), "پاک کردن گفتگو") }
                     IconButton(onClick = onOpenVoices) { Icon(painterResource(DsR.drawable.ic_play), "گوینده") }
-                    IconButton(onClick = onOpenModels) { Icon(painterResource(DsR.drawable.ic_memory), "مدل‌ها") }
+                    IconButton(onClick = onOpenModels) { Icon(painterResource(DsR.drawable.ic_memory), "مدل گفتار") }
                 },
             )
         },
@@ -178,7 +178,7 @@ private fun statusText(state: AssistantUiState): String = state.preparing?.let {
     EngineStatus.UNSUPPORTED -> "پشتیبانی نمی‌شود"
     EngineStatus.NO_MODEL -> "مدلی نصب نیست"
     EngineStatus.LOADING -> "در حال آماده‌سازی ${state.modelName.orEmpty()}…"
-    EngineStatus.READY -> "آماده · ${state.modelName.orEmpty()} · آفلاین"
+    EngineStatus.READY -> "آماده · فوری و آفلاین"
     EngineStatus.FAILED -> "خطا در بارگذاری مدل"
     EngineStatus.IDLE -> state.modelName?.let { "$it · آفلاین" }.orEmpty()
 }

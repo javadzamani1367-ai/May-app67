@@ -119,15 +119,7 @@ internal fun EventEditorSheet(
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                repeat(TagColors.count) { i ->
-                    Box(
-                        Modifier.size(30.dp).clip(CircleShape).background(TagColors.color(i))
-                            .then(if (draft.color == i) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape) else Modifier)
-                            .clickable { draft = draft.copy(color = i) },
-                    )
-                }
-            }
+            ir.roozban.core.designsystem.components.ColorSwatches(draft.color, { draft = draft.copy(color = it) }, size = 30.dp)
             Spacer(Modifier.height(12.dp))
             OutlinedButton(onClick = { pickingDate = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.event_date, PersianDateFormatter.dayMonthYear(draft.date.toJalali())))

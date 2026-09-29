@@ -1,5 +1,13 @@
 package ir.roozban.app
 
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.WindowInsets
 import android.app.NotificationManager
 import android.content.Intent
 import android.graphics.Color
@@ -90,11 +98,15 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     AppBackdrop(null, null, 0f, MaterialTheme.colorScheme.background)
                 }
-                RoozbanApp(
-                    startScreen = userSettings.startScreen,
-                    openRequest = open,
-                    onOpenHandled = { openRequest.value = null },
-                )
+                // The backdrop runs behind the system bars; the app itself stays clear of the
+                // navigation buttons at the bottom (and of cut-outs at the sides).
+                Box(Modifier.windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal))) {
+                    RoozbanApp(
+                        startScreen = userSettings.startScreen,
+                        openRequest = open,
+                        onOpenHandled = { openRequest.value = null },
+                    )
+                }
             }
         }
     }

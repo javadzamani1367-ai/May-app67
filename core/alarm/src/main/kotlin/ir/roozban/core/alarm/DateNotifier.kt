@@ -61,7 +61,6 @@ class DateNotifier @Inject constructor(
         val other = listOfNotNull(gregorian, hijri).joinToString("  |  ")
 
         fun views(): RemoteViews = RemoteViews(context.packageName, R.layout.notification_date).apply {
-            setImageViewResource(R.id.date_logo, context.applicationInfo.icon)
             setTextViewText(R.id.date_day, PersianDigits.format(jalali.day))
             setTextViewText(R.id.date_jalali, PersianDateFormatter.fullDate(jalali))
             setTextViewText(R.id.date_other, other)

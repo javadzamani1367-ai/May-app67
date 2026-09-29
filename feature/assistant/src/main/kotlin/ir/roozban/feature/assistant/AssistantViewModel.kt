@@ -3,17 +3,14 @@ package ir.roozban.feature.assistant
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import ir.roozban.ai.core.EngineState
 import ir.roozban.ai.core.LlmException
-import ir.roozban.ai.runtime.AssistantHost
-import ir.roozban.ai.runtime.ModelManager
 import ir.roozban.ai.tools.ActionResult
-import ir.roozban.ai.tools.Assistant
+import ir.roozban.ai.tools.ActionPlanner
+import ir.roozban.ai.tools.RuleAssistant
 import ir.roozban.ai.tools.AssistantContext
 import ir.roozban.ai.tools.AssistantEvent
 import ir.roozban.ai.tools.Plan
 import ir.roozban.ai.tools.PlannedAction
-import ir.roozban.ai.tools.PromptBuilder
 import ir.roozban.ai.tools.ToolExecutor
 import ir.roozban.ai.tools.Turn
 import ir.roozban.ai.tools.answerLocally
@@ -80,8 +77,6 @@ data class AssistantUiState(
 
 @HiltViewModel
 class AssistantViewModel @Inject constructor(
-    private val host: AssistantHost,
-    private val models: ModelManager,
     private val executor: ToolExecutor,
     private val tasks: TaskRepository,
     private val habits: HabitRepository,
@@ -98,16 +93,10 @@ class AssistantViewModel @Inject constructor(
     private var job: Job? = null
     private val access = entitlements.access(ProFeature.ASSISTANT)
 
-    private val core = combine(items, busy, host.engine.state, models.state, host.warmProgress) { items, busy, engine, m, warm ->
-        val status = when {
-            !m.tier.supported -> EngineStatus.UNSUPPORTED
-            m.active == null -> EngineStatus.NO_MODEL
-            engine is EngineState.Loading -> EngineStatus.LOADING
-            engine is EngineState.Ready -> EngineStatus.READY
-            engine is EngineState.Failed -> EngineStatus.FAILED
-            else -> EngineStatus.IDLE
-        }
-        AssistantUiState(items, status, m.active?.name, busy, access, warm)
+    // The assistant understands requests itself (RuleAssistant): no model to download or load,
+    // so it is ready at once on every phone.
+    private val core = combine(items, busy) { items, busy ->
+        AssistantUiState(items, EngineStatus.READY, null, busy, access, null)
     }
 
     val state: StateFlow<AssistantUiState> = combine(core, speech.state) { s, speaking ->
@@ -118,18 +107,6 @@ class AssistantViewModel @Inject constructor(
         }
         s.copy(speakingId = id?.takeIf { it.startsWith(SPEECH_PREFIX) }?.removePrefix(SPEECH_PREFIX)?.toLongOrNull(), noVoice = speaking is SpeakState.NoVoice)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AssistantUiState(access = access))
-
-    init {
-        // Warm the model up while the user types.
-        if (models.state.value.active != null && models.tier.supported) {
-            viewModelScope.launch {
-                runCatching {
-                    val loaded = host.ensureLoaded()
-                    host.warmUp(loaded, PromptBuilder(loaded.model.template, loaded.config.contextTokens).prefix())
-                }
-            }
-        }
-    }
 
     fun send(text: String) {
         val message = text.trim()
@@ -147,11 +124,11 @@ class AssistantViewModel @Inject constructor(
                     settings = settings.current(),
                     facts = memory.all(),
                 )
-                // Memory requests are answered by the app itself, without loading the model.
-                val events = answerLocally(context, message)?.let { flowOf(it) } ?: run {
-                    val loaded = host.ensureLoaded()
-                    Assistant(host.engine, loaded.model.template, loaded.config.contextTokens).ask(context, history.toList(), message)
-                }
+                val events = answerLocally(context, message)?.let { flowOf(it) } ?: flowOf(
+                    RuleAssistant(context).answer(message).let { response ->
+                        AssistantEvent.Complete("", response, ActionPlanner(context, message).plan(response))
+                    },
+                )
                 events
                     .collect { event ->
                         when (event) {
@@ -243,7 +220,6 @@ class AssistantViewModel @Inject constructor(
 
     override fun onCleared() {
         if (state.value.speakingId != null) speech.stop()
-        host.release()
     }
 
     private companion object {

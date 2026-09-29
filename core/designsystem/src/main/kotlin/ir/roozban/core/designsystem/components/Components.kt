@@ -3,6 +3,9 @@ package ir.roozban.core.designsystem.components
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -165,5 +168,25 @@ fun EmptyState(@DrawableRes icon: Int, title: String, body: String, role: Role, 
         Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         Spacer(Modifier.height(8.dp))
         Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+    }
+}
+
+/** The color choice for projects, labels, habits and occasions: all [TagColors], wrapping onto several lines. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+fun ColorSwatches(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier, size: Dp = 32.dp) {
+    androidx.compose.foundation.layout.FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        for (i in 0 until ir.roozban.core.designsystem.theme.TagColors.count) {
+            val color = ir.roozban.core.designsystem.theme.TagColors.color(i)
+            Box(
+                Modifier.size(size).clip(CircleShape).background(color)
+                    .then(if (i == selected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape) else Modifier)
+                    .clickable { onSelect(i) },
+            )
+        }
     }
 }

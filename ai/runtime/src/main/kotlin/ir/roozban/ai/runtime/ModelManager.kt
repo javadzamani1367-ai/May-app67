@@ -83,6 +83,8 @@ class ModelManager @Inject constructor(
     val state: StateFlow<ModelsState> = _state.asStateFlow()
 
     init {
+        // Voices no longer offered (replaced by clearer ones) are removed to free their space.
+        runCatching { voices.keepOnly(ModelCatalog.voices.mapTo(HashSet()) { it.id }) }
         refresh()
     }
 

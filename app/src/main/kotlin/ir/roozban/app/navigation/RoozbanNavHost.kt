@@ -128,6 +128,8 @@ fun RoozbanApp(
                     NavigationBar(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer,
                         tonalElevation = 0.dp,
+                        // The system navigation bar is already kept clear at the root (MainActivity).
+                        windowInsets = WindowInsets(0, 0, 0, 0),
                         modifier = Modifier
                             .shadow(12.dp, RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
@@ -139,7 +141,8 @@ fun RoozbanApp(
                                     navController.navigate(tab.route) {
                                         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                         launchSingleTop = true
-                                        restoreState = true
+                                        // «بیشتر» always opens on its own list, not on the screen last left inside it.
+                                        restoreState = tab != Tab.MORE
                                     }
                                 },
                                 icon = { Icon(painterResource(tab.icon), contentDescription = null) },

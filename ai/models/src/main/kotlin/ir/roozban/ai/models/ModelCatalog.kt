@@ -128,26 +128,40 @@ object ModelCatalog {
     private const val VOICE_RELEASE = "https://github.com/javadzamani1367-ai/May-app67/releases/download/tts-voices"
 
     /**
-     * Persian Piper voices (rhasspy/piper-voices via sherpa-onnx, published by the tts-voices
-     * workflow). Their training data is CC0; «gyro» is left out because its terms are unclear.
+     * Persian voices for reading aloud, chosen by the tts-eval workflow: each voice read the same
+     * sentences and a Persian speech model transcribed them back (character error rate). Matcha
+     * voices (clearest, trained on CC0 data) come with their vocoder; the Piper voices are lighter.
+     * «امیر» and «رضا» were dropped as the least clear.
      */
     val voices: List<ModelSpec> = listOf(
-        voice("tts-fa-amir", "امیر", "گوینده‌ی پیشنهادی", 67_374_891L, "d707857ee28f412d0964632d7baef1e79a47e80ff2f4afb5e60c724d96eba6b5"),
-        voice("tts-fa-ganji", "گنجی", "گوینده‌ی دوم", 67_374_418L, "e0600ee50b53f478f74328311f0ea4d8f8496654e68eb77d5b3e99663df6fdca"),
-        voice("tts-fa-ganji_adabi", "گنجی (ادبی)", "همان گوینده با لحن متن‌های ادبی", 67_373_547L, "43b89ccb9ebd251601ce8283a43c2bd9b15db973c2c59d70acf8dec47f58b797"),
-        voice("tts-fa-reza_ibrahim", "رضا", "آموزش‌دیده با صدای قرائت", 67_374_669L, "ef43089ba8f7f1645d593f8f1257bb62838af4e26b875722d9463763dac7939d"),
+        voice(
+            "tts-fa-musa", "موسی", "صدای مرد · واضح‌ترین در آزمون ما (خطای حدود ۱٪)", "roozban-tts-matcha-musa-vocos.zip",
+            126_736_554L, "c77c173419f3947a49e46c32132201262a83d7d604dfcd92f13f19833d7e73c3", "CC0 (mah92/Musa-FA_EN-Matcha-TTS-Model)",
+        ),
+        voice(
+            "tts-fa-khadijah", "خدیجه", "صدای زن · روان و طبیعی (خطای حدود ۴٪)", "roozban-tts-matcha-khadijah-hifigan_v2.zip",
+            80_062_312L, "c21f631e13f003c5ced2bc5eee90549540d878f1282c8f46f93599d9328c9fb7", "CC0 (mah92/Khadijah-FA_EN-Matcha-TTS-Model)",
+        ),
+        voice(
+            "tts-fa-ganji", "گنجی", "صدای مرد · سبک‌تر (خطای حدود ۳٪)", "roozban-tts-fa-ganji.zip",
+            67_374_418L, "e0600ee50b53f478f74328311f0ea4d8f8496654e68eb77d5b3e99663df6fdca", "CC0 data, Piper",
+        ),
+        voice(
+            "tts-fa-ganji_adabi", "گنجی (ادبی)", "همان گوینده با لحن متن‌های ادبی (خطای حدود ۴٪)", "roozban-tts-fa-ganji_adabi.zip",
+            67_373_547L, "43b89ccb9ebd251601ce8283a43c2bd9b15db973c2c59d70acf8dec47f58b797", "CC0 data, Piper",
+        ),
     )
 
-    private fun voice(id: String, name: String, description: String, size: Long, sha: String) = ModelSpec(
+    private fun voice(id: String, name: String, description: String, file: String, size: Long, sha: String, license: String) = ModelSpec(
         id = id,
         name = name,
         description = description,
-        url = "$VOICE_RELEASE/roozban-${id}.zip",
+        url = "$VOICE_RELEASE/$file",
         sizeBytes = size,
         sha256 = sha,
         template = ChatTemplate.CHATML,
         minTier = DeviceTier.UNSUPPORTED,
-        license = "CC0 data, Piper (MIT)",
+        license = license,
         kind = ModelKind.VOICE,
     )
 

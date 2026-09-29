@@ -78,7 +78,7 @@ internal fun ModelsScreen(onBack: () -> Unit, viewModel: ModelsViewModel = hiltV
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             RoozbanTopBar(
-                title = { Text("مدل‌های دستیار") },
+                title = { Text("مدل‌های گفتار") },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(painterResource(DsR.drawable.ic_arrow_back), "بازگشت") } },
             )
         },
@@ -90,25 +90,19 @@ internal fun ModelsScreen(onBack: () -> Unit, viewModel: ModelsViewModel = hiltV
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item { DeviceCard(state.tier, state.wifiOnly, viewModel::setWifiOnly) }
+            // The assistant no longer needs a language model; models downloaded before can be removed.
             if (state.installed.isNotEmpty()) {
-                item { SectionTitle("دستیار: نصب‌شده", icon = DsR.drawable.ic_check, color = Roozban.colors.completed.color) }
-                items(state.installed, key = { "i-" + it.id }) { m ->
-                    InstalledCard(m, active = state.active?.id == m.id, onActivate = { viewModel.activate(m.id) }, onDelete = { confirmDelete = m })
-                }
-            }
-            val available = state.available.filter { spec -> state.installed.none { it.id == spec.id } }
-            if (available.isNotEmpty()) {
-                item { SectionTitle("دستیار: قابل دانلود", icon = DsR.drawable.ic_download) }
-                items(available, key = { "c-" + it.id }) { spec ->
-                    CatalogCard(
-                        spec,
-                        recommended = spec.id == ModelCatalog.recommendedIdFor(state.tier),
-                        download = state.downloads[spec.id],
-                        onDownload = { viewModel.download(spec) },
-                        onCancel = { viewModel.cancel(spec) },
-                        onDiscard = { viewModel.discard(spec) },
+                item { SectionTitle("مدل‌های قبلی دستیار (دیگر لازم نیست)", icon = DsR.drawable.ic_delete, color = Roozban.colors.warning.color) }
+                item {
+                    Text(
+                        "دستیار حالا بدون مدل زبانی و فوری کار می‌کند. این فایل‌ها را حذف کن تا فضای گوشی آزاد شود.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 4.dp),
                     )
+                }
+                items(state.installed, key = { "i-" + it.id }) { m ->
+                    InstalledCard(m, active = false, onActivate = {}, onDelete = { confirmDelete = m })
                 }
             }
             item {
@@ -133,7 +127,7 @@ internal fun ModelsScreen(onBack: () -> Unit, viewModel: ModelsViewModel = hiltV
                     onDiscard = { viewModel.discard(spec) },
                 )
             }
-            item {
+            if (false) item {
                 AppCard {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         IconBadge(DsR.drawable.ic_file_open, Roozban.colors.info)
