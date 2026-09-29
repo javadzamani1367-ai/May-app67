@@ -6,6 +6,9 @@ import ir.roozban.ai.core.audio.Segmenter
 import ir.roozban.ai.core.audio.Transcript
 import kotlinx.coroutines.runBlocking
 import java.io.File
+import java.io.FileDescriptor
+import java.io.FileOutputStream
+import java.io.PrintStream
 
 /**
  * Long-form dictation eval: runs minutes of speech through the app's own dictation steps (the
@@ -21,8 +24,9 @@ fun main(args: Array<String>) {
     val threads = args.getOrNull(4) ?: "4"
     val old = config == "old"
     val process = ProcessBuilder(bench, model, threads, "1", "-", "-").redirectError(ProcessBuilder.Redirect.INHERIT).start()
-    val toBench = process.outputStream.bufferedWriter()
-    val fromBench = process.inputStream.bufferedReader()
+    val toBench = process.outputStream.bufferedWriter(Charsets.UTF_8)
+    val fromBench = process.inputStream.bufferedReader(Charsets.UTF_8)
+    val out = PrintStream(FileOutputStream(FileDescriptor.out), true, Charsets.UTF_8)
     val tmp = File.createTempFile("piece", ".wav")
 
     fun bench(piece: ShortArray, prompt: String?): Pair<String, Double> {
@@ -73,14 +77,13 @@ fun main(args: Array<String>) {
                 if (t.isNotBlank()) text.append(if (text.isEmpty()) "" else " ").append(t)
             }
         }
-        println("RESULT\t$path\t${"%.0f".format(totalMs)}\t$text")
-        System.out.flush()
+        out.println("RESULT\t$path\t${"%.0f".format(totalMs)}\t$text")
     }
     toBench.close()
     process.waitFor()
     tmp.delete()
     val sorted = pieceMs.sorted()
-    println(
+    out.println(
         "PIECES n=${pieceMs.size} avgLen=${"%.1f".format(pieceSeconds.average())}s maxLen=${"%.1f".format(pieceSeconds.maxOrNull() ?: 0.0)}s " +
             "avgWait=${"%.1f".format(pieceMs.average() / 1000)}s p90Wait=${"%.1f".format(sorted.getOrElse((sorted.size * 0.9).toInt()) { 0.0 } / 1000)}s",
     )
