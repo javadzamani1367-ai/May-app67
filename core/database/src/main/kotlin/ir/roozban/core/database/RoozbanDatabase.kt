@@ -20,8 +20,9 @@ import androidx.room.RoomDatabase
         MemoryFactEntity::class,
         NoteEntity::class,
         HiddenHistoryEntity::class,
+        AttendanceEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
     autoMigrations = [
         // v2: projects, labels, subtasks.
@@ -36,6 +37,8 @@ import androidx.room.RoomDatabase
         AutoMigration(from = 5, to = 6),
         // v7: done tasks the user removed from the done list (still in reports).
         AutoMigration(from = 6, to = 7),
+        // v8: attendance (check-in/out, missions, leave).
+        AutoMigration(from = 7, to = 8),
     ],
 )
 abstract class RoozbanDatabase : RoomDatabase() {
@@ -49,6 +52,7 @@ abstract class RoozbanDatabase : RoomDatabase() {
     abstract fun eventDao(): EventDao
     abstract fun memoryDao(): MemoryDao
     abstract fun noteDao(): NoteDao
+    abstract fun attendanceDao(): AttendanceDao
 
     companion object {
         const val NAME = "roozban.db"

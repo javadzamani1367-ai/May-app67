@@ -8,6 +8,7 @@ android {
 
 dependencies {
     implementation(projects.core.domain)
+    implementation(projects.core.ui)
     implementation(projects.core.calendar)
     implementation(projects.ai.runtime)
     implementation(projects.ai.tts)

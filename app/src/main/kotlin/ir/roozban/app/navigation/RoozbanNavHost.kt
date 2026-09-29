@@ -201,6 +201,7 @@ fun RoozbanApp(
                 onOpenSpeechModels = { navController.navigate(AssistantModelsRoute) },
                 onOpenVoices = { navController.navigate(AssistantVoicesRoute) },
                 onBack = back,
+                onNavigate = { navController.navigate(it) },
             )
             habitsScreens(
                 onOpenHabit = { navController.navigate(HabitRoute(it)) },

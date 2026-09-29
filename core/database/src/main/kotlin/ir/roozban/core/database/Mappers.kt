@@ -1,5 +1,7 @@
 package ir.roozban.core.database
 
+import ir.roozban.core.model.AttendanceEntry
+import ir.roozban.core.model.AttendanceKind
 import ir.roozban.core.model.EventCalendar
 import ir.roozban.core.model.EventKind
 import ir.roozban.core.model.FactSource
@@ -8,6 +10,7 @@ import ir.roozban.core.model.Habit
 import ir.roozban.core.model.HabitLog
 import ir.roozban.core.model.HabitSchedule
 import ir.roozban.core.model.Label
+import ir.roozban.core.model.LeaveType
 import ir.roozban.core.model.MemoryFact
 import ir.roozban.core.model.Note
 import ir.roozban.core.model.PersonalEvent
@@ -199,6 +202,23 @@ fun MemoryFact.toEntity() = MemoryFactEntity(
     pinned = pinned,
     createdAt = createdAt.toEpochMilli(),
     updatedAt = updatedAt.toEpochMilli(),
+)
+
+fun AttendanceEntity.toModel() = AttendanceEntry(
+    id = id,
+    kind = AttendanceKind.entries.firstOrNull { it.name == kind } ?: AttendanceKind.WORK,
+    start = floatingSecondsToLocal(start),
+    end = end?.let(::floatingSecondsToLocal),
+    allDay = allDay,
+    leaveType = leaveType?.let { t -> LeaveType.entries.firstOrNull { it.name == t } },
+    note = note,
+    createdAt = Instant.ofEpochMilli(createdAt),
+    updatedAt = Instant.ofEpochMilli(updatedAt),
+)
+
+fun AttendanceEntry.toEntity() = AttendanceEntity(
+    id, kind.name, start.toFloatingSeconds(), end?.toFloatingSeconds(), allDay, leaveType?.name, note,
+    createdAt.toEpochMilli(), updatedAt.toEpochMilli(),
 )
 
 fun NoteEntity.toModel() = Note(id, title, body, Instant.ofEpochMilli(createdAt), Instant.ofEpochMilli(updatedAt))

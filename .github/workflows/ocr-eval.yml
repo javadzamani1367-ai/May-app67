@@ -1,0 +1,80 @@
+name: OCR eval (Persian)
+
+# Persian pages, as clean scans and as phone photos (tilt, uneven light, blur, JPEG), through
+# offline OCR engines that could run on the phone: character error rate and time per page.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/ocr-eval.yml'
+      - 'tools/ocr_eval/**'
+
+concurrency:
+  group: ocr-eval-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fonts and shaping
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q libraqm0 fonts-noto-core > /dev/null
+          pip install -q pillow
+          mkdir -p fonts
+          curl -sSfL -o fonts/Sahel.ttf https://github.com/rastikerdar/sahel-font/raw/master/dist/Sahel.ttf || true
+          curl -sSfL -o fonts/Shabnam.ttf https://github.com/rastikerdar/shabnam-font/raw/master/dist/Shabnam.ttf || true
+          ls -la fonts; fc-list | grep -i naskh | head -3
+      - name: Make pages
+        run: |
+          FONTS="core/designsystem/src/main/res/font/vazirmatn_regular.ttf,/usr/share/fonts/truetype/noto/NotoNaskhArabic-Regular.ttf"
+          for f in fonts/*.ttf; do [ -s "$f" ] && FONTS="$FONTS,$f"; done
+          FONTS="$FONTS" python3 tools/ocr_eval/eval.py make pages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ocr-pages
+          path: pages/
+
+  eval:
+    needs: pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [tesseract-best, tesseract-fast, paddle, easyocr]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ocr-pages
+          path: pages
+      - name: Engine
+        run: |
+          case "${{ matrix.engine }}" in
+            tesseract-*)
+              sudo apt-get update -q && sudo apt-get install -y -q tesseract-ocr > /dev/null
+              tesseract --version | head -1
+              mkdir -p td-best td-fast
+              curl -sSfL -o td-best/fas.traineddata https://github.com/tesseract-ocr/tessdata_best/raw/main/fas.traineddata
+              curl -sSfL -o td-fast/fas.traineddata https://github.com/tesseract-ocr/tessdata_fast/raw/main/fas.traineddata
+              ls -la td-best td-fast ;;
+            paddle)
+              pip install -q paddlepaddle==3.0.0 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/ || pip install -q paddlepaddle
+              pip install -q paddleocr ;;
+            easyocr)
+              pip install -q torch torchvision --index-url https://download.pytorch.org/whl/cpu
+              pip install -q easyocr ;;
+          esac
+      - name: Run and score
+        env:
+          TESSDATA_BEST: ${{ github.workspace }}/td-best
+          TESSDATA_FAST: ${{ github.workspace }}/td-fast
+          OMP_THREAD_LIMIT: "4"
+        run: |
+          python3 tools/ocr_eval/run.py ${{ matrix.engine }} pages/list.txt > out.txt
+          python3 tools/ocr_eval/eval.py score pages out.txt | tee summary.txt
+          head -c 1500 out.txt
+          { echo "### ${{ matrix.engine }}"; echo '```'; cat summary.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

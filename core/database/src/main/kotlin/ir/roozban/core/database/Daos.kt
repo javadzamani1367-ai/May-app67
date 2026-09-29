@@ -341,6 +341,25 @@ interface NoteDao {
 }
 
 @Dao
+interface AttendanceDao {
+    /** Entries touching [from, until) in floating seconds; an open one counts as reaching now. */
+    @Query("SELECT * FROM attendance WHERE start < :until AND (`end` IS NULL OR `end` >= :from) ORDER BY start")
+    fun observeBetween(from: Long, until: Long): Flow<List<AttendanceEntity>>
+
+    @Query("SELECT * FROM attendance WHERE `end` IS NULL AND kind = 'WORK' ORDER BY start DESC LIMIT 1")
+    fun observeOpen(): Flow<AttendanceEntity?>
+
+    @Query("SELECT * FROM attendance WHERE `end` IS NULL AND kind = 'WORK' ORDER BY start DESC LIMIT 1")
+    suspend fun open(): AttendanceEntity?
+
+    @Upsert
+    suspend fun upsert(entry: AttendanceEntity)
+
+    @Query("DELETE FROM attendance WHERE id = :id")
+    suspend fun delete(id: String)
+}
+
+@Dao
 interface MemoryDao {
     @Query("SELECT * FROM memory_fact ORDER BY pinned DESC, updated_at DESC")
     fun observeAll(): Flow<List<MemoryFactEntity>>
@@ -411,6 +430,15 @@ interface BackupDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHiddenDone(rows: List<HiddenHistoryEntity>)
+
+    @Query("SELECT * FROM attendance")
+    suspend fun attendance(): List<AttendanceEntity>
+
+    @Query("DELETE FROM attendance")
+    suspend fun clearAttendance()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAttendance(rows: List<AttendanceEntity>)
 
     @Query("SELECT * FROM note")
     suspend fun notes(): List<NoteEntity>
@@ -497,6 +525,7 @@ interface BackupDao {
         memoryFacts: List<MemoryFactEntity>? = null,
         notes: List<NoteEntity>? = null,
         hiddenDone: List<HiddenHistoryEntity> = emptyList(),
+        attendance: List<AttendanceEntity>? = null,
     ) {
         clearReminders()
         clearEvents()
@@ -525,6 +554,11 @@ interface BackupDao {
         if (memoryFacts != null) {
             clearMemoryFacts()
             insertMemoryFacts(memoryFacts.distinctBy { it.key })
+        }
+        // Null keeps the phone's attendance (backups made before it existed).
+        if (attendance != null) {
+            clearAttendance()
+            insertAttendance(attendance)
         }
         // Likewise for notes (backups made before the notes tool).
         if (notes != null) {

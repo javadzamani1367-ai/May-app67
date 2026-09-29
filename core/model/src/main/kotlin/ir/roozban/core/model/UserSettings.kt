@@ -43,6 +43,7 @@ data class UserSettings(
     val eventSound: String? = null,
     val planning: PlanningSettings = PlanningSettings(),
     val speech: SpeechSettings = SpeechSettings(),
+    val attendance: AttendanceSettings = AttendanceSettings(),
 ) {
     companion object {
         const val BACKGROUND_IMAGE = "image"

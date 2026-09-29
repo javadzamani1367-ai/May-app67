@@ -239,6 +239,20 @@ data class NoteEntity(
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
 )
 
+/** Attendance: check-in/out, missions and leave. Times are floating local seconds. */
+@Entity(tableName = "attendance", indices = [Index("start"), Index("end")])
+data class AttendanceEntity(
+    @PrimaryKey val id: String,
+    val kind: String,
+    val start: Long,
+    val end: Long?,
+    @ColumnInfo(name = "all_day") val allDay: Boolean,
+    @ColumnInfo(name = "leave_type") val leaveType: String?,
+    val note: String,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+    @ColumnInfo(name = "updated_at") val updatedAt: Long,
+)
+
 @Entity(tableName = "memory_fact", indices = [Index(value = ["key"], unique = true)])
 data class MemoryFactEntity(
     @PrimaryKey val id: String,

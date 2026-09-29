@@ -127,8 +127,10 @@ def edits(a, b):
     return prev[-1]
 
 
-def score(d, results, refs_name="refs.tsv"):
+def score(d, results, refs_name="refs.tsv", only=None):
     refs = dict(line.rstrip("\n").split("\t", 1) for line in open(os.path.join(d, refs_name), encoding="utf-8"))
+    if only:
+        refs = {k: v for k, v in refs.items() if re.search(only, k)}
     we = wn = ce = cn = dels = 0
     ms = 0.0
     n = 0
@@ -158,6 +160,6 @@ if __name__ == "__main__":
     elif sys.argv[1] == "long":
         long_form(sys.argv[2], int(sys.argv[3]), [int(g) for g in sys.argv[4].split(",")])
     elif sys.argv[1] == "score-long":
-        score(sys.argv[2], sys.argv[3], "long_refs.tsv")
+        score(sys.argv[2], sys.argv[3], "long_refs.tsv", sys.argv[4] if len(sys.argv) > 4 else None)
     else:
         score(sys.argv[2], sys.argv[3])

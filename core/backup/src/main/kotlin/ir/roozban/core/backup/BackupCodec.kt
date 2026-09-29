@@ -71,6 +71,11 @@ object BackupMerger {
             timeEntries = (local.timeEntries + incoming.timeEntries).distinctBy { it.id },
             habits = habits,
             events = newest(local.events, incoming.events, { it.id }, { it.updatedAt }),
+            attendance = if (local.attendance == null && incoming.attendance == null) {
+                null
+            } else {
+                newest(local.attendance.orEmpty(), incoming.attendance.orEmpty(), { it.id }, { it.updatedAt })
+            },
             notes = if (local.notes == null && incoming.notes == null) {
                 null
             } else {

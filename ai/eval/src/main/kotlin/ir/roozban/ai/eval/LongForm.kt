@@ -4,6 +4,8 @@ import ir.roozban.ai.core.audio.Pcm
 import ir.roozban.ai.core.audio.PieceTranscriber
 import ir.roozban.ai.core.audio.Segmenter
 import ir.roozban.ai.core.audio.Transcript
+import ir.roozban.ai.core.text.PersianLexicon
+import ir.roozban.ai.core.text.SpellCorrector
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.FileDescriptor
@@ -18,6 +20,8 @@ import java.io.PrintStream
  *
  * usage: LongForm <bench> <model> <list.txt of long WAVs> <config: old|new> [threads]
  * ROOZBAN_FIT_CTX=1 in the environment makes the bench encode only what each piece fills.
+ * ROOZBAN_SPELL_DIR (fa_words/fa_pairs) turns on [SpellCorrector]; ROOZBAN_SPELL="edit,sound,unknown,margin,context"
+ * sets its parameters.
  */
 fun main(args: Array<String>) {
     val (bench, model, list, config) = args
@@ -28,6 +32,15 @@ fun main(args: Array<String>) {
     val fromBench = process.inputStream.bufferedReader(Charsets.UTF_8)
     val out = PrintStream(FileOutputStream(FileDescriptor.out), true, Charsets.UTF_8)
     val tmp = File.createTempFile("piece", ".wav")
+    val speller = System.getenv("ROOZBAN_SPELL_DIR")?.let { dir ->
+        val p = System.getenv("ROOZBAN_SPELL")?.split(',')?.map(String::toDouble)
+        val params = if (p == null) SpellCorrector.Params() else SpellCorrector.Params(p[0], p[1], p[2], p[3], contextWeight = p[4])
+        val t = System.currentTimeMillis()
+        SpellCorrector(PersianLexicon.load(File(dir)), params = params).also {
+            System.err.println("spelling data loaded in ${System.currentTimeMillis() - t} ms")
+        }
+    }
+    var spellMs = 0L
 
     fun bench(piece: ShortArray, prompt: String?): Pair<String, Double> {
         tmp.writeBytes(Pcm.toWav(piece))
@@ -70,7 +83,11 @@ fun main(args: Array<String>) {
             val (t, ms) = bench(piece, null)
             totalMs += ms
             pieceMs += ms
-            Transcript.clean(t)
+            val clean = Transcript.clean(t)
+            if (speller == null) clean else {
+                val s0 = System.nanoTime()
+                speller.correct(clean).also { spellMs += (System.nanoTime() - s0) / 1_000_000 }
+            }
         })
         runBlocking {
             for ((n, piece) in pieces.withIndex()) {
@@ -97,6 +114,6 @@ fun main(args: Array<String>) {
     val sorted = pieceMs.sorted()
     out.println(
         "PIECES n=${pieceMs.size} avgLen=${"%.1f".format(pieceSeconds.average())}s maxLen=${"%.1f".format(pieceSeconds.maxOrNull() ?: 0.0)}s " +
-            "avgWait=${"%.1f".format(pieceMs.average() / 1000)}s p90Wait=${"%.1f".format(sorted.getOrElse((sorted.size * 0.9).toInt()) { 0.0 } / 1000)}s",
+            "spell=${spellMs}ms avgWait=${"%.1f".format(pieceMs.average() / 1000)}s p90Wait=${"%.1f".format(sorted.getOrElse((sorted.size * 0.9).toInt()) { 0.0 } / 1000)}s",
     )
 }

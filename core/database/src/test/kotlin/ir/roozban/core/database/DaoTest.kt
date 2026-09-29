@@ -233,6 +233,19 @@ class DaoTest {
     }
 
     @Test
+    fun `attendance in a range and the open check-in`() = runTest {
+        val a = db.attendanceDao()
+        a.upsert(AttendanceEntity("in", "WORK", 1_000, 2_000, false, null, "", 1, 1))
+        a.upsert(AttendanceEntity("open", "WORK", 5_000, null, false, null, "", 1, 1))
+        a.upsert(AttendanceEntity("leave", "LEAVE", 10_000, 90_000, true, "SICK", "", 1, 1))
+        a.upsert(AttendanceEntity("old", "WORK", 10, 20, false, null, "", 1, 1))
+        assertThat(a.observeBetween(1_500, 20_000).first().map { it.id }).containsExactly("in", "open", "leave").inOrder()
+        assertThat(a.open()?.id).isEqualTo("open")
+        a.upsert(AttendanceEntity("open", "WORK", 5_000, 6_000, false, null, "", 1, 2))
+        assertThat(a.open()).isNull()
+    }
+
+    @Test
     fun `focus sessions and tracked time with their task`() = runTest {
         tasks.upsert(task("a").toEntity())
         val focus = db.focusDao()

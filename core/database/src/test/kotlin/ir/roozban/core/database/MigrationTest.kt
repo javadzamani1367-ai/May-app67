@@ -165,4 +165,19 @@ class MigrationTest {
         assertThat(db.backupDao().hiddenDone()).hasSize(1)
         db.close()
     }
+
+    @Test
+    fun `migrates 7 to 8 keeping the done list and adding attendance`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val file = context.getDatabasePath("migration-test-7.db").apply { parentFile?.mkdirs(); delete() }
+        createFromSchema(file, 7)
+        SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READWRITE).use { v7 ->
+            v7.execSQL("INSERT INTO history_hidden (task_id, occurrence, hidden_at) VALUES ('t', -1, 5)")
+        }
+        val db = Room.databaseBuilder(context, RoozbanDatabase::class.java, file.path).allowMainThreadQueries().build()
+        assertThat(db.backupDao().hiddenDone()).hasSize(1)
+        db.attendanceDao().upsert(AttendanceEntity("a", "WORK", 100, null, false, null, "", 1, 1))
+        assertThat(db.attendanceDao().open()?.id).isEqualTo("a")
+        db.close()
+    }
 }

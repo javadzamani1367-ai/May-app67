@@ -1,5 +1,6 @@
 package ir.roozban.core.data
 
+import ir.roozban.core.backup.BackupAttendance
 import ir.roozban.core.backup.BackupCodec
 import ir.roozban.core.backup.BackupCompletion
 import ir.roozban.core.backup.BackupData
@@ -19,6 +20,7 @@ import ir.roozban.core.backup.BackupTimeEntry
 import ir.roozban.core.backup.InvalidBackupException
 import ir.roozban.core.backup.WrongPasswordException
 import ir.roozban.core.database.BackupDao
+import ir.roozban.core.database.AttendanceEntity
 import ir.roozban.core.database.CompletionEntity
 import ir.roozban.core.database.FocusSessionEntity
 import ir.roozban.core.database.HabitEntity
@@ -39,6 +41,7 @@ import ir.roozban.core.domain.RestoreMode
 import ir.roozban.core.domain.RestoreResult
 import ir.roozban.core.domain.RoutineReminders
 import ir.roozban.core.domain.SettingsRepository
+import ir.roozban.core.model.AttendanceSettings
 import ir.roozban.core.model.FocusSettings
 import ir.roozban.core.model.PlanningSettings
 import ir.roozban.core.model.ReminderKind
@@ -123,6 +126,7 @@ class RoomBackupService @Inject constructor(
                 )
             },
             notes = dao.notes().map { BackupNote(it.id, it.title, it.body, it.createdAt, it.updatedAt) },
+            attendance = dao.attendance().map { BackupAttendance(it.id, it.kind, it.start, it.end, it.allDay, it.leaveType, it.note, it.createdAt, it.updatedAt) },
             memory = dao.memoryFacts().map {
                 BackupFact(it.id, it.key, it.text, it.source, it.confidence, it.pinned, it.createdAt, it.updatedAt)
             },
@@ -155,6 +159,7 @@ class RoomBackupService @Inject constructor(
                 )
             },
             notes = data.notes?.map { NoteEntity(it.id, it.title, it.body, it.createdAt, it.updatedAt) },
+            attendance = data.attendance?.map { AttendanceEntity(it.id, it.kind, it.start, it.end, it.allDay, it.leaveType, it.note, it.createdAt, it.updatedAt) },
             memoryFacts = data.memory?.map {
                 MemoryFactEntity(it.id, it.key, it.text, it.source, it.confidence.coerceIn(0f, 1f), it.pinned, it.createdAt, it.updatedAt)
             },
@@ -212,6 +217,8 @@ class RoomBackupService @Inject constructor(
         planMorningMinute = planning.morningTime?.let { it.hour * 60 + it.minute },
         planAuto = planning.autoPlan,
         learningEnabled = planning.learningEnabled,
+        attendanceDailyMinutes = attendance.dailyMinutes,
+        attendanceThursdayMinutes = attendance.thursdayMinutes,
     )
 
     private fun BackupSettings.toModel() = UserSettings(
@@ -253,6 +260,10 @@ class RoomBackupService @Inject constructor(
             morningTime = planMorningMinute?.let(::minuteTime),
             autoPlan = planAuto,
             learningEnabled = learningEnabled,
+        ),
+        attendance = AttendanceSettings(
+            dailyMinutes = attendanceDailyMinutes.coerceIn(0, 24 * 60),
+            thursdayMinutes = attendanceThursdayMinutes.coerceIn(0, 24 * 60),
         ),
     )
 

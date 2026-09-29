@@ -33,7 +33,7 @@ import ir.roozban.core.designsystem.theme.Roozban
 
 /** «ابزارهای کاربردی»: small tools next to the planner. */
 @Composable
-internal fun ToolsScreen(onOpenNotes: () -> Unit, onBack: () -> Unit) {
+internal fun ToolsScreen(onOpenNotes: () -> Unit, onOpenDates: (span: Boolean) -> Unit, onOpen: (Any) -> Unit, onBack: () -> Unit) {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
@@ -55,6 +55,24 @@ internal fun ToolsScreen(onOpenNotes: () -> Unit, onBack: () -> Unit) {
                 Roozban.colors.focus,
                 onOpenNotes,
             )
+            Tool(
+                DsR.drawable.ic_calendar_month,
+                "تبدیل تاریخ",
+                "شمسی، میلادی و قمری به هم؛ با روز هفته و فاصله تا امروز.",
+                Roozban.colors.warning,
+            ) { onOpenDates(false) }
+            Tool(
+                DsR.drawable.ic_schedule,
+                "فاصلهٔ دو تاریخ",
+                "از یک تاریخ تا تاریخ دیگر: چند سال و ماه و روز، چند هفته، چند روز.",
+                Roozban.colors.info,
+            ) { onOpenDates(true) }
+            Tool(
+                DsR.drawable.ic_timer,
+                "ثبت تردد",
+                "ورود و خروج، مأموریت و مرخصی؛ با گزارش ماهانه، اضافه‌کار و خروجی اکسل.",
+                Roozban.colors.success,
+            ) { onOpen(AttendanceRoute) }
         }
     }
 }

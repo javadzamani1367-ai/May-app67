@@ -27,6 +27,8 @@ data class BackupData(
     val notes: List<BackupNote>? = null,
     /** Done tasks removed from the done list (occurrence -1 for a one-off task). */
     val hiddenDone: List<BackupHiddenDone> = emptyList(),
+    /** Null in backups made before attendance existed: restoring keeps the phone's. */
+    val attendance: List<BackupAttendance>? = null,
 ) {
     companion object {
         const val FORMAT_VERSION = 1
@@ -116,6 +118,8 @@ data class BackupSettings(
     val planMorningMinute: Int? = null,
     val planAuto: Boolean = false,
     val learningEnabled: Boolean = true,
+    val attendanceDailyMinutes: Int = 480,
+    val attendanceThursdayMinutes: Int = 0,
 )
 
 @Serializable
@@ -164,6 +168,19 @@ data class BackupEvent(
     val remindDays: String = "0,1",
     val reminderMinute: Int = 540,
     val notes: String = "",
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
+@Serializable
+data class BackupAttendance(
+    val id: String,
+    val kind: String,
+    val start: Long,
+    val end: Long? = null,
+    val allDay: Boolean = false,
+    val leaveType: String? = null,
+    val note: String = "",
     val createdAt: Long,
     val updatedAt: Long,
 )

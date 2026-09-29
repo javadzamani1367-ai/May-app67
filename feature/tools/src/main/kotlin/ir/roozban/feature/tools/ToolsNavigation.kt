@@ -12,6 +12,12 @@ data object ToolsRoute
 data object NotesRoute
 
 @Serializable
+data object AttendanceRoute
+
+@Serializable
+data class DateToolsRoute(val span: Boolean = false)
+
+@Serializable
 data class NoteRoute(val id: String? = null)
 
 fun NavGraphBuilder.toolsScreens(
@@ -20,8 +26,12 @@ fun NavGraphBuilder.toolsScreens(
     onOpenSpeechModels: () -> Unit,
     onOpenVoices: () -> Unit,
     onBack: () -> Unit,
+    /** Opens another screen of this module (its routes are declared here). */
+    onNavigate: (Any) -> Unit,
 ) {
-    composable<ToolsRoute> { ToolsScreen(onOpenNotes = onOpenNotes, onBack = onBack) }
+    composable<ToolsRoute> { ToolsScreen(onOpenNotes = onOpenNotes, onOpenDates = { onNavigate(DateToolsRoute(it)) }, onOpen = onNavigate, onBack = onBack) }
+    composable<AttendanceRoute> { AttendanceScreen(onBack = onBack) }
+    composable<DateToolsRoute> { entry -> DateToolsScreen(startOnSpan = entry.toRoute<DateToolsRoute>().span, onBack = onBack) }
     composable<NotesRoute> { NotesScreen(onOpenNote = onOpenNote, onBack = onBack) }
     composable<NoteRoute> { entry ->
         NoteEditorScreen(

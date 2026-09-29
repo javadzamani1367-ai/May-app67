@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import ir.roozban.core.domain.SettingsRepository
+import ir.roozban.core.model.AttendanceSettings
 import ir.roozban.core.model.FocusSettings
 import ir.roozban.core.model.PlanningSettings
 import ir.roozban.core.model.ReminderKind
@@ -77,6 +78,8 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
         val PLAN_MORNING = intPreferencesKey("plan_morning_minute")
         val PLAN_AUTO = booleanPreferencesKey("plan_auto")
         val LEARNING = booleanPreferencesKey("learning_enabled")
+        val ATT_DAILY = intPreferencesKey("attendance_daily_minutes")
+        val ATT_THURSDAY = intPreferencesKey("attendance_thursday_minutes")
         /** Absent = automatic. */
         val SPEECH_VOICE = stringPreferencesKey("speech_voice")
         val SPEECH_RATE = floatPreferencesKey("speech_rate")
@@ -139,6 +142,10 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
                     autoPlan = this[Keys.PLAN_AUTO] ?: DEFAULTS.planning.autoPlan,
                     learningEnabled = this[Keys.LEARNING] ?: DEFAULTS.planning.learningEnabled,
                 ),
+                attendance = AttendanceSettings(
+                    dailyMinutes = this[Keys.ATT_DAILY] ?: DEFAULTS.attendance.dailyMinutes,
+                    thursdayMinutes = this[Keys.ATT_THURSDAY] ?: DEFAULTS.attendance.thursdayMinutes,
+                ),
                 speech = SpeechSettings(
                     voice = this[Keys.SPEECH_VOICE],
                     rate = (this[Keys.SPEECH_RATE] ?: DEFAULTS.speech.rate).coerceIn(SpeechSettings.MIN_RATE, SpeechSettings.MAX_RATE),
@@ -184,6 +191,8 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
             this[Keys.PLAN_MORNING] = s.planning.morningTime.toMinute()
             this[Keys.PLAN_AUTO] = s.planning.autoPlan
             this[Keys.LEARNING] = s.planning.learningEnabled
+            this[Keys.ATT_DAILY] = s.attendance.dailyMinutes
+            this[Keys.ATT_THURSDAY] = s.attendance.thursdayMinutes
             s.speech.voice.let { if (it == null) remove(Keys.SPEECH_VOICE) else this[Keys.SPEECH_VOICE] = it }
             this[Keys.SPEECH_RATE] = s.speech.rate
             this[Keys.SPEECH_READ_REPLIES] = s.speech.readReplies

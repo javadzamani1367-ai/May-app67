@@ -2,25 +2,30 @@ package ir.roozban.core.data
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import ir.roozban.core.database.AttendanceDao
 import ir.roozban.core.database.MemoryDao
 import ir.roozban.core.database.NoteDao
 import ir.roozban.core.database.toEntity
+import ir.roozban.core.database.toFloatingSeconds
 import ir.roozban.core.database.toModel
+import ir.roozban.core.domain.AttendanceRepository
 import ir.roozban.core.domain.LearningSnapshot
 import ir.roozban.core.domain.LearningSnapshotCodec
 import ir.roozban.core.domain.LearningStore
 import ir.roozban.core.domain.MemoryRepository
 import ir.roozban.core.domain.NoteRepository
+import ir.roozban.core.model.AttendanceEntry
 import ir.roozban.core.model.FactSource
 import ir.roozban.core.model.MemoryFact
 import ir.roozban.core.model.Note
+import java.io.File
+import java.time.LocalDate
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import java.io.File
-import javax.inject.Inject
-import javax.inject.Singleton
 
 class RoomMemoryRepository @Inject constructor(private val dao: MemoryDao) : MemoryRepository {
     override fun observeFacts(): Flow<List<MemoryFact>> = dao.observeAll().map { list -> list.map { it.toModel() } }
@@ -82,4 +87,18 @@ class FileLearningStore @Inject constructor(@ApplicationContext context: Context
         file.delete()
         cached = null
     }
+}
+
+class RoomAttendanceRepository @Inject constructor(private val dao: AttendanceDao) : AttendanceRepository {
+    override fun observeBetween(from: LocalDate, to: LocalDate): Flow<List<AttendanceEntry>> =
+        dao.observeBetween(from.atStartOfDay().toFloatingSeconds(), to.plusDays(1).atStartOfDay().toFloatingSeconds())
+            .map { list -> list.map { it.toModel() } }
+
+    override fun observeOpen(): Flow<AttendanceEntry?> = dao.observeOpen().map { it?.toModel() }
+
+    override suspend fun open(): AttendanceEntry? = dao.open()?.toModel()
+
+    override suspend fun upsert(entry: AttendanceEntry) = dao.upsert(entry.toEntity())
+
+    override suspend fun delete(id: String) = dao.delete(id)
 }
