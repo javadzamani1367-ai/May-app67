@@ -39,16 +39,24 @@ class ModelDownloadService : Service() {
     private var job: Job? = null
     private var current: ModelSpec? = null
 
+    /** Downloads asked for while another one runs (the two spelling files, for example). */
+    private val queue = ArrayDeque<ModelSpec>()
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_CANCEL) {
+            synchronized(queue) { queue.clear() }
             job?.cancel()
             stop()
             return START_NOT_STICKY
         }
         val spec = intent?.getStringExtra(EXTRA_ID)?.let(ModelCatalog::get)
-        if (spec == null || job?.isActive == true) {
+        if (spec != null && job?.isActive == true) {
+            synchronized(queue) { if (spec.id != current?.id && queue.none { it.id == spec.id }) queue.addLast(spec) }
+            return START_NOT_STICKY
+        }
+        if (spec == null) {
             if (job?.isActive != true) stop()
             return START_NOT_STICKY
         }
@@ -109,7 +117,14 @@ class ModelDownloadService : Service() {
                 .setAutoCancel(true)
                 .build(),
         )
-        stop()
+        val next = synchronized(queue) { queue.removeFirstOrNull() }
+        if (next != null) {
+            current = next
+            nm.notify(NOTIFICATION_ID, progress(next, 0, next.sizeBytes))
+            run(next)
+        } else {
+            stop()
+        }
     }
 
     private fun progress(spec: ModelSpec, done: Long, total: Long) = NotificationCompat.Builder(this, CHANNEL)

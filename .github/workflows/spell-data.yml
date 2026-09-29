@@ -3,6 +3,9 @@ name: Persian spelling data and eval
 # Builds the word and word-pair frequencies the dictation spell corrector uses (Persian Wikipedia
 # plus an everyday-speech word list) and measures the corrector on long-form dictation: settings
 # are chosen on half of the recordings and reported on the other half.
+#
+# The app pins the published files by sha256 (ModelCatalog.spell), so the data is rebuilt and
+# re-published only when this workflow is run by hand; a push measures the published data.
 on:
   workflow_dispatch:
   push:
@@ -20,6 +23,7 @@ permissions:
 
 jobs:
   data:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -53,16 +57,20 @@ jobs:
 
   eval:
     needs: data
+    if: always() && needs.data.result != 'failure' && needs.data.result != 'cancelled'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - uses: actions/download-artifact@v4
-        with:
-          name: spell-data
-          path: spell
+      - name: Spelling data (as published)
+        run: |
+          mkdir -p spell
+          for f in fa_words.txt.gz fa_pairs.txt.gz; do
+            curl -L --fail --retry 3 -o "spell/$f" "https://github.com/${{ github.repository }}/releases/download/spell-data/$f"
+          done
+          sha256sum spell/*
       - run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg > /dev/null
       - run: python3 tools/speech_eval/eval.py prepare clips 48 && python3 tools/speech_eval/eval.py long clips 6 250,400,550,800
       - uses: actions/setup-java@v4

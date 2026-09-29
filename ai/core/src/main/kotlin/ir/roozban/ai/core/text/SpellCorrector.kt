@@ -8,20 +8,26 @@ import kotlin.math.ln
 import kotlin.math.max
 
 /**
- * Persian word and word-pair frequencies (from `tools/spell/build.py`), kept compact: words in
- * a sorted array, pairs as sorted `id1 << 32 | id2` keys with their counts.
+ * Persian word and word-pair frequencies (from `tools/spell/build.py`), kept compact for a phone:
+ * words in a sorted array, their half-space-free spellings in a second sorted array, and pairs as
+ * sorted packed keys with their counts (about 30 MB for 250k words and 1.2M pairs).
  */
 class PersianLexicon private constructor(
     private val words: Array<String>,
     private val counts: IntArray,
+    private val idBits: Int,
     private val pairKeys: LongArray,
     private val pairCounts: IntArray,
-    /** Spelling without half-spaces → id of its most frequent written form. */
-    private val byBare: HashMap<String, Int>,
+    /** Spellings without half-spaces, sorted, and the id of each one's most frequent written form. */
+    private val bareWords: Array<String>,
+    private val bareIds: IntArray,
 ) {
     private val total: Double = counts.sumOf { it.toDouble() }
 
-    fun id(word: String): Int = byBare[bare(word)] ?: -1
+    fun id(word: String): Int {
+        val i = bareWords.binarySearch(bare(word))
+        return if (i >= 0) bareIds[i] else -1
+    }
 
     fun word(id: Int): String = words[id]
 
@@ -29,7 +35,7 @@ class PersianLexicon private constructor(
 
     fun pairCount(a: Int, b: Int): Int {
         if (a < 0 || b < 0) return 0
-        val i = pairKeys.binarySearch((a.toLong() shl 32) or b.toLong())
+        val i = pairKeys.binarySearch((a.toLong() shl idBits) or b.toLong())
         return if (i >= 0) pairCounts[i] else 0
     }
 
@@ -47,10 +53,13 @@ class PersianLexicon private constructor(
     companion object {
         private const val BACKOFF = 0.4
 
-        fun bare(word: String): String = word.replace("‌", "")
+        fun bare(word: String): String = if ('\u200C' in word) word.replace("\u200C", "") else word
 
         fun load(dir: File): PersianLexicon =
-            read(File(dir, "fa_words.txt.gz").inputStream(), File(dir, "fa_pairs.txt.gz").inputStream())
+            read(File(dir, WORDS_FILE).inputStream(), File(dir, PAIRS_FILE).inputStream())
+
+        const val WORDS_FILE = "fa_words.txt.gz"
+        const val PAIRS_FILE = "fa_pairs.txt.gz"
 
         fun read(wordsIn: InputStream, pairsIn: InputStream): PersianLexicon {
             val list = ArrayList<Pair<String, Int>>(260_000)
@@ -61,16 +70,25 @@ class PersianLexicon private constructor(
                 }
             }
             list.sortBy { it.first }
-            val words = Array(list.size) { list[it].first }
-            val counts = IntArray(list.size) { list[it].second }
-            val index = HashMap<String, Int>(words.size * 2)
-            words.forEachIndexed { i, w -> index[w] = i }
-            val byBare = HashMap<String, Int>(words.size * 2)
-            words.forEachIndexed { i, w ->
-                val b = bare(w)
-                val prev = byBare[b]
-                if (prev == null || counts[i] > counts[prev]) byBare[b] = i
+            // Keep one entry per spelling (the file should not repeat one, but be safe).
+            val unique = ArrayList<Pair<String, Int>>(list.size)
+            for (e in list) if (unique.isEmpty() || unique.last().first != e.first) unique += e
+            val words = Array(unique.size) { unique[it].first }
+            val counts = IntArray(unique.size) { unique[it].second }
+            list.clear()
+            // Half-space-free spelling → its most frequent form.
+            val bareOrder = words.indices.sortedWith(compareBy<Int> { bare(words[it]) }.thenByDescending { counts[it] })
+            val bw = ArrayList<String>(words.size)
+            val bi = IntArray(words.size)
+            var nb = 0
+            for (i in bareOrder) {
+                val b = bare(words[i])
+                if (nb > 0 && bw[nb - 1] == b) continue
+                bw += if (b == words[i]) words[i] else b
+                bi[nb++] = i
             }
+            val idBits = 32 - Integer.numberOfLeadingZeros(maxOf(1, words.size))
+            // Pairs: parsed into packed (key, line number) so a primitive sort orders them.
             var keys = LongArray(1 shl 20)
             var values = IntArray(1 shl 20)
             var n = 0
@@ -79,22 +97,39 @@ class PersianLexicon private constructor(
                     val a = line.indexOf(' ')
                     val b = line.lastIndexOf(' ')
                     if (a <= 0 || b <= a) return@forEach
-                    val x = index[line.substring(0, a)] ?: return@forEach
-                    val y = index[line.substring(a + 1, b)] ?: return@forEach
+                    val x = words.binarySearch(line.substring(0, a))
+                    val y = words.binarySearch(line.substring(a + 1, b))
+                    if (x < 0 || y < 0) return@forEach
                     val c = line.substring(b + 1).toIntOrNull() ?: return@forEach
                     if (n == keys.size) {
                         keys = keys.copyOf(n * 2)
                         values = values.copyOf(n * 2)
                     }
-                    keys[n] = (x.toLong() shl 32) or y.toLong()
+                    keys[n] = (x.toLong() shl idBits) or y.toLong()
                     values[n] = c
                     n++
                 }
             }
-            val order = (0 until n).sortedBy { keys[it] }
-            val sortedKeys = LongArray(n) { keys[order[it]] }
-            val sortedValues = IntArray(n) { values[order[it]] }
-            return PersianLexicon(words, counts, sortedKeys, sortedValues, byBare)
+            val rowBits = 32 - Integer.numberOfLeadingZeros(maxOf(1, n))
+            val sortedKeys = LongArray(n)
+            val sortedValues = IntArray(n)
+            if (2 * idBits + rowBits <= 63) {
+                val packed = LongArray(n) { (keys[it] shl rowBits) or it.toLong() }
+                packed.sort()
+                val mask = (1L shl rowBits) - 1
+                for (i in 0 until n) {
+                    val row = (packed[i] and mask).toInt()
+                    sortedKeys[i] = keys[row]
+                    sortedValues[i] = values[row]
+                }
+            } else {
+                val order = (0 until n).sortedBy { keys[it] }
+                for (i in 0 until n) {
+                    sortedKeys[i] = keys[order[i]]
+                    sortedValues[i] = values[order[i]]
+                }
+            }
+            return PersianLexicon(words, counts, idBits, sortedKeys, sortedValues, bw.toTypedArray(), bi.copyOf(nb))
         }
 
         private fun reader(input: InputStream): BufferedReader = GZIPInputStream(input, 1 shl 16).bufferedReader()
@@ -185,8 +220,9 @@ class SpellCorrector(
                 bestId = id
             }
         }
-        // A known word keeps its usual half-space spelling («میروم» → «می‌روم»).
-        val usual = if (known) lexicon.word(self) else original
+        // A known word gets its usual half-space («میروم» → «می‌روم»), but a half-space already
+        // there stays: colloquial text often drops it, which does not make it wrong.
+        val usual = if (known && '\u200C' !in original) lexicon.word(self) else original
         return when {
             bestId < 0 -> usual
             !known -> if (bestScore > selfScore) lexicon.word(bestId) else original

@@ -15,6 +15,9 @@ enum class ModelKind {
 
     /** Tesseract language data for reading text in pictures and scanned PDFs. */
     OCR,
+
+    /** Persian word frequencies for correcting dictation spelling. */
+    SPELL,
 }
 
 /** A downloadable model. [sha256] and [sizeBytes] are of the exact file at [url]. */
@@ -167,6 +170,34 @@ object ModelCatalog {
         ocrLanguage("ocr-fas", "فارسی", "fas-fast.traineddata", 431_500L, "db1c0a91208aff00d3cf1ed2c1d23f76419afd5f024688b4f71adc3f2ce4a505"),
     )
 
+    private const val SPELL_RELEASE = "https://github.com/javadzamani1367-ai/May-app67/releases/download/spell-data"
+
+    /**
+     * Spelling data for dictation (tools/spell, spell-data workflow): how often each Persian word
+     * and word pair occurs in Persian Wikipedia and film subtitles. On long dictation it lowered the
+     * word error rate on held-out recordings from 20.9% to 20.2%. Both files are needed.
+     */
+    val spell: List<ModelSpec> = listOf(
+        spellFile("spell-fa-words", "fa_words.txt.gz", 1_407_584L, "bd5f24e01ab94f7f19e053b7a50f1fc0902076bec018210a0d4374a268167921"),
+        spellFile("spell-fa-pairs", "fa_pairs.txt.gz", 8_416_771L, "4fc89332ce5f19f746722337204546a82c57e4c12802341a89341e8c35148b66"),
+    )
+
+    /** The file name a spelling spec is stored under. */
+    fun spellFileName(spec: ModelSpec): String = spec.url.substringAfterLast('/')
+
+    private fun spellFile(id: String, file: String, size: Long, sha: String) = ModelSpec(
+        id = id,
+        name = "اصلاح املای دیکته",
+        description = "واژه‌نامهٔ فارسی برای اصلاح غلط‌های املایی متن گفتاری",
+        url = "$SPELL_RELEASE/$file",
+        sizeBytes = size,
+        sha256 = sha,
+        template = ChatTemplate.CHATML,
+        minTier = DeviceTier.UNSUPPORTED,
+        license = "CC BY-SA (Persian Wikipedia), FrequencyWords",
+        kind = ModelKind.SPELL,
+    )
+
     /** Tesseract's language code of an OCR spec («fas», «eng»). */
     fun ocrLanguage(spec: ModelSpec): String = spec.id.removePrefix("ocr-")
 
@@ -200,7 +231,7 @@ object ModelCatalog {
     fun isLegacySpeech(id: String) = id.startsWith("whisper-")
 
     fun get(id: String): ModelSpec? = all.firstOrNull { it.id == id } ?: speech.firstOrNull { it.id == id } ?: voices.firstOrNull { it.id == id }
-        ?: ocr.firstOrNull { it.id == id }
+        ?: ocr.firstOrNull { it.id == id } ?: spell.firstOrNull { it.id == id }
 
     /** Assistant models the device can run, the recommended one first. */
     fun availableFor(tier: DeviceTier): List<ModelSpec> =

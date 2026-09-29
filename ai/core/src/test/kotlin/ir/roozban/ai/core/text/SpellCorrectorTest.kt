@@ -26,6 +26,8 @@ class SpellCorrectorTest {
             برخاست 200
             او 20000
             می‌روم 400
+            میگفتن 500
+            می‌گفتن 100
             استعمارگران 50
             انگلیسی 900
             """.trimIndent(),
@@ -59,6 +61,8 @@ class SpellCorrectorTest {
     @Test
     fun `half-spaces follow the usual spelling`() {
         assertThat(SpellCorrector(lexicon).correct("میروم")).isEqualTo("می‌روم")
+        // Never taken away, even when the spelling without it is more common.
+        assertThat(SpellCorrector(lexicon).correct("می‌گفتن")).isEqualTo("می‌گفتن")
     }
 
     @Test

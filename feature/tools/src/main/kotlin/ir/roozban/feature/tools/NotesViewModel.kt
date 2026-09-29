@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.roozban.ai.runtime.Dictation
 import ir.roozban.ai.runtime.DictationEvent
+import ir.roozban.ai.runtime.Spelling
 import ir.roozban.ai.tts.SpeakState
 import ir.roozban.ai.tts.SpeechOutput
 import ir.roozban.core.domain.NoteRepository
@@ -75,6 +76,7 @@ class NoteEditorViewModel @Inject constructor(
     private val useCases: NoteUseCases,
     private val dictation: Dictation,
     private val speech: SpeechOutput,
+    private val spelling: Spelling,
 ) : ViewModel() {
     private val _state = MutableStateFlow(NoteUiState())
     val state: StateFlow<NoteUiState> = _state.asStateFlow()
@@ -87,6 +89,12 @@ class NoteEditorViewModel @Inject constructor(
 
     private var stopRequested = false
     private var dictating: Job? = null
+
+    /** The text right after the last dictation, to learn from the user's corrections of it. */
+    private var dictated: String? = null
+
+    /** Dictation works but its spelling data is missing: the screen offers it. */
+    val offerSpelling: Boolean get() = dictation.hasModel && !spelling.installed
 
     init {
         viewModelScope.launch {
@@ -125,6 +133,7 @@ class NoteEditorViewModel @Inject constructor(
             needModel.value = true
             return
         }
+        learnFromEdits()
         speech.stop()
         stopRequested = false
         _state.update { it.copy(dictation = DictationUi.Listening(0f, false, 0)) }
@@ -143,7 +152,10 @@ class NoteEditorViewModel @Inject constructor(
                                 DictationUi.Idle -> DictationUi.Idle
                             })
                         }
-                        is DictationEvent.Text -> _state.update { it.copy(body = append(it.body, e.text)) }
+                        is DictationEvent.Text -> {
+                            _state.update { it.copy(body = append(it.body, e.text)) }
+                            dictated = _state.value.body
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -173,9 +185,21 @@ class NoteEditorViewModel @Inject constructor(
         }
     }
 
+    /** What the user changed in dictated text since teaches the spell corrector. */
+    private fun learnFromEdits() {
+        val before = dictated ?: return
+        dictated = null
+        val after = _state.value.body
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.Default) { spelling.learn(before, after) }
+    }
+
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCleared() {
         stopRequested = true
+        dictated?.let { before ->
+            val after = _state.value.body
+            GlobalScope.launch(kotlinx.coroutines.Dispatchers.Default) { spelling.learn(before, after) }
+        }
         if (_state.value.reading) speech.stop()
         val s = _state.value
         val id = s.id ?: return

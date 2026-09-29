@@ -51,6 +51,7 @@ import ir.roozban.ai.models.ModelCatalog
 import ir.roozban.ai.models.ModelSource
 import ir.roozban.ai.models.ModelSpec
 import ir.roozban.ai.runtime.DownloadState
+import ir.roozban.ai.runtime.ModelsState
 import ir.roozban.core.designsystem.components.AppCard
 import ir.roozban.core.designsystem.components.IconBadge
 import ir.roozban.core.designsystem.components.RoozbanTopBar
@@ -127,6 +128,15 @@ internal fun ModelsScreen(onBack: () -> Unit, viewModel: ModelsViewModel = hiltV
                     onDiscard = { viewModel.discard(spec) },
                 )
             }
+            item(key = "spell") {
+                SpellCard(
+                    state = state,
+                    onDownload = { viewModel.download(ModelCatalog.spell.first()) },
+                    onCancel = { viewModel.cancel(ModelCatalog.spell.first()) },
+                    onDiscard = { viewModel.discard(ModelCatalog.spell.first()) },
+                    onDelete = viewModel::deleteSpelling,
+                )
+            }
             if (false) item {
                 AppCard {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -159,7 +169,7 @@ internal fun ModelsScreen(onBack: () -> Unit, viewModel: ModelsViewModel = hiltV
         }
     }
     confirmMobile?.let { spec ->
-        val left = spec.sizeBytes - ((state.downloads[spec.id] as? DownloadState.Failed)?.partialBytes ?: 0L)
+        val left = viewModel.sizeLeft(spec)
         AlertDialog(
             onDismissRequest = viewModel::dismissMobile,
             title = { Text("دانلود با اینترنت همراه") },
@@ -230,6 +240,51 @@ private fun InstalledCard(model: InstalledModel, active: Boolean, onActivate: ()
             IconButton(onClick = onDelete) { Icon(painterResource(DsR.drawable.ic_delete), "حذف", tint = Roozban.colors.error.color) }
         }
     }
+}
+
+/** The dictation spelling data: two files shown and downloaded as one. */
+@Composable
+private fun SpellCard(state: ModelsState, onDownload: () -> Unit, onCancel: () -> Unit, onDiscard: () -> Unit, onDelete: () -> Unit) {
+    val specs = ModelCatalog.spell
+    if (state.spellInstalled) {
+        AppCard {
+            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("اصلاح املای دیکته", fontWeight = FontWeight.Bold)
+                    Text(
+                        "روشن است: غلط‌های املایی متن گفتاری اصلاح می‌شود و از ویرایش‌های تو یاد می‌گیرد.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                TextButton(onClick = onDelete) { Text("حذف", color = Roozban.colors.error.color) }
+            }
+        }
+        return
+    }
+    val total = specs.sumOf { it.sizeBytes }
+    var done = 0L
+    var running = false
+    var failed: DownloadState.Failed? = null
+    for (spec in specs) {
+        when (val d = state.downloads[spec.id]) {
+            is DownloadState.Running -> {
+                running = true
+                done += d.downloaded
+            }
+            is DownloadState.Failed -> {
+                failed = failed ?: d
+                done += d.partialBytes
+            }
+            null -> if (spec.id in state.spellFiles) done += spec.sizeBytes
+        }
+    }
+    val download = when {
+        running -> DownloadState.Running(done, total)
+        failed != null -> DownloadState.Failed(failed.message, done)
+        else -> null
+    }
+    CatalogCard(specs.first().copy(sizeBytes = total), recommended = false, download = download, onDownload = onDownload, onCancel = onCancel, onDiscard = onDiscard)
 }
 
 @Composable

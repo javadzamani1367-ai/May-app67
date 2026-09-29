@@ -9,6 +9,7 @@ import ir.roozban.ai.core.audio.Pcm
 import ir.roozban.ai.core.audio.PieceTranscriber
 import ir.roozban.ai.core.audio.Segmenter
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -37,7 +38,10 @@ sealed interface DictationEvent {
  * and completes. Needs RECORD_AUDIO.
  */
 @Singleton
-class Dictation @Inject constructor(private val voice: VoiceInput) {
+class Dictation @Inject constructor(
+    private val voice: VoiceInput,
+    private val spelling: Spelling,
+) {
 
     val hasModel: Boolean get() = voice.hasModel
 
@@ -51,10 +55,16 @@ class Dictation @Inject constructor(private val voice: VoiceInput) {
         val pending = AtomicInteger(0)
         val toText = PieceTranscriber({ voice.transcribe(it, null) })
         val transcriber = launch {
-            for (piece in pieces) {
-                val text = toText(piece)
-                send(DictationEvent.Pending(pending.decrementAndGet()))
-                if (text.isNotBlank()) send(DictationEvent.Text(text))
+            // The word list loads while the first piece is being recorded.
+            spelling.acquire()
+            try {
+                for (piece in pieces) {
+                    val text = spelling.correct(toText(piece))
+                    send(DictationEvent.Pending(pending.decrementAndGet()))
+                    if (text.isNotBlank()) send(DictationEvent.Text(text))
+                }
+            } finally {
+                withContext(NonCancellable) { spelling.release() }
             }
         }
         withContext(Dispatchers.IO) {

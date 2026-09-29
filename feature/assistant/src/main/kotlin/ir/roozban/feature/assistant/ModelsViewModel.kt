@@ -4,6 +4,8 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ir.roozban.ai.models.ModelCatalog
+import ir.roozban.ai.models.ModelKind
 import ir.roozban.ai.models.ModelSpec
 import ir.roozban.ai.runtime.AssistantHost
 import ir.roozban.ai.runtime.ModelManager
@@ -47,7 +49,7 @@ class ModelsViewModel @Inject constructor(
      */
     fun download(spec: ModelSpec, confirmedMobile: Boolean = false) {
         _confirmMobile.value = null
-        val needed = spec.sizeBytes - manager.store.partialBytes(spec) + ModelManager.SPACE_MARGIN
+        val needed = sizeLeft(spec) + ModelManager.SPACE_MARGIN
         _message.value = when {
             manager.freeSpaceBytes() < needed -> "فضای خالی کافی نیست؛ دست‌کم ${formatSize(needed)} لازم است."
             !manager.networkAllowed() -> if (state.value.wifiOnly) "به وای‌فای وصل شو یا گزینهٔ «فقط با وای‌فای» را خاموش کن." else "اینترنت در دسترس نیست."
@@ -56,15 +58,24 @@ class ModelsViewModel @Inject constructor(
                 null
             }
             else -> {
-                manager.startDownload(spec)
+                group(spec).forEach(manager::startDownload)
                 null
             }
         }
     }
 
-    fun cancel(spec: ModelSpec) = manager.cancelDownload(spec)
+    /** What is left to download for [spec] (for the spelling data: all its missing files). */
+    fun sizeLeft(spec: ModelSpec): Long = group(spec).sumOf { it.sizeBytes - manager.store.partialBytes(it) }
 
-    fun discard(spec: ModelSpec) = manager.discardPartial(spec)
+    /** The spelling data comes as two files that only work together. */
+    private fun group(spec: ModelSpec): List<ModelSpec> =
+        if (spec.kind == ModelKind.SPELL) ModelCatalog.spell.filter { it.id !in manager.spellFiles() } else listOf(spec)
+
+    fun cancel(spec: ModelSpec) = group(spec).forEach(manager::cancelDownload)
+
+    fun discard(spec: ModelSpec) = group(spec).forEach(manager::discardPartial)
+
+    fun deleteSpelling() = ModelCatalog.spell.forEach { manager.delete(it.id) }
 
     fun activate(id: String) {
         manager.setActive(id)

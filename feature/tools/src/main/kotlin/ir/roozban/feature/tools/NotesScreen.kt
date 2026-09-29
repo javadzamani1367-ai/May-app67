@@ -40,6 +40,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -226,6 +227,19 @@ internal fun NoteEditorScreen(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 enabled = state.loaded,
             )
+            var hideSpelling by rememberSaveable { mutableStateOf(false) }
+            if (viewModel.offerSpelling && !hideSpelling && state.body.isNotBlank()) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "برای اصلاح خودکار غلط‌های املایی متن گفتاری، واژه‌نامه را دانلود کن (حدود ۱۰ مگابایت).",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                    )
+                    TextButton(onClick = onOpenSpeechModels) { Text("دانلود") }
+                    TextButton(onClick = { hideSpelling = true }) { Text("بعداً") }
+                }
+            }
             val words = state.body.split(Regex("\\s+")).count { it.isNotBlank() }
             Text(
                 "${PersianDigits.format(words)} واژه",
