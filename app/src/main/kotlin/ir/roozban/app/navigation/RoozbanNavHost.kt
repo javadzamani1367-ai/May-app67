@@ -149,10 +149,13 @@ fun RoozbanApp(
                                 selected = tab == current,
                                 onClick = {
                                     navController.navigate(tab.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                        // Every tab opens fresh: at the top of its list, on its own first screen,
+                                        // not scrolled or deep where it was last left.
+                                        // The start screen («امروز» or the calendar) is replaced too when its own
+                                        // tab is tapped; back from another tab still returns to it.
+                                        val start = navController.graph.findStartDestination()
+                                        popUpTo(start.id) { inclusive = start.hasRoute(tab.routeClass) }
                                         launchSingleTop = true
-                                        // «بیشتر» always opens on its own list, not on the screen last left inside it.
-                                        restoreState = tab != Tab.MORE
                                     }
                                 },
                                 icon = { Icon(painterResource(tab.icon), contentDescription = null) },

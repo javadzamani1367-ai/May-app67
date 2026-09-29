@@ -5,8 +5,12 @@
 
 #include <string>
 
-#include "engine.h"
 #include "speech.h"
+#ifdef ROOZBAN_SPEECH_ONLY
+#include "ggml-backend.h"
+#else
+#include "engine.h"
+#endif
 
 namespace {
 
@@ -20,21 +24,48 @@ std::string to_string(JNIEnv * env, jstring s) {
     return out;
 }
 
+#ifndef ROOZBAN_SPEECH_ONLY
 roozban::Engine * engine(jlong handle) { return reinterpret_cast<roozban::Engine *>(handle); }
+#endif
 
 }  // namespace
 
 extern "C" {
 
+JNIEXPORT jstring JNICALL
+Java_ir_roozban_ai_runtime_LlamaNative_nativeLastError(JNIEnv * env, jobject) {
+    return env->NewStringUTF(g_error.c_str());
+}
+
+#ifdef ROOZBAN_SPEECH_ONLY
+// Speech only: the language model is not built; its entry points report failure.
+JNIEXPORT jboolean JNICALL
+Java_ir_roozban_ai_runtime_LlamaNative_nativeInit(JNIEnv * env, jobject, jstring lib_dir) {
+    static bool initialized = false;
+    if (initialized) return JNI_TRUE;
+    std::string dir = to_string(env, lib_dir);
+    if (!dir.empty()) ggml_backend_load_all_from_path(dir.c_str());
+    else ggml_backend_load_all();
+    initialized = ggml_backend_reg_count() > 0;
+    return initialized ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jlong JNICALL
+Java_ir_roozban_ai_runtime_LlamaNative_nativeLoad(JNIEnv *, jobject, jstring, jint, jint, jint) {
+    g_error = "language model not included";
+    return 0;
+}
+JNIEXPORT void JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeFree(JNIEnv *, jobject, jlong) {}
+JNIEXPORT jint JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeCountTokens(JNIEnv *, jobject, jlong, jstring) { return 0; }
+JNIEXPORT void JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeCancel(JNIEnv *, jobject, jlong) {}
+JNIEXPORT jint JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeWarmUp(JNIEnv *, jobject, jlong, jstring, jstring, jobject) { return -1; }
+JNIEXPORT jint JNICALL Java_ir_roozban_ai_runtime_LlamaNative_nativeGenerate(JNIEnv *, jobject, jlong, jstring, jstring, jfloat, jfloat, jfloat, jint, jint, jobject) { return -1; }
+
+#else
 JNIEXPORT jboolean JNICALL
 Java_ir_roozban_ai_runtime_LlamaNative_nativeInit(JNIEnv * env, jobject, jstring lib_dir) {
     std::string dir = to_string(env, lib_dir);
     return roozban::init(dir.c_str()) ? JNI_TRUE : JNI_FALSE;
-}
-
-JNIEXPORT jstring JNICALL
-Java_ir_roozban_ai_runtime_LlamaNative_nativeLastError(JNIEnv * env, jobject) {
-    return env->NewStringUTF(g_error.c_str());
 }
 
 JNIEXPORT jlong JNICALL
@@ -97,6 +128,8 @@ Java_ir_roozban_ai_runtime_LlamaNative_nativeGenerate(
         },
         g_error);
 }
+
+#endif  // ROOZBAN_SPEECH_ONLY
 
 JNIEXPORT jlong JNICALL
 Java_ir_roozban_ai_runtime_LlamaNative_nativeSpeechLoad(JNIEnv * env, jobject, jstring path) {
