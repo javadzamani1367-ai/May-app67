@@ -1,0 +1,53 @@
+name: PDF to Word eval (Persian)
+
+# Persian documents printed to PDF by Chrome and by LibreOffice (like Word's output), converted
+# with the app's layout and .docx code, scored against the source text; plain PDFBox text
+# alongside. A 40-page document checks time and memory.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/pdf-eval.yml'
+      - 'tools/pdf_eval/**'
+      - 'core/documents/**'
+      - 'ai/eval/src/main/kotlin/ir/roozban/ai/eval/PdfEval.kt'
+
+concurrency:
+  group: pdf-eval-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Tools
+        run: sudo apt-get update -q && sudo apt-get install -y -q libreoffice-writer fonts-noto-core > /dev/null
+      - name: Documents
+        run: |
+          python3 tools/pdf_eval/pdf_eval.py make docs
+          for n in short long; do
+            google-chrome --headless=new --no-sandbox --disable-gpu --no-pdf-header-footer --print-to-pdf="docs/$n-chrome.pdf" "file://$PWD/docs/$n.html" 2>/dev/null
+            (cd docs && soffice --headless --convert-to pdf:writer_pdf_Export --outdir lo "$n.html" > /dev/null && mv "lo/$n.pdf" "$n-libreoffice.pdf")
+          done
+          ls -la docs
+      - name: Convert and score
+        run: |
+          for f in docs/*-chrome.pdf docs/*-libreoffice.pdf; do
+            n=$(basename "$f" .pdf); src=${n%%-*}
+            ./gradlew -q :ai:eval:pdf --args="$PWD/$f $PWD/docs/$n.docx" | tee -a summary.txt
+            python3 tools/pdf_eval/pdf_eval.py score docs/sources.json "$src" "docs/$n.docx" | tee -a summary.txt
+            python3 tools/pdf_eval/pdf_eval.py score docs/sources.json "$src" "docs/$n.docx.plain.txt" | head -1 | tee -a summary.txt
+          done
+          { echo '```'; grep -E "^(PDF|SCORE)" summary.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pdf-eval
+          path: docs/
