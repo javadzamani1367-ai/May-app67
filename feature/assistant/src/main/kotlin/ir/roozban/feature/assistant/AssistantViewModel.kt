@@ -124,7 +124,7 @@ class AssistantViewModel @Inject constructor(
                     settings = settings.current(),
                     facts = memory.all(),
                 )
-                val events = answerLocally(context, message)?.let { flowOf(it) } ?: flowOf(
+                val events = answerLocally(context, message)?.let { flowOf<AssistantEvent>(it) } ?: flowOf<AssistantEvent>(
                     RuleAssistant(context).answer(message).let { response ->
                         AssistantEvent.Complete("", response, ActionPlanner(context, message).plan(response))
                     },
