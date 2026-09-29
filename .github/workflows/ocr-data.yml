@@ -1,0 +1,35 @@
+name: Publish OCR language data
+
+# Tesseract language data for the image-to-text tool, published as release «ocr-data» so the app
+# downloads fixed files (with their sha256) and not a moving branch.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/ocr-data.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          set -e
+          mkdir out
+          for v in fast best; do
+            for l in fas eng; do
+              curl -sSfL -o "out/$l-$v.traineddata" "https://github.com/tesseract-ocr/tessdata_$v/raw/main/$l.traineddata"
+            done
+          done
+          curl -sSfL https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/LICENSE | head -3
+          for f in out/*; do echo "ASSET $(basename $f) $(stat -c %s $f) $(sha256sum $f | cut -d' ' -f1)"; done
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view ocr-data -R "$GITHUB_REPOSITORY" > /dev/null 2>&1 || \
+            gh release create ocr-data -R "$GITHUB_REPOSITORY" --prerelease --title "OCR language data" --notes "Tesseract traineddata (Apache-2.0, tesseract-ocr/tessdata_fast and tessdata_best) for the image-to-text tool."
+          gh release upload ocr-data out/* -R "$GITHUB_REPOSITORY" --clobber
