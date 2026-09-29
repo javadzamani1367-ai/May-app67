@@ -15,8 +15,9 @@ import kotlin.math.sqrt
  */
 class Vad(
     private val sampleRate: Int = 16_000,
-    private val marginDb: Double = 12.0,
-    private val minSpeechDb: Double = -48.0,
+    private val marginDb: Double = 9.0,
+    // Low on purpose: phones record voice recognition without gain control (see Segmenter).
+    private val minSpeechDb: Double = -64.0,
     private val endSilenceMs: Int = 1_200,
     private val noSpeechTimeoutMs: Int = 8_000,
     private val maxMs: Int = 30_000,
@@ -37,6 +38,9 @@ class Vad(
         private set
 
     private var noiseDb = -60.0
+
+    /** Loudness a frame needs to count as speech; also where to trim the recording. */
+    val speechThresholdDb: Double get() = max(noiseDb + marginDb, minSpeechDb)
     private var elapsedMs = 0.0
     private var speechMs = 0.0
     private var silenceMs = 0.0

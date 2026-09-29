@@ -80,7 +80,7 @@ class VoiceInput @Inject constructor(
             recorder.release()
         }
         val spoken = vad.heardSpeech || stop()
-        emit(Recording.Done(if (spoken) Pcm.trim(all.copyOf(size)) else ShortArray(0), vad.endReason))
+        emit(Recording.Done(if (spoken) Pcm.trim(all.copyOf(size), thresholdDb = vad.speechThresholdDb) else ShortArray(0), vad.endReason))
     }.flowOn(Dispatchers.IO)
 
     private companion object {

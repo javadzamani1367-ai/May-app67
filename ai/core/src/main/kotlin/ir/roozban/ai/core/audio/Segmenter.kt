@@ -20,8 +20,10 @@ class Segmenter(
     private val softMaxMs: Int = 8_000,
     private val hardMaxMs: Int = 14_000,
     private val leadInMs: Int = 300,
-    private val marginDb: Double = 12.0,
-    private val minSpeechDb: Double = -48.0,
+    // Phones record voice recognition without gain control, so speech can be very quiet: what
+    // counts is being clearly above the room, not an absolute loudness.
+    private val marginDb: Double = 9.0,
+    private val minSpeechDb: Double = -64.0,
 ) {
     /** 0..1 loudness of the last frame. */
     var level: Float = 0f
@@ -49,11 +51,7 @@ class Segmenter(
             // Capped: talking from the very first moment must not be taken for noise.
             frames <= 3 -> if (frames == 1) minOf(db, INITIAL_FLOOR_DB) else minOf(noiseDb, db)
             db < noiseDb -> noiseDb * 0.7 + db * 0.3
-            // Rise only on quiet frames: minutes of talking must not lift the floor into the voice,
-            // or what is said next would count as silence and be dropped. A noise that never stops
-            // (after [SUSTAINED_MS] of "speech") is learned slowly all the same.
-            db <= noiseDb + marginDb || voicedMs >= SUSTAINED_MS -> noiseDb * 0.995 + db * 0.005
-            else -> noiseDb
+            else -> noiseDb * 0.995 + db * 0.005
         }
         val voiced = db > max(noiseDb + marginDb, minSpeechDb)
         append(frame, count)
@@ -91,7 +89,9 @@ class Segmenter(
     fun flush(): ShortArray? = if (heard && size > 0) take() else null.also { size = 0 }
 
     private fun take(): ShortArray {
-        val piece = Pcm.trim(buffer.copyOf(size))
+        // Trimmed against this room's noise, not a fixed loudness: a fixed -45 dB cut quiet
+        // speakers' sentences away entirely.
+        val piece = Pcm.trim(buffer.copyOf(size), thresholdDb = max(noiseDb + marginDb, minSpeechDb))
         size = 0
         heard = false
         voicedMs = 0.0
@@ -107,7 +107,6 @@ class Segmenter(
 
     private companion object {
         const val MIN_SPEECH_MS = 150.0
-        const val INITIAL_FLOOR_DB = -40.0
-        const val SUSTAINED_MS = 20_000.0
+        const val INITIAL_FLOOR_DB = -50.0
     }
 }

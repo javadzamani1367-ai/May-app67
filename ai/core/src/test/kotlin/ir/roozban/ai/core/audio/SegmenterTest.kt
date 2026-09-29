@@ -82,4 +82,20 @@ class SegmenterTest {
         val out = pieces(rapidSpeech(70_000))
         out.forEach { assertThat(it).isAtMost(15.5) }
     }
+
+    /** Without gain control a phone can record speech 30–40 dB below full scale, or quieter. */
+    @Test
+    fun `quiet speech in a quiet room is kept`() {
+        for (amplitude in listOf(0.02, 0.005, 0.002)) {
+            val quietRoom = noise(1500, amplitude = 0.0002)
+            val out = pieces(quietRoom, speech(4000, amplitude), noise(1200, amplitude = 0.0002), speech(3000, amplitude), noise(1500, amplitude = 0.0002))
+            assertThat(out.sum()).isGreaterThan(6.5)
+        }
+    }
+
+    @Test
+    fun `talking from the first moment is kept`() {
+        val out = pieces(speech(5000, 0.05), noise(1500, amplitude = 0.0003))
+        assertThat(out.sum()).isGreaterThan(4.5)
+    }
 }

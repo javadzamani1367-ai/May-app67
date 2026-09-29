@@ -46,13 +46,23 @@ fun main(args: Array<String>) {
         val samples = Pcm.fromWav(File(path).readBytes())
         val segmenter = if (old) Segmenter(softMaxMs = 20_000, hardMaxMs = 28_000) else Segmenter()
         val pieces = mutableListOf<ShortArray>()
+        val ends = mutableListOf<Int>()
         val frame = Pcm.SAMPLE_RATE * 30 / 1000
         var i = 0
         while (i + frame <= samples.size) {
-            segmenter.feed(samples.copyOfRange(i, i + frame))?.let(pieces::add)
+            segmenter.feed(samples.copyOfRange(i, i + frame))?.let {
+                pieces += it
+                ends += i + frame
+            }
             i += frame
         }
-        segmenter.flush()?.let(pieces::add)
+        segmenter.flush()?.let {
+            pieces += it
+            ends += samples.size
+        }
+        val rate = Pcm.SAMPLE_RATE.toDouble()
+        val kept = pieces.sumOf { it.size } / rate
+        out.println("KEPT\t$path\t${"%.1f".format(kept)}s of ${"%.1f".format(samples.size / rate)}s in ${pieces.size} pieces")
 
         var totalMs = 0.0
         val text = StringBuilder()
@@ -63,7 +73,7 @@ fun main(args: Array<String>) {
             Transcript.clean(t)
         })
         runBlocking {
-            for (piece in pieces) {
+            for ((n, piece) in pieces.withIndex()) {
                 pieceSeconds += piece.size / Pcm.SAMPLE_RATE.toDouble()
                 val t = if (old) {
                     // As the app did before: the end of the text so far as a prompt, one attempt.
@@ -75,6 +85,8 @@ fun main(args: Array<String>) {
                     transcriber(piece)
                 }
                 if (t.isNotBlank()) text.append(if (text.isEmpty()) "" else " ").append(t)
+                val end = ends[n] / rate
+                out.println("PIECE\t${"%.1f".format(end - piece.size / rate)}-${"%.1f".format(end)}s\t${t.count { it.isLetter() }} letters\t${t.take(60)}")
             }
         }
         out.println("RESULT\t$path\t${"%.0f".format(totalMs)}\t$text")
