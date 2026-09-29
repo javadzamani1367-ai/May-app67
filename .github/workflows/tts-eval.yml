@@ -40,21 +40,31 @@ jobs:
         run: |
           set -e
           mkdir -p voices && cd voices
-          for n in vits-piper-fa_IR-amir-medium vits-piper-fa_IR-ganji-medium vits-piper-fa_IR-ganji_adabi-medium vits-piper-fa_IR-reza_ibrahim-medium matcha-tts-fa_en-musa matcha-tts-fa_en-khadijah; do
+          for n in vits-piper-fa-haaniye_low vits-mimic3-fa-haaniye_low matcha-tts-fa_en-musa matcha-tts-fa_en-khadijah; do
             curl -sSfL -o $n.tar.bz2 "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$n.tar.bz2"
             tar xjf $n.tar.bz2 && rm $n.tar.bz2
             ls -la $n | head -8
           done
-          curl -sSfL -o vocos-22khz-univ.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
-          ls -la vocos-22khz-univ.onnx
+          for f in vocos-22khz-univ.onnx hifigan_v1.onnx hifigan_v2.onnx; do
+            curl -sSfL -o $f https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/$f
+          done
+          ls -la *.onnx
+          cat vits-piper-fa-haaniye_low/MODEL_CARD vits-piper-fa-haaniye_low/README* vits-mimic3-fa-haaniye_low/README* vits-mimic3-fa-haaniye_low/LICENSE* 2>/dev/null | head -60 || true
+          ls vits-piper-fa-haaniye_low vits-mimic3-fa-haaniye_low
 
       - name: Synthesize and judge
         run: |
           pip install -q sherpa-onnx soundfile numpy torch --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple
           pip install -q transformers librosa
           python tools/tts_eval/eval.py voices out
+        env:
+          VOICES: >-
+            vits-piper-fa-haaniye_low vits-mimic3-fa-haaniye_low
+            matcha-tts-fa_en-khadijah+vocos-22khz-univ.onnx matcha-tts-fa_en-khadijah+hifigan_v1.onnx matcha-tts-fa_en-khadijah+hifigan_v2.onnx
+            matcha-tts-fa_en-musa+vocos-22khz-univ.onnx matcha-tts-fa_en-musa+hifigan_v1.onnx
 
       - name: Package Matcha voices
+        if: false
         run: |
           set -e
           cd voices

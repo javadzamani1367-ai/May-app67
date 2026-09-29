@@ -25,7 +25,7 @@ def engine(d, vocoder):
     name = os.path.basename(d)
     tokens = os.path.join(d, "tokens.txt")
     data = os.path.join(d, "espeak-ng-data")
-    if name.startswith("matcha"):
+    if vocoder:
         model = sherpa_onnx.OfflineTtsModelConfig(
             matcha=sherpa_onnx.OfflineTtsMatchaModelConfig(
                 acoustic_model=os.path.join(d, "model.onnx"), vocoder=vocoder, tokens=tokens, data_dir=data),
@@ -57,15 +57,20 @@ def cer(ref, hyp):
 
 def main(root, out):
     os.makedirs(out, exist_ok=True)
-    vocoder = os.path.join(root, "vocos-22khz-univ.onnx")
     from transformers import pipeline
     import librosa
     asr = pipeline("automatic-speech-recognition", model="C1Tech/whisper_base_persian", device="cpu")
 
-    voices = sorted(d for d in os.listdir(root) if os.path.isdir(os.path.join(root, d)))
+    # "<dir>" or "<dir>+<vocoder file>" (Matcha models need a vocoder).
+    wanted = os.environ.get("VOICES", "").split()
+    if not wanted:
+        wanted = [d if not d.startswith("matcha") else d + "+vocos-22khz-univ.onnx"
+                  for d in sorted(os.listdir(root)) if os.path.isdir(os.path.join(root, d))]
     rows = []
-    for v in voices:
-        tts = engine(os.path.join(root, v), vocoder)
+    for spec in wanted:
+        d, _, voc = spec.partition("+")
+        v = d + ("-" + voc.split(".")[0] if voc else "")
+        tts = engine(os.path.join(root, d), os.path.join(root, voc) if voc else None)
         synth = audio = 0.0
         errors = []
         sample = []
