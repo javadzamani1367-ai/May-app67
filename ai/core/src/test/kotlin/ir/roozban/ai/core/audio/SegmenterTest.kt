@@ -15,9 +15,9 @@ class SegmenterTest {
         return ShortArray(rate * ms / 1000) { ((r.nextDouble() * 2 - 1) * amplitude * 32767).toInt().toShort() }
     }
 
-    private fun speech(ms: Int): ShortArray {
+    private fun speech(ms: Int, amplitude: Double = 0.3): ShortArray {
         val n = noise(ms, seed = 7)
-        return ShortArray(n.size) { i -> (n[i] + 0.3 * 32767 * sin(2 * PI * 220 * i / rate)).toInt().coerceIn(-32768, 32767).toShort() }
+        return ShortArray(n.size) { i -> (n[i] + amplitude * 32767 * sin(2 * PI * 220 * i / rate)).toInt().coerceIn(-32768, 32767).toShort() }
     }
 
     /** Pieces (in seconds) the segmenter produces for the audio, plus the flushed rest. */
@@ -51,15 +51,35 @@ class SegmenterTest {
     private fun rapidSpeech(ms: Int): ShortArray = (0 until ms / 400).map { speech(300) + noise(100, seed = it) }.reduce { a, b -> a + b }
 
     @Test
-    fun `speech without pauses is cut before whisper's 30 seconds`() {
+    fun `speech without pauses is still cut into pieces`() {
         val out = pieces(rapidSpeech(70_000))
-        assertThat(out.size).isAtLeast(3)
-        out.forEach { assertThat(it).isAtMost(28.5) }
+        assertThat(out.size).isAtLeast(5)
+        out.forEach { assertThat(it).isAtMost(14.5) }
         assertThat(out.sum()).isGreaterThan(65.0)
     }
 
     @Test
     fun `silence alone gives nothing`() {
         assertThat(pieces(noise(60_000))).isEmpty()
+    }
+
+    /**
+     * A room with echo: between words the level only drops to a hum, never to the quiet of the
+     * room. Minutes of this must not raise the noise floor into the voice, or a softer sentence
+     * afterwards would be taken for silence and lost.
+     */
+    @Test
+    fun `a long stretch of talking does not make later speech count as silence`() {
+        val talking = (0 until 150).map { speech(300) + noise(100, amplitude = 0.03, seed = it) }.reduce { a, b -> a + b }
+        val soft = speech(4000, amplitude = 0.04)
+        val out = pieces(noise(1000), talking, noise(1200), soft, noise(1500))
+        // Everything said is kept: 60 s of talking plus the 4 s sentence.
+        assertThat(out.sum()).isGreaterThan(63.0)
+    }
+
+    @Test
+    fun `pieces stay short so text shows soon and the model does not stop early`() {
+        val out = pieces(rapidSpeech(70_000))
+        out.forEach { assertThat(it).isAtMost(15.5) }
     }
 }

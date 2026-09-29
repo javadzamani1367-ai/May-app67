@@ -44,6 +44,11 @@ bool transcribe(Speech * s, const std::vector<float> & samples, const SpeechOpti
     p.print_timestamps = false;
     p.suppress_blank = true;
     p.initial_prompt = o.prompt.empty() ? nullptr : o.prompt.c_str();
+    if (o.fit_audio_ctx) {
+        // 50 encoder positions per second of audio, plus a margin; the full window is 1500.
+        const int ctx = (int) (samples.size() / 16000.0 * 50.0) + 64;
+        if (ctx < 1500) p.audio_ctx = ctx;
+    }
     if (whisper_full(s->ctx, p, samples.data(), (int) samples.size()) != 0) {
         error = "transcription failed";
         return false;

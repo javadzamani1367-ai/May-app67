@@ -95,5 +95,14 @@ class AudioTest {
     fun `transcript cleanup`() {
         assertThat(Transcript.clean(" [موسیقی] فردا ساعت ۹ جلسه  داريم. ")).isEqualTo("فردا ساعت ۹ جلسه داریم")
         assertThat(Transcript.clean("(خنده) خرید نان…")).isEqualTo("خرید نان")
+        val z = "\u200C"
+        assertThat(Transcript.clean("من فردا می روم و نمی خواهم دیر شود")).isEqualTo("من فردا می${z}روم و نمی${z}خواهم دیر شود")
+        assertThat(Transcript.clean("کتاب ها و دفتر های بزرگ تر")).isEqualTo("کتاب${z}ها و دفتر${z}های بزرگ${z}تر")
+        // Words that only start like the suffixes stay apart.
+        assertThat(Transcript.clean("علی و هادی آمدند")).isEqualTo("علی و هادی آمدند")
+        // Emphasis («خیلی خیلی») is kept; only a loop of four or more goes.
+        assertThat(Transcript.clean("خیلی خیلی خوب بود")).isEqualTo("خیلی خیلی خوب بود")
+        assertThat(Transcript.clean("سلام خوبی سلام خوبی سلام خوبی سلام خوبی")).isEqualTo("سلام خوبی")
+        assertThat(Transcript.clean("ساعت ۹ صبح")).isEqualTo("ساعت ۹ صبح")
     }
 }

@@ -48,6 +48,28 @@ object Pcm {
     }
 
     /** Leading and trailing silence cut to [padMs], so the recognizer sees less empty audio. */
+    /**
+     * Splits in two at the quietest 100 ms between 30 % and 70 % of the way through, so a word is
+     * not cut in half.
+     */
+    fun splitAtQuietest(samples: ShortArray, sampleRate: Int = SAMPLE_RATE): Pair<ShortArray, ShortArray> {
+        val window = sampleRate / 10
+        val from = (samples.size * 0.3).toInt()
+        val to = (samples.size * 0.7).toInt() - window
+        var best = samples.size / 2
+        var quietest = Double.MAX_VALUE
+        var i = from
+        while (i <= to) {
+            val db = Vad.dbfs(samples.copyOfRange(i, i + window))
+            if (db < quietest) {
+                quietest = db
+                best = i + window / 2
+            }
+            i += window / 2
+        }
+        return samples.copyOfRange(0, best) to samples.copyOfRange(best, samples.size)
+    }
+
     fun trim(samples: ShortArray, thresholdDb: Double = -45.0, padMs: Int = 200, frameMs: Int = 20): ShortArray {
         val frame = SAMPLE_RATE * frameMs / 1000
         val frames = samples.size / frame

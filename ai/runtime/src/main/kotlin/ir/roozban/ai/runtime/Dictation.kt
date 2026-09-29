@@ -6,6 +6,7 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import ir.roozban.ai.core.LlmException
 import ir.roozban.ai.core.audio.Pcm
+import ir.roozban.ai.core.audio.PieceTranscriber
 import ir.roozban.ai.core.audio.Segmenter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -40,18 +41,18 @@ class Dictation @Inject constructor(private val voice: VoiceInput) {
 
     val hasModel: Boolean get() = voice.hasModel
 
-    /** [context] returns the text so far; its end is given to the model so sentences carry on naturally. */
+    /**
+     * The text so far is not given to the model as a prompt: with the Persian models it made
+     * them skip sentences now and then, and it did not help accuracy.
+     */
     @SuppressLint("MissingPermission")
-    fun run(stop: () -> Boolean, context: () -> String = { "" }): Flow<DictationEvent> = channelFlow {
+    fun run(stop: () -> Boolean): Flow<DictationEvent> = channelFlow {
         val pieces = Channel<ShortArray>(Channel.UNLIMITED)
         val pending = AtomicInteger(0)
+        val toText = PieceTranscriber({ voice.transcribe(it, null) })
         val transcriber = launch {
             for (piece in pieces) {
-                val prompt = context().takeLast(PROMPT_CHARS)
-                val text = runCatching { voice.transcribe(piece, prompt.ifBlank { null }) }.getOrElse { e ->
-                    if (e is kotlinx.coroutines.CancellationException) throw e
-                    ""
-                }
+                val text = toText(piece)
                 send(DictationEvent.Pending(pending.decrementAndGet()))
                 if (text.isNotBlank()) send(DictationEvent.Text(text))
             }
@@ -92,9 +93,5 @@ class Dictation @Inject constructor(private val voice: VoiceInput) {
         }
         pieces.close()
         transcriber.join()
-    }
-
-    private companion object {
-        const val PROMPT_CHARS = 120
     }
 }

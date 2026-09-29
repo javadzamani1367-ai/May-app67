@@ -29,6 +29,11 @@ struct SpeechOptions {
     int threads = 4;
     /** 1 = greedy; more = beam search (slower, usually more accurate). */
     int beam = 1;
+    /**
+     * Encode only as much of Whisper's 30 s window as the audio fills: much faster on short
+     * pieces, but some fine-tuned models get less accurate (measured by the long-form eval).
+     */
+    bool fit_audio_ctx = false;
 };
 
 /** 16 kHz mono float samples in [-1, 1] → text. Returns false on error. */

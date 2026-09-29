@@ -1,0 +1,96 @@
+name: Speech long-form eval (Persian)
+
+# Minutes of continuous Persian talk through the app's own dictation steps (Segmenter, piece
+# retries, text cleanup) and speech code: accuracy, dropped words and how long each piece waits
+# for its text. Compares the previous dictation settings with the new ones, per speech model.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/speech-longform.yml'
+      - 'tools/speech_eval/**'
+      - 'ai/eval/src/main/kotlin/ir/roozban/ai/eval/LongForm.kt'
+      - 'ai/core/src/main/kotlin/ir/roozban/ai/core/audio/**'
+
+concurrency:
+  group: speech-longform-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg > /dev/null
+      - name: Newer Persian speech models on Hugging Face
+        run: bash tools/speech_eval/discover.sh | grep -v "^===" | sort -rn | head -40 || true
+      - run: python3 tools/speech_eval/eval.py prepare clips 48
+      - run: python3 tools/speech_eval/eval.py long clips 6 250,400,550,800
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-long
+          path: clips/
+
+  eval:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: base-fa,  file: roozban-whisper-base-fa-q5_1.bin }
+          - { name: small-fa, file: roozban-whisper-small-fa-q5_1.bin }
+          - { name: turbo-fa, file: roozban-whisper-turbo-fa-q5_0.bin }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fa-long
+          path: clips
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build speech bench
+        run: |
+          cmake -S ai/runtime/src/main/cpp -B bench-build -DGGML_NATIVE=OFF > /dev/null
+          cmake --build bench-build --target roozban-speech-bench -j "$(nproc)"
+
+      - name: Get model
+        run: curl -L --fail --retry 3 -o model.bin "https://github.com/${{ github.repository }}/releases/download/speech-models/${{ matrix.file }}"
+
+      - name: Previous dictation (28 s pieces, text-so-far prompt, one attempt)
+        run: |
+          ./gradlew -q :ai:eval:longform --args="$PWD/bench-build/roozban-speech-bench $PWD/model.bin $PWD/clips/long_list.txt old" > old.txt
+          grep PIECES old.txt | tee -a summary.txt
+          python3 tools/speech_eval/eval.py score-long clips old.txt | tail -1 | sed 's/^/old     /' | tee -a summary.txt
+
+      - name: New dictation (short pieces, no prompt, retries)
+        run: |
+          ./gradlew -q :ai:eval:longform --args="$PWD/bench-build/roozban-speech-bench $PWD/model.bin $PWD/clips/long_list.txt new" > new.txt
+          grep PIECES new.txt | tee -a summary.txt
+          python3 tools/speech_eval/eval.py score-long clips new.txt | tee new-score.txt | tail -1 | sed 's/^/new     /' | tee -a summary.txt
+          head -4 new-score.txt
+
+      - name: New dictation, encoder fitted to each piece (faster)
+        env:
+          ROOZBAN_FIT_CTX: "1"
+        run: |
+          ./gradlew -q :ai:eval:longform --args="$PWD/bench-build/roozban-speech-bench $PWD/model.bin $PWD/clips/long_list.txt new" > fit.txt
+          grep PIECES fit.txt | tee -a summary.txt
+          python3 tools/speech_eval/eval.py score-long clips fit.txt | tail -1 | sed 's/^/new+fit /' | tee -a summary.txt
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "=== SUMMARY ${{ matrix.name }}"; cat summary.txt || true
+          { echo "### ${{ matrix.name }}"; echo '```'; cat summary.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

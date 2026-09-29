@@ -130,7 +130,7 @@ class NoteEditorViewModel @Inject constructor(
         _state.update { it.copy(dictation = DictationUi.Listening(0f, false, 0)) }
         dictating = viewModelScope.launch {
             try {
-                dictation.run(stop = { stopRequested }, context = { _state.value.body }).collect { e ->
+                dictation.run(stop = { stopRequested }).collect { e ->
                     when (e) {
                         is DictationEvent.Level -> _state.update { s ->
                             val d = s.dictation

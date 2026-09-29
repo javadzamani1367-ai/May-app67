@@ -1,10 +1,13 @@
 // CI benchmark for speech: the app's speech code on the host.
-// usage: roozban-speech-bench model.bin threads beam prompt-file|- list-file|file.wav...
+// usage: roozban-speech-bench model.bin threads beam prompt-file|- list-file|file.wav...|-
 // Prints one tab-separated line per file: RESULT <path> <ms> <text>
+// With "-" as the only input, reads "<path>[\t<prompt>]" lines from stdin and answers each at
+// once (the long-form eval drives it this way). ROOZBAN_FIT_CTX=1 sets fit_audio_ctx.
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -61,6 +64,33 @@ int main(int argc, char ** argv) {
     o.threads = std::atoi(argv[2]);
     o.beam = std::atoi(argv[3]);
     if (std::strcmp(argv[4], "-") != 0) o.prompt = read_text(argv[4]);
+    o.fit_audio_ctx = std::getenv("ROOZBAN_FIT_CTX") != nullptr && std::strcmp(std::getenv("ROOZBAN_FIT_CTX"), "1") == 0;
+    auto run = [&](const std::string & f, const std::string & prompt) {
+        std::vector<float> pcm;
+        if (!read_wav(f, pcm)) {
+            std::printf("RESULT\t%s\t-1\t(not a PCM16 WAV)\n", f.c_str());
+            std::fflush(stdout);
+            return;
+        }
+        roozban::SpeechOptions po = o;
+        po.language = f.find("-en.") != std::string::npos ? "en" : "fa";
+        if (!prompt.empty()) po.prompt = prompt;
+        std::string text;
+        roozban::SpeechStats st;
+        bool ok = roozban::transcribe(s, pcm, po, text, error, &st);
+        for (auto & c : text) if (c == '\t' || c == '\n') c = ' ';
+        std::printf("RESULT\t%s\t%.0f\t%s\n", f.c_str(), st.ms, ok ? text.c_str() : ("ERROR " + error).c_str());
+        std::fflush(stdout);
+    };
+    if (argc == 6 && std::strcmp(argv[5], "-") == 0) {
+        for (std::string line; std::getline(std::cin, line);) {
+            if (line.empty()) continue;
+            const auto tab = line.find('\t');
+            run(line.substr(0, tab), tab == std::string::npos ? "" : line.substr(tab + 1));
+        }
+        roozban::speech_free(s);
+        return 0;
+    }
     std::vector<std::string> files;
     for (int i = 5; i < argc; i++) {
         std::string a = argv[i];
@@ -71,20 +101,7 @@ int main(int argc, char ** argv) {
             files.push_back(a);
         }
     }
-    for (const auto & f : files) {
-        std::vector<float> pcm;
-        if (!read_wav(f, pcm)) {
-            std::printf("RESULT\t%s\t-1\t(not a PCM16 WAV)\n", f.c_str());
-            continue;
-        }
-        o.language = f.find("-en.") != std::string::npos ? "en" : "fa";
-        std::string text;
-        roozban::SpeechStats st;
-        bool ok = roozban::transcribe(s, pcm, o, text, error, &st);
-        for (auto & c : text) if (c == '\t' || c == '\n') c = ' ';
-        std::printf("RESULT\t%s\t%.0f\t%s\n", f.c_str(), st.ms, ok ? text.c_str() : ("ERROR " + error).c_str());
-        std::fflush(stdout);
-    }
+    for (const auto & f : files) run(f, "");
     roozban::speech_free(s);
     return 0;
 }
