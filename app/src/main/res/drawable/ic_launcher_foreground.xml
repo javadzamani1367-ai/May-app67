@@ -11,7 +11,7 @@
         android:pathData="M40,36h28a8,8 0,0 1,8 8v26a8,8 0,0 1,-8 8h-28a8,8 0,0 1,-8 -8v-26a8,8 0,0 1,8 -8z" />
     <!-- header band -->
     <path
-        android:fillColor="#FFB547"
+        android:fillColor="#FF9F43"
         android:pathData="M40,36h28a8,8 0,0 1,8 8v4h-44v-4a8,8 0,0 1,8 -8z" />
     <!-- rings -->
     <path
@@ -22,19 +22,19 @@
         android:pathData="M63,30a2.2,2.2 0,0 1,2.2 2.2v7.6a2.2,2.2 0,0 1,-4.4 0v-7.6a2.2,2.2 0,0 1,2.2 -2.2z" />
     <!-- rising sun -->
     <path
-        android:fillColor="#FF8A3D"
+        android:fillColor="#FF7A2F"
         android:pathData="M43,71a11,11 0,0 1,22 0z" />
     <path
-        android:fillColor="#FF8A3D"
+        android:fillColor="#FF7A2F"
         android:pathData="M52.8,53h2.4v6.5h-2.4z" />
     <path
-        android:fillColor="#FF8A3D"
+        android:fillColor="#FF7A2F"
         android:pathData="M41.6,57.4l1.7,-1.7l4.4,4.4l-1.7,1.7z" />
     <path
-        android:fillColor="#FF8A3D"
+        android:fillColor="#FF7A2F"
         android:pathData="M66.4,57.4l-1.7,-1.7l-4.4,4.4l1.7,1.7z" />
     <!-- horizon -->
     <path
-        android:fillColor="#5B3CC4"
+        android:fillColor="#154A9A"
         android:pathData="M38,71h32v2.6h-32z" />
 </vector>

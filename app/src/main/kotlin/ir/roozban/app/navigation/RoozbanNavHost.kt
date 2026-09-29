@@ -47,6 +47,7 @@ import ir.roozban.feature.tools.NoteRoute
 import ir.roozban.feature.tools.NotesRoute
 import ir.roozban.feature.tools.ToolsRoute
 import ir.roozban.feature.tools.toolsScreens
+import ir.roozban.core.designsystem.theme.Roozban
 import ir.roozban.core.designsystem.components.AppActions
 import ir.roozban.core.designsystem.components.LocalAppActions
 import androidx.compose.runtime.CompositionLocalProvider
@@ -135,6 +136,15 @@ fun RoozbanApp(
                             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
                     ) {
                         Tab.entries.forEach { tab ->
+                            // Every tab keeps its own color; «امروز» wears the chosen main color.
+                            val c = Roozban.colors
+                            val (tint, container) = when (tab) {
+                                Tab.TODAY -> MaterialTheme.colorScheme.primary to MaterialTheme.colorScheme.primaryContainer
+                                Tab.UPCOMING -> c.info.color to c.info.container
+                                Tab.CALENDAR -> c.warning.color to c.warning.container
+                                Tab.HABITS -> c.success.color to c.success.container
+                                Tab.MORE -> c.focus.color to c.focus.container
+                            }
                             NavigationBarItem(
                                 selected = tab == current,
                                 onClick = {
@@ -148,11 +158,11 @@ fun RoozbanApp(
                                 icon = { Icon(painterResource(tab.icon), contentDescription = null) },
                                 label = { Text(stringResource(tab.label), fontWeight = if (tab == current) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    selectedIconColor = tint,
+                                    selectedTextColor = tint,
+                                    indicatorColor = container,
+                                    unselectedIconColor = tint,
+                                    unselectedTextColor = tint,
                                 ),
                             )
                         }
