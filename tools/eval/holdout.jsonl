@@ -1,0 +1,30 @@
+{"id": "h-create-1", "input": "پس‌فردا ساعت ۱۱ صبح تعویض روغن ماشین", "expect": [{"tool": "create_task", "title": "روغن", "due": "+2 11:00"}]}
+{"id": "h-create-2", "input": "یه یادآور بذار برای امشب ساعت ۹ که به بابا پیام بدم", "expect": [{"tool": "create_task", "title": "بابا", "due": "+0 21:00"}]}
+{"id": "h-create-3", "input": "خرید کتاب ریاضی برای علی", "expect": [{"tool": "create_task", "title": "کتاب", "due": "none"}]}
+{"id": "h-create-4", "input": "یکشنبه ساعت ۴ عصر کلاس یوگا", "expect": [{"tool": "create_task", "title": "یوگا", "due": "+3 16:00"}]}
+{"id": "h-create-5", "input": "فردا ارسال فاکتور برای مشتری، مهمه", "expect": [{"tool": "create_task", "title": "فاکتور", "due": "+1", "important": true}]}
+{"id": "h-create-6", "input": "هر روز ساعت ۷ صبح قرص ویتامین", "expect": [{"tool": "create_task", "title": "ویتامین", "repeat": true}]}
+{"id": "h-create-7", "input": "اضافه کن: رزرو بلیط قطار مشهد", "expect": [{"tool": "create_task", "title": "بلیط", "due": "none"}]}
+{"id": "h-create-8", "input": "فردا ساعت ۲ بعدازظهر یک ساعت جلسه با مشاور", "expect": [{"tool": "create_task", "title": "مشاور", "due": "+1 14:00", "minutes": 60}]}
+{"id": "h-complete-1", "input": "خرید نان انجام شد", "expect": [{"tool": "complete_task", "task": "خرید نان"}]}
+{"id": "h-complete-2", "input": "هدیه تولد سارا رو خریدم", "expect": [{"tool": "complete_task", "task": "خرید هدیه تولد سارا"}]}
+{"id": "h-complete-3", "input": "جلسه با علی تموم شد", "expect": [{"tool": "complete_task", "task": "جلسه با علی"}]}
+{"id": "h-complete-4", "input": "کار ۳ رو تیک بزن", "expect": [{"tool": "complete_task", "task": "تمدید بیمه ماشین"}]}
+{"id": "h-move-1", "input": "زنگ به دندانپزشک رو بذار فردا ساعت ۱۰", "expect": [{"tool": "reschedule", "task": "زنگ به دندانپزشک", "due": "+1 10:00"}]}
+{"id": "h-move-2", "input": "جلسه با علی رو ببر ساعت ۵ عصر", "expect": [{"tool": "reschedule", "task": "جلسه با علی", "due": "+0 17:00"}]}
+{"id": "h-move-3", "input": "خرید هدیه تولد سارا رو بنداز برای شنبه", "expect": [{"tool": "reschedule", "task": "خرید هدیه تولد سارا", "due": "+2"}]}
+{"id": "h-delete-1", "input": "خرید هدیه تولد سارا رو حذف کن", "expect": [{"tool": "delete_task", "task": "خرید هدیه تولد سارا"}]}
+{"id": "h-delete-2", "input": "کار شماره ۱ رو پاک کن", "expect": [{"tool": "delete_task", "task": "خرید نان"}]}
+{"id": "h-update-1", "input": "تمدید بیمه ماشین رو مهم کن", "expect": [{"tool": "update_task", "task": "تمدید بیمه ماشین", "important": true}]}
+{"id": "h-bulk-1", "input": "کارهای مونده رو بنداز برای شنبه", "expect": [{"tool": "reschedule_overdue", "due": "+2"}]}
+{"id": "h-list-1", "input": "امروز چه کارهایی دارم؟", "expect": [{"tool": "list_tasks", "range": "today"}]}
+{"id": "h-list-2", "input": "برنامه فردام رو بگو", "expect": [{"tool": "list_tasks", "range": "tomorrow"}]}
+{"id": "h-list-3", "input": "همه کارهام رو نشون بده", "expect": [{"tool": "list_tasks", "range": "all"}]}
+{"id": "h-list-4", "input": "کارهای عقب افتاده‌ام کدوما هستن", "expect": [{"tool": "list_tasks", "range": "overdue"}]}
+{"id": "h-slot-1", "input": "پس‌فردا دو ساعت وقت آزاد دارم؟", "expect": [{"tool": "find_free_slot", "day": "+2", "minutes": 120}]}
+{"id": "h-focus-1", "input": "یه پومودورو شروع کن", "expect": [{"tool": "start_focus", "task": "none"}]}
+{"id": "h-habit-1", "input": "امروز کتاب خواندم", "expect": [{"tool": "log_habit", "habit": "کتاب خواندن"}]}
+{"id": "h-habit-2", "input": "سه لیوان آب خوردم", "expect": [{"tool": "log_habit", "habit": "نوشیدن آب"}]}
+{"id": "h-habit-3", "input": "یه عادت جدید: نوشتن روزانه ساعت ۱۰ شب", "expect": [{"tool": "create_habit", "title": "نوشتن"}]}
+{"id": "h-chat-1", "input": "خسته نباشی", "expect": []}
+{"id": "h-multi-1", "input": "خرید نان رو خریدم و فردا ساعت ۸ صبح ورزش", "expect": [{"tool": "complete_task", "task": "خرید نان"}, {"tool": "create_task", "title": "ورزش", "due": "+1 08:00"}]}

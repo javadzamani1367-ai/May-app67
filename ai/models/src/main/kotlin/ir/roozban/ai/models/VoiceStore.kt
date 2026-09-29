@@ -66,6 +66,11 @@ class VoiceStore(val dir: File) {
         }
     }
 
+    /** Removes voices that are no longer offered (e.g. replaced by clearer ones). */
+    fun keepOnly(ids: Set<String>) {
+        installed().filter { it !in ids }.forEach { delete(it) }
+    }
+
     fun delete(id: String) {
         modelDir(id).deleteRecursively()
         if (installed().isEmpty()) espeakDir.deleteRecursively()
@@ -76,6 +81,9 @@ class VoiceStore(val dir: File) {
     companion object {
         const val MODEL = "model.onnx"
         const val TOKENS = "tokens.txt"
+
+        /** Present in Matcha voices, which need a vocoder next to the acoustic model. */
+        const val VOCODER = "vocoder.onnx"
         private const val ESPEAK = "espeak-ng-data"
         private const val COMPLETE = ".complete"
     }

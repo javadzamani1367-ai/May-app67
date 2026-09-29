@@ -12,6 +12,7 @@ import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import com.k2fsa.sherpa.onnx.OfflineTts
 import com.k2fsa.sherpa.onnx.OfflineTtsConfig
+import com.k2fsa.sherpa.onnx.OfflineTtsMatchaModelConfig
 import com.k2fsa.sherpa.onnx.OfflineTtsModelConfig
 import com.k2fsa.sherpa.onnx.OfflineTtsVitsModelConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -168,15 +169,23 @@ class SpeechOutput @Inject constructor(
         piper = null
         val store: VoiceStore = models.voices
         val dir = store.modelDir(id)
+        val model = File(dir, VoiceStore.MODEL).path
+        val tokens = File(dir, VoiceStore.TOKENS).path
+        val vocoder = File(dir, VoiceStore.VOCODER)
+        val threads = (Runtime.getRuntime().availableProcessors() / 2).coerceIn(2, MAX_THREADS)
+        // Matcha voices come with their vocoder; Piper (VITS) voices do not need one.
         val config = OfflineTtsConfig(
-            model = OfflineTtsModelConfig(
-                vits = OfflineTtsVitsModelConfig(
-                    model = File(dir, VoiceStore.MODEL).path,
-                    tokens = File(dir, VoiceStore.TOKENS).path,
-                    dataDir = store.espeakDir.path,
-                ),
-                numThreads = THREADS,
-            ),
+            model = if (vocoder.isFile) {
+                OfflineTtsModelConfig(
+                    matcha = OfflineTtsMatchaModelConfig(acousticModel = model, vocoder = vocoder.path, tokens = tokens, dataDir = store.espeakDir.path),
+                    numThreads = threads,
+                )
+            } else {
+                OfflineTtsModelConfig(
+                    vits = OfflineTtsVitsModelConfig(model = model, tokens = tokens, dataDir = store.espeakDir.path),
+                    numThreads = threads,
+                )
+            },
         )
         val tts = withContext(Dispatchers.IO) { OfflineTts(config = config) }
         piper = id to tts
@@ -322,7 +331,7 @@ class SpeechOutput @Inject constructor(
     companion object {
         const val DEFAULT_ID = "speech"
         private const val TAG = "RoozbanSpeech"
-        private const val THREADS = 2
+        private const val MAX_THREADS = 4
         private const val RELEASE_AFTER_MS = 60_000L
         private val PERSIAN = setOf("fa", "fas", "per")
         private val ATTRIBUTES: AudioAttributes = AudioAttributes.Builder()
