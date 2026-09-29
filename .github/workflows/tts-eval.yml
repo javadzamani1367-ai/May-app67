@@ -40,17 +40,15 @@ jobs:
         run: |
           set -e
           mkdir -p voices && cd voices
-          for n in vits-piper-fa-haaniye_low vits-mimic3-fa-haaniye_low matcha-tts-fa_en-musa matcha-tts-fa_en-khadijah; do
+          for n in matcha-tts-fa_en-musa matcha-tts-fa_en-khadijah; do
             curl -sSfL -o $n.tar.bz2 "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$n.tar.bz2"
             tar xjf $n.tar.bz2 && rm $n.tar.bz2
             ls -la $n | head -8
           done
-          for f in vocos-22khz-univ.onnx hifigan_v1.onnx hifigan_v2.onnx; do
+          for f in vocos-22khz-univ.onnx hifigan_v2.onnx hifigan_v3.onnx; do
             curl -sSfL -o $f https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/$f
           done
           ls -la *.onnx
-          cat vits-piper-fa-haaniye_low/MODEL_CARD vits-piper-fa-haaniye_low/README* vits-mimic3-fa-haaniye_low/README* vits-mimic3-fa-haaniye_low/LICENSE* 2>/dev/null | head -60 || true
-          ls vits-piper-fa-haaniye_low vits-mimic3-fa-haaniye_low
 
       - name: Synthesize and judge
         run: |
@@ -59,19 +57,19 @@ jobs:
           python tools/tts_eval/eval.py voices out
         env:
           VOICES: >-
-            vits-piper-fa-haaniye_low vits-mimic3-fa-haaniye_low
-            matcha-tts-fa_en-khadijah+vocos-22khz-univ.onnx matcha-tts-fa_en-khadijah+hifigan_v1.onnx matcha-tts-fa_en-khadijah+hifigan_v2.onnx
-            matcha-tts-fa_en-musa+vocos-22khz-univ.onnx matcha-tts-fa_en-musa+hifigan_v1.onnx
+            matcha-tts-fa_en-musa+hifigan_v2.onnx matcha-tts-fa_en-musa+hifigan_v3.onnx
+            matcha-tts-fa_en-khadijah+hifigan_v2.onnx matcha-tts-fa_en-khadijah+hifigan_v3.onnx
 
       - name: Package Matcha voices
-        if: false
         run: |
           set -e
           cd voices
-          for v in musa khadijah; do
+          # <voice>:<vocoder>: the voice ships with its vocoder (Matcha needs one).
+          for pair in musa:vocos-22khz-univ musa:hifigan_v2 khadijah:hifigan_v2; do
+            v=${pair%%:*}; voc=${pair##*:}
             d=matcha-tts-fa_en-$v
-            cp vocos-22khz-univ.onnx $d/vocoder.onnx
-            (cd $d && zip -q -r -9 ../../out/roozban-tts-matcha-$v.zip model.onnx tokens.txt vocoder.onnx espeak-ng-data)
+            cp $voc.onnx $d/vocoder.onnx
+            (cd $d && zip -q -r -9 ../../out/roozban-tts-matcha-$v-${voc%%-*}.zip model.onnx tokens.txt vocoder.onnx espeak-ng-data)
           done
           cd ../out && for f in *.zip; do echo "ASSET $f $(stat -c %s "$f") $(sha256sum "$f" | cut -d' ' -f1)"; done
 
