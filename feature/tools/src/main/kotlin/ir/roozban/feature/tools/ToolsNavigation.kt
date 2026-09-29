@@ -15,6 +15,12 @@ data object NotesRoute
 data object AttendanceRoute
 
 @Serializable
+data object OcrRoute
+
+@Serializable
+data object PdfRoute
+
+@Serializable
 data class DateToolsRoute(val span: Boolean = false)
 
 @Serializable
@@ -31,6 +37,8 @@ fun NavGraphBuilder.toolsScreens(
 ) {
     composable<ToolsRoute> { ToolsScreen(onOpenNotes = onOpenNotes, onOpenDates = { onNavigate(DateToolsRoute(it)) }, onOpen = onNavigate, onBack = onBack) }
     composable<AttendanceRoute> { AttendanceScreen(onBack = onBack) }
+    composable<OcrRoute> { ir.roozban.feature.tools.ocr.OcrScreen(onOpenNote = onOpenNote, onBack = onBack) }
+    composable<PdfRoute> { ir.roozban.feature.tools.pdf.PdfScreen(onOpenOcrData = { onNavigate(OcrRoute) }, onBack = onBack) }
     composable<DateToolsRoute> { entry -> DateToolsScreen(startOnSpan = entry.toRoute<DateToolsRoute>().span, onBack = onBack) }
     composable<NotesRoute> { NotesScreen(onOpenNote = onOpenNote, onBack = onBack) }
     composable<NoteRoute> { entry ->

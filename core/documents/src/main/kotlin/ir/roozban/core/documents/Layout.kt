@@ -41,7 +41,15 @@ data class Paragraph(val lines: List<Line>, val align: Align, val heading: Int =
  */
 object Layout {
     fun lines(glyphs: List<Glyph>): List<Line> {
-        val clean = glyphs.mapNotNull { g -> normalize(g.text).takeIf { it.isNotEmpty() }?.let { g.copy(text = it) } }
+        val normalized = glyphs.mapNotNull { g -> normalize(g.text).takeIf { it.isNotEmpty() }?.let { g.copy(text = it) } }
+        // A half-space has no width and often shares its neighbour's position, so sorting by x
+        // would put it on either side: keep it with the letter it follows in the content stream.
+        val clean = ArrayList<Glyph>(normalized.size)
+        for (g in normalized) {
+            val prev = clean.lastOrNull()
+            if (g.text == ZWNJ && prev != null && prev.text.isNotBlank()) clean[clean.size - 1] = prev.copy(text = prev.text + ZWNJ)
+            else if (g.text != ZWNJ) clean += g
+        }
         if (clean.isEmpty()) return emptyList()
         // Group by baseline, top to bottom.
         val rows = ArrayList<MutableList<Glyph>>()
@@ -153,6 +161,10 @@ object Layout {
                 else -> Align.END
             }
         }
+        // The usual distance between lines of one paragraph (font sizes in PDFs are not always
+        // reliable, the spacing is).
+        val gaps = lines.zipWithNext { a, b -> b.y - a.y }.filter { it > 0 }.sorted()
+        val spacing = if (gaps.isEmpty()) body * 1.4f else gaps[gaps.size / 3]
         val out = ArrayList<Paragraph>()
         var cur = ArrayList<Line>()
         var prev: Line? = null
@@ -173,7 +185,7 @@ object Layout {
         for (l in lines) {
             val p = prev
             val newPara = p == null ||
-                l.y - p.y > maxOf(l.size, p.size) * 1.75f ||
+                l.y - p.y > spacing * 1.3f ||
                 abs(l.size - p.size) > 0.15f * maxOf(l.size, p.size) ||
                 l.bold != p.bold && (l.words.size < 12 || p.words.size < 12) ||
                 // The previous line ended short of the margin: its paragraph ended there.
@@ -188,4 +200,5 @@ object Layout {
     }
 
     private val DIGIT_RUN = Regex("[0-9۰-۹٠-٩]{2,}")
+    private const val ZWNJ = "\u200C"
 }

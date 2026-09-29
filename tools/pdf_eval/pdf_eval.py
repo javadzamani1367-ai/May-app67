@@ -90,17 +90,9 @@ def edits(a, b):
     return prev[-1]
 
 
-def chunked_cer(ref, hyp, size=2000):
-    # Align chunk by chunk (sources are long); good enough to compare converters.
-    total, errs, j = 0, 0, 0
-    for i in range(0, len(ref), size):
-        r = ref[i:i + size]
-        h = hyp[j:j + size + size // 10]
-        e = edits(r, h[:len(r) + len(r) // 10])
-        errs += e
-        total += len(r)
-        j += len(r)
-    return errs / max(total, 1)
+def chunked_cer(ref, hyp):
+    from rapidfuzz.distance import Levenshtein
+    return Levenshtein.distance(ref, hyp) / max(len(ref), 1)
 
 
 def docx_text(path):

@@ -21,6 +21,8 @@ turbine = "1.2.1"
 icu4j = "78.3"
 pdfbox = "2.0.32"
 pdfbox-android = "2.0.27.0"
+tesseract4android = "4.9.0"
+exifinterface = "1.4.1"
 room = "2.8.5"
 datastore = "1.2.1"
 robolectric = "4.17"
@@ -88,6 +90,8 @@ turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine
 icu4j = { group = "com.ibm.icu", name = "icu4j", version.ref = "icu4j" }
 pdfbox = { group = "org.apache.pdfbox", name = "pdfbox", version.ref = "pdfbox" }
 pdfbox-android = { group = "com.tom-roush", name = "pdfbox-android", version.ref = "pdfbox-android" }
+tesseract4android = { group = "cz.adaptech.tesseract4android", name = "tesseract4android", version.ref = "tesseract4android" }
+androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

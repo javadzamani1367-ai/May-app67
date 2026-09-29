@@ -51,6 +51,8 @@ data class ModelsState(
     val wifiOnly: Boolean = false,
     /** Ids of the Piper voices on the phone. */
     val voicesInstalled: Set<String> = emptySet(),
+    /** OCR languages installed («fas», «eng»). */
+    val ocrInstalled: Set<String> = emptySet(),
 ) {
     val active: InstalledModel? get() = installed.firstOrNull { it.id == activeId } ?: installed.firstOrNull()
 
@@ -74,6 +76,13 @@ class ModelManager @Inject constructor(
     private val prefs = context.getSharedPreferences("ai", Context.MODE_PRIVATE)
     val store = ModelStore(File(context.filesDir, "models"))
     val voices = VoiceStore(File(store.dir, "voices"))
+
+    /** Tesseract's data folder: `<ocrDir>/tessdata/<lang>.traineddata`. */
+    val ocrDir = File(store.dir, "ocr")
+
+    /** OCR languages installed («fas», «eng»). */
+    fun ocrInstalled(): Set<String> =
+        File(ocrDir, "tessdata").listFiles { f -> f.name.endsWith(".traineddata") }?.mapTo(HashSet()) { it.name.removeSuffix(".traineddata") } ?: emptySet()
     val tier: DeviceTier = DeviceTier.of(totalRam())
 
     private val _wifiOnly = MutableStateFlow(prefs.getBoolean(KEY_WIFI_ONLY, false))
@@ -92,7 +101,7 @@ class ModelManager @Inject constructor(
         val all = store.installed()
         val installed = all.filter { it.kind == ModelKind.LLM }
         val speech = all.filter { it.kind == ModelKind.SPEECH }
-        val failed = (ModelCatalog.all + ModelCatalog.speech + ModelCatalog.voices).mapNotNull { spec ->
+        val failed = (ModelCatalog.all + ModelCatalog.speech + ModelCatalog.voices + ModelCatalog.ocr).mapNotNull { spec ->
             val part = store.partialBytes(spec)
             if (part > 0 && all.none { it.id == spec.id }) spec.id to DownloadState.Failed("", part) else null
         }.toMap()
@@ -104,6 +113,7 @@ class ModelManager @Inject constructor(
                 activeSpeechId = prefs.getString(KEY_ACTIVE_SPEECH, null),
                 wifiOnly = prefs.getBoolean(KEY_WIFI_ONLY, false),
                 voicesInstalled = voices.installed(),
+                ocrInstalled = ocrInstalled(),
                 downloads = failed + s.downloads.filterValues { it is DownloadState.Running },
             )
         }
@@ -164,6 +174,23 @@ class ModelManager @Inject constructor(
 
     internal fun onFinished(spec: ModelSpec, downloadError: String?) {
         var error = downloadError
+        if (error == null && spec.kind == ModelKind.OCR) {
+            // Language data goes where Tesseract looks for it.
+            error = runCatching {
+                val dir = File(ocrDir, "tessdata").apply { mkdirs() }
+                val from = store.fileFor(spec)
+                val to = File(dir, ModelCatalog.ocrLanguage(spec) + ".traineddata")
+                if (!from.renameTo(to)) {
+                    from.copyTo(to, overwrite = true)
+                    from.delete()
+                }
+            }.exceptionOrNull()?.let { "ذخیرهٔ داده‌ها نشد؛ دوباره تلاش کن." }
+            if (error == null) {
+                _state.update { it.copy(downloads = it.downloads - spec.id) }
+                refresh()
+                return
+            }
+        }
         if (error == null && spec.kind == ModelKind.VOICE) {
             // A voice arrives as a zip: unpack it next to the others.
             error = runCatching { voices.install(spec.id, store.fileFor(spec)) }.exceptionOrNull()?.let { "فایل صدا سالم نبود؛ دوباره تلاش کن." }
@@ -205,7 +232,9 @@ class ModelManager @Inject constructor(
     }
 
     fun delete(id: String) {
-        if (ModelCatalog.get(id)?.kind == ModelKind.VOICE) voices.delete(id)
+        val spec = ModelCatalog.get(id)
+        if (spec?.kind == ModelKind.VOICE) voices.delete(id)
+        if (spec?.kind == ModelKind.OCR) File(ocrDir, "tessdata/${ModelCatalog.ocrLanguage(spec)}.traineddata").delete()
         store.delete(id)
         if (prefs.getString(KEY_ACTIVE, null) == id) prefs.edit { remove(KEY_ACTIVE) }
         if (prefs.getString(KEY_ACTIVE_SPEECH, null) == id) prefs.edit { remove(KEY_ACTIVE_SPEECH) }

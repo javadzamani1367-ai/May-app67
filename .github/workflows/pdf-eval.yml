@@ -28,7 +28,9 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
       - name: Tools
-        run: sudo apt-get update -q && sudo apt-get install -y -q libreoffice-writer fonts-noto-core > /dev/null
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q libreoffice-writer fonts-noto-core > /dev/null
+          pip install -q rapidfuzz
       - name: Documents
         run: |
           python3 tools/pdf_eval/pdf_eval.py make docs

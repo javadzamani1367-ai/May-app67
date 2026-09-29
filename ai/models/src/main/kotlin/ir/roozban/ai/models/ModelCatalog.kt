@@ -12,6 +12,9 @@ enum class ModelKind {
 
     /** A Piper voice for reading text aloud (a zip: model, tokens, phonemizer data). */
     VOICE,
+
+    /** Tesseract language data for reading text in pictures and scanned PDFs. */
+    OCR,
 }
 
 /** A downloadable model. [sha256] and [sizeBytes] are of the exact file at [url]. */
@@ -152,6 +155,34 @@ object ModelCatalog {
         ),
     )
 
+    private const val OCR_RELEASE = "https://github.com/javadzamani1367-ai/May-app67/releases/download/ocr-data"
+
+    /**
+     * Language data for image-to-text (Tesseract, Apache-2.0), chosen by the ocr-eval workflow:
+     * the fast Persian model read phone photos with 3.5% and scans with 4.5% character errors in
+     * about 0.4 s a page, better than the large model; adding English made Persian worse (it read
+     * Persian words as Latin), so Persian alone is used.
+     */
+    val ocr: List<ModelSpec> = listOf(
+        ocrLanguage("ocr-fas", "فارسی", "fas-fast.traineddata", 431_500L, "db1c0a91208aff00d3cf1ed2c1d23f76419afd5f024688b4f71adc3f2ce4a505"),
+    )
+
+    /** Tesseract's language code of an OCR spec («fas», «eng»). */
+    fun ocrLanguage(spec: ModelSpec): String = spec.id.removePrefix("ocr-")
+
+    private fun ocrLanguage(id: String, name: String, file: String, size: Long, sha: String) = ModelSpec(
+        id = id,
+        name = name,
+        description = "داده‌های خواندن متن $name از تصویر",
+        url = "$OCR_RELEASE/$file",
+        sizeBytes = size,
+        sha256 = sha,
+        template = ChatTemplate.CHATML,
+        minTier = DeviceTier.UNSUPPORTED,
+        license = "Apache-2.0 (tesseract-ocr/tessdata_fast)",
+        kind = ModelKind.OCR,
+    )
+
     private fun voice(id: String, name: String, description: String, file: String, size: Long, sha: String, license: String) = ModelSpec(
         id = id,
         name = name,
@@ -169,6 +200,7 @@ object ModelCatalog {
     fun isLegacySpeech(id: String) = id.startsWith("whisper-")
 
     fun get(id: String): ModelSpec? = all.firstOrNull { it.id == id } ?: speech.firstOrNull { it.id == id } ?: voices.firstOrNull { it.id == id }
+        ?: ocr.firstOrNull { it.id == id }
 
     /** Assistant models the device can run, the recommended one first. */
     fun availableFor(tier: DeviceTier): List<ModelSpec> =
