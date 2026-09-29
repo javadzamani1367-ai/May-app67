@@ -24,7 +24,11 @@ class LayoutTest {
                 x = lx
                 for (c in chars) { out += Glyph(c.toString(), lx, y, 6f, size, bold); lx += 6f }
             } else {
-                for (c in run.single()) { x -= 6f; out += Glyph(c.toString(), x, y, 6f, size, bold) }
+                for (c in run.single()) {
+                    if (c == '\u200C') { out += Glyph(c.toString(), x, y, 0f, size, bold); continue }
+                    x -= 6f
+                    out += Glyph(c.toString(), x, y, 6f, size, bold)
+                }
             }
             x -= 4f
             out += Glyph(" ", x, y, 4f, size, bold)
@@ -43,6 +47,14 @@ class LayoutTest {
     fun `numbers and Latin inside Persian keep their own order`() {
         val lines = Layout.lines(rtlLine("سال ۱۴۰۵ و نسخه PDF Reader آماده است", 100f))
         assertThat(lines.single().text).isEqualTo("سال ۱۴۰۵ و نسخه PDF Reader آماده است")
+    }
+
+    @Test
+    fun `a half-space stays in place whether the PDF draws in reading order or left to right`() {
+        val text = "گونه\u200Cهای دست\u200Cنویس می\u200Cزند"
+        val logical = rtlLine(text, 100f)
+        assertThat(Layout.lines(logical).single().text).isEqualTo(text)
+        assertThat(Layout.lines(logical.reversed()).single().text).isEqualTo(text)
     }
 
     @Test

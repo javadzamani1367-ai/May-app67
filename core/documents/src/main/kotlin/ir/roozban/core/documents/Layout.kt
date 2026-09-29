@@ -42,13 +42,24 @@ data class Paragraph(val lines: List<Line>, val align: Align, val heading: Int =
 object Layout {
     fun lines(glyphs: List<Glyph>): List<Line> {
         val normalized = glyphs.mapNotNull { g -> normalize(g.text).takeIf { it.isNotEmpty() }?.let { g.copy(text = it) } }
-        // A half-space has no width and often shares its neighbour's position, so sorting by x
-        // would put it on either side: keep it with the letter it follows in the content stream.
+        // A half-space has no width and shares its neighbours' position, so sorting by x would put
+        // it on either side: attach it to the letter it logically follows. Some writers draw in
+        // reading order (that letter comes before it in the stream), others left to right (for
+        // Persian, the letter after it in the stream).
+        val attach = IntArray(normalized.size) { -1 }
+        for ((i, g) in normalized.withIndex()) {
+            if (g.text != ZWNJ) continue
+            val p = (i - 1 downTo 0).firstOrNull { normalized[it].text != ZWNJ }?.takeIf { normalized[it].text.isNotBlank() }
+            val n = (i + 1 until normalized.size).firstOrNull { normalized[it].text != ZWNJ }
+                ?.takeIf { normalized[it].text.isNotBlank() && p != null && abs(normalized[it].y - normalized[p].y) <= 0.45f * maxOf(normalized[it].size, 1f) }
+            attach[i] = if (p != null && n != null && isRtl(normalized[n].text) && normalized[n].x > normalized[p].x + 0.01f) n else p ?: -1
+        }
+        val suffix = HashMap<Int, String>()
+        for (i in attach.indices) if (attach[i] >= 0) suffix[attach[i]] = ZWNJ
         val clean = ArrayList<Glyph>(normalized.size)
-        for (g in normalized) {
-            val prev = clean.lastOrNull()
-            if (g.text == ZWNJ && prev != null && prev.text.isNotBlank()) clean[clean.size - 1] = prev.copy(text = prev.text + ZWNJ)
-            else if (g.text != ZWNJ) clean += g
+        for ((i, g) in normalized.withIndex()) {
+            if (g.text == ZWNJ) continue
+            clean += suffix[i]?.let { g.copy(text = g.text + it) } ?: g
         }
         if (clean.isEmpty()) return emptyList()
         // Group by baseline, top to bottom.
