@@ -81,7 +81,7 @@ class DoneViewModelTest {
     fun `groups by day, newest first, and searches titles and projects`() = runTest {
         projects.upsert(Project("p", "کار", createdAt = clock.instant(), updatedAt = clock.instant()))
         val vm = viewModel(FakeHistory(listOf(call, report, gym)))
-        backgroundScope.launch { vm.state.collect {} }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
 
         val days = vm.state.value.days
         assertThat(days.map { it.label }).containsExactly("امروز", "دیروز").inOrder()
@@ -100,7 +100,7 @@ class DoneViewModelTest {
     fun `removing hides it from the list with undo`() = runTest {
         val history = FakeHistory(listOf(report, call))
         val vm = viewModel(history)
-        backgroundScope.launch { vm.state.collect {} }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         val entry = vm.state.value.days.first().entries.first()
 
         vm.remove(entry)
