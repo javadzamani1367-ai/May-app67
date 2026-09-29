@@ -1,6 +1,5 @@
 package ir.roozban.core.designsystem.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
@@ -31,7 +30,7 @@ object TagColors {
 
     @Composable
     fun color(index: Int): Color {
-        val palette = if (isSystemInDarkTheme()) dark else light
+        val palette = if (LocalDarkTheme.current) dark else light
         return palette[Math.floorMod(index, palette.size)]
     }
 }

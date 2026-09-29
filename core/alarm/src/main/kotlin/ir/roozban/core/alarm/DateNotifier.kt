@@ -7,6 +7,8 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.graphics.Typeface
 import android.os.Build
 import android.view.View
@@ -89,6 +91,8 @@ class DateNotifier @Inject constructor(
             .setCategory(NotificationCompat.CATEGORY_STATUS)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setContentIntent(AppLinks.open(context, AppLinks.CALENDAR))
+            // Newer Android lets ongoing notifications be swiped away: put it straight back.
+            .setDeleteIntent(refreshIntent(REQUEST_DISMISSED, PendingIntent.FLAG_UPDATE_CURRENT))
             .build()
         try {
             manager.notify(NOTIFICATION_ID, notification)
@@ -97,28 +101,36 @@ class DateNotifier @Inject constructor(
         }
     }
 
-    /** The day number drawn in white, used as the status-bar icon (the system tints it). */
+    /**
+     * The status-bar icon: a round badge with the day number cut out of it. Android draws status-bar
+     * icons in a single color (white on a dark bar, dark on a light one), so the number shows in the
+     * bar's own color inside a solid circle: black in white on the usual dark bar.
+     */
     private fun dayIcon(day: Int): IconCompat {
         val size = 96
         val bitmap = createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val circle = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.WHITE }
+        canvas.drawCircle(size / 2f, size / 2f, size / 2f - 1f, circle)
         val typeface = runCatching { ResourcesCompat.getFont(context, DsR.font.vazirmatn_bold) }.getOrNull() ?: Typeface.DEFAULT_BOLD
         val text = PersianDigits.format(day)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = android.graphics.Color.WHITE
             this.typeface = typeface
             textAlign = Paint.Align.CENTER
-            textSize = if (text.length > 1) 78f else 92f
+            textSize = if (text.length > 1) 58f else 68f
+            xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
         }
-        val canvas = Canvas(bitmap)
         val bounds = android.graphics.Rect()
         paint.getTextBounds(text, 0, text.length, bounds)
         canvas.drawText(text, size / 2f, size / 2f - bounds.exactCenterY(), paint)
         return IconCompat.createWithBitmap(bitmap)
     }
 
-    private fun midnightIntent(flags: Int): PendingIntent? = PendingIntent.getBroadcast(
+    private fun midnightIntent(flags: Int): PendingIntent? = refreshIntent(REQUEST_MIDNIGHT, flags)
+
+    private fun refreshIntent(request: Int, flags: Int): PendingIntent? = PendingIntent.getBroadcast(
         context,
-        0,
+        request,
         Intent(context, RoutineReceiver::class.java).setAction(RoutineReceiver.ACTION_DATE_REFRESH),
         flags or PendingIntent.FLAG_IMMUTABLE,
     )
@@ -146,5 +158,7 @@ class DateNotifier @Inject constructor(
 
     private companion object {
         const val NOTIFICATION_ID = 0x0DA7E
+        const val REQUEST_MIDNIGHT = 0
+        const val REQUEST_DISMISSED = 1
     }
 }

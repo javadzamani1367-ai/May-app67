@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,8 +57,21 @@ private fun paletteName(p: ThemePalette): Int = when (p) {
     ThemePalette.TEAL -> R.string.palette_teal
     ThemePalette.SLATE -> R.string.palette_slate
     ThemePalette.GREEN -> R.string.palette_green
+    ThemePalette.SKY -> R.string.palette_sky
+    ThemePalette.NAVY -> R.string.palette_navy
+    ThemePalette.PURPLE -> R.string.palette_purple
+    ThemePalette.PINK -> R.string.palette_pink
+    ThemePalette.RED -> R.string.palette_red
+    ThemePalette.ORANGE -> R.string.palette_orange
+    ThemePalette.GOLD -> R.string.palette_gold
+    ThemePalette.BROWN -> R.string.palette_brown
+    ThemePalette.OLIVE -> R.string.palette_olive
+    ThemePalette.LIME -> R.string.palette_lime
+    ThemePalette.MINT -> R.string.palette_mint
+    ThemePalette.GRAPHITE -> R.string.palette_graphite
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 internal fun AppearanceCard(s: UserSettings, vm: SettingsViewModel, section: @Composable (String, @Composable () -> Unit) -> Unit, switchRow: @Composable (String, Boolean, (Boolean) -> Unit) -> Unit) {
     val context = LocalContext.current
@@ -82,7 +96,11 @@ internal fun AppearanceCard(s: UserSettings, vm: SettingsViewModel, section: @Co
         }
 
         Label(stringResource(R.string.appearance_palette))
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Every color at a glance, in rows.
+        androidx.compose.foundation.layout.FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             ThemePalette.entries.forEach { p ->
                 val selected = s.palette == p && !s.dynamicColor
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { vm.setPalette(p) }) {
@@ -93,7 +111,7 @@ internal fun AppearanceCard(s: UserSettings, vm: SettingsViewModel, section: @Co
                     ) {
                         if (selected) Icon(painterResource(DsR.drawable.ic_check), null, tint = Color.White)
                     }
-                    Text(stringResource(paletteName(p)), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 4.dp))
+                    Text(stringResource(paletteName(p)), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 4.dp).width(52.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 1)
                 }
             }
         }

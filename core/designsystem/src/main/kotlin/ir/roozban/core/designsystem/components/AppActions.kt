@@ -21,7 +21,6 @@ import ir.roozban.core.designsystem.theme.Roozban
 data class AppActions(
     val onAssistant: (() -> Unit)? = null,
     val onTools: (() -> Unit)? = null,
-    val onSettings: (() -> Unit)? = null,
 )
 
 val LocalAppActions = staticCompositionLocalOf { AppActions() }
@@ -35,14 +34,16 @@ fun AssistantAction() {
     }
 }
 
-/** «⋮» at the start of the bar (the right side in Persian): tools, assistant and settings. */
+/** «☰» at the start of the bar (the right side in Persian): tools and assistant. */
 @Composable
 fun AppMenuButton() {
     val actions = LocalAppActions.current
     var open by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { open = true }) {
-            Icon(painterResource(R.drawable.ic_more_vert), stringResource(R.string.ds_menu))
+            // Three lines, so it is not confused with a screen's own ⋮ menu. Settings is not repeated
+            // here: every main screen has its own settings button.
+            Icon(painterResource(R.drawable.ic_menu), stringResource(R.string.ds_menu))
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             actions.onTools?.let { go ->
@@ -56,13 +57,6 @@ fun AppMenuButton() {
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.ds_assistant)) },
                     leadingIcon = { Icon(painterResource(R.drawable.ic_assistant), null) },
-                    onClick = { open = false; go() },
-                )
-            }
-            actions.onSettings?.let { go ->
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.ds_settings)) },
-                    leadingIcon = { Icon(painterResource(R.drawable.ic_settings), null) },
                     onClick = { open = false; go() },
                 )
             }

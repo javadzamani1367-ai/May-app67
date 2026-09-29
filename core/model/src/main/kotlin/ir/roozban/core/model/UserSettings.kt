@@ -52,7 +52,10 @@ data class UserSettings(
 enum class ThemeMode { LIGHT, DARK, SYSTEM }
 
 /** Accent color families; neutrals stay white/near-black so text is always black on white. */
-enum class ThemePalette { INDIGO, OCEAN, VIOLET, ROSE, CORAL, AMBER, TEAL, SLATE, GREEN }
+enum class ThemePalette {
+    INDIGO, OCEAN, VIOLET, ROSE, CORAL, AMBER, TEAL, SLATE, GREEN,
+    SKY, NAVY, PURPLE, PINK, RED, ORANGE, GOLD, BROWN, OLIVE, LIME, MINT, GRAPHITE,
+}
 
 enum class StartScreen { TODAY, CALENDAR }
 

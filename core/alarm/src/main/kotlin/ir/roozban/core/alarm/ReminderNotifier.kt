@@ -68,7 +68,8 @@ class ReminderNotifier @Inject constructor(
                     vibrationPattern = longArrayOf(0, 400, 200, 400)
                     lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 },
-                NotificationChannel(CHANNEL_DATE, context.getString(R.string.channel_date), NotificationManager.IMPORTANCE_LOW).apply {
+                // Default importance (but silent): phones hide low-importance icons from the status bar.
+                NotificationChannel(CHANNEL_DATE, context.getString(R.string.channel_date), NotificationManager.IMPORTANCE_DEFAULT).apply {
                     description = context.getString(R.string.channel_date_desc)
                     setShowBadge(false)
                     setSound(null, null)
@@ -194,8 +195,8 @@ class ReminderNotifier @Inject constructor(
         const val CHANNEL_FOCUS_END = "focus_alerts_v2"
         const val CHANNEL_HABITS = "habit_alerts"
         const val CHANNEL_EVENTS = "event_alerts"
-        const val CHANNEL_DATE = "today_date"
-        private val LEGACY_CHANNELS = listOf("focus_end", "habits", "focus_alerts", "habit_reminders", "personal_events")
+        const val CHANNEL_DATE = "today_date_badge"
+        private val LEGACY_CHANNELS = listOf("focus_end", "habits", "focus_alerts", "habit_reminders", "personal_events", "today_date")
         private const val DEFAULT = "<default>"
         private const val KEY_HABIT_SOUND = "habit_sound"
         private const val KEY_EVENT_SOUND = "event_sound"

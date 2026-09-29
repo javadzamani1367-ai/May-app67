@@ -114,7 +114,6 @@ fun RoozbanApp(
         AppActions(
             onAssistant = { navController.navigate(AssistantRoute) { launchSingleTop = true } },
             onTools = { navController.navigate(ToolsRoute) { launchSingleTop = true } },
-            onSettings = { navController.navigate(SettingsRoute) { launchSingleTop = true } },
         )
     }
     CompositionLocalProvider(LocalAppActions provides appActions) {
