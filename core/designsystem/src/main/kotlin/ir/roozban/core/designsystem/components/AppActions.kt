@@ -34,15 +34,15 @@ fun AssistantAction() {
     }
 }
 
-/** «☰» at the start of the bar (the right side in Persian): tools and assistant. */
+/** «☰» at the start of the bar (the right side in Persian): tools. The assistant has its own button in the bar. */
 @Composable
 fun AppMenuButton() {
     val actions = LocalAppActions.current
     var open by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { open = true }) {
-            // Three lines, so it is not confused with a screen's own ⋮ menu. Settings is not repeated
-            // here: every main screen has its own settings button.
+            // Three lines, so it is not confused with a screen's own ⋮ menu. Settings and the assistant
+            // are not repeated here: every main screen has its own buttons for them.
             Icon(painterResource(R.drawable.ic_menu), stringResource(R.string.ds_menu))
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
@@ -50,13 +50,6 @@ fun AppMenuButton() {
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.ds_tools)) },
                     leadingIcon = { Icon(painterResource(R.drawable.ic_mic), null) },
-                    onClick = { open = false; go() },
-                )
-            }
-            actions.onAssistant?.let { go ->
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.ds_assistant)) },
-                    leadingIcon = { Icon(painterResource(R.drawable.ic_assistant), null) },
                     onClick = { open = false; go() },
                 )
             }
