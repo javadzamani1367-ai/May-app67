@@ -180,6 +180,59 @@ class DaoTest {
     }
 
     @Test
+    fun `done list shows finished tasks and occurrences, hiding keeps them in the reports`() = runTest {
+        tasks.upsert(task("a").copy(recurrence = null, completedAt = Instant.ofEpochMilli(5_000)).toEntity())
+        tasks.upsert(task("sub").copy(recurrence = null, parentId = "a", completedAt = Instant.ofEpochMilli(5_500)).toEntity())
+        tasks.upsert(task("r").toEntity())
+        tasks.insertCompletion(CompletionEntity("r", 20_000, 6_000))
+        tasks.insertCompletion(CompletionEntity("r", 20_001, 7_000))
+        assertThat(tasks.observeDone().first().map { it.taskId to it.occurrence })
+            .containsExactly("r" to 20_001L, "r" to 20_000L, "a" to -1L).inOrder()
+
+        tasks.hideDone(HiddenHistoryEntity("a", -1, 8_000))
+        tasks.hideDone(HiddenHistoryEntity("r", 20_000, 8_000))
+        assertThat(tasks.observeDone().first().map { it.taskId to it.occurrence }).containsExactly("r" to 20_001L)
+        // Still counted in reports and statistics.
+        assertThat(tasks.observeCompletionEvents(0, 10_000).first().map { it.taskId })
+            .containsExactly("a", "sub", "r", "r")
+
+        tasks.unhideDone("a", -1)
+        assertThat(tasks.observeDone().first().map { it.taskId }).contains("a")
+
+        // Reopened and done again after being hidden: back in the list.
+        tasks.upsert(task("r").toEntity())
+        tasks.hideDone(HiddenHistoryEntity("r", 20_001, 8_000))
+        tasks.insertCompletion(CompletionEntity("r", 20_001, 9_000))
+        assertThat(tasks.observeDone().first().map { it.taskId to it.occurrence }).contains("r" to 20_001L)
+    }
+
+    @Test
+    fun `a year later done tasks leave the history and the reports`() = runTest {
+        tasks.upsert(task("old").copy(recurrence = null, completedAt = Instant.ofEpochMilli(100)).toEntity())
+        tasks.upsert(task("oldsub").copy(recurrence = null, parentId = "old").toEntity())
+        tasks.upsert(task("new").copy(recurrence = null, completedAt = Instant.ofEpochMilli(5_000)).toEntity())
+        tasks.upsert(task("open").copy(recurrence = null).toEntity())
+        tasks.upsert(task("donesub").copy(recurrence = null, parentId = "open", completedAt = Instant.ofEpochMilli(100)).toEntity())
+        tasks.upsert(task("r").toEntity())
+        tasks.insertCompletion(CompletionEntity("r", 1, 100))
+        tasks.insertCompletion(CompletionEntity("r", 2, 5_000))
+        tasks.hideDone(HiddenHistoryEntity("old", -1, 200))
+        tasks.hideDone(HiddenHistoryEntity("r", 1, 200))
+
+        tasks.purgeDoneOlderThan(before = 1_000)
+
+        assertThat(tasks.get("old")).isNull()
+        assertThat(tasks.get("oldsub")).isNull()
+        assertThat(tasks.get("new")).isNotNull()
+        // A done step of a task still in progress stays with its task.
+        assertThat(tasks.get("donesub")).isNotNull()
+        assertThat(tasks.get("r")).isNotNull()
+        assertThat(tasks.completions("r").map { it.occurrence }).containsExactly(2L)
+        assertThat(db.backupDao().hiddenDone()).isEmpty()
+        assertThat(tasks.observeCompletionEvents(0, 1_000).first().map { it.taskId }).containsExactly("donesub")
+    }
+
+    @Test
     fun `focus sessions and tracked time with their task`() = runTest {
         tasks.upsert(task("a").toEntity())
         val focus = db.focusDao()

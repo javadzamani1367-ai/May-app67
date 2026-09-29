@@ -21,6 +21,10 @@ data object CalendarRoute
 @Serializable
 data object ProjectsRoute
 
+/** Done tasks (search, send back, take off the list). */
+@Serializable
+data object DoneRoute
+
 @Serializable
 data class ProjectRoute(val projectId: String)
 
@@ -31,14 +35,22 @@ fun NavGraphBuilder.tasksScreens(
     onBack: () -> Unit,
     onOpenVoiceModels: (() -> Unit)? = null,
     onOpenPlanner: (() -> Unit)? = null,
+    onOpenDone: (() -> Unit)? = null,
 ) {
     composable<TodayRoute> {
-        TaskListRoute(ListMode.TODAY, onOpenSettings, onOpenVoiceModels = onOpenVoiceModels, onOpenPlanner = onOpenPlanner)
+        TaskListRoute(
+            ListMode.TODAY,
+            onOpenSettings,
+            onOpenVoiceModels = onOpenVoiceModels,
+            onOpenPlanner = onOpenPlanner,
+            onOpenDone = onOpenDone,
+        )
     }
     composable<UpcomingRoute> { TaskListRoute(ListMode.UPCOMING, onOpenSettings, onOpenVoiceModels = onOpenVoiceModels) }
     composable<InboxRoute> { TaskListRoute(ListMode.INBOX, onOpenSettings, onOpenVoiceModels = onOpenVoiceModels) }
     composable<CalendarRoute> { CalendarScreen(onOpenSettings = onOpenSettings) }
     composable<ProjectsRoute> { ProjectsScreen(onOpenProject = onOpenProject, onOpenSettings = onOpenSettings) }
+    composable<DoneRoute> { DoneScreen(onBack = onBack) }
     composable<ProjectRoute> { entry ->
         val route = entry.toRoute<ProjectRoute>()
         TaskListRoute(ListMode.PROJECT, onOpenSettings, projectId = route.projectId, onBack = onBack, onOpenVoiceModels = onOpenVoiceModels)

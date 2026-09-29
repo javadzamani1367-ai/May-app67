@@ -73,15 +73,18 @@ class RoozbanApplication : Application() {
             }
         }
         appScope.launch {
-            // Re-arm alarms (e.g. after a force-stop, which clears them) and drop old deleted tasks.
+            // Re-arm alarms (e.g. after a force-stop, which clears them) and drop old deleted tasks and
+            // year-old done ones (from the history, reports and statistics alike).
             reconciler.reconcile()
             tasks.purgeDeletedOlderThanDays(DELETED_RETENTION_DAYS)
+            tasks.purgeDoneOlderThanDays(DONE_RETENTION_DAYS)
         }
     }
 
     private companion object {
         const val PERSIAN = "fa-IR"
         const val DELETED_RETENTION_DAYS = 7L
+        const val DONE_RETENTION_DAYS = 365L
         const val WIDGET_UPDATE_THROTTLE_MS = 1_000L
     }
 }

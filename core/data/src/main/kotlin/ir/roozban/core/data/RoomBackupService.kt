@@ -9,6 +9,7 @@ import ir.roozban.core.backup.BackupNote
 import ir.roozban.core.backup.BackupFocusSession
 import ir.roozban.core.backup.BackupHabit
 import ir.roozban.core.backup.BackupHabitLog
+import ir.roozban.core.backup.BackupHiddenDone
 import ir.roozban.core.backup.BackupLabel
 import ir.roozban.core.backup.BackupMerger
 import ir.roozban.core.backup.BackupProject
@@ -24,6 +25,7 @@ import ir.roozban.core.database.HabitEntity
 import ir.roozban.core.database.PersonalEventEntity
 import ir.roozban.core.database.HabitLogEntity
 import ir.roozban.core.database.MemoryFactEntity
+import ir.roozban.core.database.HiddenHistoryEntity
 import ir.roozban.core.database.NoteEntity
 import ir.roozban.core.database.LabelEntity
 import ir.roozban.core.database.ProjectEntity
@@ -101,6 +103,7 @@ class RoomBackupService @Inject constructor(
             projects = dao.projects().map { BackupProject(it.id, it.name, it.color, it.archived, it.sortOrder, it.createdAt, it.updatedAt) },
             labels = dao.labels().map { BackupLabel(it.id, it.name, it.color, it.createdAt, it.updatedAt) },
             completions = dao.completions().map { BackupCompletion(it.taskId, it.occurrence, it.completedAt) },
+            hiddenDone = dao.hiddenDone().map { BackupHiddenDone(it.taskId, it.occurrence, it.hiddenAt) },
             settings = settings.current().toBackup(),
             focusSessions = dao.focusSessions().map {
                 BackupFocusSession(it.id, it.taskId, it.startedAt, it.endedAt, it.plannedMinutes, it.focusedSeconds, it.completed)
@@ -133,6 +136,7 @@ class RoomBackupService @Inject constructor(
             labels = data.labels.map { LabelEntity(it.id, it.name, it.color, it.createdAt, it.updatedAt) },
             taskLabels = data.tasks.flatMap { t -> t.labelIds.map { TaskLabelEntity(t.id, it) } },
             completions = data.completions.map { CompletionEntity(it.taskId, it.occurrence, it.completedAt) },
+            hiddenDone = data.hiddenDone.map { HiddenHistoryEntity(it.taskId, it.occurrence, it.hiddenAt) },
             focusSessions = data.focusSessions.map {
                 FocusSessionEntity(it.id, it.taskId, it.startedAt, it.endedAt, it.plannedMinutes, it.focusedSeconds, it.completed)
             },

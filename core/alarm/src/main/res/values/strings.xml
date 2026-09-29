@@ -16,8 +16,8 @@
     <string name="channel_focus_desc">شمارش معکوس تمرکز و استراحت</string>
     <string name="channel_focus_end">پایان تمرکز و استراحت</string>
     <string name="channel_focus_end_desc">خبر پایان هر دوره‌ی تمرکز یا استراحت</string>
-    <string name="channel_habits">عادت‌ها و مرور</string>
-    <string name="channel_habits_desc">یادآوری عادت‌ها و مرور روزانه و هفتگی</string>
+    <string name="channel_habits">روال‌ها و مرور</string>
+    <string name="channel_habits_desc">یادآوری روال‌ها و مرور روزانه و هفتگی</string>
     <string name="focus_phase_work">تمرکز</string>
     <string name="focus_phase_short_break">استراحت کوتاه</string>
     <string name="focus_phase_long_break">استراحت بلند</string>
@@ -32,7 +32,7 @@
     <string name="focus_ready_text">برای شروع بزنید</string>
     <string name="focus_dnd_rule">تمرکز روزبان</string>
     <string name="focus_dnd_summary">در حال تمرکز</string>
-    <string name="habit_reminder_text">وقت عادت امروز است</string>
+    <string name="habit_reminder_text">وقت روال امروز است</string>
     <string name="morning_title">برنامه‌ی امروز</string>
     <string name="morning_proposed">%1$s کار برای امروز پیشنهاد شد؛ بزنید تا ببینید و تأیید کنید</string>
     <string name="morning_applied">%1$s کار در برنامه‌ی امروز چیده شد؛ بزنید تا ببینید</string>

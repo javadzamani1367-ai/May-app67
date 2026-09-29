@@ -112,5 +112,28 @@ data class CompletionEvent(
     val estimateMinutes: Int?,
 )
 
+/** One entry of the done list: a finished task, or one done occurrence of a recurring task. */
+data class DoneItem(
+    val taskId: String,
+    val title: String,
+    val projectId: String?,
+    val at: Instant,
+    /** The occurrence for recurring tasks; null for a one-off task. */
+    val occurrence: LocalDate?,
+)
+
+/**
+ * The list of done tasks. Removing an entry only hides it here: it still counts in reports
+ * and statistics until it is a year old, when it is removed everywhere.
+ */
+interface DoneHistory {
+    /** Newest first. */
+    fun observeDone(): Flow<List<DoneItem>>
+
+    suspend fun hide(item: DoneItem)
+
+    suspend fun unhide(item: DoneItem)
+}
+
 /** A time entry joined with its task (null when the task was deleted or none was chosen). */
 data class TrackedTime(val entry: TimeEntry, val taskTitle: String?, val projectId: String?)

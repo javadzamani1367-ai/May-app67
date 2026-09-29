@@ -48,6 +48,7 @@ internal fun MoreScreen(
     onFocus: () -> Unit,
     onInbox: () -> Unit,
     onProjects: () -> Unit,
+    onDone: () -> Unit,
     onReports: () -> Unit,
     onReview: (weekly: Boolean) -> Unit,
     onSettings: () -> Unit,
@@ -74,6 +75,7 @@ internal fun MoreScreen(
             Entry(DsR.drawable.ic_timer, R.string.more_focus, R.string.more_focus_desc, c.focus, onFocus)
             Entry(DsR.drawable.ic_inbox, R.string.more_inbox, R.string.more_inbox_desc, c.info, onInbox)
             Entry(DsR.drawable.ic_folder, R.string.more_projects, R.string.more_projects_desc, c.warning, onProjects)
+            Entry(DsR.drawable.ic_check, R.string.more_done, R.string.more_done_desc, c.completed, onDone)
             SectionTitle(stringResource(R.string.more_group_insight), modifier = Modifier.padding(top = 8.dp))
             Entry(DsR.drawable.ic_bar_chart, R.string.more_reports, R.string.more_reports_desc, c.success, onReports)
             Entry(DsR.drawable.ic_review, R.string.more_daily_review, R.string.more_daily_review_desc, c.completed) { onReview(false) }

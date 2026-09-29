@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="habits_title">عادت‌ها</string>
-    <string name="habits_new">عادت جدید</string>
+    <string name="habits_title">روال‌ها</string>
+    <string name="habits_new">روال جدید</string>
     <string name="habits_back">بازگشت</string>
     <string name="habits_settings">تنظیمات</string>
     <string name="habits_today_progress">امروز %1$s از %2$s</string>
-    <string name="habits_empty_title">هنوز عادتی ندارید</string>
-    <string name="habits_empty_body">یک عادت کوچک بسازید، مثلاً «۱۰ دقیقه مطالعه». هر روز که انجامش دهید، رشته‌تان بلندتر می‌شود.</string>
+    <string name="habits_empty_title">هنوز روالی ندارید</string>
+    <string name="habits_empty_body">یک روال کوچک بسازید، مثلاً «۱۰ دقیقه مطالعه». هر روز که انجامش دهید، رشته‌تان بلندتر می‌شود.</string>
     <string name="habits_archived">بایگانی‌شده</string>
     <string name="habits_streak_days">%1$s روز</string>
     <string name="habits_streak_weeks">%1$s هفته</string>
@@ -19,7 +19,7 @@
     <string name="habits_cancel">انصراف</string>
     <string name="habits_save">ذخیره</string>
     <string name="habits_more">گزینه‌های بیشتر</string>
-    <string name="habits_name">نام عادت</string>
+    <string name="habits_name">نام روال</string>
     <string name="habits_color">رنگ</string>
     <string name="habits_schedule">زمان‌بندی</string>
     <string name="habits_daily">هر روز</string>
@@ -34,11 +34,11 @@
     <string name="habits_best">بهترین</string>
     <string name="habits_rate">۳۰ روز اخیر</string>
     <string name="habits_percent">٪%1$s</string>
-    <string name="habits_freeze_help">هر ۷ روز پیاپی (یا ۴ هفته برای عادت‌های هفتگی) یک «یخ‌زدگی» ذخیره می‌کنید؛ اگر روزی جا بماند، یخ‌زدگی رشته را نگه می‌دارد. حداکثر ۲ ذخیره.</string>
+    <string name="habits_freeze_help">هر ۷ روز پیاپی (یا ۴ هفته برای روال‌های هفتگی) یک «یخ‌زدگی» ذخیره می‌کنید؛ اگر روزی جا بماند، یخ‌زدگی رشته را نگه می‌دارد. حداکثر ۲ ذخیره.</string>
     <string name="habits_tap_hint">روی هر روز بزنید تا ثبت یا پاک شود.</string>
     <string name="habits_previous_month">ماه قبل</string>
     <string name="habits_next_month">ماه بعد</string>
-    <string name="habits_locked">عادت‌ها از قابلیت‌های Pro است. سابقه‌ی عادت‌ها همچنان دیده می‌شود ولی ثبت تازه ممکن نیست.</string>
+    <string name="habits_locked">روال‌ها از قابلیت‌های Pro است. سابقه‌ی روال‌ها همچنان دیده می‌شود ولی ثبت تازه ممکن نیست.</string>
     <string name="habits_legend_done">انجام شد</string>
     <string name="habits_legend_frozen">یخ‌زده</string>
     <string name="habits_legend_missed">جا مانده</string>

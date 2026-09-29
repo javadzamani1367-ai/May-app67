@@ -73,7 +73,7 @@ private val SUGGESTIONS = listOf(
     "کارهای امروزم چیه؟",
     "فردا برای ۴۵ دقیقه ورزش وقت خالی پیدا کن",
     "کارهای عقب‌افتاده رو بذار برای فردا",
-    "عادت روزانه: کتاب خواندن ساعت ۱۰ شب",
+    "روال جدید: کتاب خواندن هر شب ساعت ۱۰",
 )
 
 @Composable
@@ -192,7 +192,7 @@ private fun Intro(onPick: (String) -> Unit) {
         Text("چه کاری برات انجام بدم؟", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(4.dp))
         Text(
-            "کار بساز، جابه‌جا کن، تیک بزن، وقت خالی پیدا کن یا عادت ثبت کن.",
+            "کار بساز، جابه‌جا کن، تیک بزن، وقت خالی پیدا کن یا روال ثبت کن.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

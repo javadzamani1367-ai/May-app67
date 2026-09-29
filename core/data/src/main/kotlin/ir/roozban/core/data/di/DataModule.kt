@@ -37,6 +37,7 @@ import ir.roozban.core.datastore.DataStoreSettingsRepository
 import ir.roozban.core.domain.BackupService
 import ir.roozban.core.domain.Entitlements
 import ir.roozban.core.domain.EventRepository
+import ir.roozban.core.domain.DoneHistory
 import ir.roozban.core.domain.FocusRepository
 import ir.roozban.core.domain.FocusStateStore
 import ir.roozban.core.domain.HabitRepository
@@ -56,6 +57,9 @@ import javax.inject.Singleton
 abstract class DataModule {
     @Binds
     abstract fun taskRepository(impl: RoomTaskRepository): TaskRepository
+
+    @Binds
+    abstract fun doneHistory(impl: RoomTaskRepository): DoneHistory
 
     @Binds
     abstract fun reminderRepository(impl: RoomReminderRepository): ReminderRepository

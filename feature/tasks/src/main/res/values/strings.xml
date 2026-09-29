@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Done tasks page; the name awaits the user's approval. -->
+    <string name="done_title">انجام‌شده‌ها</string>
+    <string name="done_open_all">همهٔ کارهای انجام‌شده ←</string>
     <string name="tasks_title_today">روزبان</string>
     <string name="tasks_title_upcoming">آینده</string>
     <string name="tasks_title_inbox">صندوق ورودی</string>

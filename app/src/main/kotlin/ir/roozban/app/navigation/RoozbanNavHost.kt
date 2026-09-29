@@ -62,6 +62,7 @@ import ir.roozban.feature.settings.BatteryGuideRoute
 import ir.roozban.feature.settings.SettingsRoute
 import ir.roozban.feature.settings.settingsScreens
 import ir.roozban.feature.tasks.CalendarRoute
+import ir.roozban.feature.tasks.DoneRoute
 import ir.roozban.feature.tasks.InboxRoute
 import ir.roozban.feature.tasks.ProjectRoute
 import ir.roozban.feature.tasks.ProjectsRoute
@@ -174,6 +175,7 @@ fun RoozbanApp(
                 onBack = back,
                 onOpenVoiceModels = { navController.navigate(AssistantModelsRoute) },
                 onOpenPlanner = { navController.navigate(PlannerRoute) },
+                onOpenDone = { navController.navigate(DoneRoute) },
             )
             plannerScreens(onOpenMemory = { navController.navigate(MemoryRoute) }, onBack = back)
             assistantScreens(
@@ -203,6 +205,7 @@ fun RoozbanApp(
                     onFocus = { navController.navigate(FocusRoute()) },
                     onInbox = { navController.navigate(InboxRoute) },
                     onProjects = { navController.navigate(ProjectsRoute) },
+                    onDone = { navController.navigate(DoneRoute) },
                     onReports = { navController.navigate(ReportsRoute) },
                     onReview = { navController.navigate(ReviewRoute(it)) },
                     onSettings = openSettings,

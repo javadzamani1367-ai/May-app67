@@ -250,7 +250,7 @@ class RuleAssistant(private val context: AssistantContext) {
         private const val NEW_MARK = "⁣new⁣"
         private val STRONG_SPLIT = Regex("\\s*[،؛;]\\s*|\\s+و\\s+بعد(?:ش)?\\s+|\\s+بعدش\\s+|\\n+")
         private val LIST_OF_NEW = Regex("(?:چند|دو|سه|چهار|\\d)\\s*تا\\s+کار\\s+(?:اضافه\\s+کن|بساز|بنویس)\\s*[:：]\\s*(.+)")
-        private val HABIT_WORDS = listOf("عادت")
+        private val HABIT_WORDS = listOf("عادت", "روال")
         private val NEW_WORDS = listOf("جدید", "بساز", "اضافه", "تازه", "درست کن")
         private val FOCUS_WORDS = listOf("تمرکز", "پومودورو", "فوکوس")
         private val SLOT_WORDS = listOf("وقت آزاد", "وقت خالی", "وقت پیدا", "فرصت خالی", "زمان آزاد")
@@ -274,7 +274,8 @@ class RuleAssistant(private val context: AssistantContext) {
         private val PER_WEEK = Regex("(?:هفته‌ای|هفته ای|هفته)\\s*(\\d)\\s*(?:بار|روز)")
         private val RENAME = Regex("(?:اسم|عنوان)[^\\n]*?(?:رو|را)\\s+(?:بکن|بذار|عوض کن به|تغییر بده به)\\s+(.+)$")
         private val HABIT_NOISE = listOf(
-            "یه عادت جدید", "یک عادت جدید", "عادت جدید", "به عادت‌هام", "به عادتهام", "به عادت‌ها", "عادت", "بساز", "اضافه کن", "رو", "را", "هر روز",
+            "یه عادت جدید", "یک عادت جدید", "عادت جدید", "به عادت‌هام", "به عادتهام", "به عادت‌ها", "عادت",
+            "یه روال جدید", "یک روال جدید", "روال جدید", "به روال‌هام", "به روالهام", "به روال‌ها", "روال", "بساز", "اضافه کن", "رو", "را", "هر روز",
         )
         private val MODIFIER_ONLY = Regex("(مهم|مهمه|مهم است|فوری|فوریه|خیلی مهمه|مهم و فوری)[.!]?")
         private val SMALL_TALK = listOf("سلام", "ممنون", "مرسی", "متشکرم", "متشکر", "دمت گرم", "خسته نباشی", "خداحافظ", "چطوری", "خوبی")

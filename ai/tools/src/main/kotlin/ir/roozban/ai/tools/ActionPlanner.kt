@@ -196,7 +196,7 @@ class ActionPlanner(private val context: AssistantContext, private val message: 
     }
 
     private fun createHabit(call: ToolCall, spec: ToolSpec): PlannedAction {
-        val name = call.text("name") ?: return fail(call, spec, "نام عادت مشخص نبود.")
+        val name = call.text("name") ?: return fail(call, spec, "نام روال مشخص نبود.")
         val perWeek = call.number("per_week")?.takeIf { it in 1..6 }
         val schedule = if (perWeek == null) HabitSchedule.Daily else HabitSchedule.TimesPerWeek(perWeek)
         val perDay = (call.number("per_day") ?: 1).coerceIn(1, 20)
@@ -204,7 +204,7 @@ class ActionPlanner(private val context: AssistantContext, private val message: 
         val reminder = reminderText?.let { times.time(it, now) }
         if (reminderText != null && reminder == null) return fail(call, spec, "ساعت یادآوری «$reminderText» را نفهمیدم.")
         val summary = buildString {
-            append("عادت جدید: «").append(name).append("» — ")
+            append("روال جدید: «").append(name).append("» — ")
             append(if (perWeek == null) "هر روز" else "${PersianDigits.format(perWeek)} روز در هفته")
             if (perDay > 1) append("، ").append(PersianDigits.format(perDay)).append(" بار")
         }
@@ -212,12 +212,12 @@ class ActionPlanner(private val context: AssistantContext, private val message: 
     }
 
     private fun logHabit(call: ToolCall, spec: ToolSpec): PlannedAction {
-        val ref = call.text("habit") ?: return fail(call, spec, "کدام عادت؟")
+        val ref = call.text("habit") ?: return fail(call, spec, "کدام روال؟")
         val active = context.habits.filter { !it.archived }
         return when (val m = Matcher.find(ref, active) { it.name }) {
-            is Match.Found -> PlannedAction(call, spec.risk, "ثبت عادت «${m.item.name}» برای امروز", Operation.LogHabit(m.item, call.number("count")))
-            is Match.Ambiguous -> fail(call, spec, "کدام عادت؟ " + m.candidates.joinToString("، ") { "«${it.name}»" })
-            Match.None -> fail(call, spec, "عادتی به اسم «$ref» پیدا نکردم.")
+            is Match.Found -> PlannedAction(call, spec.risk, "ثبت روال «${m.item.name}» برای امروز", Operation.LogHabit(m.item, call.number("count")))
+            is Match.Ambiguous -> fail(call, spec, "کدام روال؟ " + m.candidates.joinToString("، ") { "«${it.name}»" })
+            Match.None -> fail(call, spec, "روالی به اسم «$ref» پیدا نکردم.")
         }
     }
 

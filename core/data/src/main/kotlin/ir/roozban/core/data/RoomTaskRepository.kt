@@ -1,6 +1,7 @@
 package ir.roozban.core.data
 
 import ir.roozban.core.database.CompletionEntity
+import ir.roozban.core.database.HiddenHistoryEntity
 import ir.roozban.core.database.LabelDao
 import ir.roozban.core.database.ProjectDao
 import ir.roozban.core.database.ReminderDao
@@ -9,6 +10,8 @@ import ir.roozban.core.database.toEntity
 import ir.roozban.core.database.toFloatingSeconds
 import ir.roozban.core.database.toModel
 import ir.roozban.core.domain.CompletionEvent
+import ir.roozban.core.domain.DoneHistory
+import ir.roozban.core.domain.DoneItem
 import ir.roozban.core.domain.LabelRepository
 import ir.roozban.core.domain.ProjectRepository
 import ir.roozban.core.domain.ReminderRepository
@@ -29,7 +32,7 @@ import javax.inject.Inject
 class RoomTaskRepository @Inject constructor(
     private val dao: TaskDao,
     private val clock: Clock,
-) : TaskRepository {
+) : TaskRepository, DoneHistory {
     override fun observeOpenTasks(): Flow<List<Task>> = dao.observeOpen().map { list -> list.map { it.toModel() } }
 
     override fun observeCompletedSince(since: Instant): Flow<List<Task>> =
@@ -66,6 +69,30 @@ class RoomTaskRepository @Inject constructor(
 
     override suspend fun removeCompletion(taskId: String, occurrence: LocalDate) =
         dao.deleteCompletion(taskId, occurrence.toEpochDay())
+
+    override fun observeDone(): Flow<List<DoneItem>> = dao.observeDone().map { rows ->
+        rows.map {
+            DoneItem(
+                taskId = it.taskId,
+                title = it.title,
+                projectId = it.projectId,
+                at = Instant.ofEpochMilli(it.at),
+                occurrence = it.occurrence.takeIf { day -> day >= 0 }?.let(LocalDate::ofEpochDay),
+            )
+        }
+    }
+
+    override suspend fun hide(item: DoneItem) =
+        dao.hideDone(HiddenHistoryEntity(item.taskId, item.occurrenceKey(), clock.millis()))
+
+    override suspend fun unhide(item: DoneItem) = dao.unhideDone(item.taskId, item.occurrenceKey())
+
+    private fun DoneItem.occurrenceKey(): Long = occurrence?.toEpochDay() ?: -1
+
+    /** Done tasks and occurrences older than [days] leave the history, reports and statistics. */
+    suspend fun purgeDoneOlderThanDays(days: Long) {
+        dao.purgeDoneOlderThan(clock.millis() - days * 24 * 60 * 60 * 1000)
+    }
 
     /** Deleted tasks stay restorable for a while, then are removed for good. */
     suspend fun purgeDeletedOlderThanDays(days: Long) {

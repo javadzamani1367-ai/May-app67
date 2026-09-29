@@ -10,7 +10,7 @@
     <string name="reports_tracked">زمان ثبت‌شده</string>
     <string name="reports_focus">تمرکز</string>
     <string name="reports_focus_value">%1$s دوره</string>
-    <string name="reports_habits">انجام عادت‌ها</string>
+    <string name="reports_habits">انجام روال‌ها</string>
     <string name="reports_percent">٪%1$s</string>
     <string name="reports_vs_previous">%1$s نسبت به دوره‌ی قبل</string>
     <string name="reports_completed_per_day">کارهای انجام‌شده در هر روز</string>
@@ -38,7 +38,7 @@
     <string name="review_pick_date">تاریخ دیگر</string>
     <string name="review_done">انجام شد</string>
     <string name="review_delete">حذف</string>
-    <string name="review_habits">عادت‌های امروز</string>
+    <string name="review_habits">روال‌های امروز</string>
     <string name="review_tomorrow_plan">برنامه‌ی فردا</string>
     <string name="review_tomorrow_empty">برای فردا هنوز کاری ندارید.</string>
     <string name="review_focus_today">امروز %1$s تمرکز کردید.</string>

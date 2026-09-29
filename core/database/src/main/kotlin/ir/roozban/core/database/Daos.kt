@@ -108,6 +108,57 @@ interface TaskDao {
     @Query("SELECT * FROM task_completion WHERE task_id = :taskId ORDER BY occurrence")
     suspend fun completions(taskId: String): List<CompletionEntity>
 
+    /**
+     * Done tasks and done occurrences for the history list, newest first. Hidden ones are left out,
+     * unless the task was reopened and done again after it was hidden.
+     */
+    @Query(
+        """
+        SELECT t.id AS task_id, t.title AS title, t.project_id AS project_id, t.completed_at AS at, -1 AS occurrence FROM task t
+        WHERE t.completed_at IS NOT NULL AND t.deleted_at IS NULL AND t.parent_id IS NULL AND t.rrule IS NULL
+          AND NOT EXISTS (SELECT 1 FROM history_hidden h WHERE h.task_id = t.id AND h.occurrence = -1 AND h.hidden_at >= t.completed_at)
+        UNION ALL
+        SELECT c.task_id AS task_id, t.title AS title, t.project_id AS project_id, c.completed_at AS at, c.occurrence AS occurrence
+        FROM task_completion c JOIN task t ON t.id = c.task_id
+        WHERE t.deleted_at IS NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM history_hidden h
+            WHERE h.task_id = c.task_id AND h.occurrence = c.occurrence AND h.hidden_at >= c.completed_at
+          )
+        ORDER BY at DESC
+        """,
+    )
+    fun observeDone(): Flow<List<DoneRow>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun hideDone(row: HiddenHistoryEntity)
+
+    @Query("DELETE FROM history_hidden WHERE task_id = :taskId AND occurrence = :occurrence")
+    suspend fun unhideDone(taskId: String, occurrence: Long)
+
+    @Query("DELETE FROM task WHERE parent_id IN (SELECT id FROM task WHERE parent_id IS NULL AND completed_at IS NOT NULL AND completed_at < :before)")
+    suspend fun purgeOldDoneSubtasks(before: Long): Int
+
+    @Query("DELETE FROM task WHERE parent_id IS NULL AND completed_at IS NOT NULL AND completed_at < :before")
+    suspend fun purgeOldDoneTasks(before: Long): Int
+
+    @Query("DELETE FROM task_completion WHERE completed_at < :before")
+    suspend fun purgeOldCompletions(before: Long): Int
+
+    @Query("DELETE FROM history_hidden WHERE task_id NOT IN (SELECT id FROM task) OR (occurrence >= 0 AND NOT EXISTS (SELECT 1 FROM task_completion c WHERE c.task_id = history_hidden.task_id AND c.occurrence = history_hidden.occurrence))")
+    suspend fun purgeOrphanedHidden(): Int
+
+    /**
+     * After a year, done tasks and done occurrences leave the history, the reports and the
+     * statistics for good (hidden or not).
+     */
+    @Transaction
+    suspend fun purgeDoneOlderThan(before: Long): Int {
+        val n = purgeOldDoneSubtasks(before) + purgeOldDoneTasks(before) + purgeOldCompletions(before)
+        purgeOrphanedHidden()
+        return n
+    }
+
     /** Finished tasks plus done occurrences of recurring ones, in [from, until). */
     @Query(
         """
@@ -352,6 +403,15 @@ interface BackupDao {
     @Query("DELETE FROM personal_event")
     suspend fun clearEvents()
 
+    @Query("SELECT * FROM history_hidden")
+    suspend fun hiddenDone(): List<HiddenHistoryEntity>
+
+    @Query("DELETE FROM history_hidden")
+    suspend fun clearHiddenDone()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHiddenDone(rows: List<HiddenHistoryEntity>)
+
     @Query("SELECT * FROM note")
     suspend fun notes(): List<NoteEntity>
 
@@ -436,6 +496,7 @@ interface BackupDao {
         events: List<PersonalEventEntity> = emptyList(),
         memoryFacts: List<MemoryFactEntity>? = null,
         notes: List<NoteEntity>? = null,
+        hiddenDone: List<HiddenHistoryEntity> = emptyList(),
     ) {
         clearReminders()
         clearEvents()
@@ -452,6 +513,8 @@ interface BackupDao {
         val labelIds = labels.mapTo(HashSet()) { it.id }
         insertTaskLabels(taskLabels.filter { it.taskId in taskIds && it.labelId in labelIds })
         insertCompletions(completions.filter { it.taskId in taskIds })
+        clearHiddenDone()
+        insertHiddenDone(hiddenDone.filter { it.taskId in taskIds })
         insertFocusSessions(focusSessions)
         insertTimeEntries(timeEntries)
         insertHabits(habits)

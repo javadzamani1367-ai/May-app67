@@ -25,6 +25,8 @@ data class BackupData(
     val memory: List<BackupFact>? = null,
     /** Null in backups made before the notes tool: restoring keeps the phone's notes. */
     val notes: List<BackupNote>? = null,
+    /** Done tasks removed from the done list (occurrence -1 for a one-off task). */
+    val hiddenDone: List<BackupHiddenDone> = emptyList(),
 ) {
     companion object {
         const val FORMAT_VERSION = 1
@@ -165,6 +167,9 @@ data class BackupEvent(
     val createdAt: Long,
     val updatedAt: Long,
 )
+
+@Serializable
+data class BackupHiddenDone(val taskId: String, val occurrence: Long, val hiddenAt: Long)
 
 @Serializable
 data class BackupNote(val id: String, val title: String = "", val body: String = "", val createdAt: Long, val updatedAt: Long)

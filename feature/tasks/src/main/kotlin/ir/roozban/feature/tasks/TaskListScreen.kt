@@ -86,6 +86,7 @@ internal fun TaskListRoute(
     onBack: (() -> Unit)? = null,
     onOpenVoiceModels: (() -> Unit)? = null,
     onOpenPlanner: (() -> Unit)? = null,
+    onOpenDone: (() -> Unit)? = null,
     viewModel: TaskListViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(mode, projectId) { viewModel.setMode(mode, projectId) }
@@ -126,6 +127,7 @@ internal fun TaskListRoute(
         onOpenSettings = onOpenSettings,
         onBack = onBack,
         onOpenPlanner = onOpenPlanner,
+        onOpenDone = onOpenDone,
     )
 
     if (sheetOpen) {
@@ -164,6 +166,7 @@ internal fun TaskListScreen(
     onOpenSettings: () -> Unit,
     onBack: (() -> Unit)? = null,
     onOpenPlanner: (() -> Unit)? = null,
+    onOpenDone: (() -> Unit)? = null,
 ) {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -243,6 +246,13 @@ internal fun TaskListScreen(
                 }
             }
             if (state.isEmpty && state.mode == mode) item(key = "empty") { EmptyState(mode) }
+            if (onOpenDone != null && mode == ListMode.TODAY) {
+                item(key = "all-done") {
+                    TextButton(onClick = onOpenDone, modifier = Modifier.animateItem()) {
+                        Text(stringResource(R.string.done_open_all))
+                    }
+                }
+            }
         }
     }
 }

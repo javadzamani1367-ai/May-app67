@@ -120,7 +120,7 @@ class ToolExecutor @Inject constructor(
         is Operation.CreateHabit -> {
             val habit = habitUseCases.create(op.name, color = Math.floorMod(op.name.hashCode(), 8), op.schedule, op.perDay, op.reminder)
             if (habit == null) {
-                ActionResult(action, false, "نام عادت خالی بود.")
+                ActionResult(action, false, "نام روال خالی بود.")
             } else {
                 ActionResult(action, true, action.summary, undo = Undo { habitUseCases.delete(habit) })
             }

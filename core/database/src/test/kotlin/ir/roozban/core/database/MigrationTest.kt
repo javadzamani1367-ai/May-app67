@@ -150,4 +150,19 @@ class MigrationTest {
         assertThat(db.noteDao().get("n")?.body).isEqualTo("متن یادداشت")
         db.close()
     }
+
+    @Test
+    fun `migrates 6 to 7 keeping notes and adding the hidden done list`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val file = context.getDatabasePath("migration-test-6.db").apply { parentFile?.mkdirs(); delete() }
+        createFromSchema(file, 6)
+        SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READWRITE).use { v6 ->
+            v6.execSQL("INSERT INTO note (id, title, body, created_at, updated_at) VALUES ('n', 'جلسه', 'متن', 1, 2)")
+        }
+        val db = Room.databaseBuilder(context, RoozbanDatabase::class.java, file.path).allowMainThreadQueries().build()
+        assertThat(db.noteDao().get("n")?.body).isEqualTo("متن")
+        db.taskDao().hideDone(HiddenHistoryEntity("t", -1, 5))
+        assertThat(db.backupDao().hiddenDone()).hasSize(1)
+        db.close()
+    }
 }

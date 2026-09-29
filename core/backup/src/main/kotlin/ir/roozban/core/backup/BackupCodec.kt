@@ -63,6 +63,9 @@ object BackupMerger {
             completions = (local.completions + incoming.completions)
                 .filter { it.taskId in taskIds }
                 .distinctBy { it.taskId to it.occurrence },
+            hiddenDone = (local.hiddenDone + incoming.hiddenDone)
+                .filter { it.taskId in taskIds }
+                .distinctBy { it.taskId to it.occurrence },
             settings = local.settings ?: incoming.settings,
             focusSessions = (local.focusSessions + incoming.focusSessions).distinctBy { it.id },
             timeEntries = (local.timeEntries + incoming.timeEntries).distinctBy { it.id },

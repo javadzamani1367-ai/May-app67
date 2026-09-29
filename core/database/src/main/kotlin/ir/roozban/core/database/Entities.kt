@@ -209,6 +209,27 @@ data class PersonalEventEntity(
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
 )
 
+/**
+ * A finished task (occurrence = -1) or a done occurrence of a recurring one that the user removed
+ * from the list of done tasks. It still counts in reports and statistics.
+ */
+@Entity(tableName = "history_hidden", primaryKeys = ["task_id", "occurrence"])
+data class HiddenHistoryEntity(
+    @ColumnInfo(name = "task_id") val taskId: String,
+    val occurrence: Long,
+    @ColumnInfo(name = "hidden_at") val hiddenAt: Long,
+)
+
+/** One row of the done list. */
+data class DoneRow(
+    @ColumnInfo(name = "task_id") val taskId: String,
+    val title: String,
+    @ColumnInfo(name = "project_id") val projectId: String?,
+    val at: Long,
+    /** Epoch day of the occurrence for recurring tasks, -1 for a one-off task. */
+    val occurrence: Long,
+)
+
 @Entity(tableName = "note", indices = [Index("updated_at")])
 data class NoteEntity(
     @PrimaryKey val id: String,
