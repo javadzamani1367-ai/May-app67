@@ -44,7 +44,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        engine: [tesseract-best, tesseract-fast, paddle, easyocr]
+        engine: [tesseract-fast, tesseract-fast-eng, tesseract-fast-eng-psm3, tesseract-best-eng]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -60,6 +60,8 @@ jobs:
               mkdir -p td-best td-fast
               curl -sSfL -o td-best/fas.traineddata https://github.com/tesseract-ocr/tessdata_best/raw/main/fas.traineddata
               curl -sSfL -o td-fast/fas.traineddata https://github.com/tesseract-ocr/tessdata_fast/raw/main/fas.traineddata
+              curl -sSfL -o td-best/eng.traineddata https://github.com/tesseract-ocr/tessdata_best/raw/main/eng.traineddata
+              curl -sSfL -o td-fast/eng.traineddata https://github.com/tesseract-ocr/tessdata_fast/raw/main/eng.traineddata
               ls -la td-best td-fast ;;
             paddle)
               pip install -q paddlepaddle==3.0.0 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/ || pip install -q paddlepaddle

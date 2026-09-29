@@ -31,9 +31,13 @@ def main():
     engine, lst = sys.argv[1], sys.argv[2]
     images = [l.strip() for l in open(lst) if l.strip()]
     if engine.startswith("tesseract"):
-        tessdata = os.environ["TESSDATA_" + engine.split("-")[1].upper()]
+        # tesseract-<best|fast>[-eng][-psm3]: Persian model, optionally with English, page layout mode.
+        parts = engine.split("-")
+        tessdata = os.environ["TESSDATA_" + parts[1].upper()]
+        langs = "fas+eng" if "eng" in parts else "fas"
+        psm = "3" if "psm3" in parts else "6"
         def run(img):
-            out = subprocess.run(["tesseract", img, "-", "-l", "fas", "--psm", "6", "--tessdata-dir", tessdata], capture_output=True, text=True)
+            out = subprocess.run(["tesseract", img, "-", "-l", langs, "--psm", psm, "--tessdata-dir", tessdata], capture_output=True, text=True)
             return out.stdout
     elif engine == "paddle":
         from paddleocr import PaddleOCR
