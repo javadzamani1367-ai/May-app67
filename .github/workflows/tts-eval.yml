@@ -1,0 +1,71 @@
+name: TTS voices eval (Persian)
+
+# Compares Persian voices for reading aloud: every candidate reads the same eight sentences;
+# a Persian speech model transcribes the audio back and the character error rate shows how
+# clearly each voice pronounces. Also prints speed and licenses, publishes comparison samples,
+# and packages the Matcha voices (with their vocoder) for the app.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/tts-eval.yml'
+      - 'tools/tts_eval/**'
+
+permissions:
+  contents: write
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Persian models in the sherpa-onnx release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view tts-models -R k2-fsa/sherpa-onnx --json assets --jq '.assets[] | "\(.name) \(.size)"' | grep -i -E "fa_|fa-|persian|farsi" || true
+          gh release view vocoder-models -R k2-fsa/sherpa-onnx --json assets --jq '.assets[] | "\(.name) \(.size)"' || true
+
+      - name: Licenses
+        run: |
+          for r in mah92/Musa-FA_EN-Matcha-TTS-Model mah92/Khadijah-FA_EN-Matcha-TTS-Model; do
+            echo "=== $r"
+            curl -sSfL "https://huggingface.co/api/models/$r" | python3 -c "import json,sys; d=json.load(sys.stdin); print('license:', d.get('cardData',{}).get('license'), d.get('tags'))" || true
+            curl -sSfL "https://huggingface.co/$r/raw/main/README.md" | head -60 || true
+          done
+
+      - name: Download voices
+        run: |
+          set -e
+          mkdir -p voices && cd voices
+          for n in vits-piper-fa_IR-amir-medium vits-piper-fa_IR-ganji-medium vits-piper-fa_IR-ganji_adabi-medium vits-piper-fa_IR-reza_ibrahim-medium matcha-tts-fa_en-musa matcha-tts-fa_en-khadijah; do
+            curl -sSfL -o $n.tar.bz2 "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$n.tar.bz2"
+            tar xjf $n.tar.bz2 && rm $n.tar.bz2
+            ls -la $n | head -8
+          done
+          curl -sSfL -o vocos-22khz-univ.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
+          ls -la vocos-22khz-univ.onnx
+
+      - name: Synthesize and judge
+        run: |
+          pip install -q sherpa-onnx soundfile numpy torch --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple
+          pip install -q transformers librosa
+          python tools/tts_eval/eval.py voices out
+
+      - name: Package Matcha voices
+        run: |
+          set -e
+          cd voices
+          for v in musa khadijah; do
+            d=matcha-tts-fa_en-$v
+            cp vocos-22khz-univ.onnx $d/vocoder.onnx
+            (cd $d && zip -q -r -9 ../../out/roozban-tts-matcha-$v.zip model.onnx tokens.txt vocoder.onnx espeak-ng-data)
+          done
+          cd ../out && for f in *.zip; do echo "ASSET $f $(stat -c %s "$f") $(sha256sum "$f" | cut -d' ' -f1)"; done
+
+      - name: Publish samples and packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload tts-voices out/* -R "$GITHUB_REPOSITORY" --clobber
