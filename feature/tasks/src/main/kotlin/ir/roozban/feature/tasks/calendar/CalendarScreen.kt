@@ -106,6 +106,7 @@ internal fun CalendarScreen(
     var menu by remember { mutableStateOf(false) }
     var converting by remember { mutableStateOf(false) }
     var goingTo by remember { mutableStateOf(false) }
+    var pickingMonth by remember { mutableStateOf(false) }
     var pickingCity by remember { mutableStateOf(false) }
     var eventDraft by remember { mutableStateOf<EventDraft?>(null) }
 
@@ -128,7 +129,8 @@ internal fun CalendarScreen(
                     IconButton(onClick = viewModel::previous) {
                         Icon(painterResource(DsR.drawable.ic_chevron_right), stringResource(R.string.calendar_previous))
                     }
-                    TextButton(onClick = viewModel::goToToday) { Text(stringResource(R.string.calendar_today)) }
+                    // Opens the month picker (which also has «امروز»).
+                    TextButton(onClick = { pickingMonth = true }) { Text(stringResource(R.string.calendar_today)) }
                     IconButton(onClick = viewModel::next) {
                         Icon(painterResource(DsR.drawable.ic_chevron_left), stringResource(R.string.calendar_next))
                     }
@@ -232,6 +234,15 @@ internal fun CalendarScreen(
             today = state.today,
             onConfirm = { d -> if (d != null) viewModel.goTo(d); goingTo = false },
             onDismiss = { goingTo = false },
+        )
+    }
+    if (pickingMonth) {
+        MonthPickerDialog(
+            current = state.selected,
+            today = state.today,
+            onPick = { viewModel.goTo(it); pickingMonth = false },
+            onToday = { viewModel.goToToday(); pickingMonth = false },
+            onDismiss = { pickingMonth = false },
         )
     }
     if (pickingCity) {

@@ -56,18 +56,6 @@ internal fun ToolsScreen(onOpenNotes: () -> Unit, onOpenDates: (span: Boolean) -
                 onOpenNotes,
             )
             Tool(
-                DsR.drawable.ic_image,
-                "تبدیل تصویر به متن",
-                "از عکس یا تصویر گالری، متن فارسی را بخوان؛ کپی، اشتراک یا ذخیره در یادداشت‌ها.",
-                Roozban.colors.streak,
-            ) { onOpen(OcrRoute) }
-            Tool(
-                DsR.drawable.ic_file_open,
-                "تبدیل PDF به ورد",
-                "PDF فارسی به فایل ورد با پاراگراف‌ها و عنوان‌ها؛ بی‌محدودیت صفحه. صفحه‌های اسکن‌شده هم خوانده می‌شوند.",
-                Roozban.colors.error,
-            ) { onOpen(PdfRoute) }
-            Tool(
                 DsR.drawable.ic_calendar_month,
                 "تبدیل تاریخ",
                 "شمسی، میلادی و قمری به هم؛ با روز هفته و فاصله تا امروز.",

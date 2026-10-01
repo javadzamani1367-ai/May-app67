@@ -35,6 +35,11 @@ data class UserSettings(
     val startScreen: StartScreen = StartScreen.TODAY,
     /** Ongoing notification with today's date and the day number in the status bar. */
     val dateNotification: Boolean = true,
+    /**
+     * Every reminder (not only alarms) also opens a full-screen page, over the lock screen too,
+     * with a button to close it.
+     */
+    val fullScreenAlerts: Boolean = false,
     /** City for prayer times (see `IranCities`); null = not shown. */
     val prayerCity: String? = null,
     /** Notification sound for habit reminders: null = system default, "" = silent, else a sound URI. */

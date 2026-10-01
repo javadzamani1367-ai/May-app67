@@ -1,25 +1,2 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-
-    <application>
-        <!-- Photos taken for image-to-text are written here (app cache) by the camera app. -->
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.tools.files"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/tools_file_paths" />
-        </provider>
-
-        <!-- PDF → Word runs here so a long document keeps converting when the screen is left. -->
-        <service
-            android:name="ir.roozban.feature.tools.pdf.PdfConvertService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
-    </application>
-</manifest>
+<manifest />

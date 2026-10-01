@@ -106,6 +106,8 @@
     <string name="palette_lime">لیمویی</string>
     <string name="palette_mint">نعنایی</string>
     <string name="palette_graphite">زغالی</string>
+    <string name="settings_full_screen">نمایش تمام‌صفحه</string>
+    <string name="settings_full_screen_desc">هر یادآور (کار، عادت و مناسبت) روی صفحه و صفحهٔ قفل هم تمام‌صفحه نشان داده می‌شود، با دکمهٔ بستن. هشدارها همیشه تمام‌صفحه‌اند.</string>
     <string name="settings_date_notification">تاریخ امروز در نوار اعلان</string>
     <string name="settings_date_notification_desc">عدد روز کنار ساعت و تاریخ کامل شمسی، میلادی و قمری در نوار اعلان</string>
     <string name="sounds_title">صدای اعلان‌ها</string>

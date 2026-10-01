@@ -99,6 +99,11 @@ class RoutineReceiver : BroadcastReceiver() {
             .setAutoCancel(true)
             .setContentIntent(AppLinks.open(context, AppLinks.HABITS))
             .addAction(0, context.getString(R.string.action_done), done)
+            .apply {
+                if (notifier.fullScreen) {
+                    setFullScreenIntent(AlarmActivity.messageIntent(context, habitNotificationId(habit.id), habit.name, context.getString(R.string.habit_reminder_text)), true)
+                }
+            }
             .build()
         notify(context, habitNotificationId(habit.id), notification)
     }
@@ -127,6 +132,9 @@ class RoutineReceiver : BroadcastReceiver() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(true)
             .setContentIntent(AppLinks.open(context, AppLinks.CALENDAR))
+            .apply {
+                if (notifier.fullScreen) setFullScreenIntent(AlarmActivity.messageIntent(context, ("event:" + event.id).hashCode(), title, text), true)
+            }
             .build()
         notify(context, ("event:" + event.id).hashCode(), notification)
     }

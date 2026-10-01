@@ -211,6 +211,7 @@ class RoomBackupService @Inject constructor(
         backgroundVeil = backgroundVeil,
         startScreen = startScreen.name,
         dateNotification = dateNotification,
+        fullScreenAlerts = fullScreenAlerts,
         prayerCity = prayerCity,
         planDayStartMinute = planning.dayStart.let { it.hour * 60 + it.minute },
         planDayEndMinute = planning.dayEnd.let { it.hour * 60 + it.minute },
@@ -253,6 +254,7 @@ class RoomBackupService @Inject constructor(
         backgroundVeil = backgroundVeil.coerceIn(0.3f, 0.95f),
         startScreen = StartScreen.entries.firstOrNull { it.name == startScreen } ?: StartScreen.TODAY,
         dateNotification = dateNotification,
+        fullScreenAlerts = fullScreenAlerts,
         prayerCity = prayerCity,
         planning = PlanningSettings(
             dayStart = minuteTime(planDayStartMinute),

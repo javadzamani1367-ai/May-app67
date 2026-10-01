@@ -18,10 +18,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // Tesseract for Android (image-to-text) is published only on JitPack.
-        maven("https://jitpack.io") {
-            content { includeGroup("cz.adaptech.tesseract4android") }
-        }
     }
 }
 
@@ -32,7 +28,6 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")
 include(":core:common")
 include(":core:calendar")
-include(":core:documents")
 include(":core:recurrence")
 include(":core:timeparser")
 include(":core:model")

@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
@@ -213,12 +214,17 @@ internal fun TaskListScreen(
             )
         },
     ) { padding ->
+        // Not saved across navigation: coming back to the list (from another tab or page) shows
+        // it from the top, while it keeps its place as long as it stays on screen.
+        val listState = remember { LazyListState() }
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            state = listState,
+            // Below the (transparent) top bar, so rows never scroll under its icons.
+            modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding()),
             contentPadding = PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
-                top = padding.calculateTopPadding() + 8.dp,
+                top = 8.dp,
                 bottom = padding.calculateBottomPadding() + 96.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -239,12 +245,7 @@ internal fun TaskListScreen(
                     TaskRow(task, onToggle = { onToggle(task.id) }, onClick = { onOpen(task.id) }, modifier = Modifier.animateItem())
                 }
             }
-            if (state.completed.isNotEmpty()) {
-                item(key = "completed-title") { SectionTitle(stringResource(R.string.tasks_completed_today), null, state.completed.size, done = true) }
-                items(state.completed, key = { "done-" + it.id }) { task ->
-                    TaskRow(task, onToggle = { onToggle(task.id) }, onClick = { onOpen(task.id) }, modifier = Modifier.animateItem())
-                }
-            }
+            // A task ticked off leaves the list; it is in «انجام‌شده‌ها» (the hero still counts it).
             if (state.isEmpty && state.mode == mode) item(key = "empty") { EmptyState(mode) }
             if (onOpenDone != null && mode == ListMode.TODAY) {
                 item(key = "all-done") {

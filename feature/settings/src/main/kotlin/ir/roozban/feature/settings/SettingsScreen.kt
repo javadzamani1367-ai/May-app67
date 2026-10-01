@@ -218,7 +218,18 @@ private fun HealthRow(label: String, ok: Boolean, onFix: () -> Unit) {
 
 @Composable
 private fun DefaultReminderCard(s: UserSettings, vm: SettingsViewModel) {
+    val context = LocalContext.current
     SettingsCard(stringResource(R.string.settings_default_reminder), icon = DsR.drawable.ic_alarm, role = Roozban.colors.info) {
+        SwitchRow(stringResource(R.string.settings_full_screen), s.fullScreenAlerts) { on ->
+            vm.setFullScreenAlerts(on)
+            // Android 14+ asks for this permission separately.
+            if (on && !ReminderPermissions.status(context).fullScreen) context.startSafely(ReminderPermissions.fullScreenSettings(context))
+        }
+        Text(
+            stringResource(R.string.settings_full_screen_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         val kind = s.defaultReminder?.kind
         ChipRow {
             FilterChip(kind == null, { vm.setDefaultReminderKind(null) }, { Text(stringResource(R.string.settings_reminder_none)) })

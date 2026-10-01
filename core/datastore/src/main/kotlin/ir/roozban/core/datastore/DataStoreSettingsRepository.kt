@@ -67,6 +67,7 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
         val BACKGROUND_VEIL = floatPreferencesKey("background_veil")
         val START_SCREEN = stringPreferencesKey("start_screen")
         val DATE_NOTIFICATION = booleanPreferencesKey("date_notification")
+        val FULL_SCREEN_ALERTS = booleanPreferencesKey("full_screen_alerts")
         /** "" = off. */
         val PRAYER_CITY = stringPreferencesKey("prayer_city")
         /** Absent = default sound. */
@@ -132,6 +133,7 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
                 backgroundVeil = this[Keys.BACKGROUND_VEIL] ?: DEFAULTS.backgroundVeil,
                 startScreen = enumOr(this[Keys.START_SCREEN], DEFAULTS.startScreen),
                 dateNotification = this[Keys.DATE_NOTIFICATION] ?: DEFAULTS.dateNotification,
+                fullScreenAlerts = this[Keys.FULL_SCREEN_ALERTS] ?: DEFAULTS.fullScreenAlerts,
                 prayerCity = this[Keys.PRAYER_CITY]?.let { it.ifEmpty { null } } ?: DEFAULTS.prayerCity,
                 habitSound = this[Keys.HABIT_SOUND],
                 eventSound = this[Keys.EVENT_SOUND],
@@ -183,6 +185,7 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
             this[Keys.BACKGROUND_VEIL] = s.backgroundVeil
             this[Keys.START_SCREEN] = s.startScreen.name
             this[Keys.DATE_NOTIFICATION] = s.dateNotification
+            this[Keys.FULL_SCREEN_ALERTS] = s.fullScreenAlerts
             this[Keys.PRAYER_CITY] = s.prayerCity.orEmpty()
             s.habitSound.let { if (it == null) remove(Keys.HABIT_SOUND) else this[Keys.HABIT_SOUND] = it }
             s.eventSound.let { if (it == null) remove(Keys.EVENT_SOUND) else this[Keys.EVENT_SOUND] = it }

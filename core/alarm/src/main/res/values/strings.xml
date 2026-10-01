@@ -12,6 +12,7 @@
     <string name="action_dismiss">بستن</string>
     <string name="missed_prefix">از دست رفته: %1$s</string>
     <string name="alarm_title">وقت انجام کار</string>
+    <string name="reminder_title">یادآور</string>
     <string name="channel_focus">تمرکز</string>
     <string name="channel_focus_desc">شمارش معکوس تمرکز و استراحت</string>
     <string name="channel_focus_end">پایان تمرکز و استراحت</string>

@@ -61,6 +61,10 @@ class RoozbanApplication : Application() {
             }
         }
         appScope.launch {
+            // Reminders follow the «full screen» switch (read when a reminder fires).
+            settings.settings.map { it.fullScreenAlerts }.distinctUntilChanged().collect(notifier::applyFullScreen)
+        }
+        appScope.launch {
             // The date notification follows its switch and the Hijri offset.
             settings.settings.map { it.dateNotification to it.hijriOffset }.distinctUntilChanged().drop(1).collect {
                 dateNotifier.refresh()

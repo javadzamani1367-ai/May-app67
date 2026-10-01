@@ -6,7 +6,18 @@ import ir.roozban.core.designsystem.components.AppCard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.positionChange
+import kotlin.math.abs
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -96,6 +107,8 @@ internal fun MonthView(
     // Scrolling a list up slides the month grid away so the list gets the whole screen;
     // scrolling back to the list's top brings it back.
     var gridHeight by remember { mutableIntStateOf(0) }
+    // The grid follows the finger a little while it is swiped sideways.
+    var dragX by remember { mutableFloatStateOf(0f) }
     var gridOffset by remember { mutableFloatStateOf(0f) }
     val collapse = remember {
         object : NestedScrollConnection {
@@ -129,17 +142,7 @@ internal fun MonthView(
                 .background(MaterialTheme.colorScheme.surfaceContainer)
                 .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f), MaterialTheme.shapes.large)
                 .padding(vertical = 8.dp)
-                .pointerInput(Unit) {
-                var total = 0f
-                detectHorizontalDragGestures(
-                    onDragStart = { total = 0f },
-                    onDragEnd = {
-                        // Right-to-left: the next month sits to the left, so a rightward swipe brings it in.
-                        if (total > SWIPE_PX) swipe(true) else if (total < -SWIPE_PX) swipe(false)
-                    },
-                    onHorizontalDrag = { _, amount -> total += amount },
-                )
-            },
+                .monthSwipe(onSwipe = { swipe(it) }, onDrag = { dragX = it }),
         ) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp)) {
                 PersianNames.WEEKDAYS_SHORT.forEachIndexed { i, label ->
@@ -153,11 +156,27 @@ internal fun MonthView(
                     )
                 }
             }
-            state.days.chunked(7).forEach { week ->
-                Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
-                    week.forEach { day ->
-                        MonthCell(day, day.date == state.selected, Modifier.weight(1f)) {
-                            if (day.date == state.selected) onOpenDay(day.date) else onSelect(day.date)
+            // A new month slides in from the side it came from (the next month from the left).
+            val month = state.days.getOrNull(7)?.date?.toJalali()?.let { it.year * 12 + it.month } ?: 0
+            AnimatedContent(
+                targetState = month to state.days,
+                transitionSpec = {
+                    val forward = targetState.first > initialState.first
+                    val dir = if (forward) -1 else 1
+                    (slideInHorizontally { it * dir } + fadeIn()) togetherWith (slideOutHorizontally { -it * dir } + fadeOut())
+                },
+                contentKey = { it.first },
+                label = "month",
+                modifier = Modifier.graphicsLayer { translationX = dragX * 0.35f },
+            ) { (_, days) ->
+                Column {
+                    days.chunked(7).forEach { week ->
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
+                            week.forEach { day ->
+                                MonthCell(day, day.date == state.selected, Modifier.weight(1f)) {
+                                    if (day.date == state.selected) onOpenDay(day.date) else onSelect(day.date)
+                                }
+                            }
                         }
                     }
                 }
@@ -472,3 +491,38 @@ private fun relative(date: LocalDate, today: LocalDate): String? {
 }
 
 private const val SWIPE_PX = 120f
+
+/**
+ * Sideways swipes over the month grid change the month. Seen before the day cells see the touch
+ * (so a swipe that starts on a day is not taken as a tap), while vertical drags are left alone.
+ * Right-to-left: the next month sits to the left, so a rightward swipe brings it in.
+ */
+private fun Modifier.monthSwipe(onSwipe: (next: Boolean) -> Unit, onDrag: (Float) -> Unit): Modifier = pointerInput(Unit) {
+    val slop = viewConfiguration.touchSlop
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        var dx = 0f
+        var dy = 0f
+        var dragging = false
+        while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+            if (!change.pressed) break
+            val delta = change.positionChange()
+            dx += delta.x
+            dy += delta.y
+            if (!dragging) {
+                if (abs(dx) > slop && abs(dx) > abs(dy) * 1.5f) dragging = true
+                else if (abs(dy) > slop) break
+            }
+            if (dragging) {
+                change.consume()
+                onDrag(dx)
+            }
+        }
+        if (dragging) {
+            onDrag(0f)
+            if (dx > SWIPE_PX) onSwipe(true) else if (dx < -SWIPE_PX) onSwipe(false)
+        }
+    }
+}

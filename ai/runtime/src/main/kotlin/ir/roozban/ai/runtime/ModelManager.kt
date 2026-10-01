@@ -51,8 +51,6 @@ data class ModelsState(
     val wifiOnly: Boolean = false,
     /** Ids of the Piper voices on the phone. */
     val voicesInstalled: Set<String> = emptySet(),
-    /** OCR languages installed («fas», «eng»). */
-    val ocrInstalled: Set<String> = emptySet(),
     /** Ids of the dictation spelling files on the phone. */
     val spellFiles: Set<String> = emptySet(),
 ) {
@@ -82,12 +80,6 @@ class ModelManager @Inject constructor(
     val store = ModelStore(File(context.filesDir, "models"))
     val voices = VoiceStore(File(store.dir, "voices"))
 
-    /** Tesseract's data folder: `<ocrDir>/tessdata/<lang>.traineddata`. */
-    val ocrDir = File(store.dir, "ocr")
-
-    /** OCR languages installed («fas», «eng»). */
-    fun ocrInstalled(): Set<String> =
-        File(ocrDir, "tessdata").listFiles { f -> f.name.endsWith(".traineddata") }?.mapTo(HashSet()) { it.name.removeSuffix(".traineddata") } ?: emptySet()
 
     /** The dictation spelling data (both files of [ModelCatalog.spell]). */
     val spellDir = File(store.dir, "spell")
@@ -108,6 +100,8 @@ class ModelManager @Inject constructor(
     init {
         // Voices no longer offered (replaced by clearer ones) are removed to free their space.
         runCatching { voices.keepOnly(ModelCatalog.voices.mapTo(HashSet()) { it.id }) }
+        // Image-to-text was removed: its language data is no longer needed.
+        runCatching { File(store.dir, "ocr").deleteRecursively() }
         refresh()
     }
 
@@ -115,7 +109,7 @@ class ModelManager @Inject constructor(
         val all = store.installed()
         val installed = all.filter { it.kind == ModelKind.LLM }
         val speech = all.filter { it.kind == ModelKind.SPEECH }
-        val failed = (ModelCatalog.all + ModelCatalog.speech + ModelCatalog.voices + ModelCatalog.ocr + ModelCatalog.spell).mapNotNull { spec ->
+        val failed = (ModelCatalog.all + ModelCatalog.speech + ModelCatalog.voices + ModelCatalog.spell).mapNotNull { spec ->
             val part = store.partialBytes(spec)
             if (part > 0 && all.none { it.id == spec.id }) spec.id to DownloadState.Failed("", part) else null
         }.toMap()
@@ -127,7 +121,6 @@ class ModelManager @Inject constructor(
                 activeSpeechId = prefs.getString(KEY_ACTIVE_SPEECH, null),
                 wifiOnly = prefs.getBoolean(KEY_WIFI_ONLY, false),
                 voicesInstalled = voices.installed(),
-                ocrInstalled = ocrInstalled(),
                 spellFiles = spellFiles(),
                 downloads = failed + s.downloads.filterValues { it is DownloadState.Running },
             )
@@ -189,15 +182,11 @@ class ModelManager @Inject constructor(
 
     internal fun onFinished(spec: ModelSpec, downloadError: String?) {
         var error = downloadError
-        if (error == null && (spec.kind == ModelKind.OCR || spec.kind == ModelKind.SPELL)) {
-            // Language data goes where Tesseract (or the spell corrector) looks for it.
+        if (error == null && spec.kind == ModelKind.SPELL) {
+            // Spelling data goes where the spell corrector looks for it.
             error = runCatching {
                 val from = store.fileFor(spec)
-                val to = if (spec.kind == ModelKind.OCR) {
-                    File(File(ocrDir, "tessdata").apply { mkdirs() }, ModelCatalog.ocrLanguage(spec) + ".traineddata")
-                } else {
-                    File(spellDir.apply { mkdirs() }, ModelCatalog.spellFileName(spec))
-                }
+                val to = File(spellDir.apply { mkdirs() }, ModelCatalog.spellFileName(spec))
                 if (!from.renameTo(to)) {
                     from.copyTo(to, overwrite = true)
                     from.delete()
@@ -252,7 +241,6 @@ class ModelManager @Inject constructor(
     fun delete(id: String) {
         val spec = ModelCatalog.get(id)
         if (spec?.kind == ModelKind.VOICE) voices.delete(id)
-        if (spec?.kind == ModelKind.OCR) File(ocrDir, "tessdata/${ModelCatalog.ocrLanguage(spec)}.traineddata").delete()
         if (spec?.kind == ModelKind.SPELL) File(spellDir, ModelCatalog.spellFileName(spec)).delete()
         store.delete(id)
         if (prefs.getString(KEY_ACTIVE, null) == id) prefs.edit { remove(KEY_ACTIVE) }

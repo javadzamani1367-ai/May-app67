@@ -102,6 +102,8 @@ class SettingsViewModel @Inject constructor(
 
     fun setDateNotification(enabled: Boolean) = update { it.copy(dateNotification = enabled) }
 
+    fun setFullScreenAlerts(enabled: Boolean) = update { it.copy(fullScreenAlerts = enabled) }
+
     /** null = default sound, "" = silent, else a sound URI. */
     fun setHabitSound(sound: String?) = update { it.copy(habitSound = sound) }
 

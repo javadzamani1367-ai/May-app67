@@ -112,6 +112,7 @@ data class BackupSettings(
     val backgroundVeil: Float = 0.8f,
     val startScreen: String? = null,
     val dateNotification: Boolean = true,
+    val fullScreenAlerts: Boolean = false,
     val prayerCity: String? = null,
     val planDayStartMinute: Int = 8 * 60,
     val planDayEndMinute: Int = 22 * 60,

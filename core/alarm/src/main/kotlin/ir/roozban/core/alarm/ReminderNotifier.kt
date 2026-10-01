@@ -92,6 +92,13 @@ class ReminderNotifier @Inject constructor(
      * cannot change after creation, so each sound gets its own channel id and the old one goes.
      * [habitSound]/[eventSound]: null = system default, "" = silent, else a sound URI.
      */
+    /** Every reminder opens a full-screen page too (setting «نمایش تمام‌صفحه»). */
+    val fullScreen: Boolean get() = prefs.getBoolean(KEY_FULL_SCREEN, false)
+
+    fun applyFullScreen(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_FULL_SCREEN, enabled).apply()
+    }
+
     fun applySounds(habitSound: String?, eventSound: String?) {
         prefs.edit().putString(KEY_HABIT_SOUND, habitSound ?: DEFAULT).putString(KEY_EVENT_SOUND, eventSound ?: DEFAULT).apply()
         createAlertChannels()
@@ -155,6 +162,7 @@ class ReminderNotifier @Inject constructor(
             .setCategory(if (kind == ReminderKind.ALARM && !missed) NotificationCompat.CATEGORY_ALARM else NotificationCompat.CATEGORY_REMINDER)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setContentIntent(openApp())
             .addAction(0, context.getString(R.string.action_done), ReminderReceiver.actionIntent(context, task.id, ReminderReceiver.ACTION_DONE))
             .addAction(0, context.getString(R.string.action_snooze_10), ReminderReceiver.snoozeIntent(context, task.id, 10))
@@ -164,6 +172,8 @@ class ReminderNotifier @Inject constructor(
             builder.setOngoing(true)
                 .setFullScreenIntent(AlarmActivity.pendingIntent(context, task.id), true)
                 .setDeleteIntent(ReminderReceiver.actionIntent(context, task.id, ReminderReceiver.ACTION_DISMISS))
+        } else if (!missed && fullScreen) {
+            builder.setFullScreenIntent(AlarmActivity.pendingIntent(context, task.id, alarm = false), true)
         }
         val notification = builder.build()
         if (kind == ReminderKind.ALARM && !missed) notification.flags = notification.flags or Notification.FLAG_INSISTENT
@@ -202,6 +212,7 @@ class ReminderNotifier @Inject constructor(
         private const val KEY_EVENT_SOUND = "event_sound"
         private const val KEY_HABIT_CHANNEL = "habit_channel"
         private const val KEY_EVENT_CHANNEL = "event_channel"
+        private const val KEY_FULL_SCREEN = "full_screen"
 
         fun notificationId(taskId: String): Int = taskId.hashCode()
     }

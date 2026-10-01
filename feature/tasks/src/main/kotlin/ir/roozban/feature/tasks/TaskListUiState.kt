@@ -14,9 +14,10 @@ data class TaskListUiState(
     val sections: List<TaskSection> = emptyList(),
     /** Only for [ListMode.PROJECT]. */
     val projectName: String? = null,
+    /** Ticked off today: only counted (they are listed in «انجام‌شده‌ها»). */
     val completed: List<TaskItem> = emptyList(),
 ) {
-    val isEmpty: Boolean get() = !loading && sections.all { it.tasks.isEmpty() } && completed.isEmpty()
+    val isEmpty: Boolean get() = !loading && sections.all { it.tasks.isEmpty() }
 }
 
 data class TodayHeader(

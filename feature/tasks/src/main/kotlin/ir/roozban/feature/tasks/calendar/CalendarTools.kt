@@ -66,6 +66,13 @@ import ir.roozban.core.ui.JalaliDatePickerDialog
 import ir.roozban.core.ui.TimePickerDialog
 import ir.roozban.feature.tasks.R
 import java.time.LocalDate
+import ir.roozban.core.designsystem.R as DsR
+import ir.roozban.core.calendar.PersianNames
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.material3.IconButton
 
 // ------------------------------------------------------------------ personal event editor
 
@@ -310,3 +317,60 @@ private fun NumberField(label: String, value: String, modifier: Modifier, onChan
     )
 }
 
+
+/** Picks a month: the year with arrows, then one of its twelve months; «امروز» returns to today. */
+@Composable
+internal fun MonthPickerDialog(current: LocalDate, today: LocalDate, onPick: (LocalDate) -> Unit, onToday: () -> Unit, onDismiss: () -> Unit) {
+    val shown = current.toJalali()
+    val now = today.toJalali()
+    var year by remember { mutableIntStateOf(shown.year) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                // Right-to-left: the earlier year (pointing right) comes first.
+                IconButton(onClick = { year-- }) { Icon(painterResource(DsR.drawable.ic_chevron_right), stringResource(R.string.calendar_previous)) }
+                Text(
+                    PersianDigits.format(year),
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                )
+                IconButton(onClick = { year++ }) { Icon(painterResource(DsR.drawable.ic_chevron_left), stringResource(R.string.calendar_next)) }
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                (1..12).chunked(3).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        row.forEach { m ->
+                            val selected = year == shown.year && m == shown.month
+                            val isNow = year == now.year && m == now.month
+                            val colors = MaterialTheme.colorScheme
+                            Box(
+                                Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (selected) colors.primary else if (isNow) colors.primaryContainer else colors.surfaceContainerHigh)
+                                    .clickable {
+                                        onPick(if (isNow) today else JalaliDate.of(year, m, 1).toLocalDate())
+                                    }
+                                    .padding(vertical = 12.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    PersianNames.jalaliMonth(m),
+                                    color = if (selected) colors.onPrimary else colors.onSurface,
+                                    fontWeight = if (selected || isNow) FontWeight.Bold else FontWeight.Normal,
+                                    maxLines = 1,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onToday) { Text(stringResource(R.string.calendar_today)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.dialog_cancel)) } },
+    )
+}

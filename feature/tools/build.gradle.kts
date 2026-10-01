@@ -14,12 +14,5 @@ dependencies {
     implementation(projects.ai.tts)
     implementation(libs.androidx.activity.compose)
     implementation(projects.ai.models)
-    implementation(projects.core.documents)
-    implementation(libs.tesseract4android)
-    implementation(libs.pdfbox.android) {
-        // The app already ships the newer BouncyCastle provider (core:backup); two copies clash.
-        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
-    }
-    implementation(libs.androidx.exifinterface)
     testImplementation(projects.core.testing)
 }
