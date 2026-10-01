@@ -130,7 +130,7 @@ check('هر ستون گوشی روی سرور هست', $missingOnServer === [], 
 check('سرور ستون اضافه ندارد', $extraOnServer === [], implode(', ', $extraOnServer));
 
 $tableCount = preg_match_all('/CREATE TABLE IF NOT EXISTS/', $sql);
-check('هر ۱۶ جدول در schema.sql هست', $tableCount === 16, "$tableCount جدول");
+check('هر ۲۱ جدول در schema.sql هست', $tableCount === 21, "$tableCount جدول");
 
 // نسخه اسکیما در سه زبان نوشته شده و هیچ کامپایلری آن سه را با هم مقایسه
 // نمی‌کند. اگر یکی جا بماند، سرور در /ping عددی را اعلام می‌کند که اسکیمای
@@ -225,10 +225,58 @@ echo "\n— نسخه پایگاه داده —\n";
 // نصب تازه نسخه‌اش را از schema.sql می‌گیرد و نصب قدیمی از گام‌های
 // Migrations. اگر این دو عدد از هم جدا شوند، نصب تازه یا گامی را دوباره اجرا
 // می‌کند یا گامی را هرگز نمی‌بیند.
+require_once __DIR__ . '/../api/lib/FieldSchema.php';
 require_once __DIR__ . '/../api/lib/Migrations.php';
 preg_match('/INSERT IGNORE INTO schema_meta \(id, version\) VALUES \(1, (\d+)\)/',
     (string) file_get_contents(__DIR__ . '/../schema.sql'), $versionMatch);
 equals('نسخه schema.sql با آخرین گام به‌روزرسانی یکی است', Migrations::latest(), (int) ($versionMatch[1] ?? -1));
+
+// جدول‌های میدانی دو جا نوشته شده‌اند: گام به‌روزرسانی و schema.sql. اگر یکی
+// عوض شود و دیگری نه، نصب تازه و نصب به‌روزشده دو پایگاه داده متفاوت دارند.
+$flat = static fn (string $s): string => preg_replace('/\s+/', ' ', trim($s));
+$schemaFlat = $flat((string) file_get_contents(__DIR__ . '/../schema.sql'));
+foreach (FieldSchema::TABLES as $statement) {
+    preg_match('/CREATE TABLE IF NOT EXISTS (\w+)/', $statement, $tableName);
+    check("جدول {$tableName[1]} در schema.sql عیناً همان گام به‌روزرسانی است",
+        str_contains($schemaFlat, $flat($statement)));
+}
+check('ستون permissions در جدول کاربران schema.sql هست',
+    str_contains($schemaFlat, 'permissions TINYINT NOT NULL DEFAULT 0'));
+
+// ---------------------------------------------------------------------------
+echo "\n— موردهای اپ میدانی —\n";
+foreach (['Response', 'Config', 'Db', 'Auth', 'Field', 'FieldCodes'] as $class) {
+    require_once __DIR__ . '/../api/lib/' . $class . '.php';
+}
+equals('قالب کد رهگیری', 'RZ-1405-000123', FieldCodes::format('RZ', 1405, 123));
+// ۲۹ اسفند ۱۴۰۴ و ۱ فروردین ۱۴۰۵، دو طرف مرز سال، به وقت ایران.
+equals('سال شمسی آخرین روز سال', 1404, FieldCodes::jalaliYear(strtotime('2026-03-20 12:00:00 Asia/Tehran') * 1000));
+equals('سال شمسی اولین روز سال', 1405, FieldCodes::jalaliYear(strtotime('2026-03-21 00:30:00 Asia/Tehran') * 1000));
+
+$report = [
+    'id' => '11111111-2222-3333-4444-555555555555', 'kind' => Field::KIND_CRYPTO, 'created_at' => 1759000000000,
+    'latitude' => 33.63, 'longitude' => 46.42, 'description' => 'صدای مداوم فن در شب',
+];
+$photo = ['id' => '11111111-2222-3333-4444-666666666666', 'role' => Field::ROLE_PHOTO,
+          'mime' => 'image/jpeg', 'size' => 10, 'sha256' => str_repeat('a', 64)];
+equals('گزارش کامل پذیرفته می‌شود', null, Field::problem($report, [$photo]));
+check('گزارش بی‌شرح رد می‌شود', Field::problem(['description' => '  '] + $report, []) !== null);
+check('گزارش بی‌موقعیت رد می‌شود', Field::problem(['latitude' => null] + $report, []) !== null);
+check('شناسه غیر UUID رد می‌شود', Field::problem(['id' => '42'] + $report, []) !== null);
+check('نوع فایل ناشناخته رد می‌شود', Field::problem($report, [['mime' => 'application/x-php'] + $photo]) !== null);
+check('فایل بی‌اثر انگشت رد می‌شود', Field::problem($report, [['sha256' => 'xyz'] + $photo]) !== null);
+
+$feeder = ['id' => '11111111-2222-3333-4444-777777777777', 'kind' => Field::KIND_FEEDER, 'created_at' => 1759000000000,
+           'latitude' => 33.63, 'longitude' => 46.42, 'plate' => 'T-1024'];
+equals('آمپرگیری با پلاک پذیرفته می‌شود', null, Field::problem($feeder, []));
+check('آمپرگیری بی‌پلاک رد می‌شود', Field::problem(['plate' => ''] + $feeder, []) !== null);
+
+$thermal = ['id' => '11111111-2222-3333-4444-888888888888', 'kind' => Field::KIND_THERMAL, 'created_at' => 1759000000000];
+$frame = ['id' => '11111111-2222-3333-4444-999999999999', 'role' => Field::ROLE_THERMAL, 'mime' => 'image/jpeg',
+          'size' => 10, 'sha256' => str_repeat('b', 64), 'asset_type' => Field::ASSET_POLE, 'plate' => '7781'];
+equals('تصویر ترموویژن با نوع و پلاک پذیرفته می‌شود', null, Field::problem($thermal, [$frame]));
+check('تصویر ترموویژن بی‌پلاک رد می‌شود', Field::problem($thermal, [['plate' => ''] + $frame]) !== null);
+check('تصویر ترموویژن بی‌نوع رد می‌شود', Field::problem($thermal, [['asset_type' => null] + $frame]) !== null);
 
 // ---------------------------------------------------------------------------
 echo "\n";

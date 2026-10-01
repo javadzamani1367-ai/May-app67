@@ -8,6 +8,7 @@ declare(strict_types=1);
  * @var PDO $pdo
  */
 
+require_once __DIR__ . '/../../api/lib/FieldSchema.php';
 require_once __DIR__ . '/../../api/lib/Migrations.php';
 
 echo "\n— قفل ورود ناموفق —\n";

@@ -13,7 +13,7 @@ final class AuthController
         }
 
         $user = Auth::login($userCode, $password, $device !== '' ? $device : null);
-        $token = Auth::issueToken((string) $user['id'], $device !== '' ? $device : null);
+        $token = Auth::issueToken((string) $user['id'], $device !== '' ? $device : null, (int) $user['role']);
 
         if ($device !== '') {
             Db::run(
@@ -41,7 +41,7 @@ final class AuthController
 
     public function me(Request $request): void
     {
-        Response::json(['user' => self::publicUser(Auth::require($request))]);
+        Response::json(['user' => self::publicUser(Auth::require($request, null, true))]);
     }
 
     /**
@@ -82,6 +82,7 @@ final class AuthController
             'role' => (int) $row['role'],
             'unit' => $row['unit'] === null ? null : (int) $row['unit'],
             'county' => $row['county'],
+            'permissions' => (int) ($row['permissions'] ?? 0),
         ];
     }
 }

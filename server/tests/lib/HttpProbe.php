@@ -83,6 +83,17 @@ final class HttpProbe
         );
     }
 
+    /** بدنه خام، همان‌طور که گوشی تکه فایل را می‌فرستد؛ پاسخ JSON است. */
+    public function bytes(string $route, string $body, ?string $token): array
+    {
+        return $this->send(
+            $route,
+            ['Accept: application/json', 'Content-Type: application/octet-stream'],
+            [CURLOPT_POST => true, CURLOPT_POSTFIELDS => $body],
+            $token
+        );
+    }
+
     /** بایت‌های خام، برای مسیر دانلود که JSON برنمی‌گرداند. */
     public function raw(string $route, ?string $token): array
     {

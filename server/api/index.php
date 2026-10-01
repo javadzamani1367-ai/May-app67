@@ -9,7 +9,8 @@ declare(strict_types=1);
  * از هر امکانات اضافه دارد.
  */
 
-foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'Migrations', 'Storage', 'Notifications'] as $class) {
+foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSchema', 'Migrations', 'Storage',
+          'Notifications', 'Jalali', 'Field', 'FieldCodes', 'FieldSettings'] as $class) {
     require_once __DIR__ . '/lib/' . $class . '.php';
 }
 foreach (glob(__DIR__ . '/lib/Controllers/*.php') ?: [] as $controller) {
@@ -58,6 +59,11 @@ $routes = [
     'GET /sync/report'           => [SyncController::class, 'pull'],
     'POST /sync/file'            => [SyncFileController::class, 'upload'],
     'GET /sync/file'             => [SyncFileController::class, 'download'],
+
+    'GET /field/me'              => [FieldController::class, 'me'],
+    'POST /field/item'           => [FieldController::class, 'push'],
+    'GET /field/items'           => [FieldController::class, 'items'],
+    'POST /field/upload'         => [FieldUploadController::class, 'chunk'],
 
     'POST /approvals/submit'     => [ApprovalController::class, 'submit'],
     'POST /approvals/decide'     => [ApprovalController::class, 'decide'],

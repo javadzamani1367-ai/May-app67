@@ -9,7 +9,7 @@ final class UserController
         Auth::require($request, Auth::ROLE_MANAGER);
         $rows = Db::all(
             'SELECT id, user_code, full_name, role, unit, county, phone, device_code, active,
-                    created_at, updated_at, note
+                    permissions, created_at, updated_at, note
              FROM users ORDER BY role, full_name'
         );
         Response::json(['users' => $rows]);
@@ -39,13 +39,13 @@ final class UserController
 
         Db::run(
             'INSERT INTO users (id, user_code, full_name, role, unit, county, phone, device_code,
-                                password_hash, active, created_at, updated_at, note)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                password_hash, active, created_at, updated_at, note, permissions)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                 full_name = VALUES(full_name), role = VALUES(role), unit = VALUES(unit),
                 county = VALUES(county), phone = VALUES(phone), device_code = VALUES(device_code),
                 password_hash = VALUES(password_hash), active = VALUES(active),
-                updated_at = VALUES(updated_at), note = VALUES(note)',
+                updated_at = VALUES(updated_at), note = VALUES(note), permissions = VALUES(permissions)',
             [
                 $id,
                 $userCode,
@@ -60,6 +60,9 @@ final class UserController
                 $existing['created_at'] ?? $now,
                 $now,
                 $request->str('note'),
+                // ویرایشی که مجوز نفرستد (اپ مدیر قدیمی) مجوزهای قبلی را نگه می‌دارد.
+                ($request->int('permissions') ?? (int) ($existing['permissions'] ?? 0))
+                    & (Auth::PERM_INSPECT | Auth::PERM_REPORT),
             ]
         );
 

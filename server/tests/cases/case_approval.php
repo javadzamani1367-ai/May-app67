@@ -105,3 +105,4 @@ require __DIR__ . '/dispatch_merge.php';
 require __DIR__ . '/device_code.php';
 require __DIR__ . '/manager_recovery.php';
 require __DIR__ . '/login_lockout.php';
+require __DIR__ . '/field_cycle.php';

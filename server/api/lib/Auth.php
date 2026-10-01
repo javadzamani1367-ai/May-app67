@@ -13,17 +13,27 @@ final class Auth
     public const ROLE_EXPERT = 0;
     public const ROLE_MANAGER = 1;
     public const ROLE_UNIT = 2;
+    /** کاربر اپ بازرسی میدانی. کارهایش را ستون permissions تعیین می‌کند. */
+    public const ROLE_FIELD = 3;
+
+    /** مجوزهای کاربر میدانی، به صورت بیت: مدیر یکی یا هر دو را می‌دهد. */
+    public const PERM_INSPECT = 1;
+    public const PERM_REPORT = 2;
 
     public static function hashToken(string $token): string
     {
         return hash('sha256', $token . Config::get('app_key', ''));
     }
 
-    public static function issueToken(string $userId, ?string $deviceCode): string
+    public static function issueToken(string $userId, ?string $deviceCode, int $role = self::ROLE_EXPERT): string
     {
         $token = bin2hex(random_bytes(32));
         $now = Db::now();
-        $days = (int) Config::get('token_days', 30);
+        // نشست اپ میدانی کوتاه‌تر است: کاربرانش بیشترند و گوشی‌شان قفل دستگاه
+        // ندارد، پس گوشی گم‌شده باید زودتر از سرور بریده شود.
+        $days = $role === self::ROLE_FIELD
+            ? (int) Config::get('field_token_days', 7)
+            : (int) Config::get('token_days', 30);
         Db::run(
             'INSERT INTO tokens (token_hash, user_id, device_code, created_at, expires_at)
              VALUES (?, ?, ?, ?, ?)',
@@ -32,8 +42,15 @@ final class Auth
         return $token;
     }
 
-    /** کاربر پشت توکن، یا خطای ۴۰۱. هیچ مسیری بدون این فراخوانی محافظت نشده است. */
-    public static function require(Request $request, ?int $role = null): array
+    /**
+     * کاربر پشت توکن، یا خطای ۴۰۱. هیچ مسیری بدون این فراخوانی محافظت نشده است.
+     *
+     * کاربر میدانی فقط به مسیری راه دارد که خودش را صریحاً بپذیرد ($role برابر
+     * ROLE_FIELD یا $allowField). مسیرهای قدیمی بدون نقش نوشته شده‌اند چون آن
+     * روز فقط کارشناس و مدیر و واحد بودند؛ اگر نقش تازه خودبه‌خود از آن‌ها رد
+     * می‌شد، کاربر میدانی می‌توانست پرونده رسمی بفرستد یا ارسال‌ها را بخواند.
+     */
+    public static function require(Request $request, ?int $role = null, bool $allowField = false): array
     {
         $token = $request->bearer();
         if ($token === null || $token === '') {
@@ -49,6 +66,9 @@ final class Auth
             Response::fail(401, 'bad_token', 'نشست شما منقضی شده است. دوباره وارد شوید.');
         }
         if ($role !== null && (int) $row['role'] !== $role) {
+            Response::fail(403, 'forbidden', 'این بخش برای نقش کاربری شما نیست.');
+        }
+        if ($role === null && !$allowField && (int) $row['role'] === self::ROLE_FIELD) {
             Response::fail(403, 'forbidden', 'این بخش برای نقش کاربری شما نیست.');
         }
         return $row;

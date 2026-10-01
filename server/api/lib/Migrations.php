@@ -16,22 +16,48 @@ declare(strict_types=1);
  */
 final class Migrations
 {
-    /** هر کلید یک نسخه؛ مقدار، دستورهایی که پایگاه داده را به آن نسخه می‌رسانند. */
-    private const STEPS = [
-        1 => [
-            // قفل ورود ناموفق: کلید، هش کد کاربری یا نشانی شبکه است.
-            "CREATE TABLE IF NOT EXISTS login_attempts (
-               scope        VARCHAR(80) NOT NULL PRIMARY KEY,
-               failures     INT         NOT NULL DEFAULT 0,
-               first_at     BIGINT      NOT NULL,
-               locked_until BIGINT      NOT NULL DEFAULT 0
-             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-        ],
-    ];
+    /**
+     * هر کلید یک نسخه؛ مقدار، کارهایی که پایگاه داده را به آن نسخه می‌رسانند:
+     * یک دستور SQL، یا تابعی برای کاری که SQL خام نمی‌تواند تکرارپذیر انجامش
+     * دهد (افزودن ستون فقط وقتی هنوز نیست).
+     *
+     * @return array<int, array<int, string|callable>>
+     */
+    private static function steps(): array
+    {
+        return [
+            1 => [
+                // قفل ورود ناموفق: کلید، هش کد کاربری یا نشانی شبکه است.
+                "CREATE TABLE IF NOT EXISTS login_attempts (
+                   scope        VARCHAR(80) NOT NULL PRIMARY KEY,
+                   failures     INT         NOT NULL DEFAULT 0,
+                   first_at     BIGINT      NOT NULL,
+                   locked_until BIGINT      NOT NULL DEFAULT 0
+                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+            ],
+            // اپ بازرسی میدانی: مجوز کاربر، موردها، فایل‌ها، تاریخچه، کدها.
+            2 => array_merge(
+                [static fn () => self::addColumn('users', 'permissions', 'TINYINT NOT NULL DEFAULT 0')],
+                FieldSchema::TABLES
+            ),
+        ];
+    }
+
+    private static function addColumn(string $table, string $column, string $definition): void
+    {
+        $exists = Db::one(
+            'SELECT 1 AS present FROM information_schema.columns
+             WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?',
+            [$table, $column]
+        );
+        if ($exists === null) {
+            Db::run("ALTER TABLE `$table` ADD COLUMN `$column` $definition");
+        }
+    }
 
     public static function latest(): int
     {
-        return max(array_keys(self::STEPS));
+        return max(array_keys(self::steps()));
     }
 
     public static function ensure(): void
@@ -47,12 +73,12 @@ final class Migrations
         }
         try {
             $current = self::current();
-            foreach (self::STEPS as $version => $statements) {
+            foreach (self::steps() as $version => $statements) {
                 if ($version <= $current) {
                     continue;
                 }
-                foreach ($statements as $sql) {
-                    Db::run($sql);
+                foreach ($statements as $statement) {
+                    is_callable($statement) ? $statement() : Db::run($statement);
                 }
                 Db::run('UPDATE schema_meta SET version = ? WHERE id = 1', [$version]);
             }

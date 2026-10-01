@@ -6,7 +6,7 @@ final class NotificationController
 {
     public function index(Request $request): void
     {
-        $user = Auth::require($request);
+        $user = Auth::require($request, null, true);
         $since = $request->int('since', 0) ?? 0;
 
         $rows = Db::all(
@@ -27,7 +27,7 @@ final class NotificationController
 
     public function markRead(Request $request): void
     {
-        $user = Auth::require($request);
+        $user = Auth::require($request, null, true);
         $ids = $request->arr('ids');
         if ($ids === []) {
             Response::json(['done' => true]);
