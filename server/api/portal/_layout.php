@@ -9,10 +9,14 @@ declare(strict_types=1);
  * رنگ‌ها همان خانواده‌های اپ هستند و هر کدام فقط یک معنا دارند: سرمه‌ای قاب،
  * سبزآبی اقدام، کهربایی دیده‌شده و منتظر، سبز پاسخ‌داده، قرمز مهلت‌گذشته.
  *
- * @param bool $signedIn پیوندهای صندوق و خروج فقط برای کاربر واردشده معنا دارند.
+ * پنل مدیر هم همین پوسته را با زیرعنوان و پیوندهای خودش به کار می‌برد.
+ *
+ * @param bool $signedIn پیوندها فقط برای کاربر واردشده معنا دارند.
+ * @param array<int, array{0: string, 1: string}>|null $nav پیوندهای سربرگ: [نشانی، عنوان]
  */
-function portal_header(string $title, bool $signedIn = true): void
+function portal_header(string $title, bool $signedIn = true, string $subtitle = 'پرتال واحدها', ?array $nav = null): void
 {
+    $nav ??= [['index.php', 'صندوق ورودی'], ['logout.php', 'خروج']];
     ?><!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -60,6 +64,11 @@ function portal_header(string $title, bool $signedIn = true): void
   .tag-seen { background:#fef3c7; color:#6b3108; }
   .tag-answered { background:#dcfce7; color:#124a27; }
   .tag-overdue { background:#fee2e2; color:#6e1717; }
+  .check { display:flex; align-items:center; gap:8px; margin-top:10px; color:var(--ink); }
+  .check input { width:auto; margin:0; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:0 16px; }
+  .notice { background:#dcfce7; color:#124a27; padding:10px 12px; border-radius:10px;
+            border-inline-start:4px solid #16a34a; }
   .error { background:#fee2e2; color:#6e1717; padding:10px 12px; border-radius:10px;
            border-inline-start:4px solid #dc2626; }
   @media (max-width:600px){ main{margin:10px auto;} .card{padding:13px;}
@@ -70,12 +79,13 @@ function portal_header(string $title, bool $signedIn = true): void
 <header>
   <div class="brand">
     <?= portal_mark() ?>
-    <div><strong>توان‌کاو</strong><small>پرتال واحدها</small></div>
+    <div><strong>توان‌کاو</strong><small><?= htmlspecialchars($subtitle, ENT_QUOTES, 'UTF-8') ?></small></div>
   </div>
   <?php if ($signedIn): ?>
   <nav>
-    <a href="index.php">صندوق ورودی</a>
-    <a href="logout.php">خروج</a>
+    <?php foreach ($nav as [$href, $label]): ?>
+    <a href="<?= htmlspecialchars($href, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></a>
+    <?php endforeach; ?>
   </nav>
   <?php endif; ?>
 </header>
@@ -107,6 +117,9 @@ function portal_footer(): void
     ?></main>
 </body></html><?php
 }
+
+/** نام چهار واحد مقصد، به ترتیب ستون users.unit — مشترک پرتال و پنل مدیر. */
+const UNIT_NAMES = ['واحد فروش', 'واحد حراست', 'واحد حقوقی', 'برق شهرستان'];
 
 /** عدد فارسی برای نمایش؛ ذخیره‌سازی همیشه لاتین می‌ماند. */
 function fa_digits(?string $value): string

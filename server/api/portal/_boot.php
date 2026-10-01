@@ -38,7 +38,6 @@ function portal_require_user(): array
     return $user;
 }
 
-const UNIT_NAMES = ['واحد فروش', 'واحد حراست', 'واحد حقوقی', 'برق شهرستان'];
 
 function unit_name(?int $unit): string
 {

@@ -139,6 +139,39 @@ final class HttpProbe
         return $raw;
     }
 
+    /**
+     * یک صفحه، مثل مرورگر: کوکی‌ها در فایل [$jar] می‌مانند و بین درخواست‌ها
+     * می‌روند، و ریدایرکت دنبال نمی‌شود تا تست ببیند صفحه کجا می‌فرستد.
+     *
+     * @return array{status: int, body: string, location: string}
+     */
+    public function page(string $path, string $jar, ?array $post = null): array
+    {
+        $handle = curl_init("http://127.0.0.1:$this->port/$path");
+        $location = '';
+        curl_setopt_array($handle, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_COOKIEJAR => $jar,
+            CURLOPT_COOKIEFILE => $jar,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_HEADERFUNCTION => static function ($curl, string $header) use (&$location): int {
+                if (stripos($header, 'Location:') === 0) {
+                    $location = trim(substr($header, 9));
+                }
+                return strlen($header);
+            },
+        ]);
+        if ($post !== null) {
+            curl_setopt($handle, CURLOPT_POST, true);
+            curl_setopt($handle, CURLOPT_POSTFIELDS, http_build_query($post));
+        }
+        $body = (string) curl_exec($handle);
+        $status = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
+        curl_close($handle);
+        return ['status' => $status, 'body' => $body, 'location' => $location];
+    }
+
     /** فرم HTML، برای setup.php که JSON نیست. */
     public function form(string $path, array $fields): int
     {
