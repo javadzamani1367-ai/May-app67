@@ -1,5 +1,7 @@
 package ir.ilam.inspection.ui.visit
 
+import ir.ilam.inspection.ui.capture.CAPTURE_PERMISSIONS
+import ir.ilam.inspection.ui.capture.CameraCapture
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult

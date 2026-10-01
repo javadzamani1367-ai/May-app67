@@ -25,7 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ir.ilam.inspection.R
+import ir.ilam.inspection.core.R
 import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.PersianNumbers
 

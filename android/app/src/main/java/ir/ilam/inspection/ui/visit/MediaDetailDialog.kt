@@ -1,5 +1,6 @@
 package ir.ilam.inspection.ui.visit
 
+import ir.ilam.inspection.ui.location.formatCoordinates
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth

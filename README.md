@@ -92,8 +92,8 @@ cd android
 (مجوز SIL OFL) بگیرید و اینجا بگذارید:
 
 ```
-android/app/src/main/assets/fonts/Vazirmatn-Regular.ttf
-android/app/src/main/assets/fonts/Vazirmatn-Bold.ttf
+android/core/src/main/assets/fonts/Vazirmatn-Regular.ttf
+android/core/src/main/assets/fonts/Vazirmatn-Bold.ttf
 ```
 
 بدون این فایل‌ها پروژه ساخته و اجرا می‌شود اما رابط کاربری و PDF از فونت

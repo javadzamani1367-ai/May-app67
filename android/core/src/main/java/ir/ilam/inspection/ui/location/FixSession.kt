@@ -1,4 +1,4 @@
-package ir.ilam.inspection.ui.visit
+package ir.ilam.inspection.ui.location
 
 import android.os.SystemClock
 import androidx.compose.runtime.Composable

@@ -8,16 +8,12 @@
     <string name="nav_settings">تنظیمات</string>
     <string name="nav_stats">آمار</string>
     <string name="action_new_report">ثبت گزارش جدید</string>
-    <string name="action_back">بازگشت</string>
     <string name="action_save">ذخیره</string>
     <string name="action_next">مرحله بعد</string>
     <string name="action_previous">مرحله قبل</string>
     <string name="action_finish">پایان بازدید</string>
     <string name="action_add">افزودن</string>
-    <string name="action_delete">حذف</string>
     <string name="action_edit">ویرایش</string>
-    <string name="action_cancel">انصراف</string>
-    <string name="action_confirm">تأیید</string>
     <string name="action_share">اشتراک‌گذاری</string>
     <string name="action_retry">تلاش دوباره</string>
     <string name="action_search">جستجو</string>
@@ -135,14 +131,6 @@
     <string name="gps_source_manual">منبع: ورود دستی</string>
     <string name="action_pick_on_map">انتخاب از نقشه</string>
     <string name="action_manual_coordinates">ورود دستی مختصات</string>
-    <string name="map_picker_title">مکان را روی نقشه انتخاب کنید</string>
-    <string name="map_picker_hint">نقشه را جابه‌جا کنید تا نشانگر روی محل مورد نظر قرار بگیرد</string>
-    <string name="map_picker_confirm">ثبت این مختصات</string>
-    <string name="map_offline_hint">در نبود اینترنت فقط نقشه‌های دیده‌شده قبلی نمایش داده می‌شوند</string>
-    <string name="manual_latitude">عرض جغرافیایی</string>
-    <string name="manual_longitude">طول جغرافیایی</string>
-    <string name="manual_coordinates_invalid">مختصات وارد شده معتبر نیست</string>
-    <string name="manual_coordinates_save">ثبت مختصات دستی</string>
 
     <!-- مالک -->
     <string name="field_owner_name">نام و نام خانوادگی</string>
@@ -188,8 +176,6 @@
     <string name="question_seal_internal">آیا کنتور پلمب داخلی دارد؟</string>
     <string name="question_appearance_ok">وضعیت ظاهری کنتور سالم است؟</string>
     <string name="question_tampered">دستکاری در کنتور وجود دارد؟</string>
-    <string name="answer_yes">بله</string>
-    <string name="answer_no">خیر</string>
 
     <!-- دستگاه‌ها -->
     <string name="devices_title">دستگاه‌های استخراج</string>
@@ -199,8 +185,6 @@
     <string name="device_serial">شماره سریال</string>
     <string name="device_power">توان (وات)</string>
     <string name="device_note">توضیح</string>
-    <string name="scan_title">اسکن بارکد دستگاه</string>
-    <string name="scan_hint">بارکد را داخل کادر بالا بگیرید. با خواندن بارکد، این صفحه بسته می‌شود.</string>
     <string name="device_entry_barcode">بارکد</string>
     <string name="device_entry_manual">دستی</string>
     <string name="device_count">تعداد دستگاه: %1$s</string>
@@ -236,8 +220,6 @@
     <string name="media_importing">در حال افزودن…</string>
     <string name="media_import_failed">افزودن برخی فایل‌ها ناموفق بود</string>
     <string name="media_no_caption">بدون شرح</string>
-    <string name="media_shutter_count">%1$s تصویر گرفته شد</string>
-    <string name="media_recording">در حال ضبط…</string>
     <string-array name="photo_captions">
         <item>تصویر کلی ملک</item>
         <item>تصویر پلاک پایه انشعاب</item>
@@ -259,8 +241,6 @@
         <item>فیلم جمع‌آوری ماینرها</item>
         <item>فیلم جمع‌آوری انشعاب</item>
     </string-array>
-    <string name="media_take_photo">گرفتن عکس</string>
-    <string name="media_record_video">ضبط ویدیو</string>
     <string name="media_caption">شرح تصویر</string>
     <string name="media_empty">تصویری ثبت نشده است</string>
     <string name="media_count">%1$s فایل</string>
@@ -523,11 +503,6 @@
     <string name="lock_biometric">ورود با اثر انگشت</string>
     <string name="lock_biometric_title">احراز هویت</string>
 
-    <!-- عمومی -->
-    <string name="date_year">سال</string>
-    <string name="date_month">ماه</string>
-    <string name="date_day">روز</string>
-    <string name="date_pick">انتخاب تاریخ</string>
     <string name="crash_title">برنامه در اجرای قبلی بسته شد</string>
     <string name="crash_hint">متن زیر علت دقیق را نشان می‌دهد. آن را برای توسعه‌دهنده بفرستید تا همین خطا رفع شود. اطلاعات پرونده‌های شما پاک نشده است.</string>
     <string name="crash_share">ارسال گزارش خطا</string>
@@ -537,9 +512,6 @@
     <string name="error_number">مقدار عددی وارد کنید</string>
     <string name="snippet_save">ذخیره این متن برای استفاده بعدی</string>
     <string name="snippet_open">متن‌های ذخیره‌شده</string>
-    <string name="confirm_delete_title">حذف مورد</string>
-    <string name="confirm_delete_message">آیا از حذف این مورد اطمینان دارید؟</string>
-    <string name="confirm_delete_named">آیا از حذف «%1$s» اطمینان دارید؟</string>
     <string name="case_delete">حذف پرونده</string>
     <string name="case_delete_confirm_title">حذف کامل پرونده</string>
     <string name="case_delete_confirm_message">پرونده %1$s با همه تصاویر، فیلم‌ها و مدارکش برای همیشه حذف می‌شود. این کار برگشت‌پذیر نیست.</string>

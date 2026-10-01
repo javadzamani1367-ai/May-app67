@@ -431,8 +431,8 @@ cd android
 [rastikerdar/vazirmatn](https://github.com/rastikerdar/vazirmatn) بگیرید:
 
 ```
-android/app/src/main/assets/fonts/Vazirmatn-Regular.ttf
-android/app/src/main/assets/fonts/Vazirmatn-Bold.ttf
+android/core/src/main/assets/fonts/Vazirmatn-Regular.ttf
+android/core/src/main/assets/fonts/Vazirmatn-Bold.ttf
 ```
 
 ### سرور

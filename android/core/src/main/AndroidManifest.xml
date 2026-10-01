@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- The barcode window. Declared here, with the class, so any app that
+             uses the scanner gets the entry without repeating it. -->
+        <activity
+            android:name="ir.ilam.inspection.ui.capture.ScanActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:stateNotNeeded="true"
+            android:theme="@style/Theme.Inspection"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+    </application>
+</manifest>

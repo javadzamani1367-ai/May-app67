@@ -74,14 +74,17 @@ class ServerApi(private val baseUrl: String) {
         data.optInt("schema_version", 0)
     }
 
-    internal suspend fun <T> post(
+    // The transport is public because each app adds its own endpoint groups
+    // as extensions (sync and admin in the inspection apps, field reports in
+    // the field app), and those live outside this module.
+    suspend fun <T> post(
         path: String,
         body: JSONObject,
         token: String? = null,
         parse: (JSONObject) -> T
     ): ApiResult<T> = call(path, "POST", body, token, parse)
 
-    internal suspend fun <T> get(
+    suspend fun <T> get(
         path: String,
         token: String?,
         parse: (JSONObject) -> T

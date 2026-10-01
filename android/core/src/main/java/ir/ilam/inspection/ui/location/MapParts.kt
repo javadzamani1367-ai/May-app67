@@ -1,4 +1,4 @@
-package ir.ilam.inspection.ui.visit
+package ir.ilam.inspection.ui.location
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -28,7 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
-import ir.ilam.inspection.R
+import ir.ilam.inspection.core.R
 import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tavan
 import ir.ilam.inspection.util.Fix

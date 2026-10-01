@@ -1,8 +1,8 @@
-package ir.ilam.inspection.ui.visit
+package ir.ilam.inspection.ui.capture
 
 import com.journeyapps.barcodescanner.CaptureActivity
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
-import ir.ilam.inspection.R
+import ir.ilam.inspection.core.R
 
 /**
  * The barcode scanner in a box rather than over the whole screen. The library

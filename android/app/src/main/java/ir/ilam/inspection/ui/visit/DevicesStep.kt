@@ -1,5 +1,6 @@
 package ir.ilam.inspection.ui.visit
 
+import ir.ilam.inspection.ui.capture.ScanActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

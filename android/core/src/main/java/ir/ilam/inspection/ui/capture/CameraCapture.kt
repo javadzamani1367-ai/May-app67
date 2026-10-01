@@ -1,4 +1,4 @@
-package ir.ilam.inspection.ui.visit
+package ir.ilam.inspection.ui.capture
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -42,7 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import ir.ilam.inspection.R
+import ir.ilam.inspection.core.R
 import ir.ilam.inspection.util.PersianNumbers
 import kotlinx.coroutines.delay
 import java.io.File

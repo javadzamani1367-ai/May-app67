@@ -23,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ir.ilam.inspection.R
+import ir.ilam.inspection.core.R
 import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tavan
 import ir.ilam.inspection.ui.theme.Tone

@@ -1,5 +1,7 @@
 package ir.ilam.inspection.ui.visit
 
+import ir.ilam.inspection.ui.location.formatCoordinates
+import ir.ilam.inspection.ui.location.formatMetres
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

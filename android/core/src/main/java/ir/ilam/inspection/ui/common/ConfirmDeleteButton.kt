@@ -17,7 +17,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import ir.ilam.inspection.R
+import ir.ilam.inspection.core.R
 import ir.ilam.inspection.ui.theme.Tavan
 
 /**

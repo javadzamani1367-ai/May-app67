@@ -39,9 +39,9 @@ import ir.ilam.inspection.ui.common.TavanTopBar
 import ir.ilam.inspection.ui.pending.CaseCard
 import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tavan
-import ir.ilam.inspection.ui.visit.DotOverlay
-import ir.ilam.inspection.ui.visit.MapControls
-import ir.ilam.inspection.ui.visit.newMapView
+import ir.ilam.inspection.ui.location.DotOverlay
+import ir.ilam.inspection.ui.location.MapControls
+import ir.ilam.inspection.ui.location.newMapView
 import ir.ilam.inspection.util.Fix
 import ir.ilam.inspection.util.LocationProvider
 import ir.ilam.inspection.util.MapConfig

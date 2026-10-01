@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings used by the shared module: theme, common components, location,
+     map, capture. The apps that depend on :core see them through their own R. -->
+<resources>
+    <string name="action_back">بازگشت</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_cancel">انصراف</string>
+    <string name="action_confirm">تأیید</string>
+    <string name="map_picker_title">مکان را روی نقشه انتخاب کنید</string>
+    <string name="map_picker_hint">نقشه را جابه‌جا کنید تا نشانگر روی محل مورد نظر قرار بگیرد</string>
+    <string name="map_picker_confirm">ثبت این مختصات</string>
+    <string name="map_offline_hint">در نبود اینترنت فقط نقشه‌های دیده‌شده قبلی نمایش داده می‌شوند</string>
+    <string name="manual_latitude">عرض جغرافیایی</string>
+    <string name="manual_longitude">طول جغرافیایی</string>
+    <string name="manual_coordinates_invalid">مختصات وارد شده معتبر نیست</string>
+    <string name="manual_coordinates_save">ثبت مختصات دستی</string>
+    <string name="answer_yes">بله</string>
+    <string name="answer_no">خیر</string>
+    <string name="scan_title">اسکن بارکد دستگاه</string>
+    <string name="scan_hint">بارکد را داخل کادر بالا بگیرید. با خواندن بارکد، این صفحه بسته می‌شود.</string>
+    <string name="media_shutter_count">%1$s تصویر گرفته شد</string>
+    <string name="media_recording">در حال ضبط…</string>
+    <string name="media_take_photo">گرفتن عکس</string>
+    <string name="media_record_video">ضبط ویدیو</string>
+    <!-- عمومی -->
+    <string name="date_year">سال</string>
+    <string name="date_month">ماه</string>
+    <string name="date_day">روز</string>
+    <string name="date_pick">انتخاب تاریخ</string>
+    <string name="confirm_delete_title">حذف مورد</string>
+    <string name="confirm_delete_message">آیا از حذف این مورد اطمینان دارید؟</string>
+    <string name="confirm_delete_named">آیا از حذف «%1$s» اطمینان دارید؟</string>
+    <string name="location_accuracy_value">±%1$s متر</string>
+    <string name="location_quality_excellent">دقت عالی</string>
+    <string name="location_quality_good">دقت خوب</string>
+    <string name="location_quality_fair">دقت متوسط</string>
+    <string name="location_quality_poor">دقت ضعیف</string>
+    <string name="location_quality_unknown">دقت نامشخص</string>
+    <string name="fix_refining">در حال دقیق‌سازی موقعیت</string>
+    <string name="fix_hint">گوشی را ثابت نگه دارید و اگر می‌توانید در فضای باز بایستید؛ زیر سقف یا کنار دیوار دقت کم می‌شود.</string>
+    <string name="fix_waiting_first">در انتظار اولین موقعیت…</string>
+    <string name="fix_elapsed">%1$s ثانیه · %2$s نمونه</string>
+    <string name="fix_accept">ثبت همین موقعیت</string>
+    <string name="fix_stop">توقف</string>
+    <string name="map_my_location">موقعیت من</string>
+    <string name="map_zoom_in">بزرگ‌نمایی</string>
+    <string name="map_zoom_out">کوچک‌نمایی</string>
+    <string name="map_locating">در حال یافتن موقعیت شما…</string>
+    <string name="map_distance_to_you">فاصله تا موقعیت شما: %1$s متر</string>
+    <string name="map_view_title">موقعیت پرونده روی نقشه</string>
+    <string name="map_view_hint">نقطه قرمز محل ثبت‌شده پرونده است؛ نقطه آبی موقعیت فعلی شما</string>
+    <string name="action_close">بستن</string>
+</resources>

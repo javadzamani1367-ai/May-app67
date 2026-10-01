@@ -50,7 +50,7 @@ import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.ui.visit.AttendeeRow
 import ir.ilam.inspection.ui.visit.DeviceCard
 import ir.ilam.inspection.ui.visit.LocationFacts
-import ir.ilam.inspection.ui.visit.MiniMap
+import ir.ilam.inspection.ui.location.MiniMap
 import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.PersianNumbers
 

@@ -1,4 +1,4 @@
-package ir.ilam.inspection.ui.visit
+package ir.ilam.inspection.ui.capture
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,7 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ir.ilam.inspection.R
+import ir.ilam.inspection.core.R
 
 /**
  * The camera's controls, laid out the way every phone camera lays them out,

@@ -1,4 +1,4 @@
-package ir.ilam.inspection.ui.visit
+package ir.ilam.inspection.ui.location
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -46,7 +46,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
-import ir.ilam.inspection.R
+import ir.ilam.inspection.core.R
 import ir.ilam.inspection.ui.common.BottomActionBar
 import ir.ilam.inspection.ui.common.PrimaryButton
 import ir.ilam.inspection.ui.common.SecondaryButton

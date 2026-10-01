@@ -53,36 +53,19 @@
     <string name="location_title">موقعیت مکانی</string>
     <string name="location_coordinates">مختصات</string>
     <string name="location_accuracy">دقت</string>
-    <string name="location_accuracy_value">±%1$s متر</string>
     <string name="location_captured_at">زمان ثبت</string>
     <string name="location_source">منبع</string>
     <string name="location_source_sensor">گیرنده موقعیت گوشی</string>
     <string name="location_source_map">انتخاب از نقشه</string>
     <string name="location_source_manual">ورود دستی</string>
     <string name="location_samples">%1$s نمونه</string>
-    <string name="location_quality_excellent">دقت عالی</string>
-    <string name="location_quality_good">دقت خوب</string>
-    <string name="location_quality_fair">دقت متوسط</string>
-    <string name="location_quality_poor">دقت ضعیف</string>
-    <string name="location_quality_unknown">دقت نامشخص</string>
     <string name="location_not_recorded_title">موقعیت ثبت نشده</string>
     <string name="location_not_recorded_hint">در محل بایستید و «ثبت موقعیت دقیق» را بزنید. گوشی چند ثانیه به ماهواره‌ها گوش می‌دهد تا دقیق‌ترین نقطه را پیدا کند.</string>
     <string name="action_capture_precise">ثبت موقعیت دقیق</string>
     <string name="action_recapture">دریافت دوباره موقعیت</string>
-    <string name="fix_refining">در حال دقیق‌سازی موقعیت</string>
-    <string name="fix_hint">گوشی را ثابت نگه دارید و اگر می‌توانید در فضای باز بایستید؛ زیر سقف یا کنار دیوار دقت کم می‌شود.</string>
-    <string name="fix_waiting_first">در انتظار اولین موقعیت…</string>
-    <string name="fix_elapsed">%1$s ثانیه · %2$s نمونه</string>
-    <string name="fix_accept">ثبت همین موقعیت</string>
-    <string name="fix_stop">توقف</string>
     <string name="fix_done">موقعیت با دقت ±%1$s متر ثبت شد</string>
     <string name="fix_timeout_coarse">دقتی بهتر از ±%1$s متر به‌دست نیامد. برای دقت بیشتر در فضای باز دوباره تلاش کنید.</string>
     <string name="fix_location_off">موقعیت‌یاب گوشی خاموش است. آن را از تنظیمات گوشی روشن کنید.</string>
-    <string name="map_my_location">موقعیت من</string>
-    <string name="map_zoom_in">بزرگ‌نمایی</string>
-    <string name="map_zoom_out">کوچک‌نمایی</string>
-    <string name="map_locating">در حال یافتن موقعیت شما…</string>
-    <string name="map_distance_to_you">فاصله تا موقعیت شما: %1$s متر</string>
     <string name="map_open_full">نمایش روی نقشه</string>
     <string name="section_site">مشخصات محل</string>
     <string name="section_site_hint">شهرستان و ناحیه، آدرس و شماره‌های اشتراک و پرونده</string>
@@ -178,9 +161,6 @@
     <string name="case_media_title">پیوست تصاویر و فیلم‌ها</string>
     <string name="case_continue_visit">ادامه بازدید</string>
     <string name="case_expert_code">کد کارشناس</string>
-    <string name="map_view_title">موقعیت پرونده روی نقشه</string>
-    <string name="map_view_hint">نقطه قرمز محل ثبت‌شده پرونده است؛ نقطه آبی موقعیت فعلی شما</string>
-    <string name="action_close">بستن</string>
 
     <!-- ارسال مدارک -->
     <string name="dispatch_unit_hint">مدارک برای کدام واحد فرستاده می‌شود</string>

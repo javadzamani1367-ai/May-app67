@@ -1,5 +1,13 @@
 package ir.ilam.inspection.ui.visit
 
+import ir.ilam.inspection.ui.location.MiniMap
+import ir.ilam.inspection.ui.location.rememberFixSession
+import ir.ilam.inspection.ui.location.FixOutcome
+import ir.ilam.inspection.ui.location.MapPickerDialog
+import ir.ilam.inspection.ui.location.ManualCoordinates
+import ir.ilam.inspection.ui.location.LiveFixPanel
+import ir.ilam.inspection.ui.location.formatMetres
+import ir.ilam.inspection.ui.location.accuracyQuality
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult

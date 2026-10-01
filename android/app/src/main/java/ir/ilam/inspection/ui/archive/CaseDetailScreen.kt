@@ -50,7 +50,7 @@ import ir.ilam.inspection.ui.common.TavanTopBar
 import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.ui.theme.colorForReportType
-import ir.ilam.inspection.ui.visit.MapPickerDialog
+import ir.ilam.inspection.ui.location.MapPickerDialog
 import ir.ilam.inspection.util.PersianNumbers
 import ir.ilam.inspection.util.TrackingCode
 

@@ -10,7 +10,7 @@ android/app/release/
 *.iml
 
 # Vazirmatn is fetched at build time; see README
-android/app/src/main/assets/fonts/*.ttf
+android/core/src/main/assets/fonts/*.ttf
 
 .DS_Store
 

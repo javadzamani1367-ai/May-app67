@@ -32,7 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import ir.ilam.inspection.R
+import ir.ilam.inspection.core.R
 import ir.ilam.inspection.ui.theme.Navy700
 import ir.ilam.inspection.ui.theme.Navy950
 import ir.ilam.inspection.ui.theme.Spacing

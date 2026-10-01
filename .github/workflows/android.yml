@@ -81,16 +81,16 @@ jobs:
         continue-on-error: true
         run: |
           set -x
-          mkdir -p android/app/src/main/assets/fonts
+          mkdir -p android/core/src/main/assets/fonts
           curl -fsSL -o /tmp/vazirmatn.zip \
             https://github.com/rastikerdar/vazirmatn/releases/download/v33.003/vazirmatn-v33.003.zip
           unzip -q -o /tmp/vazirmatn.zip -d /tmp/vazirmatn
-          find /tmp/vazirmatn -name 'Vazirmatn-Regular.ttf' -exec cp {} android/app/src/main/assets/fonts/ \;
-          find /tmp/vazirmatn -name 'Vazirmatn-Bold.ttf' -exec cp {} android/app/src/main/assets/fonts/ \;
+          find /tmp/vazirmatn -name 'Vazirmatn-Regular.ttf' -exec cp {} android/core/src/main/assets/fonts/ \;
+          find /tmp/vazirmatn -name 'Vazirmatn-Bold.ttf' -exec cp {} android/core/src/main/assets/fonts/ \;
           # Optional weights for the type scale; the app falls back without them.
-          find /tmp/vazirmatn -name 'Vazirmatn-Medium.ttf' -exec cp {} android/app/src/main/assets/fonts/ \;
-          find /tmp/vazirmatn -name 'Vazirmatn-ExtraBold.ttf' -exec cp {} android/app/src/main/assets/fonts/ \;
-          ls -la android/app/src/main/assets/fonts/
+          find /tmp/vazirmatn -name 'Vazirmatn-Medium.ttf' -exec cp {} android/core/src/main/assets/fonts/ \;
+          find /tmp/vazirmatn -name 'Vazirmatn-ExtraBold.ttf' -exec cp {} android/core/src/main/assets/fonts/ \;
+          ls -la android/core/src/main/assets/fonts/
 
       # Catches in a second what the resource merger otherwise reports five
       # minutes into a build: a duplicate string, a reference to one that does
@@ -129,7 +129,7 @@ jobs:
 
       - name: Unit tests
         working-directory: android
-        run: ./gradlew --no-daemon testExpertDebugUnitTest
+        run: ./gradlew --no-daemon :core:testDebugUnitTest testExpertDebugUnitTest
 
       - name: Build debug APK
         working-directory: android
