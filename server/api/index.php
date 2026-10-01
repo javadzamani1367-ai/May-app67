@@ -9,7 +9,7 @@ declare(strict_types=1);
  * از هر امکانات اضافه دارد.
  */
 
-foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'Storage', 'Notifications'] as $class) {
+foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'Migrations', 'Storage', 'Notifications'] as $class) {
     require_once __DIR__ . '/lib/' . $class . '.php';
 }
 foreach (glob(__DIR__ . '/lib/Controllers/*.php') ?: [] as $controller) {
@@ -24,6 +24,9 @@ set_exception_handler(static function (Throwable $e): void {
 });
 
 $request = new Request();
+
+// پایگاه داده نصب‌شده را، اگر از کد عقب است، پیش از هر کاری به‌روز می‌کند.
+Migrations::ensure();
 
 // پیش‌پرواز CORS برای پرتال واحدها روی همان دامنه لازم نیست، ولی کلاینت
 // اندروید ممکن است از دامنه دیگری صدا بزند.

@@ -291,7 +291,7 @@ if (UserRole.isManager) { /* صف تأیید، مدیریت کاربران، گ�
 
 ```
 server/
-├── schema.sql          ← ۱۴ جدول. یک‌بار در phpMyAdmin وارد می‌شود.
+├── schema.sql          ← ۱۶ جدول. فقط هنگام نصب در phpMyAdmin وارد می‌شود؛ بعد از آن Migrations.php
 ├── README.md           ← نصب قدم‌به‌قدم روی سی‌پنل
 ├── tests/run.php       ← تست‌ها، بدون PHPUnit، روی خود هاست هم اجرا می‌شود
 └── api/

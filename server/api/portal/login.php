@@ -6,16 +6,24 @@ $error = null;
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $code = trim((string) ($_POST['user_code'] ?? ''));
     $password = (string) ($_POST['password'] ?? '');
-    $user = $code === '' ? null : Db::one('SELECT * FROM users WHERE user_code = ? AND active = 1', [$code]);
+    $locked = $code === '' ? null : LoginGuard::lockedMessage($code);
+    $user = $code === '' || $locked !== null
+        ? null : Db::one('SELECT * FROM users WHERE user_code = ? AND active = 1', [$code]);
 
     // پیام یکسان برای هر دو حالت، تا نشود از تفاوت پیام فهمید کدام کد
     // کاربری روی سامانه وجود دارد.
-    if ($user === null || empty($user['password_hash'])
+    if ($locked !== null) {
+        $error = $locked;
+    } elseif ($user === null || empty($user['password_hash'])
         || !password_verify($password, (string) $user['password_hash'])) {
+        if ($code !== '') {
+            LoginGuard::failed($code);
+        }
         $error = 'کد کاربری یا رمز عبور درست نیست.';
     } elseif ((int) $user['role'] !== Auth::ROLE_UNIT) {
         $error = 'این پرتال برای واحدهای مقصد است.';
     } else {
+        LoginGuard::succeeded($code);
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
         header('Location: index.php');

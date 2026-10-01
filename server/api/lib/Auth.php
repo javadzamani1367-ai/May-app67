@@ -76,17 +76,20 @@ final class Auth
 
     public static function login(string $userCode, string $password, ?string $deviceCode): array
     {
+        // قفل پیش از هر چیز: حساب قفل‌شده حتی با رمز درست هم باز نمی‌شود، وگرنه
+        // قفل فقط حدس‌زدن را کند می‌کرد و جلویش را نمی‌گرفت.
+        LoginGuard::check($userCode);
         $user = Db::one('SELECT * FROM users WHERE user_code = ? AND active = 1', [$userCode]);
 
         // پیام یکسان برای «کاربر نیست» و «رمز غلط»: وگرنه می‌شود فهرست
         // کدهای کاربری معتبر را از همین تفاوت پیام بیرون کشید.
         $invalid = 'کد کاربری یا رمز عبور درست نیست.';
-        if ($user === null || empty($user['password_hash'])) {
+        if ($user === null || empty($user['password_hash'])
+            || !password_verify($password, (string) $user['password_hash'])) {
+            LoginGuard::failed($userCode);
             Response::fail(401, 'bad_credentials', $invalid);
         }
-        if (!password_verify($password, (string) $user['password_hash'])) {
-            Response::fail(401, 'bad_credentials', $invalid);
-        }
+        LoginGuard::succeeded($userCode);
 
         // قفل دستگاه: حساب کارشناس به همان نصبی بسته است که مدیر ثبت کرده.
         if ((int) $user['role'] === self::ROLE_EXPERT) {

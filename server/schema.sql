@@ -261,3 +261,20 @@ CREATE TABLE IF NOT EXISTS sync_log (
   last_updated_at BIGINT      NOT NULL DEFAULT 0,
   report_count    INT         NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- قفل ورود ناموفق: کلید، هش کد کاربری یا نشانی شبکه ----------------------------
+CREATE TABLE IF NOT EXISTS login_attempts (
+  scope        VARCHAR(80) NOT NULL PRIMARY KEY,
+  failures     INT         NOT NULL DEFAULT 0,
+  first_at     BIGINT      NOT NULL,
+  locked_until BIGINT      NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- نسخه پایگاه داده. نصب تازه از اینجا شروع می‌کند و از این به بعد سرور گام‌های
+-- تازه را خودش اجرا می‌کند (api/lib/Migrations.php). این عدد باید با آخرین گام
+-- آنجا یکی باشد؛ تست run.php همین را می‌سنجد.
+CREATE TABLE IF NOT EXISTS schema_meta (
+  id      TINYINT NOT NULL PRIMARY KEY,
+  version INT     NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 1);

@@ -130,7 +130,7 @@ check('هر ستون گوشی روی سرور هست', $missingOnServer === [], 
 check('سرور ستون اضافه ندارد', $extraOnServer === [], implode(', ', $extraOnServer));
 
 $tableCount = preg_match_all('/CREATE TABLE IF NOT EXISTS/', $sql);
-check('هر ۱۴ جدول در schema.sql هست', $tableCount === 14, "$tableCount جدول");
+check('هر ۱۶ جدول در schema.sql هست', $tableCount === 16, "$tableCount جدول");
 
 // نسخه اسکیما در سه زبان نوشته شده و هیچ کامپایلری آن سه را با هم مقایسه
 // نمی‌کند. اگر یکی جا بماند، سرور در /ping عددی را اعلام می‌کند که اسکیمای
@@ -219,6 +219,16 @@ foreach ($badPaths as $candidate => $why) {
     check("مسیر بد رد می‌شود ($why)", !pathAccepted($candidate));
 }
 unlink($probe);
+
+// ---------------------------------------------------------------------------
+echo "\n— نسخه پایگاه داده —\n";
+// نصب تازه نسخه‌اش را از schema.sql می‌گیرد و نصب قدیمی از گام‌های
+// Migrations. اگر این دو عدد از هم جدا شوند، نصب تازه یا گامی را دوباره اجرا
+// می‌کند یا گامی را هرگز نمی‌بیند.
+require_once __DIR__ . '/../api/lib/Migrations.php';
+preg_match('/INSERT IGNORE INTO schema_meta \(id, version\) VALUES \(1, (\d+)\)/',
+    (string) file_get_contents(__DIR__ . '/../schema.sql'), $versionMatch);
+equals('نسخه schema.sql با آخرین گام به‌روزرسانی یکی است', Migrations::latest(), (int) ($versionMatch[1] ?? -1));
 
 // ---------------------------------------------------------------------------
 echo "\n";

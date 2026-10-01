@@ -104,3 +104,4 @@ equals('مسیر ناموجود، ۴۰۴ می‌گیرد', 404, $badRoute['statu
 require __DIR__ . '/dispatch_merge.php';
 require __DIR__ . '/device_code.php';
 require __DIR__ . '/manager_recovery.php';
+require __DIR__ . '/login_lockout.php';
