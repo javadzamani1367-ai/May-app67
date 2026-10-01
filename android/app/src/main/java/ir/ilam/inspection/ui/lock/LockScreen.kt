@@ -1,43 +1,22 @@
 package ir.ilam.inspection.ui.lock
 
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.AppRegistration
-import androidx.compose.material.icons.filled.Dns
-import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
@@ -47,16 +26,10 @@ import ir.ilam.inspection.R
 import ir.ilam.inspection.container
 import ir.ilam.inspection.data.KeyStoreVault
 import ir.ilam.inspection.data.model.UserRole
-import ir.ilam.inspection.ui.common.AppCard
-import ir.ilam.inspection.ui.common.AppTextField
-import ir.ilam.inspection.ui.common.BrandMark
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
-import ir.ilam.inspection.ui.common.PrimaryButton
-import ir.ilam.inspection.ui.common.SecondaryButton
-import ir.ilam.inspection.ui.common.StatusBadge
 import ir.ilam.inspection.ui.theme.Tavan
-import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.util.BiometricGate
+import ir.ilam.inspection.util.findActivity
 
 /**
  * Entry gate. Owner names, national ids and the names of security and police
@@ -67,6 +40,9 @@ import ir.ilam.inspection.util.BiometricGate
  * one that user can sign in from. The first sign-in has to reach the server,
  * because that is where the pairing lives; afterwards the phone unlocks on its
  * own, since field work happens where there is no signal.
+ *
+ * The form itself is the one every TavanKav app shares ([LockFrame]); the
+ * device code and the registration request are this app's own.
  */
 @Composable
 fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
@@ -77,85 +53,36 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    var userCode by remember { mutableStateOf(vault.userCode().orEmpty()) }
-    var password by remember { mutableStateOf("") }
-
     val promptTitle = stringResource(R.string.lock_biometric_title)
     val cancelLabel = stringResource(R.string.action_cancel)
+    // Fingerprint stands in for the password, never for the activation: it can
+    // only be offered once this phone has already been paired.
     val canUseFingerprint = vault.isActivated() && BiometricGate.isAvailable(context)
+    val fingerprint = { context.findActivity()?.let { BiometricGate.prompt(it, promptTitle, cancelLabel, onUnlocked) } }
 
     LaunchedEffect(state.unlocked) {
         if (state.unlocked) onUnlocked()
     }
-
-    // Fingerprint stands in for the password, never for the activation: it can
-    // only be offered once this phone has already been paired.
     LaunchedEffect(Unit) {
-        if (canUseFingerprint) {
-            context.findActivity()?.let { BiometricGate.prompt(it, promptTitle, cancelLabel, onUnlocked) }
-        }
+        if (canUseFingerprint) fingerprint()
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Tavan.colors.header, Tavan.colors.headerDeep)))
-            .windowInsetsPadding(WindowInsets.systemBars)
-            .imePadding()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    val message = state.serverMessage?.let { LockMessage(it, error = true) }
+        ?: state.errorRes?.let { LockMessage(stringResource(it), error = true) }
+        ?: state.noticeRes?.let { LockMessage(stringResource(it), error = false) }
+
+    LockFrame(
+        roleLabel = stringResource(if (UserRole.isManager) R.string.lock_role_manager else R.string.lock_role_expert),
+        initialUserCode = vault.userCode().orEmpty(),
+        busy = state.busy,
+        message = message,
+        canUseFingerprint = canUseFingerprint,
+        onFingerprint = { fingerprint() },
+        onSignIn = viewModel::signIn,
+        onEdited = viewModel::dismissMessages,
+        onServerAddress = viewModel::openServerAddress
     ) {
-        BrandHeader()
-
-        AppCard(modifier = Modifier.fillMaxWidth().padding(top = 24.dp)) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text(stringResource(R.string.lock_welcome), style = MaterialTheme.typography.titleLarge)
-                if (state.busy) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
-                }
-                state.serverMessage?.let { Message(it, error = true) }
-                state.errorRes?.let { Message(stringResource(it), error = true) }
-                state.noticeRes?.let { Message(stringResource(it), error = false) }
-
-                AppTextField(
-                    label = stringResource(R.string.lock_user_code),
-                    value = userCode,
-                    onValueChange = { userCode = it; viewModel.dismissMessages() },
-                    imeAction = ImeAction.Next,
-                    ltr = true,
-                    leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) }
-                )
-                AppTextField(
-                    label = stringResource(R.string.lock_enter_password),
-                    value = password,
-                    onValueChange = { password = it; viewModel.dismissMessages() },
-                    imeAction = ImeAction.Done,
-                    password = true,
-                    leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null) }
-                )
-                PrimaryButton(
-                    text = stringResource(R.string.lock_sign_in),
-                    onClick = { viewModel.signIn(userCode, password) },
-                    busy = state.busy,
-                    icon = Icons.AutoMirrored.Filled.Login,
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
-                )
-                if (canUseFingerprint) {
-                    SecondaryButton(
-                        text = stringResource(R.string.lock_biometric),
-                        onClick = {
-                            context.findActivity()?.let { BiometricGate.prompt(it, promptTitle, cancelLabel, onUnlocked) }
-                        },
-                        icon = Icons.Filled.Fingerprint,
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                    )
-                }
-            }
-        }
-
         DeviceCodeCard(code = viewModel.deviceCode, showHint = !vault.isActivated())
-
         if (!vault.isActivated()) {
             TextButton(onClick = viewModel::openRegistration, enabled = !state.busy) {
                 Icon(Icons.Filled.AppRegistration, contentDescription = null, tint = Tavan.colors.onHeader)
@@ -165,16 +92,6 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }
-        }
-        // Always available: settings are behind this screen, so without this
-        // a wrong address has no way of being corrected.
-        TextButton(onClick = viewModel::openServerAddress, enabled = !state.busy) {
-            Icon(Icons.Filled.Dns, contentDescription = null, tint = Tavan.colors.onHeaderMuted)
-            Text(
-                stringResource(R.string.lock_server_address),
-                color = Tavan.colors.onHeaderMuted,
-                modifier = Modifier.padding(start = 8.dp)
-            )
         }
     }
 
@@ -192,44 +109,6 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
             busy = state.busy,
             onDismiss = viewModel::closeRegistration,
             onSend = viewModel::requestRegistration
-        )
-    }
-}
-
-@Composable
-private fun Message(text: String, error: Boolean) {
-    Text(
-        text = text,
-        color = if (error) Tavan.colors.danger.strong else Tavan.colors.success.strong,
-        style = MaterialTheme.typography.bodyMedium,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
-    )
-}
-
-/** The mark, the name in both scripts, and which of the two apps this is. */
-@Composable
-private fun BrandHeader() {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(top = 16.dp)) {
-        BrandMark(size = 92.dp)
-        Text(
-            stringResource(R.string.brand_name),
-            style = MaterialTheme.typography.displaySmall,
-            color = Tavan.colors.onHeader,
-            modifier = Modifier.padding(top = 14.dp)
-        )
-        Text(stringResource(R.string.brand_latin), style = MaterialTheme.typography.labelLarge, color = Tavan.colors.onHeaderMuted)
-        Text(
-            stringResource(R.string.brand_tagline),
-            style = MaterialTheme.typography.bodySmall,
-            color = Tavan.colors.onHeaderMuted,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 6.dp)
-        )
-        StatusBadge(
-            text = stringResource(if (UserRole.isManager) R.string.lock_role_manager else R.string.lock_role_expert),
-            tone = Tone.ACCENT,
-            solid = true,
-            modifier = Modifier.padding(top = 10.dp)
         )
     }
 }
@@ -257,14 +136,4 @@ private fun DeviceCodeCard(code: String, showHint: Boolean) {
             )
         }
     }
-}
-
-/** `LocalContext.current` is usually a theme wrapper rather than the activity. */
-private fun Context.findActivity(): Activity? {
-    var current: Context? = this
-    while (current is ContextWrapper) {
-        if (current is Activity) return current
-        current = current.baseContext
-    }
-    return null
 }

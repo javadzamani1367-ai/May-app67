@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- برند -->
-    <string name="brand_name">توان‌کاو</string>
-    <string name="brand_latin">TavanKav</string>
-    <string name="brand_tagline">سامانه بازرسی میدانی و کشف استخراج غیرمجاز رمزارز</string>
 
     <!-- داشبورد -->
     <string name="tab_dashboard">داشبورد</string>
@@ -199,9 +195,6 @@
     <string name="perf_percent">%1$s٪</string>
     <string name="perf_exports">خروجی گزارش</string>
 
-    <!-- ورود -->
-    <string name="lock_welcome">ورود به سامانه</string>
-    <string name="lock_sign_in">ورود</string>
     <string name="lock_role_expert">نسخه کارشناس</string>
     <string name="lock_role_manager">نسخه مدیر</string>
     <string name="users_subtitle">کارشناسان، کد دستگاه و درخواست‌های ثبت</string>

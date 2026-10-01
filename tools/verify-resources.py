@@ -10,33 +10,43 @@ root = pathlib.Path("android/app/src/main")
 # module's strings reach the apps through a transitive R, so a name defined in
 # both would silently resolve to the app's copy: a duplicate across modules is
 # as much a mistake as one inside a folder.
-modules = [pathlib.Path("android/core/src/main"), root]
+core = pathlib.Path("android/core/src/main")
+field = pathlib.Path("android/field/src/main")
+modules = [core, root, field]
 problems = []
+# The two apps never share a process, so a name defined in both is fine; a
+# name defined in core and in either app is not.
+pairs = [(core, root), (core, field)]
 
 # 1. duplicate resource names — the merger refuses these, within one file and
 #    across the files of one values folder (strings.xml and strings_ui.xml).
-seen = collections.defaultdict(list)
-for module in modules:
-    for folder in (module / "res").glob("values*"):
-        for f in folder.glob("*.xml"):
-            for name in re.findall(r'<(?:string|string-array|plurals) name="([\w_]+)"', f.read_text(encoding="utf-8")):
-                seen[(folder.name, name)].append(f"{module.parts[1]}/{f.name}")
-for (folder, name), files in seen.items():
-    if len(files) > 1:
-        problems.append(f"duplicate resource {name} in {folder}: {', '.join(files)}")
+for pair in pairs:
+    seen = collections.defaultdict(list)
+    for module in pair:
+        for folder in (module / "res").glob("values*"):
+            for f in folder.glob("*.xml"):
+                for name in re.findall(r'<(?:string|string-array|plurals) name="([\w_]+)"', f.read_text(encoding="utf-8")):
+                    seen[(folder.name, name)].append(f"{module.parts[1]}/{f.name}")
+    for (folder, name), files in seen.items():
+        if len(files) > 1:
+            problems.append(f"duplicate resource {name} in {folder}: {', '.join(files)}")
 
-# 2. references to resources that do not exist
-defined = set()
-for module in modules:
-    for f in (module / "res").rglob("*.xml"):
-        t = f.read_text(encoding="utf-8")
-        defined |= set(re.findall(r'<(?:string|string-array|plurals) name="([\w_]+)"', t))
-defined.add("app_name")  # supplied per build flavour
+# 2. references to resources that do not exist — each module against what it
+#    can actually see: itself and core.
+def defined_in(*mods):
+    names = {"app_name"}  # supplied per build flavour in the inspection app
+    for module in mods:
+        for f in (module / "res").rglob("*.xml"):
+            names |= set(re.findall(r'<(?:string|string-array|plurals) name="([\w_]+)"', f.read_text(encoding="utf-8")))
+    return names
+
+visible = {core: defined_in(core) - {"app_name"}, root: defined_in(core, root), field: defined_in(core, field)}
 kotlin = [f for module in modules for f in (module / "java").rglob("*.kt")]
-for f in kotlin:
-    for name in re.findall(r"R\.(?:string|array|plurals)\.([\w_]+)", f.read_text(encoding="utf-8")):
-        if name not in defined:
-            problems.append(f"missing resource {name} referenced by {f}")
+for module in modules:
+    for f in (module / "java").rglob("*.kt"):
+        for name in re.findall(r"R\.(?:string|array|plurals)\.([\w_]+)", f.read_text(encoding="utf-8")):
+            if name not in visible[module]:
+                problems.append(f"missing resource {name} referenced by {f}")
 
 # 3. duplicate declarations within one scope. Split on top level declarations
 #    first: one `of()` per enum companion and one `listFor()` per DAO are both

@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 rootProject.name = "crypto-inspection"
 include(":core")
 include(":app")
+include(":field")

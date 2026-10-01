@@ -6,8 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import ir.ilam.inspection.data.KeyStoreVault
-import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
+import ir.ilam.inspection.data.SecureDatabase
 
 /**
  * The schema the phone and the Windows archive share. Bumped only together
@@ -216,11 +215,8 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         private fun build(context: Context): AppDatabase {
-            System.loadLibrary("sqlcipher")
-            val passphrase = KeyStoreVault(context).databasePassphrase()
-            val factory = SupportOpenHelperFactory(passphrase)
             return Room.databaseBuilder(context, AppDatabase::class.java, DB_NAME)
-                .openHelperFactory(factory)
+                .openHelperFactory(SecureDatabase.factory(context))
                 .addMigrations(
                     MIGRATION_1_2,
                     MIGRATION_2_3,

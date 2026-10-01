@@ -8,7 +8,6 @@
     <string name="nav_settings">تنظیمات</string>
     <string name="nav_stats">آمار</string>
     <string name="action_new_report">ثبت گزارش جدید</string>
-    <string name="action_save">ذخیره</string>
     <string name="action_next">مرحله بعد</string>
     <string name="action_previous">مرحله قبل</string>
     <string name="action_finish">پایان بازدید</string>
@@ -434,7 +433,6 @@
     <string name="settings_expert_name">نام کارشناس</string>
     <string name="settings_default_area">کد ناحیه پیش‌فرض</string>
     <string name="county_with_code">%1$s — ناحیه %2$s</string>
-    <string name="settings_sync_target">آدرس مقصد همگام‌سازی (اختیاری)</string>
     <string name="settings_role">نقش کاربر</string>
     <string name="role_expert">کارشناس</string>
     <string name="role_manager">مدیر</string>
@@ -482,15 +480,11 @@
 
     <!-- قفل برنامه -->
     <string name="lock_title">ورود به برنامه</string>
-    <string name="lock_user_code">کد کاربری</string>
-    <string name="lock_enter_password">رمز عبور</string>
     <string name="lock_set_password">رمز عبور جدید</string>
     <string name="lock_confirm_password">تکرار رمز عبور</string>
     <string name="lock_wrong_password">رمز عبور نادرست است</string>
     <string name="lock_short_password">رمز عبور باید حداقل شش نویسه باشد</string>
     <string name="lock_missing_user_code">کد کاربری را وارد کنید</string>
-    <string name="lock_server_address">آدرس سرور</string>
-    <string name="lock_server_address_hint">آدرس پوشه‌ای که فایل‌های سرور در آن نصب شده، مثل https://example.com/api — خالی بگذارید تا برنامه کاملاً آفلاین کار کند.</string>
     <string name="lock_device_code">کد این دستگاه</string>
     <string name="lock_needs_activation">این دستگاه هنوز فعال نشده است. برای اولین ورود باید به اینترنت وصل باشید تا سرور دستگاه شما را تأیید کند.</string>
     <string name="lock_server_unreachable">سرور در دسترس نیست. اتصال اینترنت و آدرس سرور را بررسی کنید.</string>
@@ -500,13 +494,8 @@
     <string name="lock_registration_hint">مشخصات خود را وارد کنید. کد این دستگاه به‌طور خودکار همراه درخواست فرستاده می‌شود.</string>
     <string name="lock_device_code_hint">این کد مخصوص همین نصب برنامه است. با دکمه زیر آن را برای مدیر بفرستید، یا اگر اینترنت ندارید کد را به مدیر بگویید. با حذف و نصب دوباره برنامه یا تعویض گوشی، این کد عوض می‌شود و باید دوباره ثبت شود.</string>
     <string name="lock_mismatch">دو رمز یکسان نیستند</string>
-    <string name="lock_biometric">ورود با اثر انگشت</string>
     <string name="lock_biometric_title">احراز هویت</string>
 
-    <string name="crash_title">برنامه در اجرای قبلی بسته شد</string>
-    <string name="crash_hint">متن زیر علت دقیق را نشان می‌دهد. آن را برای توسعه‌دهنده بفرستید تا همین خطا رفع شود. اطلاعات پرونده‌های شما پاک نشده است.</string>
-    <string name="crash_share">ارسال گزارش خطا</string>
-    <string name="crash_dismiss">بستن و ادامه</string>
     <string name="value_empty">—</string>
     <string name="error_required">این فیلد الزامی است</string>
     <string name="error_number">مقدار عددی وارد کنید</string>

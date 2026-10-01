@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">بازرسی میدانی</string>
+    <string name="field_role">بازرسی میدانی</string>
+
+    <!-- ورود -->
+    <string name="field_lock_needs_server">ورود اول باید به سرور برسد. به اینترنت وصل شوید و دوباره امتحان کنید.</string>
+    <string name="field_lock_wrong_password">رمز عبور درست نیست.</string>
+    <string name="field_lock_missing_code">کد کاربری را وارد کنید.</string>
+    <string name="field_lock_biometric_title">ورود با اثر انگشت</string>
+    <string name="field_server_saved">آدرس سرور ذخیره شد.</string>
+
+    <!-- صفحه اصلی -->
+    <string name="field_home_greeting">%1$s، خوش آمدید</string>
+    <string name="field_home_inspect">بازرسی رمزارز / برق غیرمجاز</string>
+    <string name="field_home_inspect_hint">ترموویژن تیر و تابلو، و آمپرگیری فیدرهای تابلو ترانس</string>
+    <string name="field_home_report">گزارش رمزارز / برق غیرمجاز</string>
+    <string name="field_home_report_hint">ثبت مکانی که نشانه ماینر یا برق غیرمجاز دارد</string>
+    <string name="field_no_permission">مدیر این بخش را برای حساب شما فعال نکرده است.</string>
+    <string name="field_session_expired">نشست شما منقضی شده است. کار آفلاین ادامه دارد؛ برای ارسال به سرور دوباره وارد شوید.</string>
+    <string name="field_sign_in_again">ورود دوباره</string>
+
+    <!-- زیرمنوها -->
+    <string name="field_thermal">بازرسی ترموویژن</string>
+    <string name="field_thermal_hint">ثبت مسیر هنگام کار با دوربین و تخصیص هر تصویر به تیر یا تابلو</string>
+    <string name="field_feeder">بازرسی و آمپرگیری فیدر تابلو ترانس</string>
+    <string name="field_feeder_hint">آمپر کلید کل و فیدرها، با کنترل مجموع فازها</string>
+    <string name="field_crypto">گزارش رمزارز</string>
+    <string name="field_crypto_hint">مکانی که نشانه فعالیت ماینر دارد</string>
+    <string name="field_illegal">گزارش برق غیرمجاز</string>
+    <string name="field_illegal_hint">انشعاب بدون کنتور، دستکاری کنتور، کاربری غیرمجاز</string>
+    <string name="field_soon_title">به‌زودی</string>
+    <string name="field_soon_message">این بخش در نسخه بعدی برنامه فعال می‌شود.</string>
+
+    <!-- صف ارسال -->
+    <string name="field_queue">صف ارسال</string>
+    <string name="field_queue_empty">هنوز موردی ثبت نشده است.</string>
+    <string name="field_queue_summary">%1$s در انتظار ارسال · %2$s ارسال‌شده · %3$s خطا</string>
+    <string name="field_send_now">ارسال اکنون</string>
+    <string name="field_state_pending">در انتظار ارسال</string>
+    <string name="field_state_sent">ارسال شد</string>
+    <string name="field_state_error">خطا</string>
+    <string name="field_state_draft">پیش‌نویس</string>
+    <string name="field_error_files">برخی فایل‌ها هنوز کامل نرسیده‌اند؛ در ارسال بعدی ادامه می‌یابد.</string>
+    <string name="field_code_waiting">کد رهگیری بعد از ارسال می‌آید</string>
+    <string name="field_last_sync">آخرین ارسال: %1$s</string>
+    <string name="field_sync_done">ارسال انجام شد.</string>
+    <string name="field_sync_offline">به سرور دسترسی نیست؛ موارد در صف می‌مانند و با برقراری اتصال خودکار ارسال می‌شوند.</string>
+    <string name="field_sync_sign_in">برای ارسال، دوباره وارد شوید.</string>
+
+    <!-- نوع و وضعیت -->
+    <string name="field_kind_crypto">رمزارز</string>
+    <string name="field_kind_illegal">برق غیرمجاز</string>
+    <string name="field_kind_thermal">ترموویژن</string>
+    <string name="field_kind_feeder">آمپرگیری فیدر</string>
+    <string name="field_status_registered">ثبت شد</string>
+    <string name="field_status_reviewing">در حال بررسی مدیر</string>
+    <string name="field_status_referred">ارجاع شد به اکیپ</string>
+    <string name="field_status_result">نتیجه ثبت شد</string>
+    <string name="field_status_closed">بسته شد</string>
+    <string name="field_status_rejected">رد شد</string>
+    <string name="field_status_revisit">نیاز به مراجعه مجدد</string>
+</resources>

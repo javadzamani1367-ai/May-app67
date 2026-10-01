@@ -129,7 +129,7 @@ jobs:
 
       - name: Unit tests
         working-directory: android
-        run: ./gradlew --no-daemon :core:testDebugUnitTest testExpertDebugUnitTest
+        run: ./gradlew --no-daemon :core:testDebugUnitTest testExpertDebugUnitTest :field:testDebugUnitTest
 
       - name: Build debug APK
         working-directory: android
@@ -176,13 +176,13 @@ jobs:
       - name: Verify release signature
         run: |
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
-          for apk in android/app/build/outputs/apk/*/release/*.apk; do
+          for apk in android/app/build/outputs/apk/*/release/*.apk android/field/build/outputs/apk/release/*.apk; do
             echo "== $apk"
             "$APKSIGNER" verify --verbose --print-certs "$apk"
           done
 
       - name: Report APK sizes
-        run: ls -lh android/app/build/outputs/apk/*/*/*.apk
+        run: ls -lh android/app/build/outputs/apk/*/*/*.apk android/field/build/outputs/apk/*/*.apk
 
       - name: Upload expert APK
         uses: actions/upload-artifact@v4
@@ -198,11 +198,20 @@ jobs:
           path: android/app/build/outputs/apk/manager/release/*.apk
           if-no-files-found: error
 
+      - name: Upload field APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tavankav-field-${{ steps.signing.outputs.ephemeral == 'true' && 'testkey' || 'signed' }}-apk
+          path: android/field/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
       - name: Upload debug APKs
         uses: actions/upload-artifact@v4
         with:
           name: crypto-inspection-debug-apk
-          path: android/app/build/outputs/apk/*/debug/*.apk
+          path: |
+            android/app/build/outputs/apk/*/debug/*.apk
+            android/field/build/outputs/apk/debug/*.apk
           if-no-files-found: error
 
       # A tag turns the build into a release, so the APK can be downloaded
@@ -219,12 +228,13 @@ jobs:
         with:
           files: |
             android/app/build/outputs/apk/*/release/*.apk
+            android/field/build/outputs/apk/release/*.apk
           tag_name: ${{ inputs.release_tag || github.ref_name }}
           target_commitish: ${{ github.sha }}
           name: ${{ inputs.release_tag || github.ref_name }}
           body: |
-            دو فایل: `app-expert-release.apk` برای کارشناس و
-            `app-manager-release.apk` برای مدیر. هر دو روی یک گوشی هم نصب می‌شوند.
+            `app-expert-release.apk` برای کارشناس، `app-manager-release.apk` برای مدیر، و
+            `field-release.apk` اپ «بازرسی میدانی» برای کاربران عملیاتی. هر سه روی یک گوشی هم نصب می‌شوند.
 
             برای نصب، «نصب از منابع ناشناس» را برای مرورگر یا مدیر فایل فعال کنید.
 
@@ -248,4 +258,6 @@ jobs:
           path: |
             android/app/build/reports/
             android/app/build/outputs/logs/
+            android/core/build/reports/
+            android/field/build/reports/
           if-no-files-found: ignore

@@ -55,6 +55,11 @@ dependencies {
     api(libs.osmdroid)
     api(libs.androidx.security.crypto)
 
+    // Every app's database is SQLCipher behind Room (SecureDatabase).
+    api(libs.androidx.room.runtime)
+    api(libs.androidx.sqlite)
+    api(libs.sqlcipher)
+
     testImplementation(libs.junit)
     testImplementation(libs.json)
 }

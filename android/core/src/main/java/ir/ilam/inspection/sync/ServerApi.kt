@@ -47,7 +47,8 @@ class ServerApi(private val baseUrl: String) {
         LoginResult(
             token = data.optString("token"),
             fullName = data.optJSONObject("user")?.optString("full_name").orEmpty(),
-            role = data.optJSONObject("user")?.optInt("role") ?: 0
+            role = data.optJSONObject("user")?.optInt("role") ?: 0,
+            permissions = data.optJSONObject("user")?.optInt("permissions") ?: 0
         )
     }
 
@@ -82,18 +83,27 @@ class ServerApi(private val baseUrl: String) {
         body: JSONObject,
         token: String? = null,
         parse: (JSONObject) -> T
-    ): ApiResult<T> = call(path, "POST", body, token, parse)
+    ): ApiResult<T> = call(path, "POST", body.toString().toByteArray(), JSON_TYPE, token, parse)
+
+    /** Raw bytes as the body — a chunk of a file — with a JSON answer. */
+    suspend fun <T> postBytes(
+        path: String,
+        bytes: ByteArray,
+        token: String?,
+        parse: (JSONObject) -> T
+    ): ApiResult<T> = call(path, "POST", bytes, "application/octet-stream", token, parse)
 
     suspend fun <T> get(
         path: String,
         token: String?,
         parse: (JSONObject) -> T
-    ): ApiResult<T> = call(path, "GET", null, token, parse)
+    ): ApiResult<T> = call(path, "GET", null, null, token, parse)
 
     private suspend fun <T> call(
         path: String,
         method: String,
-        body: JSONObject?,
+        body: ByteArray?,
+        contentType: String?,
         token: String?,
         parse: (JSONObject) -> T
     ): ApiResult<T> = withContext(Dispatchers.IO) {
@@ -109,11 +119,12 @@ class ServerApi(private val baseUrl: String) {
                 token?.let { setRequestProperty("Authorization", "Bearer $it") }
                 if (body != null) {
                     doOutput = true
-                    setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    setRequestProperty("Content-Type", contentType)
+                    setFixedLengthStreamingMode(body.size)
                 }
             }
             body?.let { payload ->
-                connection.outputStream.use { it.write(payload.toString().toByteArray()) }
+                connection.outputStream.use { it.write(payload) }
             }
 
             val status = connection.responseCode
@@ -153,7 +164,7 @@ class ServerApi(private val baseUrl: String) {
         return "$base/index.php?route=$path"
     }
 
-    data class LoginResult(val token: String, val fullName: String, val role: Int)
+    data class LoginResult(val token: String, val fullName: String, val role: Int, val permissions: Int = 0)
 
     data class RemoteUser(
         val id: String = "",
@@ -183,10 +194,8 @@ class ServerApi(private val baseUrl: String) {
         val submittedAt: Long
     )
 
-
-
-
     private companion object {
+        const val JSON_TYPE = "application/json; charset=utf-8"
         const val CONNECT_TIMEOUT = 8_000
         const val READ_TIMEOUT = 15_000
     }

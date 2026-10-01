@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.AppContainer
-import ir.ilam.inspection.data.repo.SignInOutcome
+import ir.ilam.inspection.data.SignInOutcome
 import ir.ilam.inspection.sync.ApiResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -87,7 +87,7 @@ class LockViewModel(private val container: AppContainer) : ViewModel() {
             val outcome = account.signIn(userCode.trim(), password)
             _state.update { current ->
                 when (outcome) {
-                    SignInOutcome.Granted -> current.copy(busy = false, unlocked = true)
+                    is SignInOutcome.Granted -> current.copy(busy = false, unlocked = true)
                     SignInOutcome.WrongPassword ->
                         current.copy(busy = false, errorRes = R.string.lock_wrong_password)
                     SignInOutcome.NeedsActivation ->

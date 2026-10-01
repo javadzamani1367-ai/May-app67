@@ -50,4 +50,22 @@
     <string name="map_view_title">موقعیت پرونده روی نقشه</string>
     <string name="map_view_hint">نقطه قرمز محل ثبت‌شده پرونده است؛ نقطه آبی موقعیت فعلی شما</string>
     <string name="action_close">بستن</string>
+    <string name="action_save">ذخیره</string>
+    <string name="settings_sync_target">آدرس مقصد همگام‌سازی (اختیاری)</string>
+    <string name="lock_user_code">کد کاربری</string>
+    <string name="lock_enter_password">رمز عبور</string>
+    <string name="lock_server_address">آدرس سرور</string>
+    <string name="lock_server_address_hint">آدرس پوشه‌ای که فایل‌های سرور در آن نصب شده، مثل https://example.com/api — خالی بگذارید تا برنامه کاملاً آفلاین کار کند.</string>
+    <string name="lock_biometric">ورود با اثر انگشت</string>
+    <!-- برند -->
+    <string name="brand_name">توان‌کاو</string>
+    <string name="brand_latin">TavanKav</string>
+    <string name="brand_tagline">سامانه بازرسی میدانی و کشف استخراج غیرمجاز رمزارز</string>
+    <!-- ورود -->
+    <string name="lock_welcome">ورود به سامانه</string>
+    <string name="lock_sign_in">ورود</string>
+    <string name="crash_title">برنامه در اجرای قبلی بسته شد</string>
+    <string name="crash_hint">متن زیر علت دقیق را نشان می‌دهد. آن را برای توسعه‌دهنده بفرستید تا همین خطا رفع شود. اطلاعات پرونده‌های شما پاک نشده است.</string>
+    <string name="crash_share">ارسال گزارش خطا</string>
+    <string name="crash_dismiss">بستن و ادامه</string>
 </resources>

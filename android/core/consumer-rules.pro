@@ -2,6 +2,9 @@
 # service loading. They travel with the module, so every app built on :core
 # gets them without repeating them.
 
+# SQLCipher loads its native bridge by name.
+-keep class net.zetetic.database.** { *; }
+
 # ZXing capture activity is referenced from a manifest entry only.
 -keep class com.journeyapps.barcodescanner.** { *; }
 
