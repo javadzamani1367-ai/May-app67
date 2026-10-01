@@ -220,11 +220,11 @@ private fun HealthRow(label: String, ok: Boolean, onFix: () -> Unit) {
 private fun DefaultReminderCard(s: UserSettings, vm: SettingsViewModel) {
     val context = LocalContext.current
     SettingsCard(stringResource(R.string.settings_default_reminder), icon = DsR.drawable.ic_alarm, role = Roozban.colors.info) {
-        SwitchRow(stringResource(R.string.settings_full_screen), s.fullScreenAlerts) { on ->
+        SwitchRow(stringResource(R.string.settings_full_screen), s.fullScreenAlerts, onChange = { on ->
             vm.setFullScreenAlerts(on)
             // Android 14+ asks for this permission separately.
             if (on && !ReminderPermissions.status(context).fullScreen) context.startSafely(ReminderPermissions.fullScreenSettings(context))
-        }
+        })
         Text(
             stringResource(R.string.settings_full_screen_desc),
             style = MaterialTheme.typography.bodySmall,
