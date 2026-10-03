@@ -16,7 +16,7 @@ class FieldAccount(
     private val prefs: FieldPrefs
 ) {
 
-    private val flow = SignInFlow(vault, serverAddress = { prefs.serverAddress }, allowLocalOnly = false)
+    private val flow = SignInFlow(vault, serverAddress = { prefs.serverAddress }, allowLocalOnly = false, app = APP)
 
     suspend fun signIn(userCode: String, password: String): SignInOutcome {
         val outcome = flow.signIn(userCode, password)
@@ -37,4 +37,9 @@ class FieldAccount(
     fun token(): String? = vault.serverToken()
 
     val deviceCode: String get() = vault.deviceCode()
+
+    private companion object {
+        /** The server admits only field accounts from this app (AuthController::login). */
+        const val APP = "field"
+    }
 }

@@ -34,6 +34,29 @@ class FieldSync(
         val token = account.token() ?: return SyncOutcome.NOT_SIGNED_IN
         val api = ServerApi(prefs.serverAddress)
 
+        refreshProfile(api, token)?.let { return it }
+
+        for (item in dao.unsent()) {
+            val outcome = send(api, token, item)
+            if (outcome != SyncOutcome.DONE) return outcome
+        }
+        pull(api, token)?.let { return it }
+        prefs.lastSyncAt = System.currentTimeMillis()
+        return SyncOutcome.DONE
+    }
+
+    /**
+     * Name, permissions and the manager's settings, fresh from the server. The
+     * home screen asks on every opening, so a permission the manager has just
+     * granted shows the moment the app is next in front of the user — not at
+     * the next background sync. Offline it changes nothing.
+     */
+    suspend fun refreshProfile(): SyncOutcome {
+        val token = account.token() ?: return SyncOutcome.NOT_SIGNED_IN
+        return refreshProfile(ServerApi(prefs.serverAddress), token) ?: SyncOutcome.DONE
+    }
+
+    private suspend fun refreshProfile(api: ServerApi, token: String): SyncOutcome? {
         when (val me = api.fieldMe(token)) {
             is ApiResult.Ok -> with(me.value) {
                 prefs.fullName = fullName
@@ -43,17 +66,20 @@ class FieldSync(
                 prefs.purgeAfterSync = purgeAfterSync
                 prefs.sessionExpired = false
             }
-            is ApiResult.Refused -> return refused(me.code)
+            is ApiResult.Refused -> {
+                // A token from an account that is not a field user (signed in
+                // before the server checked the app): ask for a fresh sign-in,
+                // where the server says plainly why this account cannot be used.
+                if (me.code == FORBIDDEN) {
+                    prefs.permissions = 0
+                    prefs.sessionExpired = true
+                    return SyncOutcome.SIGN_IN_NEEDED
+                }
+                return refused(me.code)
+            }
             ApiResult.Unreachable -> return SyncOutcome.OFFLINE
         }
-
-        for (item in dao.unsent()) {
-            val outcome = send(api, token, item)
-            if (outcome != SyncOutcome.DONE) return outcome
-        }
-        pull(api, token)?.let { return it }
-        prefs.lastSyncAt = System.currentTimeMillis()
-        return SyncOutcome.DONE
+        return null
     }
 
     private suspend fun send(api: ServerApi, token: String, item: FieldItemEntity): SyncOutcome {
@@ -155,5 +181,6 @@ class FieldSync(
     private companion object {
         val SESSION_CODES = setOf("bad_token", "no_token")
         const val ERROR_FILE = "file_incomplete"
+        const val FORBIDDEN = "forbidden"
     }
 }

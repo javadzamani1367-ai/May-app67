@@ -20,12 +20,25 @@ foreach ([['f-100', 2], ['f-200', 3]] as [$code, $permissions]) {
     check("کاربر میدانی $code ساخته شد", ($saved['body']['ok'] ?? false) === true, $saved['raw']);
 }
 $fieldLogin = static fn (string $code) => $probe->json('POST', 'auth/login', [
-    'user_code' => $code, 'password' => 'field-pass-1', 'device_code' => 'PHONE-' . $code,
+    'user_code' => $code, 'password' => 'field-pass-1', 'device_code' => 'PHONE-' . $code, 'app' => 'field',
 ]);
 $login = $fieldLogin('f-100');
 check('کاربر میدانی بدون ثبت دستگاه وارد می‌شود', ($login['body']['ok'] ?? false) === true, $login['raw']);
 equals('مجوزها در پاسخ ورود هست', 2, $login['body']['data']['user']['permissions'] ?? null);
 $reporter = (string) ($login['body']['data']['token'] ?? '');
+
+// هر اپ فقط حساب خودش: مدیری که با حساب خودش در اپ میدانی وارد شود، صفحه
+// خاکستری بی‌توضیح می‌دید؛ حالا همان‌جا می‌شنود چرا.
+$managerInField = $probe->json('POST', 'auth/login',
+    ['user_code' => 'mgr', 'password' => 'manager-pass-1', 'device_code' => 'PHONE-M', 'app' => 'field']);
+equals('حساب مدیر در اپ میدانی با دلیل رد می‌شود', 'wrong_app', $managerInField['body']['error']['code'] ?? null);
+$fieldInExpert = $probe->json('POST', 'auth/login',
+    ['user_code' => 'f-100', 'password' => 'field-pass-1', 'device_code' => 'PHONE-F']);
+equals('حساب میدانی در اپ کارشناس رد می‌شود', 'wrong_app', $fieldInExpert['body']['error']['code'] ?? null);
+$wrongPassword = $probe->json('POST', 'auth/login',
+    ['user_code' => 'mgr', 'password' => 'not-it', 'device_code' => 'PHONE-M', 'app' => 'field']);
+equals('رمز غلط همان پیام همیشگی را می‌گیرد، نه دلیل نقش', 'bad_credentials', $wrongPassword['body']['error']['code'] ?? null);
+$pdo->exec('DELETE FROM login_attempts');
 $inspector = (string) ($fieldLogin('f-200')['body']['data']['token'] ?? '');
 
 $expires = (int) $pdo->query("SELECT MAX(t.expires_at - t.created_at) FROM tokens t JOIN users u ON u.id = t.user_id

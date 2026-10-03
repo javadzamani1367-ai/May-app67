@@ -30,8 +30,16 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $data['role'] = Auth::ROLE_MANAGER;
         $data['active'] = 1;
     }
+    $self = $existing !== null && $existing['id'] === $manager['id'];
     if ($existing === null && Db::one('SELECT id FROM users WHERE user_code = ?', [$data['user_code']]) !== null) {
         $error = 'این کد کاربری از قبل وجود دارد.';
+    } elseif ($data['permissions'] !== 0 && $data['role'] !== Auth::ROLE_FIELD) {
+        // مجوز فقط روی نقش میدانی معنا دارد و برای نقش‌های دیگر ذخیره نمی‌شد؛
+        // «ذخیره شد» گفتن و دور ریختن تیک‌ها همان چیزی بود که مدیر را گیج کرد.
+        $error = $self
+            ? 'حساب خود شما «مدیر» است و نقشش عوض نمی‌شود. برای اپ بازرسی میدانی یک کاربر جدا با نقش «کاربر میدانی» بسازید و با همان در اپ وارد شوید.'
+            : 'مجوز بازرسی و گزارش فقط برای نقش «کاربر میدانی» است. نقش این کاربر «'
+              . (ROLE_NAMES[$data['role']] ?? '—') . '» است؛ یا نقش را «کاربر میدانی» کنید یا تیک‌ها را بردارید.';
     } else {
         $error = Users::problem($data);
     }
@@ -95,6 +103,11 @@ admin_header($existing === null ? 'کاربر جدید' : 'ویرایش کارب
     <h3 style="margin-top:16px">مجوز کاربر میدانی</h3>
     <p class="muted">فقط برای نقش «کاربر میدانی». گزینه‌ای که فعال نباشد در اپ خاکستری و قفل دیده می‌شود
       و سرور هم ارسالش را نمی‌پذیرد.</p>
+    <?php if (isset($existing['id']) && $role !== Auth::ROLE_FIELD): ?>
+      <p class="error">نقش این کاربر «<?= e(ROLE_NAMES[$role] ?? '—') ?>» است، پس با این حساب نمی‌شود وارد اپ
+        بازرسی میدانی شد و این تیک‌ها برایش ذخیره نمی‌شود. برای اپ میدانی، نقش را «کاربر میدانی» کنید یا یک
+        کاربر جدا بسازید.</p>
+    <?php endif; ?>
     <label class="check"><input type="checkbox" name="perm_inspect" <?= ($permissions & Auth::PERM_INSPECT) !== 0 ? 'checked' : '' ?>>
       بازرسی (ترموویژن و آمپرگیری فیدر)</label>
     <label class="check"><input type="checkbox" name="perm_report" <?= ($permissions & Auth::PERM_REPORT) !== 0 ? 'checked' : '' ?>>

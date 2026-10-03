@@ -45,7 +45,9 @@ sealed class SignInOutcome {
 class SignInFlow(
     private val vault: KeyStoreVault,
     private val serverAddress: suspend () -> String,
-    private val allowLocalOnly: Boolean
+    private val allowLocalOnly: Boolean,
+    /** Sent with the login so the server can refuse an account meant for another app. */
+    private val app: String? = null
 ) {
 
     suspend fun signIn(userCode: String, password: String): SignInOutcome {
@@ -54,7 +56,7 @@ class SignInFlow(
             return if (allowLocalOnly) localOnly(userCode, password) else offline(userCode, password)
         }
 
-        when (val result = api.login(userCode, password, vault.deviceCode())) {
+        when (val result = api.login(userCode, password, vault.deviceCode(), app)) {
             is ApiResult.Ok -> {
                 vault.setUserCode(userCode)
                 vault.setPin(password)

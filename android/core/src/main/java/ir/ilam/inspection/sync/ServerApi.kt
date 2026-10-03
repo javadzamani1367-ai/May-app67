@@ -36,13 +36,16 @@ class ServerApi(private val baseUrl: String) {
     suspend fun login(
         userCode: String,
         password: String,
-        deviceCode: String
+        deviceCode: String,
+        /** Which app is signing in; the server admits only that app's accounts. Null for the inspection apps. */
+        app: String? = null
     ): ApiResult<LoginResult> = post(
         path = "auth/login",
         body = JSONObject()
             .put("user_code", userCode)
             .put("password", password)
             .put("device_code", deviceCode)
+            .putOpt("app", app)
     ) { data ->
         LoginResult(
             token = data.optString("token"),

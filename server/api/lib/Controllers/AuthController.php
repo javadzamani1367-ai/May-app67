@@ -13,6 +13,20 @@ final class AuthController
         }
 
         $user = Auth::login($userCode, $password, $device !== '' ? $device : null);
+
+        // هر اپ فقط حساب‌های خودش را می‌پذیرد، و این بعد از بررسی رمز است تا پاسخ
+        // چیزی درباره حسابی که رمزش را نمی‌دانیم نگوید. اپ میدانی خودش را معرفی
+        // می‌کند؛ اپ کارشناس و مدیر (حتی نسخه‌های قدیمی) چیزی نمی‌فرستند.
+        $fieldApp = $request->str('app') === 'field';
+        $fieldUser = (int) $user['role'] === Auth::ROLE_FIELD;
+        if ($fieldApp && !$fieldUser) {
+            Response::fail(403, 'wrong_app',
+                'این حساب «کاربر میدانی» نیست. مدیر باید در پنل مدیر یک کاربر با نقش «کاربر میدانی» بسازد و مجوز بازرسی یا گزارش بدهد.');
+        }
+        if (!$fieldApp && $fieldUser) {
+            Response::fail(403, 'wrong_app', 'این حساب برای اپ «بازرسی میدانی» است.');
+        }
+
         $token = Auth::issueToken((string) $user['id'], $device !== '' ? $device : null, (int) $user['role']);
 
         if ($device !== '') {
