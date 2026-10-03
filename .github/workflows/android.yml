@@ -134,10 +134,14 @@ jobs:
         run: |
           set -o pipefail
           ./gradlew --no-daemon :core:testDebugUnitTest testExpertDebugUnitTest :field:testDebugUnitTest 2>&1 | tee "$RUNNER_TEMP/unit.log" && exit 0
-          grep -E '^e: |^> |What went wrong' "$RUNNER_TEMP/unit.log" | head -40 | while IFS= read -r line; do echo "::error::$line"; done
-          find . -path '*/build/test-results/*' -name 'TEST-*.xml' -exec grep -l '<failure' {} + 2>/dev/null | while read -r f; do
-            grep -o '<testcase name="[^"]*"[^>]*>\s*<failure message="[^"]*"' "$f" | head -10 | while IFS= read -r line; do echo "::error file=$f::$line"; done
-          done
+          # GitHub keeps ten annotations per step, so everything goes into one,
+          # lines joined with the encoded newline.
+          {
+            grep -E '^e: |FAILED$|tests completed' "$RUNNER_TEMP/unit.log" | grep -v '^> Task' | head -40
+            grep -A6 'What went wrong' "$RUNNER_TEMP/unit.log" | head -14
+            find . -path '*/build/test-results/*' -name 'TEST-*.xml' -exec grep -h -B1 -A2 '<failure' {} + 2>/dev/null | head -30
+          } > "$RUNNER_TEMP/summary.txt"
+          echo "::error::$(sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g' "$RUNNER_TEMP/summary.txt")"
           exit 1
 
       - name: Build debug APK
