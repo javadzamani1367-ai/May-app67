@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Route -->
+    <string name="thermal_route_title">مسیر بازدید</string>
+    <string name="thermal_route_hint">پیش از اولین عکس شروع و بعد از آخرین عکس متوقف کنید. با صفحه خاموش و هنگام کار با HIKMICRO هم ثبت می‌شود.</string>
+    <string name="thermal_route_idle">شروع نشده</string>
+    <string name="thermal_route_recording">در حال ثبت</string>
+    <string name="thermal_route_done">پایان یافته</string>
+    <string name="thermal_route_start">شروع ثبت مسیر</string>
+    <string name="thermal_route_resume">ادامه ثبت مسیر</string>
+    <string name="thermal_route_stop">توقف ثبت مسیر</string>
+    <string name="thermal_points">نقطه‌ها</string>
+    <string name="thermal_elapsed">مدت</string>
+    <string name="thermal_accuracy">دقت (متر)</string>
+    <string name="thermal_gps_off">GPS گوشی خاموش است؛ تا روشن نشود مسیری ثبت نمی‌شود.</string>
+    <string name="thermal_clock_skew">ساعت گوشی %1$s ثانیه با زمان ماهواره اختلاف دارد. زمان فایل‌ها از ساعت گوشی است؛ ساعت را خودکار کنید.</string>
+    <string name="thermal_location_refused">بدون اجازه موقعیت، مسیر ثبت نمی‌شود. از تنظیمات گوشی اجازه دهید.</string>
+    <string name="thermal_other_recording">مسیر یک بازرسی ترموویژن دیگر در حال ثبت است. ابتدا آن را متوقف کنید.</string>
+
+    <!-- HIKMICRO files -->
+    <string name="thermal_files_title">فایل‌های HIKMICRO</string>
+    <string name="thermal_files_hint">عکس و فیلم‌هایی که در زمان این مسیر گرفته شده‌اند. اصل فایل در گالری دست نمی‌خورد.</string>
+    <string name="thermal_folder">نام پوشه در Pictures و Movies</string>
+    <string name="thermal_scan">جستجوی فایل‌های این مسیر</string>
+    <string name="thermal_found">%1$s فایل تازه پیدا شد</string>
+    <string name="thermal_found_none">فایل تازه‌ای در زمان این مسیر پیدا نشد.</string>
+    <string name="thermal_import">افزودن %1$s فایل انتخاب‌شده</string>
+    <string name="thermal_import_summary">%1$s فایل افزوده شد؛ مختصات روی %2$s نسخه نوشته شد.</string>
+    <string name="thermal_exif_dropped">برای %1$s فایل نسخه دارای مختصات ساخته نشد، چون نوشتن مختصات چیزی جز آن را هم تغییر می‌داد. اصل فایل و مختصاتش جدا ثبت شده است.</string>
+    <string name="thermal_import_skipped">%1$s فایل خوانده نشد یا قالبش JPEG یا MP4 نبود.</string>
+    <string name="thermal_access_partial">فقط به عکس‌های انتخاب‌شده دسترسی داده‌اید؛ فایل‌های دیگر دیده نمی‌شوند. از تنظیمات اجازه «همه» را بدهید.</string>
+    <string name="thermal_access_refused">بدون اجازه دسترسی به عکس‌ها و فیلم‌ها، فایل‌های HIKMICRO پیدا نمی‌شوند.</string>
+
+    <!-- Assignment -->
+    <string name="thermal_list_title">فایل‌های این بازرسی (%1$s)</string>
+    <string name="thermal_list_hint">چند فایل را انتخاب کنید و یک‌جا به تیر یا تابلو با پلاکش نسبت دهید.</string>
+    <string name="thermal_select_hint">برای تخصیص، روی فایل‌ها بزنید تا انتخاب شوند.</string>
+    <string name="thermal_assign_title">تخصیص %1$s فایل انتخاب‌شده</string>
+    <string name="thermal_asset_pole">تیر</string>
+    <string name="thermal_asset_panel">تابلو</string>
+    <string name="thermal_plate">پلاک</string>
+    <string name="thermal_file_note">توضیح</string>
+    <string name="thermal_assign">ثبت تخصیص</string>
+    <string name="thermal_unassigned">تخصیص نیافته</string>
+    <string name="thermal_uncertain">موقعیت نامطمئن</string>
+    <string name="thermal_no_position">بدون موقعیت</string>
+    <string name="thermal_export">خروجی Google Earth و اکسل</string>
+
+    <!-- Temperatures -->
+    <string name="thermal_temps_title">دماها</string>
+    <string name="thermal_temps_hint">عددها را از روی عکس وارد کنید؛ با دو انگشت بزرگ‌نمایی کنید. خودکار خوانده نمی‌شوند تا عدد اشتباهی در مدرک ننشیند.</string>
+    <string name="thermal_temps_scene">کل تصویر</string>
+    <string name="thermal_temps_box">کادر R1</string>
+    <string name="thermal_temp_max">بیشینه</string>
+    <string name="thermal_temp_min">کمینه</string>
+    <string name="thermal_temp_avg">میانگین</string>
+    <string name="thermal_temps_short">بیشینه %1$s° — R1 %2$s°</string>
+
+    <!-- Missing before finish -->
+    <string name="thermal_missing_recording">ثبت مسیر هنوز متوقف نشده</string>
+    <string name="thermal_missing_files">هیچ فایل HIKMICRO افزوده نشده</string>
+    <string name="thermal_missing_unassigned">%1$s فایل هنوز به تیر یا تابلو نسبت داده نشده</string>
+
+    <!-- Recording service and home banner -->
+    <string name="track_channel">ثبت مسیر</string>
+    <string name="track_notification_title">ثبت مسیر بازرسی ترموویژن</string>
+    <string name="track_notification_text">%1$s نقطه — دقت %2$s متر</string>
+    <string name="thermal_banner">ثبت مسیر ترموویژن روشن است</string>
+    <string name="thermal_banner_open">بازگشت به بازرسی</string>
+</resources>

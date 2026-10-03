@@ -57,7 +57,20 @@ class FieldPrefs(context: Context) {
         get() = prefs.getLong(KEY_LAST_SYNC, 0)
         set(value) = prefs.edit().putLong(KEY_LAST_SYNC, value).apply()
 
+    /** The thermal item whose route is being recorded, so a restarted service carries on. */
+    var activeTrackItem: String?
+        get() = prefs.getString(KEY_ACTIVE_TRACK, null)
+        set(value) = prefs.edit().apply { if (value == null) remove(KEY_ACTIVE_TRACK) else putString(KEY_ACTIVE_TRACK, value) }.apply()
+
+    /** The gallery folder HIKMICRO Viewer saves into, under Pictures and Movies. */
+    var thermalFolder: String
+        get() = prefs.getString(KEY_THERMAL_FOLDER, null) ?: DEFAULT_THERMAL_FOLDER
+        set(value) = prefs.edit().putString(KEY_THERMAL_FOLDER, value.trim().ifBlank { DEFAULT_THERMAL_FOLDER }).apply()
+
     private companion object {
+        const val KEY_ACTIVE_TRACK = "active_track_item"
+        const val KEY_THERMAL_FOLDER = "thermal_folder"
+        const val DEFAULT_THERMAL_FOLDER = "HIKMICRO Viewer"
         const val KEY_SERVER = "server_address"
         const val KEY_NAME = "full_name"
         const val KEY_PERMISSIONS = "permissions"

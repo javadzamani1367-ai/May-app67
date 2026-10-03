@@ -50,7 +50,8 @@ class FieldDrafts(private val dao: FieldDao, private val files: FileStore) {
         capturedAt: Long,
         latitude: Double?,
         longitude: Double?,
-        accuracy: Double?
+        accuracy: Double?,
+        uncertain: Boolean = false
     ): FieldFileEntity? {
         if (!file.exists() || file.length() == 0L) return null
         val entity = FieldFileEntity(
@@ -64,10 +65,16 @@ class FieldDrafts(private val dao: FieldDao, private val files: FileStore) {
             capturedAt = capturedAt,
             latitude = latitude,
             longitude = longitude,
-            accuracy = accuracy
+            accuracy = accuracy,
+            locationUncertain = uncertain
         )
         dao.saveFile(entity)
         return entity
+    }
+
+    /** Pole or panel, its plate and a note, on several files at once. */
+    suspend fun assign(ids: List<String>, assetType: Int, plate: String, note: String?) {
+        ids.forEach { dao.assign(it, assetType, plate.trim(), note?.trim()?.ifBlank { null }) }
     }
 
     suspend fun removeFile(file: FieldFileEntity) {

@@ -132,10 +132,20 @@ abstract class ItemEditor(
         pair.forEach { container.drafts.removeFile(it) }
     }
 
+    /** Reloads the item's files after a form changed them directly. */
+    protected suspend fun reloadFiles() {
+        item?.let { files = container.drafts.files(it.id) }
+    }
+
+    /** Last work a form does before its item joins the queue: sidecars, packed tracks. */
+    protected open suspend fun beforeFinish() = Unit
+
     /** Saves, joins the send queue and asks for a send as soon as there is a connection. */
     fun finish(context: Context, onDone: () -> Unit) {
         viewModelScope.launch {
             busy = true
+            flush()
+            withContext(Dispatchers.IO) { beforeFinish() }
             flush()
             item?.let { container.drafts.finish(it) }
             FieldSyncWorker.runSoon(context)

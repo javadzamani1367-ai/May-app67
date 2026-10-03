@@ -28,6 +28,7 @@ import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.data.Permission
 import ir.ilam.inspection.field.data.db.QueueCounts
 import ir.ilam.inspection.field.field
+import ir.ilam.inspection.field.thermal.TrackRecorder
 import ir.ilam.inspection.field.ui.queue.QueueSummary
 import ir.ilam.inspection.ui.common.HeaderAction
 import ir.ilam.inspection.ui.common.TavanTopBar
@@ -45,8 +46,9 @@ enum class ChoiceGroup { INSPECT, REPORT }
  * lock.
  */
 @Composable
-fun HomeScreen(onOpen: (ChoiceGroup) -> Unit, onQueue: () -> Unit, onSignInAgain: () -> Unit) {
+fun HomeScreen(onOpen: (ChoiceGroup) -> Unit, onQueue: () -> Unit, onRecording: (String) -> Unit, onSignInAgain: () -> Unit) {
     val container = LocalContext.current.field
+    val track by TrackRecorder.state.collectAsState()
     val counts by container.database.dao().observeCounts().collectAsState(initial = QueueCounts(0, 0, 0))
     var permissions by remember { mutableIntStateOf(container.prefs.permissions) }
     var expired by remember { mutableStateOf(container.prefs.sessionExpired) }
@@ -92,6 +94,7 @@ fun HomeScreen(onOpen: (ChoiceGroup) -> Unit, onQueue: () -> Unit, onSignInAgain
                 .padding(Spacing.screen)
         ) {
             if (expired) SessionBanner(onSignInAgain)
+            track.itemId?.takeIf { track.running }?.let { id -> RecordingBanner { onRecording(id) } }
             OptionCard(
                 title = stringResource(R.string.field_home_inspect),
                 hint = stringResource(R.string.field_home_inspect_hint),

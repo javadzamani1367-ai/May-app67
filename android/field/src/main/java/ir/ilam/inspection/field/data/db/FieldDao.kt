@@ -51,6 +51,9 @@ interface FieldDao {
     @Query("UPDATE field_file SET uploaded = :uploaded, complete = :complete WHERE id = :id")
     suspend fun setUploaded(id: String, uploaded: Long, complete: Boolean)
 
+    @Query("UPDATE field_file SET asset_type = :assetType, plate = :plate, note = COALESCE(:note, note) WHERE id = :id")
+    suspend fun assign(id: String, assetType: Int, plate: String, note: String?)
+
     @Query("DELETE FROM field_file WHERE id = :id")
     suspend fun deleteFile(id: String)
 

@@ -8,13 +8,11 @@ import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.ElectricalServices
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Thermostat
-import androidx.compose.material.icons.outlined.Construction
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.data.FieldKind
-import ir.ilam.inspection.ui.common.EmptyState
 import ir.ilam.inspection.ui.common.TavanTopBar
 import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tone
@@ -40,14 +38,5 @@ fun ChoiceScreen(group: ChoiceGroup, onBack: () -> Unit, onPick: (FieldKind) -> 
                     Icons.Filled.Bolt, Tone.WARNING, enabled = true, onClick = { onPick(FieldKind.ILLEGAL) })
             }
         }
-    }
-}
-
-/** Where each form will open; the forms arrive stage by stage (docs/FIELD-APP.md). */
-@Composable
-fun SoonScreen(onBack: () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        TavanTopBar(title = stringResource(R.string.field_soon_title), onBack = onBack)
-        EmptyState(message = stringResource(R.string.field_soon_message), icon = Icons.Outlined.Construction)
     }
 }

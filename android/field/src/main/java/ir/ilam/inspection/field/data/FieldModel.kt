@@ -46,6 +46,12 @@ enum class ServerStatus(val code: Int) {
     }
 }
 
+/** What a thermal file shows. The same numbers as `Field::ASSET_*` on the server. */
+object AssetType {
+    const val POLE = 0
+    const val PANEL = 1
+}
+
 /** What a file is to its item, and the type it travels as. */
 object FileRole {
     const val PHOTO = 0

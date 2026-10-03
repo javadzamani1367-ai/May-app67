@@ -11,21 +11,22 @@ import ir.ilam.inspection.field.ui.feeder.FeederScreen
 import ir.ilam.inspection.field.ui.home.ChoiceGroup
 import ir.ilam.inspection.field.ui.home.ChoiceScreen
 import ir.ilam.inspection.field.ui.home.HomeScreen
-import ir.ilam.inspection.field.ui.home.SoonScreen
 import ir.ilam.inspection.field.ui.queue.QueueScreen
 import ir.ilam.inspection.field.ui.report.ReportScreen
+import ir.ilam.inspection.field.ui.thermal.ThermalScreen
 
 private object Routes {
     const val HOME = "home"
     const val CHOICE = "choice/{group}"
     const val QUEUE = "queue"
-    const val SOON = "soon"
     const val REPORT = "report/{kind}?id={id}"
     const val FEEDER = "feeder?id={id}"
+    const val THERMAL = "thermal?id={id}"
 
     fun choice(group: ChoiceGroup) = "choice/${group.name}"
     fun report(kind: FieldKind, id: String? = null) = "report/${kind.code}" + (id?.let { "?id=$it" } ?: "")
     fun feeder(id: String? = null) = "feeder" + (id?.let { "?id=$it" } ?: "")
+    fun thermal(id: String? = null) = "thermal" + (id?.let { "?id=$it" } ?: "")
 }
 
 private val optionalId = navArgument("id") { type = NavType.StringType; nullable = true; defaultValue = null }
@@ -38,7 +39,7 @@ fun FieldNavigation(onSignInAgain: () -> Unit) {
         when (kind) {
             FieldKind.CRYPTO, FieldKind.ILLEGAL -> Routes.report(kind, id)
             FieldKind.FEEDER -> Routes.feeder(id)
-            FieldKind.THERMAL -> Routes.SOON
+            FieldKind.THERMAL -> Routes.thermal(id)
         }
     )
     NavHost(navController = nav, startDestination = Routes.HOME) {
@@ -46,6 +47,7 @@ fun FieldNavigation(onSignInAgain: () -> Unit) {
             HomeScreen(
                 onOpen = { nav.navigate(Routes.choice(it)) },
                 onQueue = { nav.navigate(Routes.QUEUE) },
+                onRecording = { open(FieldKind.THERMAL, it) },
                 onSignInAgain = onSignInAgain
             )
         }
@@ -70,8 +72,8 @@ fun FieldNavigation(onSignInAgain: () -> Unit) {
                 onOpenDraft = { item -> open(FieldKind.of(item.kind), item.id) }
             )
         }
-        composable(Routes.SOON) {
-            SoonScreen(onBack = { nav.popBackStack() })
+        composable(Routes.THERMAL, arguments = listOf(optionalId)) { entry ->
+            ThermalScreen(itemId = entry.arguments?.getString("id"), onClose = { nav.popBackStack() })
         }
     }
 }

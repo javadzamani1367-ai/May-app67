@@ -85,3 +85,20 @@ fun SessionBanner(onSignInAgain: () -> Unit) {
         }
     }
 }
+
+/** A thermal route is still recording: the way back to it, from the first screen. */
+@Composable
+fun RecordingBanner(onOpen: () -> Unit) {
+    val success = Tavan.colors.success
+    AppCard(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), onClick = onOpen) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(stringResource(R.string.thermal_banner), color = success.strong, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                stringResource(R.string.thermal_banner_open),
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(top = 6.dp)
+            )
+        }
+    }
+}

@@ -135,6 +135,14 @@ object PersianDate {
         return format(epochMillis) + " - " + PersianNumbers.toPersian(time)
     }
 
+    /** Date and time to the second — for evidence matched to a route by its timestamp. */
+    fun formatWithSeconds(epochMillis: Long): String {
+        val c = Calendar.getInstance(zone)
+        c.timeInMillis = epochMillis
+        val time = "%02d:%02d:%02d".format(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND))
+        return format(epochMillis) + " - " + PersianNumbers.toPersian(time)
+    }
+
     /** `050614` in latin digits — the date segment of a tracking code. */
     fun trackingStamp(epochMillis: Long): String {
         val j = of(epochMillis)
