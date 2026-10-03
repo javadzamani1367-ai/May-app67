@@ -134,6 +134,8 @@ jobs:
         run: |
           set -o pipefail
           ./gradlew --no-daemon :core:testDebugUnitTest testExpertDebugUnitTest :field:testDebugUnitTest 2>&1 | tee "$RUNNER_TEMP/unit.log" && exit 0
+          # A grep that finds nothing must not end the script before the report.
+          set +e +o pipefail
           # GitHub keeps ten annotations per step, so everything goes into one,
           # lines joined with the encoded newline.
           {
