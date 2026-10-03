@@ -127,9 +127,18 @@ jobs:
           DB_REQUIRED: "1"
         run: php server/tests/integration.php
 
+      # A failure is repeated as annotations (compile errors, failed tests),
+      # which show on the run's summary page without opening the full log.
       - name: Unit tests
         working-directory: android
-        run: ./gradlew --no-daemon :core:testDebugUnitTest testExpertDebugUnitTest :field:testDebugUnitTest
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon :core:testDebugUnitTest testExpertDebugUnitTest :field:testDebugUnitTest 2>&1 | tee "$RUNNER_TEMP/unit.log" && exit 0
+          grep -E '^e: |^> |What went wrong' "$RUNNER_TEMP/unit.log" | head -40 | while IFS= read -r line; do echo "::error::$line"; done
+          find . -path '*/build/test-results/*' -name 'TEST-*.xml' -exec grep -l '<failure' {} + 2>/dev/null | while read -r f; do
+            grep -o '<testcase name="[^"]*"[^>]*>\s*<failure message="[^"]*"' "$f" | head -10 | while IFS= read -r line; do echo "::error file=$f::$line"; done
+          done
+          exit 1
 
       - name: Build debug APK
         working-directory: android
