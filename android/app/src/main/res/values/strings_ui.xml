@@ -45,8 +45,6 @@
     <string name="cases_count">%1$s پرونده</string>
     <string name="search_empty">پرونده‌ای با این مشخصات پیدا نشد</string>
 
-    <!-- موقعیت مکانی -->
-    <string name="location_title">موقعیت مکانی</string>
     <string name="location_coordinates">مختصات</string>
     <string name="location_accuracy">دقت</string>
     <string name="location_captured_at">زمان ثبت</string>
@@ -55,13 +53,6 @@
     <string name="location_source_map">انتخاب از نقشه</string>
     <string name="location_source_manual">ورود دستی</string>
     <string name="location_samples">%1$s نمونه</string>
-    <string name="location_not_recorded_title">موقعیت ثبت نشده</string>
-    <string name="location_not_recorded_hint">در محل بایستید و «ثبت موقعیت دقیق» را بزنید. گوشی چند ثانیه به ماهواره‌ها گوش می‌دهد تا دقیق‌ترین نقطه را پیدا کند.</string>
-    <string name="action_capture_precise">ثبت موقعیت دقیق</string>
-    <string name="action_recapture">دریافت دوباره موقعیت</string>
-    <string name="fix_done">موقعیت با دقت ±%1$s متر ثبت شد</string>
-    <string name="fix_timeout_coarse">دقتی بهتر از ±%1$s متر به‌دست نیامد. برای دقت بیشتر در فضای باز دوباره تلاش کنید.</string>
-    <string name="fix_location_off">موقعیت‌یاب گوشی خاموش است. آن را از تنظیمات گوشی روشن کنید.</string>
     <string name="map_open_full">نمایش روی نقشه</string>
     <string name="section_site">مشخصات محل</string>
     <string name="section_site_hint">شهرستان و ناحیه، آدرس و شماره‌های اشتراک و پرونده</string>

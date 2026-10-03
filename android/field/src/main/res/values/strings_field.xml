@@ -30,7 +30,7 @@
     <string name="field_illegal">گزارش برق غیرمجاز</string>
     <string name="field_illegal_hint">انشعاب بدون کنتور، دستکاری کنتور، کاربری غیرمجاز</string>
     <string name="field_soon_title">به‌زودی</string>
-    <string name="field_soon_message">این بخش در نسخه بعدی برنامه فعال می‌شود.</string>
+    <string name="field_soon_message">بازرسی ترموویژن هنوز آماده نیست و در نسخه بعدی برنامه فعال می‌شود. گزارش رمزارز، گزارش برق غیرمجاز و آمپرگیری فیدر آماده‌اند.</string>
 
     <!-- صف ارسال -->
     <string name="field_queue">صف ارسال</string>

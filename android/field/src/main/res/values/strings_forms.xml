@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- مشترک فرم‌ها -->
+    <string name="field_drafts">پیش‌نویس‌ها — ارسال نشده‌اند، برای ادامه بزنید</string>
+    <string name="form_autosaved">هر تغییر خودکار ذخیره می‌شود</string>
+    <string name="form_missing_title">برای ثبت نهایی هنوز لازم است:</string>
+    <string name="form_finish">ثبت نهایی و ارسال</string>
+    <string name="form_discard">حذف این پیش‌نویس</string>
+    <string name="form_discard_title">حذف پیش‌نویس؟</string>
+    <string name="form_discard_message">همه اطلاعات و تصاویر این مورد از گوشی پاک می‌شود و برنمی‌گردد.</string>
+    <string name="form_discard_yes">بله، حذف شود</string>
+    <string name="form_next">مرحله بعد</string>
+    <string name="form_previous">مرحله قبل</string>
+    <string name="form_media_title">تصاویر، فیلم و صدا</string>
+    <string name="form_media_hint">از دوربین یا گالری. روی کپی عکس دوربین تاریخ، ساعت و مختصات درج می‌شود و اصل عکس هم نگه داشته می‌شود.</string>
+    <string name="form_media_hint_audio">از دوربین یا گالری، و ضبط صدا — صدای فن‌ها نشانه مهمی است. روی کپی عکس دوربین تاریخ، ساعت و مختصات درج می‌شود و اصل عکس هم نگه داشته می‌شود.</string>
+    <string name="form_camera">دوربین</string>
+    <string name="form_camera_video">عکس یا فیلم</string>
+    <string name="form_gallery">از گالری</string>
+    <string name="form_audio_start">ضبط صدا</string>
+    <string name="form_audio_stop">توقف ضبط صدا</string>
+    <string name="form_media_count">%1$s مورد ثبت شده</string>
+    <string name="form_remove">حذف</string>
+    <string name="form_permission_refused">بدون اجازه دسترسی این کار ممکن نیست. از تنظیمات گوشی اجازه را بدهید.</string>
+    <string name="missing_position">موقعیت ثبت نشده است</string>
+    <string name="missing_description">توضیح نوشته نشده است</string>
+
+    <!-- گزارش رمزارز و برق غیرمجاز -->
+    <string name="report_place">آدرس و نشانی</string>
+    <string name="report_address">آدرس و نام خیابان</string>
+    <string name="report_nearest_plate">نزدیک‌ترین شماره پلاک تیر یا تابلو (اختیاری)</string>
+    <string name="report_description">توضیح — اجباری</string>
+    <string name="report_description_hint_crypto">از روی چه نشانه‌ای فکر می‌کنید اینجا ماینر هست؟</string>
+    <string name="report_description_hint_illegal">چه دیدید که فکر می‌کنید برق اینجا غیرمجاز است؟</string>
+    <string name="report_description_label">توضیح شما</string>
+    <string name="report_crypto_details">جزئیات (اختیاری)</string>
+    <string name="report_amperage">آمپراژ (آمپر)</string>
+    <string name="report_miner_count">تعداد تقریبی ماینر</string>
+    <string name="report_miner_type">نوع ماینر، اگر دیده شد</string>
+    <string name="report_signs">نشانه‌هایی که دیدید</string>
+    <string name="report_illegal_details">جزئیات برق غیرمجاز</string>
+    <string name="report_consumers">مصرف‌کننده‌های پرمصرف (تعداد)</string>
+    <string name="report_other_consumer">مصرف‌کننده دیگر (نام)</string>
+    <string name="report_usage">نوع کاربری</string>
+    <string name="report_violations">نوع تخلف</string>
+    <string name="report_meter_or_bill">شماره کنتور یا شناسه قبض (اختیاری)</string>
+    <string name="report_team_title">برای اکیپ جمع‌آوری</string>
+    <string name="report_team_hint">پاسخ‌ها به اکیپ کمک می‌کند آماده به محل برود. هر سؤالی را که نمی‌دانید خالی بگذارید.</string>
+    <string name="report_best_time">بهترین زمان مراجعه</string>
+    <string name="report_entrances">تعداد ورودی‌های محل</string>
+    <string name="report_entrance_note">ورودی پیشنهادی</string>
+    <string name="report_priority">اولویت پیشنهادی شما</string>
+    <string name="priority_urgent">فوری</string>
+    <string name="priority_normal">عادی</string>
+    <string name="priority_low">کم</string>
+
+    <string name="sign_fan_noise">صدای مداوم فن یا وزوز، به‌خصوص شب</string>
+    <string name="sign_heat_exhaust">گرمای غیرعادی یا خروجی هوای گرم</string>
+    <string name="sign_covered_windows">پنجره پوشانده یا فن صنعتی روی دیوار</string>
+    <string name="sign_heavy_cabling">کابل‌کشی غیرعادی یا کابل قطور</string>
+    <string name="sign_new_transformer">انشعاب یا ترانس تازه نزدیک محل</string>
+    <string name="sign_network_gear">مودم یا آنتن اینترنت غیرمعمول</string>
+    <string name="sign_night_activity">رفت‌وآمد شبانه یا محل بسته با برق روشن</string>
+    <string name="sign_neighbour_report">گزارش همسایه یا شاکی</string>
+    <string name="sign_thermal_hot_pole">دمای بالای تیر یا تابلو در ترموویژن</string>
+    <string name="sign_voltage_drops">افت ولتاژ یا قطعی مکرر در منطقه</string>
+
+    <string name="consumer_air_conditioner">کولر گازی</string>
+    <string name="consumer_heater">بخاری یا هیتر برقی</string>
+    <string name="consumer_water_pump">پمپ آب</string>
+    <string name="consumer_industrial_motor">موتور صنعتی</string>
+    <string name="consumer_welder">دستگاه جوش</string>
+    <string name="consumer_furnace">کوره یا المنت</string>
+
+    <string name="usage_residential">مسکونی</string>
+    <string name="usage_commercial">تجاری</string>
+    <string name="usage_industrial">صنعتی</string>
+    <string name="usage_agri_well">کشاورزی — چاه</string>
+    <string name="usage_agri_greenhouse">کشاورزی — گلخانه</string>
+    <string name="usage_agri_poultry">کشاورزی — مرغداری</string>
+    <string name="usage_agri_livestock">کشاورزی — دامداری</string>
+    <string name="usage_construction">ساختمان در حال ساخت</string>
+    <string name="usage_other">سایر</string>
+
+    <string name="violation_no_meter">اتصال مستقیم بدون کنتور</string>
+    <string name="violation_meter_bypass">دور زدن کنتور</string>
+    <string name="violation_meter_tamper">دستکاری کنتور یا شکستن پلمب</string>
+    <string name="violation_borrowed_supply">انشعاب دیگران یا انشعاب موقت</string>
+    <string name="violation_wrong_usage">کاربری غیرمجاز</string>
+
+    <string name="team_vehicle_access">خودرو تا محل می‌رسد؟</string>
+    <string name="team_needs_ladder">نردبان، بالابر یا جرثقیل لازم است؟</string>
+    <string name="team_needs_police">همراهی نیروی انتظامی یا مأمور قضایی لازم است؟</string>
+    <string name="team_guarded">سگ نگهبان، نگهبان، دوربین یا درب امن دیده شد؟</string>
+    <string name="team_active_now">محل الان فعال و روشن است؟</string>
+    <string name="team_safety_hazard">خطر ایمنی هست؟ (سیم لخت، آب، سازه ناایمن)</string>
+    <string name="team_people_seen">ساکن یا فردی در محل دیده شد؟</string>
+    <string name="time_morning">صبح</string>
+    <string name="time_afternoon">عصر</string>
+    <string name="time_night">شب</string>
+</resources>

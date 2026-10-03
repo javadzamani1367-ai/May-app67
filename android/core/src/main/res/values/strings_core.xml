@@ -68,4 +68,17 @@
     <string name="crash_hint">متن زیر علت دقیق را نشان می‌دهد. آن را برای توسعه‌دهنده بفرستید تا همین خطا رفع شود. اطلاعات پرونده‌های شما پاک نشده است.</string>
     <string name="crash_share">ارسال گزارش خطا</string>
     <string name="crash_dismiss">بستن و ادامه</string>
+    <string name="gps_permission_needed">دسترسی به موقعیت مکانی لازم است</string>
+    <string name="gps_failed">دریافت موقعیت ناموفق بود</string>
+    <string name="action_pick_on_map">انتخاب از نقشه</string>
+    <string name="action_manual_coordinates">ورود دستی مختصات</string>
+    <!-- موقعیت مکانی -->
+    <string name="location_title">موقعیت مکانی</string>
+    <string name="location_not_recorded_title">موقعیت ثبت نشده</string>
+    <string name="location_not_recorded_hint">در محل بایستید و «ثبت موقعیت دقیق» را بزنید. گوشی چند ثانیه به ماهواره‌ها گوش می‌دهد تا دقیق‌ترین نقطه را پیدا کند.</string>
+    <string name="action_capture_precise">ثبت موقعیت دقیق</string>
+    <string name="action_recapture">دریافت دوباره موقعیت</string>
+    <string name="fix_done">موقعیت با دقت ±%1$s متر ثبت شد</string>
+    <string name="fix_timeout_coarse">دقتی بهتر از ±%1$s متر به‌دست نیامد. برای دقت بیشتر در فضای باز دوباره تلاش کنید.</string>
+    <string name="fix_location_off">موقعیت‌یاب گوشی خاموش است. آن را از تنظیمات گوشی روشن کنید.</string>
 </resources>

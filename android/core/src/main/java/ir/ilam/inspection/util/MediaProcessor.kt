@@ -110,7 +110,10 @@ class MediaProcessor(private val typeface: Typeface?) {
         return listOfNotNull(
             PersianDate.formatWithTime(stamp.capturedAt),
             position,
-            PersianNumbers.toPersian(stamp.trackingCode + "  /  " + stamp.expertCode)
+            // A field item has no tracking code until the server gives one; the
+            // line then carries the user code alone rather than a dangling slash.
+            listOf(stamp.trackingCode, stamp.expertCode).filter { it.isNotBlank() }
+                .joinToString("  /  ").takeIf { it.isNotEmpty() }?.let(PersianNumbers::toPersian)
         )
     }
 

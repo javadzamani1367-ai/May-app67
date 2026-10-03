@@ -4,21 +4,26 @@ import android.app.Application
 import android.content.Context
 import ir.ilam.inspection.data.KeyStoreVault
 import ir.ilam.inspection.field.data.FieldAccount
+import ir.ilam.inspection.field.data.FieldDrafts
 import ir.ilam.inspection.field.data.FieldPrefs
 import ir.ilam.inspection.field.data.db.FieldDatabase
 import ir.ilam.inspection.field.sync.FieldSync
 import ir.ilam.inspection.field.sync.FieldSyncWorker
+import ir.ilam.inspection.util.AppFonts
 import ir.ilam.inspection.util.FileStore
+import ir.ilam.inspection.util.MediaProcessor
 import ir.ilam.inspection.util.MapConfig
 
 /** The field app's few dependencies, made once and by hand — no framework for this size. */
-class FieldContainer(context: Context) {
+class FieldContainer(private val context: Context) {
     val vault by lazy { KeyStoreVault(context) }
     val prefs by lazy { FieldPrefs(context) }
     val files by lazy { FileStore(context) }
     val database by lazy { FieldDatabase.get(context) }
     val account by lazy { FieldAccount(vault, prefs) }
     val sync by lazy { FieldSync(database.dao(), prefs, account, files) }
+    val drafts by lazy { FieldDrafts(database.dao(), files) }
+    val mediaProcessor by lazy { MediaProcessor(AppFonts.typeface(context)) }
 }
 
 class FieldApp : Application() {

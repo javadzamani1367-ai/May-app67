@@ -51,6 +51,19 @@ interface FieldDao {
     @Query("UPDATE field_file SET uploaded = :uploaded, complete = :complete WHERE id = :id")
     suspend fun setUploaded(id: String, uploaded: Long, complete: Boolean)
 
+    @Query("DELETE FROM field_file WHERE id = :id")
+    suspend fun deleteFile(id: String)
+
+    @Query("DELETE FROM field_item WHERE id = :id")
+    suspend fun deleteItem(id: String)
+
+    /** Drafts, newest first: work the user started and has not finished. */
+    @Query("SELECT * FROM field_item WHERE sync_state = 0 ORDER BY updated_at DESC")
+    fun observeDrafts(): Flow<List<FieldItemEntity>>
+
+    @Query("SELECT * FROM field_file WHERE item_id = :itemId ORDER BY captured_at")
+    fun observeFiles(itemId: String): Flow<List<FieldFileEntity>>
+
     /** The local copy of a file is gone (purged after sending); the row stays as the record. */
     @Query("UPDATE field_file SET path = NULL WHERE id = :id")
     suspend fun forgetPath(id: String)

@@ -122,14 +122,10 @@
     <string name="action_capture_gps">ثبت مختصات فعلی</string>
     <string name="gps_waiting">در حال دریافت موقعیت…</string>
     <string name="gps_not_captured">مختصات ثبت نشده است</string>
-    <string name="gps_permission_needed">دسترسی به موقعیت مکانی لازم است</string>
-    <string name="gps_failed">دریافت موقعیت ناموفق بود</string>
     <string name="gps_source_google">منبع: سرویس مکان گوگل</string>
     <string name="gps_source_device">منبع: جی‌پی‌اس دستگاه</string>
     <string name="gps_source_map">منبع: انتخاب از نقشه</string>
     <string name="gps_source_manual">منبع: ورود دستی</string>
-    <string name="action_pick_on_map">انتخاب از نقشه</string>
-    <string name="action_manual_coordinates">ورود دستی مختصات</string>
 
     <!-- مالک -->
     <string name="field_owner_name">نام و نام خانوادگی</string>
