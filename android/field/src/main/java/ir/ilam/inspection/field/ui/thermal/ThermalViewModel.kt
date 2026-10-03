@@ -60,8 +60,8 @@ class ThermalViewModel(container: FieldContainer, existingId: String?) :
 
     fun startRoute(context: Context) {
         val current = item ?: return
-        if (payload.startedAt == null) setPayload(payload.copy(startedAt = System.currentTimeMillis(), endedAt = null))
-        else setPayload(payload.copy(endedAt = null))
+        if (payload.startedAt == null) writePayload(payload.copy(startedAt = System.currentTimeMillis(), endedAt = null))
+        else writePayload(payload.copy(endedAt = null))
         TrackRecorder.start(context, current.id)
     }
 
@@ -70,7 +70,7 @@ class ThermalViewModel(container: FieldContainer, existingId: String?) :
         TrackRecorder.stop(context)
         viewModelScope.launch {
             val points = withContext(Dispatchers.IO) { TrackRecorder.read(trackFile(current.id)) }
-            setPayload(payload.copy(endedAt = System.currentTimeMillis(), points = points.size,
+            writePayload(payload.copy(endedAt = System.currentTimeMillis(), points = points.size,
                 clockSkewSeconds = TrackMatcher.clockSkewSeconds(points)))
         }
     }
@@ -116,7 +116,7 @@ class ThermalViewModel(container: FieldContainer, existingId: String?) :
                     if (result.exifDropped) dropped++
                 }
             }
-            setPayload(payload.copy(files = payload.files + names))
+            writePayload(payload.copy(files = payload.files + names))
             reloadFiles()
             found = found.orEmpty().filter { it.uri !in chosen }
             chosen = emptySet()
@@ -142,14 +142,14 @@ class ThermalViewModel(container: FieldContainer, existingId: String?) :
                 files.filter { (it.role == FileRole.THERMAL || it.role == FileRole.THERMAL_EXIF) && it.capturedAt == file.capturedAt }
                     .forEach { container.drafts.removeFile(it) }
             }
-            setPayload(payload.copy(files = payload.files - file.id))
+            writePayload(payload.copy(files = payload.files - file.id))
             reloadFiles()
         }
     }
 
     fun setTemperatures(fileId: String, temperatures: Temperatures) {
         val info = payload.files[fileId] ?: ThermalFileInfo()
-        setPayload(payload.copy(files = payload.files + (fileId to info.copy(temperatures = temperatures))))
+        writePayload(payload.copy(files = payload.files + (fileId to info.copy(temperatures = temperatures))))
     }
 
     fun setAddress(text: String) = update { it.copy(address = text) }
@@ -174,7 +174,7 @@ class ThermalViewModel(container: FieldContainer, existingId: String?) :
 
     fun trackPoints() = item?.let { TrackRecorder.read(trackFile(it.id)) }.orEmpty()
 
-    private fun setPayload(next: ThermalPayload) {
+    private fun writePayload(next: ThermalPayload) {
         payload = next
         update { it.copy(payload = next.toJson().toString()) }
     }
