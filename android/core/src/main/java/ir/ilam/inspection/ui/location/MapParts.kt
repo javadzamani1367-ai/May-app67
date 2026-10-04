@@ -43,6 +43,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import ir.ilam.inspection.util.MapConfig
+import ir.ilam.inspection.util.map.OfflineMap
+import ir.ilam.inspection.util.map.OfflineTiles
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
@@ -109,12 +111,17 @@ class DotOverlay(context: Context, fill: Color) : Overlay() {
     }
 }
 
-/** An OpenStreetMap view set up the way every map in the app wants it. */
+/**
+ * An OpenStreetMap view set up the way every map in the app wants it: drawn
+ * from the offline Ilam map when one is installed, from the internet otherwise.
+ */
 fun newMapView(context: Context): MapView {
     MapConfig.ensure(context)
     return MapView(context).apply {
-        setTileSource(TileSourceFactory.MAPNIK)
-        setUseDataConnection(true)
+        if (!OfflineTiles.apply(context, this)) {
+            setTileSource(TileSourceFactory.MAPNIK)
+            setUseDataConnection(true)
+        }
         isTilesScaledToDpi = true
         // The app draws its own large zoom buttons; the stock ones are small
         // and appear and disappear on their own.
@@ -232,8 +239,11 @@ fun PickerReadout(centre: Pair<Double, Double>, me: Fix?) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+        // With the offline map installed every tile is there; the line that
+        // remains owed is the data's attribution.
+        val offline = OfflineMap.current(LocalContext.current) != null
         Text(
-            text = stringResource(R.string.map_offline_hint),
+            text = stringResource(if (offline) R.string.offline_map_source else R.string.map_offline_hint),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.outline
         )

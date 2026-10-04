@@ -23,3 +23,10 @@
 -keepclassmembers class * implements com.google.android.gms.tasks.OnFailureListener {
     public void onFailure(...);
 }
+
+# The offline map: mapsforge reads its render theme and symbols as resources
+# and builds renderers by name; androidsvg draws the symbols.
+-keep class org.mapsforge.** { *; }
+-dontwarn org.mapsforge.**
+-keep class com.caverock.androidsvg.** { *; }
+-dontwarn com.caverock.androidsvg.**

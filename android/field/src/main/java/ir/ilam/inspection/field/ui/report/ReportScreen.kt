@@ -18,6 +18,7 @@ import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.data.FieldKind
 import ir.ilam.inspection.field.data.Priority
 import ir.ilam.inspection.field.field
+import ir.ilam.inspection.field.ui.form.AddressField
 import ir.ilam.inspection.field.ui.form.FormActions
 import ir.ilam.inspection.field.ui.form.MediaSection
 import ir.ilam.inspection.field.ui.form.MissingCard
@@ -65,8 +66,7 @@ fun ReportScreen(kind: FieldKind, itemId: String?, onClose: () -> Unit) {
             )
             SectionCard(title = stringResource(R.string.report_place), icon = Icons.Filled.Place, tone = Tone.INFO) {
                 Column {
-                    AppTextField(stringResource(R.string.report_address), item.address.orEmpty(), viewModel::setAddress,
-                        singleLine = false, minLines = 2)
+                    AddressField(item.address.orEmpty(), item.latitude, item.longitude, viewModel::setAddress)
                     AppTextField(stringResource(R.string.report_nearest_plate), item.plate.orEmpty(), viewModel::setPlate, ltr = true)
                 }
             }

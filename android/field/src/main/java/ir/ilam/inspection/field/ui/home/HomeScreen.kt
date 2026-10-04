@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,7 +47,13 @@ enum class ChoiceGroup { INSPECT, REPORT }
  * lock.
  */
 @Composable
-fun HomeScreen(onOpen: (ChoiceGroup) -> Unit, onQueue: () -> Unit, onRecording: (String) -> Unit, onSignInAgain: () -> Unit) {
+fun HomeScreen(
+    onOpen: (ChoiceGroup) -> Unit,
+    onQueue: () -> Unit,
+    onRecording: (String) -> Unit,
+    onMap: () -> Unit,
+    onSignInAgain: () -> Unit
+) {
     val container = LocalContext.current.field
     val track by TrackRecorder.state.collectAsState()
     val counts by container.database.dao().observeCounts().collectAsState(initial = QueueCounts(0, 0, 0))
@@ -79,6 +86,11 @@ fun HomeScreen(onOpen: (ChoiceGroup) -> Unit, onQueue: () -> Unit, onRecording: 
                 ?.let { stringResource(R.string.field_home_greeting, it) },
             showBrand = true
         ) {
+            HeaderAction(
+                icon = Icons.Filled.Map,
+                contentDescription = stringResource(R.string.offline_map_title),
+                onClick = onMap
+            )
             HeaderAction(
                 icon = Icons.Filled.CloudUpload,
                 contentDescription = stringResource(R.string.field_queue),

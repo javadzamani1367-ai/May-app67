@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Address from the offline index. Parts are joined with the separator, general to particular. -->
+    <string name="geo_county">شهرستان %1$s</string>
+    <string name="geo_district">بخش %1$s</string>
+    <string name="geo_village">روستای %1$s</string>
+    <string name="geo_near_place">حوالی %1$s</string>
+    <string name="geo_near_street">نزدیک %1$s (%2$s متر)</string>
+    <string name="geo_village_prefixes">روستا</string>
+    <string name="geo_county_prefix">شهرستان</string>
+    <string name="geo_district_prefix">بخش</string>
+    <string name="geo_separator">"، "</string>
+
+    <!-- Offline map card -->
+    <string name="offline_map_title">نقشه آفلاین ایلام</string>
+    <string name="offline_map_hint">با نقشه آفلاین، نقشه و آدرس‌یابی بدون اینترنت کار می‌کنند.</string>
+    <string name="offline_map_installed">نصب‌شده — نسخه %1$s، %2$s مگابایت</string>
+    <string name="offline_map_none">نصب نشده. تا نصب نشود، نقشه از اینترنت گرفته می‌شود و آدرس خودکار پیشنهاد نمی‌شود.</string>
+    <string name="offline_map_download">دریافت از سرور</string>
+    <string name="offline_map_pick">انتخاب فایل نقشه</string>
+    <string name="offline_map_remove">حذف نقشه</string>
+    <string name="offline_map_downloading">در حال دریافت… %1$s مگابایت</string>
+    <string name="offline_map_downloading_of">در حال دریافت… %1$s از %2$s مگابایت</string>
+    <string name="offline_map_installing">در حال بررسی و نصب…</string>
+    <string name="offline_map_done">نقشه نسخه %1$s نصب شد.</string>
+    <string name="offline_map_no_server">نشانی سرور تنظیم نشده است.</string>
+    <string name="offline_map_not_on_server">فایل نقشه روی سرور نیست. مدیر باید tavankav-ilam-map.zip را در پوشه api/maps هاست بگذارد.</string>
+    <string name="offline_map_unreachable">سرور در دسترس نیست. دوباره تلاش کنید؛ دریافت از همان‌جا ادامه می‌یابد.</string>
+    <string name="offline_map_bad_file">این فایل نقشه معتبر نیست یا ناقص است: %1$s</string>
+    <string name="offline_map_source">داده‌های نقشه: © مشارکت‌کنندگان OpenStreetMap</string>
+    <string name="offline_address_fill">آدرس از روی نقشه</string>
+    <string name="offline_address_none">برای این نقطه آدرسی در نقشه آفلاین پیدا نشد.</string>
+    <string name="offline_address_need_map">برای آدرس خودکار، نقشه آفلاین را نصب کنید.</string>
+</resources>

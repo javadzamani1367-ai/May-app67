@@ -27,9 +27,9 @@ import ir.ilam.inspection.field.data.db.FieldFileEntity
 import ir.ilam.inspection.field.field
 import ir.ilam.inspection.field.thermal.Temperatures
 import ir.ilam.inspection.field.thermal.TrackRecorder
+import ir.ilam.inspection.field.ui.form.AddressField
 import ir.ilam.inspection.field.ui.form.FormActions
 import ir.ilam.inspection.field.ui.form.MissingCard
-import ir.ilam.inspection.ui.common.AppTextField
 import ir.ilam.inspection.ui.common.SecondaryButton
 import ir.ilam.inspection.ui.common.SectionCard
 import ir.ilam.inspection.ui.common.TavanTopBar
@@ -79,8 +79,11 @@ fun ThermalScreen(itemId: String?, onClose: () -> Unit) {
                 onStart = { if (!otherRecording) viewModel.startRoute(context) },
                 onStop = { viewModel.stopRoute(context) }
             )
-            AppTextField(stringResource(R.string.report_address), item.address.orEmpty(), viewModel::setAddress,
-                singleLine = false, minLines = 2)
+            // No position of its own until it is finished: the first located
+            // file, or where the route is now.
+            val anchor = originals.firstOrNull { it.latitude != null && !it.locationUncertain }
+            AddressField(item.address.orEmpty(), anchor?.latitude ?: track.latitude.takeIf { recording },
+                anchor?.longitude ?: track.longitude.takeIf { recording }, viewModel::setAddress)
             if (payload.startedAt != null) HikmicroCard(viewModel)
 
             if (originals.isNotEmpty()) {

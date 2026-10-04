@@ -1,0 +1,8 @@
+# نقشه آفلاین ایلام. فایل tavankav-ilam-map.zip را (از Releases مخزن، با نام
+# map-ilam-...) همین‌جا بگذارید؛ اپ میدانی از «نقشه آفلاین ← دریافت از سرور»
+# آن را می‌گیرد. داده نقشه عمومی است (OpenStreetMap)، پس ورود نمی‌خواهد؛
+# جز همان zip هیچ فایلی از این پوشه خوانده نمی‌شود.
+Require all denied
+<FilesMatch "^tavankav-ilam-map\.zip$">
+    Require all granted
+</FilesMatch>

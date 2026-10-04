@@ -53,6 +53,7 @@ zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", ve
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
 osmdroid = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroid" }
+osmdroid-mapsforge = { module = "org.osmdroid:osmdroid-mapsforge", version.ref = "osmdroid" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 androidx-work = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }

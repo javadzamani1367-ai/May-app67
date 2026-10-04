@@ -18,7 +18,10 @@ data class TrackState(
     val startedAt: Long? = null,
     val clockSkewSeconds: Long? = null,
     /** The GPS receiver is switched off: nothing will be recorded until it is on. */
-    val gpsOff: Boolean = false
+    val gpsOff: Boolean = false,
+    /** The last recorded position. */
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )
 
 /**

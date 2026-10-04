@@ -11,6 +11,7 @@ import ir.ilam.inspection.field.ui.feeder.FeederScreen
 import ir.ilam.inspection.field.ui.home.ChoiceGroup
 import ir.ilam.inspection.field.ui.home.ChoiceScreen
 import ir.ilam.inspection.field.ui.home.HomeScreen
+import ir.ilam.inspection.field.ui.map.MapScreen
 import ir.ilam.inspection.field.ui.queue.QueueScreen
 import ir.ilam.inspection.field.ui.report.ReportScreen
 import ir.ilam.inspection.field.ui.thermal.ThermalScreen
@@ -19,6 +20,7 @@ private object Routes {
     const val HOME = "home"
     const val CHOICE = "choice/{group}"
     const val QUEUE = "queue"
+    const val MAP = "map"
     const val REPORT = "report/{kind}?id={id}"
     const val FEEDER = "feeder?id={id}"
     const val THERMAL = "thermal?id={id}"
@@ -48,6 +50,7 @@ fun FieldNavigation(onSignInAgain: () -> Unit) {
                 onOpen = { nav.navigate(Routes.choice(it)) },
                 onQueue = { nav.navigate(Routes.QUEUE) },
                 onRecording = { open(FieldKind.THERMAL, it) },
+                onMap = { nav.navigate(Routes.MAP) },
                 onSignInAgain = onSignInAgain
             )
         }
@@ -64,6 +67,9 @@ fun FieldNavigation(onSignInAgain: () -> Unit) {
         }
         composable(Routes.FEEDER, arguments = listOf(optionalId)) { entry ->
             FeederScreen(itemId = entry.arguments?.getString("id"), onClose = { nav.popBackStack() })
+        }
+        composable(Routes.MAP) {
+            MapScreen(onBack = { nav.popBackStack() })
         }
         composable(Routes.QUEUE) {
             QueueScreen(

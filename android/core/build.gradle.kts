@@ -53,6 +53,9 @@ dependencies {
     api(libs.zxing.android.embedded)
     api(libs.play.services.location)
     api(libs.osmdroid)
+    // Draws the offline Ilam map. Built on mapsforge 0.21.0, so the map file
+    // must be written with that version (.github/workflows/map.yml).
+    api(libs.osmdroid.mapsforge)
     api(libs.androidx.security.crypto)
 
     // Every app's database is SQLCipher behind Room (SecureDatabase).

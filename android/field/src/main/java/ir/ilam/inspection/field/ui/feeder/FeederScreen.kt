@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.field
+import ir.ilam.inspection.field.ui.form.AddressField
 import ir.ilam.inspection.field.ui.form.FormActions
 import ir.ilam.inspection.field.ui.form.MediaSection
 import ir.ilam.inspection.field.ui.form.MissingCard
@@ -59,8 +60,7 @@ fun FeederScreen(itemId: String?, onClose: () -> Unit) {
                         Column {
                             AppTextField(stringResource(R.string.feeder_plate), item.plate.orEmpty(), viewModel::setPlate, ltr = true,
                                 error = if (item.plate.isNullOrBlank()) stringResource(R.string.feeder_plate_required) else null)
-                            AppTextField(stringResource(R.string.report_address), item.address.orEmpty(), viewModel::setAddress,
-                                singleLine = false, minLines = 2)
+                            AddressField(item.address.orEmpty(), item.latitude, item.longitude, viewModel::setAddress)
                         }
                     }
                     PositionCard(

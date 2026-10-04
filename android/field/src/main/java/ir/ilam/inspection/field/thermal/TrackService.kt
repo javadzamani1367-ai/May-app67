@@ -117,7 +117,8 @@ class TrackService : Service() {
         skews += now - location.time
         if (skews.size > MAX_SKEWS) skews.removeAt(0)
         val skew = skews.sorted()[skews.size / 2] / 1000
-        TrackRecorder.update { it.copy(points = points, accuracy = point.accuracy, lastFixAt = now, clockSkewSeconds = skew, gpsOff = false) }
+        TrackRecorder.update { it.copy(points = points, accuracy = point.accuracy, lastFixAt = now, clockSkewSeconds = skew, gpsOff = false,
+            latitude = point.latitude, longitude = point.longitude) }
         if (points % NOTIFY_EVERY == 1) {
             (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).notify(NOTIFICATION_ID, notification(point.accuracy))
         }
