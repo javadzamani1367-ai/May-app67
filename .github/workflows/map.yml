@@ -1,0 +1,143 @@
+name: Ilam offline map
+
+# Builds the offline map of Ilam province for the field app and publishes it
+# as a release file. It is not inside the APK: the map is updated on its own
+# schedule, and an app update should not have to carry it.
+#
+# Two files in one zip:
+#   ilam.map  — the drawn map, mapsforge format, read by osmdroid-mapsforge.
+#               The writer must be the same mapsforge version (0.21.0) the
+#               app's reader is built on.
+#   ilam.geo  — the address index (tools/map/build_geo.py): named streets,
+#               places and county boundaries, for "where is this point" with
+#               no network.
+# plus manifest.json with the version and the SHA-256 of each, which the app
+# checks before it replaces the map it has.
+#
+# The data is OpenStreetMap (© OpenStreetMap contributors, ODbL), downloaded
+# from Geofabrik here because it cannot be reached from the development
+# container.
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "انتشار در Releases (در غیر این صورت فقط به‌عنوان artifact)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+env:
+  # Ilam province with a margin: west, south, east, north.
+  BBOX_W: "45.35"
+  BBOX_S: "31.95"
+  BBOX_E: "48.20"
+  BBOX_N: "34.10"
+  MAPSFORGE: "0.21.0"
+  OSMOSIS: "0.49.2"
+
+jobs:
+  map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Tools
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q osmium-tool
+          pip install --quiet osmium
+          curl -fsSL --retry 3 -o osmosis.tar \
+            "https://github.com/openstreetmap/osmosis/releases/download/$OSMOSIS/osmosis-$OSMOSIS.tar"
+          tar xf osmosis.tar
+          curl -fsSL --retry 3 -o writer.jar \
+            "https://repo1.maven.org/maven2/org/mapsforge/mapsforge-map-writer/$MAPSFORGE/mapsforge-map-writer-$MAPSFORGE-jar-with-dependencies.jar"
+
+      # The builder and its checker against the hand-made sample first: a
+      # broken builder should fail in seconds, not after the download.
+      - name: Check the builder on the sample
+        run: |
+          python3 tools/map/build_geo.py tools/map/sample.osm sample.geo
+          python3 tools/map/check_geo.py sample.geo --sample
+
+      - name: Download OpenStreetMap data for Iran
+        run: |
+          curl -fsSL --retry 5 --retry-delay 30 -o iran.osm.pbf \
+            https://download.geofabrik.de/asia/iran-latest.osm.pbf
+          osmium fileinfo iran.osm.pbf | head -20
+
+      # "smart" keeps whole the county boundaries that cross the box edge, so
+      # their polygons close.
+      - name: Cut out Ilam
+        run: |
+          osmium extract --strategy smart -b "$BBOX_W,$BBOX_S,$BBOX_E,$BBOX_N" \
+            iran.osm.pbf -o ilam.osm.pbf --overwrite
+          ls -la ilam.osm.pbf
+
+      - name: Address index
+        run: |
+          python3 tools/map/build_geo.py ilam.osm.pbf ilam.geo
+          python3 tools/map/check_geo.py ilam.geo
+
+      - name: Map file
+        run: |
+          java -Xmx6g -cp "osmosis-$OSMOSIS/lib/*:writer.jar" org.openstreetmap.osmosis.core.Osmosis -q \
+            --read-pbf file=ilam.osm.pbf \
+            --mapfile-writer file=ilam.map type=ram \
+              bbox="$BBOX_S,$BBOX_W,$BBOX_N,$BBOX_E" \
+              preferred-languages=fa \
+              map-start-position=33.6374,46.4227 map-start-zoom=12 \
+              comment="TavanKav Ilam, OpenStreetMap contributors (ODbL)"
+          ls -la ilam.map
+
+      - name: Package
+        id: package
+        run: |
+          VERSION=$(date -u +%Y%m%d)
+          python3 - "$VERSION" <<'PY'
+          import hashlib, json, os, sys
+          def sha(p): return hashlib.sha256(open(p, "rb").read()).hexdigest()
+          w, s, e, n = (float(os.environ[k]) for k in ("BBOX_W", "BBOX_S", "BBOX_E", "BBOX_N"))
+          json.dump({
+              "format": 1,
+              "region": "ilam",
+              "version": sys.argv[1],
+              "bbox": [s, w, n, e],
+              "map": "ilam.map", "map_sha256": sha("ilam.map"), "map_size": os.path.getsize("ilam.map"),
+              "geo": "ilam.geo", "geo_sha256": sha("ilam.geo"), "geo_size": os.path.getsize("ilam.geo"),
+              "attribution": "© OpenStreetMap contributors (ODbL)",
+          }, open("manifest.json", "w"), indent=2)
+          PY
+          cat manifest.json
+          zip -9 -j tavankav-ilam-map.zip manifest.json ilam.map ilam.geo
+          ls -la tavankav-ilam-map.zip
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tavankav-ilam-map
+          path: tavankav-ilam-map.zip
+
+      - name: Publish
+        if: ${{ inputs.publish }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: tavankav-ilam-map.zip
+          tag_name: map-ilam-${{ steps.package.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: نقشه آفلاین ایلام ${{ steps.package.outputs.version }}
+          body: |
+            نقشه آفلاین استان ایلام برای اپ «بازرسی میدانی».
+
+            نصب: فایل `tavankav-ilam-map.zip` را در پوشه `api/maps/` هاست کپی کنید تا اپ‌ها از
+            «نقشه آفلاین ← دریافت از سرور» بگیرندش، یا فایل را به گوشی بدهید و «انتخاب فایل» را بزنید.
+
+            داده‌ها: © OpenStreetMap contributors، با مجوز ODbL.
