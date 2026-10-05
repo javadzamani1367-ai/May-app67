@@ -110,7 +110,7 @@ final class FieldController
                 self::content($item)
             )
         );
-        self::event((string) $item['id'], (string) $user['id'], 'registered', null, Field::STATUS_REGISTERED);
+        Field::event((string) $item['id'], (string) $user['id'], 'registered', null, Field::STATUS_REGISTERED);
     }
 
     /** @param array<string, mixed> $item */
@@ -160,14 +160,6 @@ final class FieldController
         );
     }
 
-    public static function event(string $itemId, ?string $userId, string $action, ?int $from, ?int $to, ?string $note = null): void
-    {
-        Db::run(
-            'INSERT INTO field_events (item_id, at, user_id, action, from_status, to_status, note)
-             VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [$itemId, Db::now(), $userId, $action, $from, $to, $note]
-        );
-    }
 
     /** @param array<string, mixed> $item */
     private static function content(array $item): array

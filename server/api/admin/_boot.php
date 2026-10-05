@@ -10,7 +10,7 @@ declare(strict_types=1);
  * کاربر می‌سازند و رمز عوض می‌کنند، و یک لایه کافی نیست.
  */
 foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSchema', 'Migrations', 'Storage',
-          'Notifications', 'Jalali', 'Field', 'FieldSettings', 'Users'] as $class) {
+          'Notifications', 'Jalali', 'Field', 'FieldSettings', 'Users', 'FieldAdmin', 'FieldLabels', 'Xlsx'] as $class) {
     require_once dirname(__DIR__) . '/lib/' . $class . '.php';
 }
 require_once dirname(__DIR__) . '/portal/_layout.php';
@@ -73,6 +73,8 @@ function csrf_check(): void
 function admin_header(string $title): void
 {
     portal_header($title, true, 'پنل مدیر', [
+        ['index.php', 'داشبورد'],
+        ['items.php', 'موردهای میدانی'],
         ['users.php', 'کاربران'],
         ['settings.php', 'تنظیمات میدانی'],
         ['logout.php', 'خروج'],
@@ -97,4 +99,23 @@ function permission_label(int $bits): string
         $parts[] = 'گزارش';
     }
     return $parts === [] ? 'بدون مجوز' : implode(' و ', $parts);
+}
+
+/** برچسب رنگی وضعیت یک مورد، با «مهلت گذشته» اگر ارجاعش دیر شده. */
+function field_status_tag(array $item): string
+{
+    $status = (int) $item['status'];
+    $html = '<span class="tag ' . (FieldAdmin::STATUS_TAGS[$status] ?? 'tag-sent') . '">'
+        . e(FieldAdmin::STATUS_NAMES[$status] ?? '—') . '</span>';
+    if (FieldAdmin::isOverdue($item)) {
+        $html .= ' <span class="tag tag-overdue">مهلت گذشته</span>';
+    }
+    return $html;
+}
+
+/** پارامترهای فعلی صفحه، با تغییر چند کلید — برای پیوند صفحه‌بندی و خروجی. */
+function query_with(array $values, array $changes = []): string
+{
+    $merged = array_filter(array_merge($values, $changes), static fn ($v) => $v !== null && $v !== '');
+    return $merged === [] ? '' : '?' . http_build_query($merged);
 }

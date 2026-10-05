@@ -90,6 +90,26 @@ check(
 );
 equals('تاریخ تهی خط تیره می‌شود', '—', Jalali::format(null));
 
+// شمسی به میلادی، برعکس همان الگوریتم؛ هر روز ده سال رفت و برگشت می‌خورد.
+$roundTrip = true;
+for ($day = 0; $day < 3653; $day++) {
+    $g = (new DateTimeImmutable('2020-03-01'))->modify("+$day day");
+    $j = Jalali::fromGregorian((int) $g->format('Y'), (int) $g->format('n'), (int) $g->format('j'));
+    if (Jalali::toGregorian(...$j) !== [(int) $g->format('Y'), (int) $g->format('n'), (int) $g->format('j')]) {
+        $roundTrip = false;
+        break;
+    }
+}
+check('شمسی به میلادی و برگشت، ده سال روزبه‌روز', $roundTrip);
+equals('آغاز روز به وقت تهران', '۱۴۰۵/۰۷/۱۳ - ۰۰:۰۰', Jalali::format(Jalali::startOfDay(1405, 7, 13)));
+equals('تاریخ با رقم فارسی خوانده می‌شود', [1405, 7, 13], Jalali::parse('۱۴۰۵/۷/۱۳'));
+equals('با خط تیره هم', [1405, 12, 29], Jalali::parse('1405-12-29'));
+equals('روز ۳۱ مهر نداریم', null, Jalali::parse('1405/07/31'));
+equals('ماه ۱۳ نداریم', null, Jalali::parse('1405/13/01'));
+equals('متن بی‌ربط تاریخ نیست', null, Jalali::parse('فردا'));
+equals('اسفند سال کبیسه ۳۰ روز دارد', [1403, 12, 30], Jalali::parse('1403/12/30'));
+equals('و سال عادی ۲۹ روز', null, Jalali::parse('1404/12/30'));
+
 // ---------------------------------------------------------------------------
 echo "\n— نحو فایل‌های PHP —\n";
 $phpFiles = [];

@@ -101,6 +101,48 @@ final class Jalali
         return [$jy, 7 + intdiv($k, 30), ($k % 30) + 1];
     }
 
+    /** @return array{0:int, 1:int, 2:int} سال، ماه، روز میلادی */
+    public static function toGregorian(int $jy, int $jm, int $jd): array
+    {
+        $r = self::cal($jy);
+        $dayNumber = self::gregorianToDayNumber($r['gy'], 3, $r['march'])
+            + ($jm - 1) * 31 - intdiv($jm, 7) * ($jm - 7) + $jd - 1;
+        return self::dayNumberToGregorian($dayNumber);
+    }
+
+    /** آغاز یک روز شمسی به وقت تهران، میلی‌ثانیه یونیکس. */
+    public static function startOfDay(int $jy, int $jm, int $jd): int
+    {
+        [$gy, $gm, $gd] = self::toGregorian($jy, $jm, $jd);
+        $date = new DateTimeImmutable(sprintf('%04d-%02d-%02d 00:00:00', $gy, $gm, $gd), new DateTimeZone(self::ZONE));
+        return $date->getTimestamp() * 1000;
+    }
+
+    /**
+     * «۱۴۰۵/۷/۱۳» یا «1405-07-13»، با رقم فارسی یا لاتین، به سال و ماه و روز؛
+     * تاریخ ناممکن (ماه ۱۳، روز ۳۱ مهر) تهی می‌شود.
+     *
+     * @return array{0:int, 1:int, 2:int}|null
+     */
+    public static function parse(string $text): ?array
+    {
+        $latin = strtr(trim($text), [
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+            '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+        ]);
+        if (preg_match('/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})$/', $latin, $m) !== 1) {
+            return null;
+        }
+        [$jy, $jm, $jd] = [(int) $m[1], (int) $m[2], (int) $m[3]];
+        if ($jy < 1300 || $jy > 1600 || $jm < 1 || $jm > 12 || $jd < 1) {
+            return null;
+        }
+        $length = $jm <= 6 ? 31 : ($jm <= 11 ? 30 : (self::cal($jy)['leap'] === 0 ? 30 : 29));
+        return $jd <= $length ? [$jy, $jm, $jd] : null;
+    }
+
     /** `۱۴۰۵/۰۶/۲۷ - ۰۹:۳۵` — همان شکلی که اپ نشان می‌دهد. */
     public static function format(?int $millis, bool $withTime = true): string
     {

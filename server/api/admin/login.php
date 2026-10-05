@@ -25,7 +25,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         LoginGuard::succeeded($code);
         session_regenerate_id(true);
         $_SESSION['admin_id'] = $user['id'];
-        header('Location: users.php');
+        header('Location: index.php');
         exit;
     }
 }

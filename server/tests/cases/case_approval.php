@@ -107,3 +107,4 @@ require __DIR__ . '/manager_recovery.php';
 require __DIR__ . '/login_lockout.php';
 require __DIR__ . '/field_cycle.php';
 require __DIR__ . '/admin_panel.php';
+require __DIR__ . '/field_admin.php';

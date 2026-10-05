@@ -24,7 +24,7 @@ $field = $probe->page('admin/login.php', $jar, ['user_code' => 'f-100', 'passwor
 check('کاربر میدانی وارد پنل مدیر نمی‌شود', str_contains($field['body'], 'فقط برای مدیر'));
 
 $in = $probe->page('admin/login.php', $jar, ['user_code' => 'mgr', 'password' => 'manager-pass-1']);
-equals('مدیر وارد می‌شود', 'users.php', $in['location']);
+equals('مدیر وارد می‌شود و داشبورد باز می‌شود', 'index.php', $in['location']);
 $list = $probe->page('admin/users.php', $jar);
 check('فهرست کاربران، کاربر میدانی را با مجوزش نشان می‌دهد',
     str_contains($list['body'], 'همکار f-200') && str_contains($list['body'], 'بازرسی و گزارش'));

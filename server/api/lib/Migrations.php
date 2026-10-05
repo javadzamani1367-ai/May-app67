@@ -40,6 +40,12 @@ final class Migrations
                 [static fn () => self::addColumn('users', 'permissions', 'TINYINT NOT NULL DEFAULT 0')],
                 FieldSchema::TABLES
             ),
+            // ارجاع: به کدام کارشناس، و مهلت نتیجه. «گذشتن مهلت» ذخیره نمی‌شود.
+            3 => [
+                static fn () => self::addColumn('field_items', 'assigned_to', 'CHAR(36) NULL'),
+                static fn () => self::addColumn('field_items', 'due_at', 'BIGINT NULL'),
+                static fn () => self::addIndex('field_items', 'idx_field_items_assigned', 'assigned_to'),
+            ],
         ];
     }
 
@@ -52,6 +58,18 @@ final class Migrations
         );
         if ($exists === null) {
             Db::run("ALTER TABLE `$table` ADD COLUMN `$column` $definition");
+        }
+    }
+
+    private static function addIndex(string $table, string $index, string $columns): void
+    {
+        $exists = Db::one(
+            'SELECT 1 AS present FROM information_schema.statistics
+             WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?',
+            [$table, $index]
+        );
+        if ($exists === null) {
+            Db::run("ALTER TABLE `$table` ADD KEY `$index` ($columns)");
         }
     }
 

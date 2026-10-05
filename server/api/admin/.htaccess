@@ -1,0 +1,4 @@
+# فایل‌های کمکی پنل (_boot.php، _item_view.php) فقط از درون صفحه‌ها خوانده می‌شوند.
+<FilesMatch "^_">
+    Require all denied
+</FilesMatch>

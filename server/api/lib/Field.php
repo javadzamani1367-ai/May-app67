@@ -57,6 +57,16 @@ final class Field
     /** بزرگ‌ترین payload پذیرفتنی؛ متن و چک‌لیست است، نه فایل. */
     public const MAX_PAYLOAD_BYTES = 262144;
 
+    /** یک سطر تاریخچه برای مورد: چه کسی، چه کرد، از کدام وضعیت به کدام. */
+    public static function event(string $itemId, ?string $userId, string $action, ?int $from, ?int $to, ?string $note = null): void
+    {
+        Db::run(
+            'INSERT INTO field_events (item_id, at, user_id, action, from_status, to_status, note)
+             VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [$itemId, Db::now(), $userId, $action, $from, $to, $note]
+        );
+    }
+
     public static function isUuid(mixed $value): bool
     {
         return is_string($value)
