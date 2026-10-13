@@ -171,6 +171,9 @@ msbuild CryptoInspection.sln /p:Configuration=Release
 
 ## اسناد
 
+**راهنمای کاربران و استقرار:** [`docs/guides/`](docs/guides/README.md) — برای کارشناس، کاربر
+میدانی، مدیر، واحدها، و راه‌اندازی و نگهداری؛ با نسخه PDF.
+
 **اگر تازه به این پروژه رسیده‌اید، از این سه شروع کنید:**
 
 - [`docs/HANDOVER.md`](docs/HANDOVER.md) — **راهنمای تحویل**: سامانه در یک صفحه،
