@@ -42,6 +42,9 @@ abstract class ItemEditor(
     var busy by mutableStateOf(false)
         protected set
 
+    /** The address last drafted from the map, so a new position may replace it — but never the user's own words. */
+    var autoAddress by mutableStateOf<String?>(null)
+
     private var saveJob: Job? = null
 
     init {

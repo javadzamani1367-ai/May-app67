@@ -1,7 +1,6 @@
 package ir.ilam.inspection.field.ui.report
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -19,13 +18,11 @@ import ir.ilam.inspection.field.data.db.FieldItemEntity
 import ir.ilam.inspection.field.ui.form.HubSection
 import ir.ilam.inspection.field.ui.form.SectionStatus
 import ir.ilam.inspection.field.ui.form.mediaSection
-import ir.ilam.inspection.field.ui.form.positionSection
 import ir.ilam.inspection.field.ui.form.preview
 import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.util.PersianNumbers
 
 const val PAGE_PLACE = "place"
-const val PAGE_DESCRIPTION = "description"
 const val PAGE_DETAILS = "details"
 const val PAGE_TEAM = "team"
 
@@ -33,24 +30,20 @@ const val PAGE_TEAM = "team"
 @Composable
 fun reportSections(kind: FieldKind, item: FieldItemEntity, details: ReportDetails, files: List<FieldFileEntity>): List<HubSection> {
     val empty = stringResource(R.string.hub_empty)
+    val hasFix = item.latitude != null && item.longitude != null
+    val described = !item.description.isNullOrBlank()
     return listOf(
-        positionSection(item),
         HubSection(
             key = PAGE_PLACE,
-            title = stringResource(R.string.report_place),
-            summary = preview(listOfNotNull(item.address?.takeIf { it.isNotBlank() }, item.plate?.takeIf { it.isNotBlank() })
-                .joinToString(" · ")) ?: empty,
+            title = stringResource(R.string.place_title),
+            summary = when {
+                !hasFix -> stringResource(R.string.hub_position_missing)
+                !described -> stringResource(R.string.missing_description)
+                else -> preview(item.address) ?: preview(item.description) ?: empty
+            },
             icon = Icons.Filled.Place,
             tone = Tone.INFO,
-            status = if (item.address.isNullOrBlank()) SectionStatus.OPTIONAL else SectionStatus.DONE
-        ),
-        HubSection(
-            key = PAGE_DESCRIPTION,
-            title = stringResource(R.string.report_description),
-            summary = preview(item.description) ?: stringResource(descriptionHint(kind)),
-            icon = Icons.AutoMirrored.Filled.Notes,
-            tone = Tone.BRAND,
-            status = if (item.description.isNullOrBlank()) SectionStatus.MISSING else SectionStatus.DONE
+            status = if (hasFix && described) SectionStatus.DONE else SectionStatus.MISSING
         ),
         detailsSection(kind, details, empty),
         teamSection(item, details, empty),

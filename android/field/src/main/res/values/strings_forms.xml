@@ -38,6 +38,9 @@
     <string name="hub_next_named">بعدی: %1$s</string>
     <string name="hub_empty">هنوز چیزی ثبت نشده</string>
     <string name="hub_position_title">موقعیت مکانی</string>
+    <string name="place_title">موقعیت، آدرس و شرح</string>
+    <string name="place_panel_title">تابلو و موقعیت آن</string>
+    <string name="place_need_map">آدرس از روی نقشه آفلاین نوشته می‌شود. نقشه ایلام را یک بار دریافت کنید:</string>
     <string name="hub_position_done">ثبت شد · دقت ±%1$s متر</string>
     <string name="hub_position_picked">از روی نقشه انتخاب شد</string>
     <string name="hub_position_missing">ثبت نشده — اجباری</string>

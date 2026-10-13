@@ -28,13 +28,22 @@ import kotlinx.coroutines.launch
 
 /**
  * The address, drafted from the offline map: county, village or city,
- * neighbourhood and nearest named street. Filled in by itself the first time
- * a position arrives and the field is still empty; never over what the user
- * typed. The button drafts it again on request. Either way it stays an
- * ordinary field — many lanes in Ilam have no name on any map.
+ * neighbourhood and nearest named street. Filled in by itself when a position
+ * arrives and the field is empty — or still holds the draft written for the
+ * previous position ([lastAuto]), so re-taking the position moves the address
+ * with it. Never over what the user typed. The button drafts it again on
+ * request. Either way it stays an ordinary field — many lanes in Ilam have no
+ * name on any map.
  */
 @Composable
-fun AddressField(value: String, latitude: Double?, longitude: Double?, onChange: (String) -> Unit) {
+fun AddressField(
+    value: String,
+    latitude: Double?,
+    longitude: Double?,
+    onChange: (String) -> Unit,
+    lastAuto: String? = null,
+    onAuto: (String) -> Unit = {}
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val installed by OfflineMap.installed.collectAsStateWithLifecycle(OfflineMap.current(context))
@@ -43,8 +52,12 @@ fun AddressField(value: String, latitude: Double?, longitude: Double?, onChange:
     val needMapText = stringResource(R.string.offline_address_need_map)
 
     LaunchedEffect(latitude, longitude, installed) {
-        if (value.isBlank() && latitude != null && longitude != null && installed != null) {
-            OfflineAddress.describe(context, latitude, longitude)?.let(onChange)
+        val untouched = value.isBlank() || value == lastAuto
+        if (untouched && latitude != null && longitude != null && installed != null) {
+            OfflineAddress.describe(context, latitude, longitude)?.let { text ->
+                onAuto(text)
+                if (text != value) onChange(text)
+            }
         }
     }
 
@@ -64,7 +77,7 @@ fun AddressField(value: String, latitude: Double?, longitude: Double?, onChange:
                     if (installed == null) { note = needMapText; return@IconButton }
                     scope.launch {
                         val text = OfflineAddress.describe(context, latitude, longitude)
-                        if (text == null) note = noneText else { note = null; onChange(text) }
+                        if (text == null) note = noneText else { note = null; onAuto(text); onChange(text) }
                     }
                 },
                 enabled = latitude != null && longitude != null

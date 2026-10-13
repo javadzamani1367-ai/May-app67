@@ -1,5 +1,6 @@
 package ir.ilam.inspection.field.ui.feeder
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
@@ -14,7 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.field
-import ir.ilam.inspection.field.ui.form.AddressField
+import ir.ilam.inspection.field.ui.form.PlaceBlock
 import ir.ilam.inspection.field.ui.form.FormHub
 import ir.ilam.inspection.field.ui.form.FormPage
 import ir.ilam.inspection.field.ui.form.ItemPositionPage
@@ -27,6 +28,7 @@ import ir.ilam.inspection.ui.common.PrimaryButton
 import ir.ilam.inspection.ui.common.SecondaryButton
 import ir.ilam.inspection.ui.common.SectionCard
 import ir.ilam.inspection.ui.common.TavanTopBar
+import ir.ilam.inspection.ui.location.rememberFresh
 import ir.ilam.inspection.ui.location.rememberLiveLocation
 import ir.ilam.inspection.ui.theme.Tone
 
@@ -41,7 +43,8 @@ fun FeederScreen(itemId: String?, onClose: () -> Unit) {
     val context = LocalContext.current
     val container = context.field
     val viewModel: FeederViewModel = viewModel(key = "feeder-${itemId ?: "new"}") { FeederViewModel(container, itemId) }
-    rememberLiveLocation()
+    val reading = rememberLiveLocation()
+    val fresh = rememberFresh(reading)
     val pageState = rememberFormPage()
     val hubScroll = rememberScrollState()
     val item = viewModel.item
@@ -70,18 +73,20 @@ fun FeederScreen(itemId: String?, onClose: () -> Unit) {
                 PanelDiagram(null, payload.feeders.map { it.state }) { pageState.value = keyOf(it) }
             }
         )
-        page == PAGE_POSITION -> ItemPositionPage(viewModel, item, onBack = back,
-            title = stringResource(R.string.feeder_position_title))
+        page == PAGE_POSITION -> {
+            BackHandler { pageState.value = PAGE_PANEL }
+            ItemPositionPage(viewModel, item, onBack = { pageState.value = PAGE_PANEL },
+                title = stringResource(R.string.feeder_position_title))
+        }
         page == PAGE_MEDIA -> MediaPage(viewModel, stampCode = item.plate.orEmpty(), onBack = back,
             allowVideo = false, allowAudio = false)
-        page == PAGE_PANEL -> FormPage(title = stringResource(R.string.feeder_panel_title), onBack = back) {
+        page == PAGE_PANEL -> FormPage(title = stringResource(R.string.place_panel_title), onBack = back) {
             SectionCard(title = stringResource(R.string.feeder_panel_title), icon = Icons.Filled.Badge, tone = Tone.BRAND) {
-                Column {
-                    AppTextField(stringResource(R.string.feeder_plate), item.plate.orEmpty(), viewModel::setPlate, ltr = true,
-                        error = if (item.plate.isNullOrBlank()) stringResource(R.string.feeder_plate_required) else null)
-                    AddressField(item.address.orEmpty(), item.latitude, item.longitude, viewModel::setAddress)
-                }
+                AppTextField(stringResource(R.string.feeder_plate), item.plate.orEmpty(), viewModel::setPlate, ltr = true,
+                    error = if (item.plate.isNullOrBlank()) stringResource(R.string.feeder_plate_required) else null)
             }
+            PlaceBlock(viewModel, item, reading, fresh, onOpenMap = { pageState.value = PAGE_POSITION },
+                onAddress = viewModel::setAddress, title = stringResource(R.string.feeder_position_title))
         }
         page == PAGE_CHECK -> FormPage(title = stringResource(R.string.feeder_check_title), onBack = back) {
             CheckStep(viewModel.verdict(), viewModel.tolerance)

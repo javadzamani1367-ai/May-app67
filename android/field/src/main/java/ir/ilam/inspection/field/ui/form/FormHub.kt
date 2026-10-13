@@ -1,32 +1,21 @@
 package ir.ilam.inspection.field.ui.form
 
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,7 +36,6 @@ import ir.ilam.inspection.ui.common.HeaderAction
 import ir.ilam.inspection.ui.common.PrimaryButton
 import ir.ilam.inspection.ui.common.StatusBadge
 import ir.ilam.inspection.ui.common.TavanTopBar
-import ir.ilam.inspection.ui.common.ToneIcon
 import ir.ilam.inspection.ui.common.ToneProgress
 import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tavan
@@ -102,7 +90,7 @@ fun FormHub(
         ) {
             ProgressCard(sections)
             header?.invoke(this)
-            sections.forEach { SectionTile(it, onClick = { onOpen(it.key) }) }
+            SectionGrid(sections, onOpen)
             footer?.invoke(this)
             Spacer(Modifier.height(Spacing.lg))
         }
@@ -153,55 +141,6 @@ private fun ProgressCard(sections: List<HubSection>) {
                 modifier = Modifier.padding(top = Spacing.sm)
             )
         }
-    }
-}
-
-/** One part of the form: big enough for a gloved thumb, with its state at the edge. */
-@Composable
-fun SectionTile(section: HubSection, onClick: () -> Unit) {
-    val stripe = when (section.status) {
-        SectionStatus.DONE -> Tavan.colors.success.strong
-        SectionStatus.MISSING -> Tavan.colors.danger.strong
-        SectionStatus.ATTENTION -> Tavan.colors.warning.strong
-        SectionStatus.OPTIONAL -> MaterialTheme.colorScheme.outlineVariant
-    }
-    AppCard(modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp), onClick = onClick) {
-        Row(
-            modifier = Modifier.fillMaxWidth().heightIn(min = 84.dp).height(IntrinsicSize.Min),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(modifier = Modifier.width(5.dp).fillMaxHeight().background(stripe))
-            ToneIcon(icon = section.icon, tone = section.tone, size = 48.dp, modifier = Modifier.padding(start = 12.dp))
-            Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp, vertical = 12.dp)) {
-                Text(section.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(
-                    section.summary,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 2.dp)
-                )
-            }
-            StatusMark(section.status)
-            Icon(
-                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun StatusMark(status: SectionStatus) {
-    when (status) {
-        SectionStatus.DONE -> Icon(Icons.Filled.CheckCircle, contentDescription = stringResource(R.string.hub_done),
-            tint = Tavan.colors.success.strong, modifier = Modifier.size(26.dp))
-        SectionStatus.MISSING -> StatusBadge(stringResource(R.string.hub_required), Tone.DANGER)
-        SectionStatus.ATTENTION -> StatusBadge(stringResource(R.string.hub_attention), Tone.WARNING)
-        SectionStatus.OPTIONAL -> StatusBadge(stringResource(R.string.hub_optional), Tone.NEUTRAL)
     }
 }
 

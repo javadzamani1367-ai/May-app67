@@ -13,7 +13,6 @@ import ir.ilam.inspection.field.data.PhaseReading
 import ir.ilam.inspection.field.ui.form.HubSection
 import ir.ilam.inspection.field.ui.form.SectionStatus
 import ir.ilam.inspection.field.ui.form.mediaSection
-import ir.ilam.inspection.field.ui.form.positionSection
 import ir.ilam.inspection.field.ui.form.preview
 import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.util.PersianNumbers
@@ -23,17 +22,20 @@ import ir.ilam.inspection.util.PersianNumbers
 fun feederSections(viewModel: FeederViewModel): List<HubSection> {
     val item = viewModel.item ?: return emptyList()
     val payload = viewModel.payload
+    val hasFix = item.latitude != null && item.longitude != null
     val tiles = mutableListOf(
         HubSection(
             key = PAGE_PANEL,
-            title = stringResource(R.string.feeder_panel_title),
-            summary = preview(listOfNotNull(item.plate?.takeIf { it.isNotBlank() }, item.address?.takeIf { it.isNotBlank() })
-                .joinToString(" · ")) ?: stringResource(R.string.feeder_plate_required),
+            title = stringResource(R.string.place_panel_title),
+            summary = when {
+                item.plate.isNullOrBlank() -> stringResource(R.string.feeder_plate_required)
+                !hasFix -> stringResource(R.string.hub_position_missing)
+                else -> preview(listOfNotNull(item.plate, item.address?.takeIf { it.isNotBlank() }).joinToString(" · ")).orEmpty()
+            },
             icon = Icons.Filled.Badge,
             tone = Tone.BRAND,
-            status = if (item.plate.isNullOrBlank()) SectionStatus.MISSING else SectionStatus.DONE
+            status = if (item.plate.isNullOrBlank() || !hasFix) SectionStatus.MISSING else SectionStatus.DONE
         ),
-        positionSection(item, title = stringResource(R.string.feeder_position_title)),
         HubSection(
             key = keyOf(FeederStep.MAIN),
             title = stringResource(R.string.feeder_main_title),

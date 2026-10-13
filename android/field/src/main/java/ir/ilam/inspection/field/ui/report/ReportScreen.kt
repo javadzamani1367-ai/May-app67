@@ -1,11 +1,11 @@
 package ir.ilam.inspection.field.ui.report
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Notes
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -15,7 +15,7 @@ import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.data.FieldKind
 import ir.ilam.inspection.field.data.Priority
 import ir.ilam.inspection.field.field
-import ir.ilam.inspection.field.ui.form.AddressField
+import ir.ilam.inspection.field.ui.form.PlaceBlock
 import ir.ilam.inspection.field.ui.form.FormHub
 import ir.ilam.inspection.field.ui.form.FormPage
 import ir.ilam.inspection.field.ui.form.ItemPositionPage
@@ -27,6 +27,7 @@ import ir.ilam.inspection.ui.common.AppTextField
 import ir.ilam.inspection.ui.common.MultilineField
 import ir.ilam.inspection.ui.common.SectionCard
 import ir.ilam.inspection.ui.common.TavanTopBar
+import ir.ilam.inspection.ui.location.rememberFresh
 import ir.ilam.inspection.ui.location.rememberLiveLocation
 import ir.ilam.inspection.ui.theme.Tone
 
@@ -44,7 +45,8 @@ fun ReportScreen(kind: FieldKind, itemId: String?, onClose: () -> Unit) {
         ReportViewModel(container, kind, itemId)
     }
     // The receiver starts now, so the position is ready by the time it is asked for.
-    rememberLiveLocation()
+    val reading = rememberLiveLocation()
+    val fresh = rememberFresh(reading)
     val pageState = rememberFormPage()
     val hubScroll = rememberScrollState()
     val item = viewModel.item
@@ -67,23 +69,23 @@ fun ReportScreen(kind: FieldKind, itemId: String?, onClose: () -> Unit) {
             onClose = onClose,
             scroll = hubScroll
         )
-        PAGE_POSITION -> ItemPositionPage(viewModel, item, onBack = back)
-        PAGE_PLACE -> FormPage(title = stringResource(R.string.report_place), onBack = back) {
-            SectionCard(title = stringResource(R.string.report_place), icon = Icons.Filled.Place, tone = Tone.INFO) {
-                Column {
-                    AddressField(item.address.orEmpty(), item.latitude, item.longitude, viewModel::setAddress)
-                    AppTextField(stringResource(R.string.report_nearest_plate), item.plate.orEmpty(), viewModel::setPlate, ltr = true)
-                }
-            }
+        PAGE_POSITION -> {
+            BackHandler { pageState.value = PAGE_PLACE }
+            ItemPositionPage(viewModel, item, onBack = { pageState.value = PAGE_PLACE })
         }
-        PAGE_DESCRIPTION -> FormPage(title = stringResource(R.string.report_description), onBack = back) {
+        PAGE_PLACE -> FormPage(title = stringResource(R.string.place_title), onBack = back) {
+            PlaceBlock(viewModel, item, reading, fresh, onOpenMap = { pageState.value = PAGE_POSITION },
+                onAddress = viewModel::setAddress) {
+                AppTextField(stringResource(R.string.report_nearest_plate), item.plate.orEmpty(), viewModel::setPlate, ltr = true)
+            }
             SectionCard(
                 title = stringResource(R.string.report_description),
                 subtitle = stringResource(descriptionHint(kind)),
                 icon = Icons.AutoMirrored.Filled.Notes,
                 tone = Tone.BRAND
             ) {
-                MultilineField(stringResource(R.string.report_description_label), item.description.orEmpty(), viewModel::setDescription)
+                MultilineField(stringResource(R.string.report_description_label), item.description.orEmpty(), viewModel::setDescription,
+                    error = if (item.description.isNullOrBlank()) stringResource(R.string.missing_description) else null)
             }
         }
         PAGE_DETAILS -> FormPage(title = stringResource(detailsTitle(kind)), onBack = back) {
