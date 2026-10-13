@@ -10,7 +10,7 @@ declare(strict_types=1);
  * کاربر می‌سازند و رمز عوض می‌کنند، و یک لایه کافی نیست.
  */
 foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSchema', 'Migrations', 'Storage',
-          'Notifications', 'Jalali', 'Field', 'FieldSettings', 'Users', 'FieldAdmin', 'FieldLabels', 'Xlsx'] as $class) {
+          'Notifications', 'Jalali', 'Field', 'FieldSettings', 'Users', 'FieldAdmin', 'FieldLabels', 'Xlsx', 'FieldDuplicates', 'Qr', 'Docx'] as $class) {
     require_once dirname(__DIR__) . '/lib/' . $class . '.php';
 }
 require_once dirname(__DIR__) . '/portal/_layout.php';
@@ -75,6 +75,7 @@ function admin_header(string $title): void
     portal_header($title, true, 'پنل مدیر', [
         ['index.php', 'داشبورد'],
         ['items.php', 'موردهای میدانی'],
+        ['map.php', 'نقشه'],
         ['users.php', 'کاربران'],
         ['settings.php', 'تنظیمات میدانی'],
         ['logout.php', 'خروج'],
@@ -118,4 +119,10 @@ function query_with(array $values, array $changes = []): string
 {
     $merged = array_filter(array_merge($values, $changes), static fn ($v) => $v !== null && $v !== '');
     return $merged === [] ? '' : '?' . http_build_query($merged);
+}
+
+/** متن لاتین (کد کاربر، کد رهگیری) میان متن فارسی، جدا از جهت اطرافش تا جابه‌جا نشود. */
+function ltr(string $text): string
+{
+    return "\u{2066}" . $text . "\u{2069}";
 }

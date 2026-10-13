@@ -111,6 +111,32 @@ equals('اسفند سال کبیسه ۳۰ روز دارد', [1403, 12, 30], Jala
 equals('و سال عادی ۲۹ روز', null, Jalali::parse('1404/12/30'));
 
 // ---------------------------------------------------------------------------
+echo "\n— کد QR —\n";
+require_once __DIR__ . '/../api/lib/Qr.php';
+// اثر انگشت ماتریس‌هایی که کتابخانه qrcode پایتون با همان داده و ماسک ساخت؛
+// همه ماسک‌ها و نسخه‌های ۱ تا ۱۰ یک بار ماژول به ماژول مقایسه و با zxing خوانده شدند.
+$qrHash = static fn (string $data, int $mask): string => hash('sha256', implode("\n",
+    array_map(static fn (array $row): string => implode('', array_map(static fn (bool $v): string => $v ? '1' : '0', $row)),
+        Qr::matrix($data, $mask))));
+foreach ([
+    ['TKV:1:5f0c7a32-9b1e-4c6d-8e2f-1a2b3c4d5e6f', 2, '74ec6fd3720547b29853699ec7ef7d59879e966609e30edf709e956fc1834ef1'],
+    ['geo:33.637400,46.422700', 5, 'dbf1740d18e56cdc063bb5a0ae71bcf61c31d32b0ea39fc8cd5d891c0323b2e6'],
+    [str_repeat('x', 120), 0, '94b9cf7559b2e47b5b9c8b45bb07936ec3c95db30771c7cc29ed897d30ec6828'],
+    [str_repeat('z', 213), 7, '253da557eea8cedaf26e8a042c46688716a06331417decfd6bb98da9637e5220'],
+] as [$data, $mask, $expected]) {
+    equals('QR ' . strlen($data) . ' بایتی با ماسک ' . $mask . ' همان مرجع است', $expected, $qrHash($data, $mask));
+}
+equals('اندازه نسخه ۳', 29, count(Qr::matrix('TKV:1:5f0c7a32-9b1e-4c6d-8e2f-1a2b3c4d5e6f')));
+check('SVG حاشیه سفید دارد', str_contains(Qr::svg('x'), 'viewBox="0 0 29 29"'));
+$tooLong = false;
+try {
+    Qr::matrix(str_repeat('a', 214));
+} catch (InvalidArgumentException $e) {
+    $tooLong = true;
+}
+check('داده بیش از نسخه ۱۰ پذیرفته نمی‌شود', $tooLong);
+
+// ---------------------------------------------------------------------------
 echo "\n— نحو فایل‌های PHP —\n";
 $phpFiles = [];
 $directory = new RecursiveIteratorIterator(

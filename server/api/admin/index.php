@@ -25,6 +25,7 @@ $overdue = Db::all(
 );
 $overdueCount = (int) (Db::one('SELECT COUNT(*) AS n FROM field_items i WHERE i.merged_into IS NULL AND '
     . FieldAdmin::OVERDUE_SQL, [$now])['n'] ?? 0);
+$duplicates = count(FieldDuplicates::pairs());
 $waiting = $byStatus[Field::STATUS_REGISTERED];
 $users = FieldAdmin::userStats();
 $experts = FieldAdmin::expertStats();
@@ -40,6 +41,8 @@ admin_header('داشبورد');
        مورد هنوز بررسی نشده</p>
     <p><a href="items.php?overdue=1"><strong><?= fa_digits((string) $overdueCount) ?></strong></a>
        ارجاع با مهلت گذشته</p>
+    <p><a href="duplicates.php"><strong><?= fa_digits((string) $duplicates) ?></strong></a>
+       جفت مورد احتمالاً تکراری</p>
   </div>
   <table>
     <tr><th>وضعیت</th><th>تعداد</th><th>نوع</th><th>تعداد</th></tr>

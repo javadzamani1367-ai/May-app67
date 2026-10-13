@@ -67,6 +67,17 @@ final class Field
         );
     }
 
+    /**
+     * آنچه QR برگه ارجاع در خود دارد و اپ کارشناس (مرحله ۸) می‌خواند: پیشوندی
+     * که نسخه دارد، و شناسه مورد. کد رهگیری انسانی است و ممکن است عوض شود؛ شناسه نه.
+     */
+    public const QR_PREFIX = 'TKV:F1:';
+
+    public static function qrPayload(string $id): string
+    {
+        return self::QR_PREFIX . $id;
+    }
+
     public static function isUuid(mixed $value): bool
     {
         return is_string($value)

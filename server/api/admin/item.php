@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 require __DIR__ . '/_item_view.php';
+require __DIR__ . '/_item_merge.php';
 
 $manager = admin_require();
 $id = (string) ($_GET['id'] ?? '');
@@ -22,6 +23,16 @@ if ($item === null) {
 $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
+    $action = (string) ($_POST['action'] ?? 'status');
+    if ($action === 'merge' || $action === 'unmerge') {
+        $error = $action === 'merge'
+            ? FieldDuplicates::merge($item, (string) ($_POST['target'] ?? ''), $manager, (string) ($_POST['note'] ?? ''))
+            : FieldDuplicates::unmerge($item, $manager);
+        if ($error === null) {
+            header('Location: item.php?id=' . urlencode($id) . '&saved=1');
+            exit;
+        }
+    }
     $to = (int) ($_POST['status'] ?? -1);
     $due = null;
     $dueText = trim((string) ($_POST['due'] ?? ''));
@@ -31,10 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $due = $parsed === null ? -1 : Jalali::startOfDay(...$parsed) + 86_400_000 - 1;
     }
     $assignee = (string) ($_POST['assigned_to'] ?? '');
-    $error = $due === -1 ? 'تاریخ مهلت را مثل ۱۴۰۵/۰۷/۲۰ بنویسید.'
+    $error = $error ?? ($due === -1 ? 'تاریخ مهلت را مثل ۱۴۰۵/۰۷/۲۰ بنویسید.'
         : FieldAdmin::transition($item, $to, $manager, (string) ($_POST['note'] ?? ''),
-            Field::isUuid($assignee) ? $assignee : null, $due);
-    if ($error === null) {
+            Field::isUuid($assignee) ? $assignee : null, $due));
+    if ($error === null && $action === 'status') {
         header('Location: item.php?id=' . urlencode($id) . '&saved=1');
         exit;
     }
@@ -49,7 +60,11 @@ $events = Db::all(
     [$id]
 );
 $experts = Db::all('SELECT id, full_name FROM users WHERE role = ? AND active = 1 ORDER BY full_name', [Auth::ROLE_EXPERT]);
-$next = FieldAdmin::NEXT[(int) $item['status']] ?? [];
+$target = $item['merged_into'] === null ? null : Db::one('SELECT id, tracking_code FROM field_items WHERE id = ?', [$item['merged_into']]);
+// مورد ادغام‌شده وضعیت جدا ندارد؛ اول باید از ادغام جدا شود.
+$next = $target === null ? (FieldAdmin::NEXT[(int) $item['status']] ?? []) : [];
+$candidates = FieldDuplicates::candidatesFor($item);
+$merged = FieldDuplicates::mergedInto($id);
 $lat = $item['latitude'] === null ? null : (float) $item['latitude'];
 $lon = $item['longitude'] === null ? null : (float) $item['longitude'];
 
@@ -61,11 +76,15 @@ admin_header((string) ($item['tracking_code'] ?? 'مورد'));
       <h2 dir="ltr" style="text-align:right"><?= e($item['tracking_code'] ?? '—') ?></h2>
       <p><?= e(FieldAdmin::KIND_NAMES[(int) $item['kind']] ?? '—') ?> — <?= field_status_tag($item) ?></p>
     </div>
-    <div><a href="items.php">بازگشت به فهرست</a></div>
+    <div>
+      <a href="sheet.php?id=<?= e($id) ?>" target="_blank"><button type="button">برگه ارجاع (چاپ / PDF)</button></a>
+      <a href="item_docx.php?id=<?= e($id) ?>"><button type="button">خروجی Word</button></a>
+      <a href="items.php">بازگشت به فهرست</a>
+    </div>
   </div>
   <?php if (isset($_GET['saved'])): ?><p class="notice">ثبت شد.</p><?php endif; ?>
   <table>
-    <?= detail_row('ثبت‌کننده', $item['reporter'] . ' (' . $item['reporter_code'] . ')') ?>
+    <?= detail_row('ثبت‌کننده', $item['reporter'] . ' (' . ltr((string) $item['reporter_code']) . ')') ?>
     <?= detail_row('اولویت', $item['priority'] === null ? null : (FieldAdmin::PRIORITY_NAMES[(int) $item['priority']] ?? null)) ?>
     <?= detail_row('زمان ثبت در گوشی', Jalali::format((int) $item['created_at'])) ?>
     <?= detail_row('زمان رسیدن به سرور', Jalali::format((int) $item['received_at'])) ?>
@@ -86,6 +105,9 @@ admin_header((string) ($item['tracking_code'] ?? 'مورد'));
 <?php $details = render_payload((int) $item['kind'], $payload); if ($details !== ''): ?>
 <div class="card"><h3>جزئیات</h3><?= $details ?></div>
 <?php endif; ?>
+
+<?= render_merge($item, $target, $candidates, $merged) ?>
+<?php if ($error !== null && $next === []): ?><div class="card"><p class="error"><?= e($error) ?></p></div><?php endif; ?>
 
 <div class="card"><h3>فایل‌ها</h3><?= render_files($files, $payload) ?></div>
 

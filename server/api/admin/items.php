@@ -32,7 +32,10 @@ admin_header('موردهای میدانی');
       <h2>موردهای میدانی</h2>
       <p class="muted"><?= fa_digits((string) $total) ?> مورد</p>
     </div>
-    <div><a href="items_export.php<?= e(query_with($values)) ?>"><button type="button">خروجی اکسل</button></a></div>
+    <div>
+      <a href="map.php<?= e(query_with($values)) ?>"><button type="button">روی نقشه</button></a>
+      <a href="items_export.php<?= e(query_with($values)) ?>"><button type="button">خروجی اکسل</button></a>
+    </div>
   </div>
   <form method="get">
     <div class="grid">
