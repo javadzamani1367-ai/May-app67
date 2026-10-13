@@ -11,7 +11,7 @@ declare(strict_types=1);
  */
 foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSchema', 'Migrations', 'Storage',
           'Notifications', 'Jalali', 'Field', 'FieldSettings', 'Users', 'FieldAdmin', 'FieldLabels', 'Xlsx', 'FieldDuplicates', 'Qr', 'Docx', 'FieldPresenter', 'FieldLine', 'FieldReferrals', 'FieldManage',
-          'CaseLabels', 'CaseReport', 'CaseArchive'] as $class) {
+          'CaseLabels', 'CaseReport', 'CaseArchive', 'CaseActions'] as $class) {
     require_once dirname(__DIR__) . '/lib/' . $class . '.php';
 }
 require_once dirname(__DIR__) . '/portal/_layout.php';
@@ -76,6 +76,8 @@ function admin_header(string $title): void
     portal_header($title, true, 'پنل مدیر', [
         ['index.php', 'داشبورد'],
         ['cases.php', 'آرشیو پرونده‌ها'],
+        ['approvals.php', 'تأییدها'],
+        ['performance.php', 'عملکرد واحدها'],
         ['items.php', 'موردهای میدانی'],
         ['map.php', 'نقشه'],
         ['users.php', 'کاربران'],

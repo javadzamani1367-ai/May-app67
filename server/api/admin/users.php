@@ -2,7 +2,19 @@
 declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 
-admin_require();
+$manager = admin_require();
+
+// درخواست ثبت دستگاه: کارشناسی که گوشی تازه دارد از صفحه ورود اپ درخواست
+// می‌فرستد. «ساخت کاربر» فرم را با همان مشخصات پر می‌کند و ذخیره، درخواست را
+// می‌بندد (Users::save)؛ «رد» فقط درخواست را می‌بندد.
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '') === 'reject_request') {
+    csrf_check();
+    Db::run('UPDATE device_requests SET status = 2, decided_at = ?, decided_by = ? WHERE id = ? AND status = 0',
+        [Db::now(), $manager['id'], (string) ($_POST['id'] ?? '')]);
+    header('Location: users.php?rejected=1');
+    exit;
+}
+$requests = Db::all('SELECT * FROM device_requests WHERE status = 0 ORDER BY created_at DESC LIMIT 100');
 
 // صفحه‌بندی از همین حالا: سقفی برای تعداد کاربر نیست و فهرست نباید با رشد کند شود.
 $perPage = 100;
@@ -38,6 +50,35 @@ admin_header('کاربران');
     </label>
   </form>
 </div>
+
+<?php if ($requests !== [] || isset($_GET['rejected'])): ?>
+<div class="card">
+  <h3>درخواست‌های ثبت دستگاه (<?= fa_digits((string) count($requests)) ?>)</h3>
+  <?php if (isset($_GET['rejected'])): ?><p class="notice">درخواست رد شد.</p><?php endif; ?>
+  <?php if ($requests !== []): ?>
+  <table>
+    <tr><th>نام</th><th>تلفن</th><th>شهرستان</th><th>کد دستگاه</th><th>زمان</th><th></th></tr>
+    <?php foreach ($requests as $req): ?>
+      <tr>
+        <td><?= e($req['full_name'] ?: '—') ?></td>
+        <td dir="ltr" style="text-align:right"><?= e((string) $req['phone']) ?></td>
+        <td><?= e((string) $req['county']) ?></td>
+        <td dir="ltr" style="text-align:right"><code><?= e((string) $req['device_code']) ?></code></td>
+        <td class="nw"><?= e(Jalali::format((int) $req['created_at'])) ?></td>
+        <td style="white-space:nowrap">
+          <a href="user.php?request=<?= e(urlencode((string) $req['id'])) ?>"><button type="button">ساخت کاربر</button></a>
+          <form method="post" style="display:inline" onsubmit="return confirm('این درخواست رد شود؟')">
+            <?= csrf_field() ?><input type="hidden" name="action" value="reject_request">
+            <input type="hidden" name="id" value="<?= e((string) $req['id']) ?>">
+            <button type="submit" style="background:#b91c1c">رد</button>
+          </form>
+        </td>
+      </tr>
+    <?php endforeach; ?>
+  </table>
+  <?php endif; ?>
+</div>
+<?php endif; ?>
 
 <div class="card">
   <?php if ($rows === []): ?>

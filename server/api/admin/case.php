@@ -2,8 +2,9 @@
 declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 require __DIR__ . '/_cases_view.php';
+require __DIR__ . '/_case_actions.php';
 
-admin_require();
+$manager = admin_require();
 
 // یک پرونده بازدید کامل، به ترتیب هفت بخش فرم رسمی، با تصاویر، مدارک و
 // سابقه ارسال به واحدها. چاپ و Word همان بخش‌ها را می‌سازند (CaseReport).
@@ -16,6 +17,7 @@ if ($case === null) {
     portal_footer();
     exit;
 }
+$errors = case_actions_handle($id, $manager);
 $r = $case['report'];
 $code = CaseLabels::code($r);
 $photos = array_values(array_filter($case['media'], static fn ($m) => (int) $m['type'] === 0));
@@ -81,6 +83,8 @@ echo case_styles();
     <div class="actions-bar">
       <a href="case_print.php?id=<?= e($id) ?>" target="_blank"><button type="button">فرم رسمی (چاپ و PDF)</button></a>
       <a href="case_docx.php?id=<?= e($id) ?>"><button type="button">خروجی Word</button></a>
+      <a href="#approval"><button type="button" style="background:#15803d">تأیید مدیر</button></a>
+      <a href="#dispatch"><button type="button" style="background:#0e7490">ارسال به واحد</button></a>
       <a href="cases.php"><button type="button" style="background:#64748b">بازگشت به آرشیو</button></a>
     </div>
   </div>
@@ -151,6 +155,10 @@ echo case_styles();
         <td><?= nl2br(e(mb_substr((string) $d['answer'], 0, 300))) ?></td></tr>
     <?php endforeach; ?>
   </table><?php endif; ?>
+</div>
+<div class="section-grid">
+  <?= case_approval_card($r, CaseActions::history($id), $errors['approval']) ?>
+  <?= case_dispatch_form($case, $errors['dispatch']) ?>
 </div>
 <p class="muted">آخرین تغییر روی گوشی: <?= e(Jalali::format((int) $r['updated_at'])) ?></p>
 <?php portal_footer();

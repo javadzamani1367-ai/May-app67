@@ -126,12 +126,7 @@ final class Jalali
      */
     public static function parse(string $text): ?array
     {
-        $latin = strtr(trim($text), [
-            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
-            '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
-            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
-            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
-        ]);
+        $latin = self::latin(trim($text));
         if (preg_match('/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})$/', $latin, $m) !== 1) {
             return null;
         }
@@ -161,6 +156,17 @@ final class Jalali
             $text .= ' - ' . $date->format('H:i');
         }
         return self::digits($text);
+    }
+
+    /** رقم فارسی و عربی به لاتین، برای هر عددی که کاربر تایپ می‌کند. */
+    public static function latin(string $value): string
+    {
+        return strtr($value, [
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+            '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+        ]);
     }
 
     public static function digits(string $value): string

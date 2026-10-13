@@ -56,18 +56,19 @@ fun DashboardTab(
 ) {
     val counts = state.counts
     if (counts.total == 0) {
+        val newVisitAction: (@Composable () -> Unit)? = if (onNewVisit == null) null else ({
+            PrimaryButton(
+                text = stringResource(R.string.action_new_visit),
+                onClick = onNewVisit,
+                icon = Icons.Filled.Add
+            )
+        })
         EmptyState(
             title = stringResource(R.string.dashboard_empty_title),
             message = stringResource(if (onNewVisit == null) R.string.dashboard_empty_manager else R.string.dashboard_empty),
             icon = Icons.AutoMirrored.Outlined.Assignment,
             modifier = modifier,
-            action = if (onNewVisit == null) null else @Composable {
-                PrimaryButton(
-                    text = stringResource(R.string.action_new_visit),
-                    onClick = onNewVisit,
-                    icon = Icons.Filled.Add
-                )
-            }
+            action = newVisitAction
         )
         return
     }

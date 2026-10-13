@@ -51,11 +51,21 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $existing = array_merge($existing ?? [], $data);
 }
 
+// «ساخت کاربر» از یک درخواست ثبت دستگاه: فرم با مشخصات همان درخواست، نقش کارشناس.
+$requestId = (string) ($_GET['request'] ?? '');
+if ($existing === null && $requestId !== '' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
+    $req = Db::one('SELECT full_name, phone, county, device_code FROM device_requests WHERE id = ? AND status = 0', [$requestId]);
+    if ($req !== null) {
+        $existing = ['full_name' => $req['full_name'], 'phone' => $req['phone'], 'county' => $req['county'],
+                     'device_code' => $req['device_code'], 'role' => Auth::ROLE_EXPERT, 'active' => 1];
+    }
+}
+
 $value = static fn (string $key): string => e((string) ($existing[$key] ?? ''));
 $role = (int) ($existing['role'] ?? Auth::ROLE_FIELD);
 $permissions = (int) ($existing['permissions'] ?? 0);
 
-admin_header($existing === null ? 'کاربر جدید' : 'ویرایش کاربر');
+admin_header(isset($existing['id']) ? 'ویرایش کاربر' : 'کاربر جدید');
 ?>
 <div class="card">
   <h2><?= $existing === null || !isset($existing['id']) ? 'کاربر جدید' : e($existing['full_name']) ?></h2>

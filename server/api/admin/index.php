@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require __DIR__ . '/_boot.php';
+require __DIR__ . '/_cases_view.php';
 
 admin_require();
 
@@ -28,10 +29,32 @@ $overdueCount = (int) (Db::one('SELECT COUNT(*) AS n FROM field_items i WHERE i.
 $duplicates = count(FieldDuplicates::pairs());
 $waiting = $byStatus[Field::STATUS_REGISTERED];
 $users = FieldAdmin::userStats();
+// پرونده‌های بازدید و کارهای مدیر روی آن‌ها، همان شمارنده‌های داشبورد اپ مدیر.
+$cases = array_fill_keys([0, 1, 2], 0);
+foreach (Db::all('SELECT status, COUNT(*) AS n FROM reports GROUP BY status') as $row) {
+    $cases[(int) $row['status']] = (int) $row['n'];
+}
+$approvals = count(CaseActions::pendingApprovals());
+$lateDispatches = count(CaseActions::overdueDispatches(1000));
+$deviceRequests = (int) (Db::one('SELECT COUNT(*) AS n FROM device_requests WHERE status = 0')['n'] ?? 0);
 $experts = FieldAdmin::expertStats();
 
 admin_header('داشبورد');
+echo case_styles();
+$tile = static fn (string $href, int $n, string $label, string $tone = '') => '<a class="kpi ' . $tone . '" href="' . e($href)
+    . '" style="text-decoration:none"><b>' . fa_digits((string) $n) . '</b><span>' . e($label) . '</span></a>';
 ?>
+<div class="card">
+  <h2>پرونده‌های بازدید</h2>
+  <div class="kpis">
+    <?= $tile('cases.php', array_sum($cases), 'پرونده رسیده به سرور') ?>
+    <?= $tile('cases.php?status=0', $cases[0], 'در دست اقدام', 'warn') ?>
+    <?= $tile('cases.php?status=1', $cases[1], 'بازدید شده', 'ok') ?>
+    <?= $tile('approvals.php', $approvals, 'در انتظار تأیید شما', $approvals > 0 ? 'danger' : '') ?>
+    <?= $tile('performance.php', $lateDispatches, 'ارسال به واحد با مهلت گذشته', $lateDispatches > 0 ? 'danger' : '') ?>
+    <?= $tile('users.php', $deviceRequests, 'درخواست ثبت دستگاه', $deviceRequests > 0 ? 'warn' : '') ?>
+  </div>
+</div>
 <div class="card">
   <h2>موردهای میدانی</h2>
   <div class="grid">
