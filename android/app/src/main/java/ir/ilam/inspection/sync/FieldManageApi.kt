@@ -132,8 +132,9 @@ suspend fun ServerApi.fieldItems(token: String, filter: FieldManage.Filter, page
         FieldManage.Page(
             items = (0 until (items?.length() ?: 0)).mapNotNull { items?.optJSONObject(it)?.let(FieldManage::row) },
             more = data.optBoolean("more"),
-            counts = counts?.keys()?.asSequence()?.mapNotNull { key -> key.toIntOrNull()?.let { it to counts.optInt(key) } }
-                ?.toMap().orEmpty(),
+            counts = counts?.let { json ->
+                json.keys().asSequence().mapNotNull { key -> key.toIntOrNull()?.let { it to json.optInt(key) } }.toMap()
+            }.orEmpty(),
             overdue = data.optInt("overdue")
         )
     }
