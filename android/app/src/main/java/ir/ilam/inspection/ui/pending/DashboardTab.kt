@@ -48,7 +48,8 @@ fun DashboardTab(
     daysWaiting: (ReportEntity) -> Int,
     onOpen: (ReportEntity) -> Unit,
     onShowTab: (ReportStatus) -> Unit,
-    onNewVisit: () -> Unit,
+    /** Null in the manager app, which records no visits. */
+    onNewVisit: (() -> Unit)?,
     onSettings: () -> Unit,
     onApprovals: () -> Unit,
     modifier: Modifier = Modifier
@@ -57,10 +58,10 @@ fun DashboardTab(
     if (counts.total == 0) {
         EmptyState(
             title = stringResource(R.string.dashboard_empty_title),
-            message = stringResource(R.string.dashboard_empty),
+            message = stringResource(if (onNewVisit == null) R.string.dashboard_empty_manager else R.string.dashboard_empty),
             icon = Icons.AutoMirrored.Outlined.Assignment,
             modifier = modifier,
-            action = {
+            action = if (onNewVisit == null) null else @Composable {
                 PrimaryButton(
                     text = stringResource(R.string.action_new_visit),
                     onClick = onNewVisit,

@@ -17,8 +17,7 @@ const FILE_ROLE_NAMES = [
     Field::ROLE_TRACK => 'مسیر (gzip)',
 ];
 
-const EVENT_NAMES = ['registered' => 'ثبت از گوشی', 'status' => 'تغییر وضعیت', 'merged' => 'ادغام',
-    'unmerged' => 'جدا شدن از ادغام', 'accepted' => 'پذیرش کارشناس', 'result' => 'نتیجه ارجاع'];
+const EVENT_NAMES = FieldManage::EVENT_NAMES;
 
 /** یک ردیف «عنوان: مقدار»؛ مقدار خالی نوشته نمی‌شود. */
 function detail_row(string $label, ?string $value): string

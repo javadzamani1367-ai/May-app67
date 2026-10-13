@@ -34,6 +34,7 @@ import ir.ilam.inspection.R
 import ir.ilam.inspection.container
 import ir.ilam.inspection.data.model.ApprovalState
 import ir.ilam.inspection.data.model.ReportStatus
+import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.ui.common.BottomActionBar
 import ir.ilam.inspection.ui.common.ColorTag
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
@@ -127,7 +128,7 @@ fun CaseDetailScreen(
                             icon = Icons.Filled.Archive,
                             modifier = Modifier.weight(1f)
                         )
-                    } else if (current.report.status == ReportStatus.PENDING.code) {
+                    } else if (current.report.status == ReportStatus.PENDING.code && !UserRole.isManager) {
                         SecondaryButton(
                             text = stringResource(R.string.case_continue_visit),
                             onClick = { onContinueVisit(reportId) },

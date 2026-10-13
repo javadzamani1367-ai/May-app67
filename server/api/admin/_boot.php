@@ -10,7 +10,7 @@ declare(strict_types=1);
  * کاربر می‌سازند و رمز عوض می‌کنند، و یک لایه کافی نیست.
  */
 foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSchema', 'Migrations', 'Storage',
-          'Notifications', 'Jalali', 'Field', 'FieldSettings', 'Users', 'FieldAdmin', 'FieldLabels', 'Xlsx', 'FieldDuplicates', 'Qr', 'Docx', 'FieldPresenter', 'FieldLine', 'FieldReferrals',
+          'Notifications', 'Jalali', 'Field', 'FieldSettings', 'Users', 'FieldAdmin', 'FieldLabels', 'Xlsx', 'FieldDuplicates', 'Qr', 'Docx', 'FieldPresenter', 'FieldLine', 'FieldReferrals', 'FieldManage',
           'CaseLabels', 'CaseReport', 'CaseArchive'] as $class) {
     require_once dirname(__DIR__) . '/lib/' . $class . '.php';
 }

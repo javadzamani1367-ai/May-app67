@@ -42,8 +42,10 @@ import ir.ilam.inspection.util.TrackingCode
 
 /**
  * The home of the app: a dashboard, then the three queues — pending, visited,
- * archived — behind a bottom bar that says how many are waiting. The floating
- * button is the second tap of the shortest path there is: a new visit.
+ * archived — behind a bottom bar that says how many are waiting. In the expert
+ * app the floating button is the second tap of the shortest path there is: a
+ * new visit. The manager app has no such button: it reviews, approves and
+ * refers, and opens the field app's items from the header.
  */
 @Composable
 fun HomeScreen(
@@ -54,7 +56,8 @@ fun HomeScreen(
     onStats: () -> Unit,
     onApprovals: () -> Unit,
     onMap: () -> Unit,
-    onReferrals: () -> Unit
+    onReferrals: () -> Unit,
+    onFieldItems: () -> Unit
 ) {
     val container = LocalContext.current.container
     val lists: CaseListViewModel = viewModel(
@@ -78,8 +81,9 @@ fun HomeScreen(
         lists.selectTab(status)
     }
 
+    // The manager reviews; only the expert who owns a pending case continues its visit.
     fun open(report: ReportEntity) {
-        if (report.status == ReportStatus.PENDING.code) onContinueVisit(report.id) else onOpenCase(report.id)
+        if (report.status == ReportStatus.PENDING.code && !UserRole.isManager) onContinueVisit(report.id) else onOpenCase(report.id)
     }
 
     val today = PersianDate.format(System.currentTimeMillis())
@@ -101,6 +105,11 @@ fun HomeScreen(
                         contentDescription = stringResource(R.string.approval_pending_title),
                         onClick = onApprovals,
                         badge = summary.counts.awaitingApproval.toInt()
+                    )
+                    HeaderAction(
+                        icon = Icons.AutoMirrored.Filled.Assignment,
+                        contentDescription = stringResource(R.string.fi_title),
+                        onClick = onFieldItems
                     )
                 }
                 if (!UserRole.isManager) {
@@ -127,8 +136,9 @@ fun HomeScreen(
                 }
             )
         },
+        // The manager app records no visits of its own: no button for one.
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            if (!UserRole.isManager) ExtendedFloatingActionButton(
                 onClick = onNewReport,
                 containerColor = MaterialTheme.colorScheme.secondary,
                 contentColor = MaterialTheme.colorScheme.onSecondary,
@@ -144,7 +154,7 @@ fun HomeScreen(
                     daysWaiting = dashboard::daysWaiting,
                     onOpen = ::open,
                     onShowTab = ::show,
-                    onNewVisit = onNewReport,
+                    onNewVisit = onNewReport.takeUnless { UserRole.isManager },
                     onSettings = onSettings,
                     onApprovals = onApprovals
                 )

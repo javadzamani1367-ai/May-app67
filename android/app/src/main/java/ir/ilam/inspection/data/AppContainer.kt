@@ -37,6 +37,8 @@ class AppContainer(private val context: Context) {
     val backgroundScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     val vault: KeyStoreVault by lazy { KeyStoreVault(context) }
+    /** For copies fetched from the server only to be looked at: photos of field items. */
+    val cacheDir: java.io.File get() = context.cacheDir
     val database: AppDatabase by lazy { AppDatabase.get(context) }
     val fileStore: FileStore by lazy { FileStore(context) }
     val counties: CountyCatalog by lazy { CountyCatalog(context) }

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- موردهای اپ بازرسی میدانی در اپ مدیر -->
+    <string name="fi_title">موردهای میدانی</string>
+    <string name="fi_subtitle">گزارش‌ها و بازرسی‌های اپ میدانی، زنده از سرور</string>
+    <string name="fi_refresh">به‌روزرسانی</string>
+    <string name="fi_search">جستجو: کد رهگیری، پلاک یا آدرس</string>
+    <string name="fi_all">همه</string>
+    <string name="fi_all_kinds">همه انواع</string>
+    <string name="fi_overdue">مهلت گذشته</string>
+    <string name="fi_more">موردهای بیشتر</string>
+    <string name="fi_empty">موردی با این فیلترها نیست.</string>
+    <string name="fi_offline">به سرور دسترسی نیست. آدرس سرور و ورود را در تنظیمات بررسی کنید.</string>
+    <string name="fi_refused">سرور این درخواست را نپذیرفت.</string>
+    <string name="fi_reporter">گزارش‌دهنده: %1$s</string>
+    <string name="fi_expert">کارشناس: %1$s</string>
+    <string name="fi_due">مهلت %1$s</string>
+
+    <string name="fi_kind_crypto">گزارش رمزارز</string>
+    <string name="fi_kind_illegal">برق غیرمجاز</string>
+    <string name="fi_kind_burn">سوختگی تجهیزات</string>
+    <string name="fi_kind_thermal">ترموویژن</string>
+    <string name="fi_kind_feeder">آمپرگیری فیدر تابلو</string>
+    <string name="fi_kind_line">آمپرگیری تیربه‌تیر</string>
+
+    <string name="fi_status_registered">ثبت‌شده</string>
+    <string name="fi_status_reviewing">در حال بررسی</string>
+    <string name="fi_status_referred">ارجاع‌شده</string>
+    <string name="fi_status_result">نتیجه ثبت شد</string>
+    <string name="fi_status_closed">بسته‌شده</string>
+    <string name="fi_status_rejected">ردشده</string>
+    <string name="fi_status_revisit">بازدید دوباره</string>
+
+    <string name="fi_code">کد رهگیری</string>
+    <string name="fi_created">زمان ثبت</string>
+    <string name="fi_reporter_label">گزارش‌دهنده</string>
+    <string name="fi_expert_label">کارشناس ارجاع</string>
+    <string name="fi_due_label">مهلت</string>
+    <string name="fi_address">آدرس</string>
+    <string name="fi_plate">پلاک</string>
+    <string name="fi_description">توضیح</string>
+    <string name="fi_files">فایل‌های رسیده</string>
+    <string name="fi_location">موقعیت</string>
+    <string name="fi_navigate">مسیریابی تا محل</string>
+    <string name="fi_details">جزئیات و یافته‌ها</string>
+    <string name="fi_result">نتیجه</string>
+    <string name="fi_result_note">توضیح نتیجه</string>
+    <string name="fi_photos">تصاویر (%1$s)</string>
+    <string name="fi_photo_loading">تصویر در دسترس نیست</string>
+    <string name="fi_history">تاریخچه</string>
+    <string name="fi_saved">وضعیت ثبت شد و به گوشی کاربر میدانی می‌رسد.</string>
+    <string name="fi_merged">این مورد در مورد دیگری ادغام شده است.</string>
+    <string name="fi_no_next">اقدام دیگری برای این وضعیت نیست.</string>
+
+    <string name="fi_action_title">تغییر وضعیت یا ارجاع</string>
+    <string name="fi_action_to">وضعیت تازه</string>
+    <string name="fi_action_expert">ارجاع به کارشناس</string>
+    <string name="fi_action_no_experts">کارشناس فعالی تعریف نشده است.</string>
+    <string name="fi_action_due">مهلت اعلام نتیجه</string>
+    <string name="fi_action_no_due">بدون مهلت</string>
+    <string name="fi_action_clear_due">برداشتن مهلت</string>
+    <string name="fi_action_note">توضیح (اختیاری)</string>
+    <string name="fi_action_reason">دلیل — به کاربر میدانی نشان داده می‌شود</string>
+    <string name="fi_action_reason_needed">برای رد یا بازدید دوباره، دلیل را بنویسید.</string>
+    <string name="fi_action_save">ثبت</string>
+</resources>

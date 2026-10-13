@@ -27,6 +27,7 @@
     <string name="dashboard_see_all">مشاهده همه</string>
     <string name="dashboard_empty_title">هنوز پرونده‌ای ثبت نشده</string>
     <string name="dashboard_empty">با دکمه «بازدید جدید» اولین گزارش را ثبت کنید.</string>
+    <string name="dashboard_empty_manager">پرونده‌های کارشناسان پس از همگام‌سازی با سرور اینجا می‌آیند. از تنظیمات «همگام‌سازی با سرور» را بزنید.</string>
     <string name="dashboard_operations">وضعیت عملیات</string>
     <string name="ops_server_off">سرور تنظیم نشده — کار کاملاً آفلاین</string>
     <string name="ops_server_synced">همه پرونده‌ها به سرور رسیده‌اند</string>

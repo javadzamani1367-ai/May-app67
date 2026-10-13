@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSchema', 'Migrations', 'Storage',
           'Notifications', 'Jalali', 'Field', 'FieldCodes', 'FieldSettings', 'Users', 'FieldLabels',
-          'FieldPresenter', 'FieldLine', 'FieldFeedback', 'FieldAdmin', 'FieldReferrals'] as $class) {
+          'FieldPresenter', 'FieldLine', 'FieldFeedback', 'FieldAdmin', 'FieldReferrals', 'FieldManage'] as $class) {
     require_once __DIR__ . '/lib/' . $class . '.php';
 }
 foreach (glob(__DIR__ . '/lib/Controllers/*.php') ?: [] as $controller) {
@@ -71,6 +71,11 @@ $routes = [
     'GET /referrals/file'        => [ReferralController::class, 'file'],
     'POST /referrals/accept'     => [ReferralController::class, 'accept'],
     'POST /referrals/result'     => [ReferralController::class, 'result'],
+
+    'GET /manage/field/items'    => [FieldManageController::class, 'index'],
+    'GET /manage/field/item'     => [FieldManageController::class, 'item'],
+    'GET /manage/field/file'     => [FieldManageController::class, 'file'],
+    'POST /manage/field/status'  => [FieldManageController::class, 'status'],
 
     'POST /approvals/submit'     => [ApprovalController::class, 'submit'],
     'POST /approvals/decide'     => [ApprovalController::class, 'decide'],

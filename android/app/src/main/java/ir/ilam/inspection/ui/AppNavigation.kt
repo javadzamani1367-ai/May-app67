@@ -7,7 +7,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import ir.ilam.inspection.container
+import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.ui.archive.CaseDetailScreen
+import ir.ilam.inspection.ui.common.ContainerViewModelFactory
+import ir.ilam.inspection.ui.fielditems.FieldItemScreen
+import ir.ilam.inspection.ui.fielditems.FieldItemsScreen
+import ir.ilam.inspection.ui.fielditems.FieldItemsViewModel
 import ir.ilam.inspection.ui.dispatch.DispatchScreen
 import ir.ilam.inspection.ui.intake.IntakeScreen
 import ir.ilam.inspection.ui.map.CasesMapScreen
@@ -36,6 +45,8 @@ object Routes {
     const val MAP = "map"
     const val REFERRALS = "referrals"
     const val REFERRAL = "referral/{id}"
+    const val FIELD_ITEMS = "field-items"
+    const val FIELD_ITEM = "field-item/{id}"
 
     fun visit(id: String) = "visit/$id"
     fun detail(id: String) = "case/$id"
@@ -56,7 +67,22 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                 onApprovals = { navController.navigate(Routes.APPROVALS) },
                 onStats = { navController.navigate(Routes.STATS) },
                 onMap = { navController.navigate(Routes.MAP) },
-                onReferrals = { navController.navigate(Routes.REFERRALS) }
+                onReferrals = { navController.navigate(Routes.REFERRALS) },
+                onFieldItems = { navController.navigate(Routes.FIELD_ITEMS) }
+            )
+        }
+        composable(Routes.FIELD_ITEMS) {
+            FieldItemsScreen(
+                viewModel = fieldItemsViewModel(),
+                onBack = { navController.popBackStack() },
+                onOpen = { navController.navigate("field-item/$it") }
+            )
+        }
+        composable(Routes.FIELD_ITEM, arguments = listOf(navArgument(ARG_ID) { type = NavType.StringType })) { entry ->
+            FieldItemScreen(
+                id = entry.arguments?.getString(ARG_ID).orEmpty(),
+                viewModel = fieldItemsViewModel(),
+                onBack = { navController.popBackStack() }
             )
         }
         composable(Routes.REFERRALS) {
@@ -76,7 +102,8 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             CasesMapScreen(
                 onBack = { navController.popBackStack() },
                 onOpenCase = { id, pending ->
-                    navController.navigate(if (pending) Routes.visit(id) else Routes.detail(id))
+                    // The manager reviews cases; only the expert who owns one continues its visit.
+                    navController.navigate(if (pending && !UserRole.isManager) Routes.visit(id) else Routes.detail(id))
                 }
             )
         }
@@ -103,7 +130,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             CaseDetailScreen(
                 reportId = entry.arguments?.getString(ARG_ID).orEmpty(),
                 onBack = { navController.popBackStack() },
-                onContinueVisit = { navController.navigate(Routes.visit(it)) },
+                onContinueVisit = { if (!UserRole.isManager) navController.navigate(Routes.visit(it)) },
                 onDispatch = { navController.navigate(Routes.dispatch(it)) }
             )
         }
@@ -138,4 +165,10 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             )
         }
     }
+}
+
+@Composable
+private fun fieldItemsViewModel(): FieldItemsViewModel {
+    val container = LocalContext.current.container
+    return viewModel(factory = remember { ContainerViewModelFactory(container) { FieldItemsViewModel(it) } })
 }
