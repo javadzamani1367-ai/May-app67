@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import ir.ilam.inspection.data.SecureDatabase
 
 /**
@@ -20,14 +22,22 @@ abstract class FieldDatabase : RoomDatabase() {
     abstract fun dao(): FieldDao
 
     companion object {
-        const val VERSION = 1
+        const val VERSION = 2
         private const val NAME = "field.db"
 
         @Volatile private var instance: FieldDatabase? = null
 
+        /** 0.5: what the office says back about an item (reason, result) is kept for the item's page. */
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE field_item ADD COLUMN server_info TEXT")
+            }
+        }
+
         fun get(context: Context): FieldDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(context.applicationContext, FieldDatabase::class.java, NAME)
                 .openHelperFactory(SecureDatabase.factory(context))
+                .addMigrations(MIGRATION_1_2)
                 .build()
                 .also { instance = it }
         }

@@ -41,6 +41,7 @@ import ir.ilam.inspection.ui.common.StatusBadge
 import ir.ilam.inspection.ui.common.TavanTopBar
 import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tavan
+import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.PersianNumbers
 import kotlinx.coroutines.launch
@@ -51,7 +52,12 @@ import kotlinx.coroutines.launch
  * gave one, and where the office has taken it.
  */
 @Composable
-fun QueueScreen(onBack: () -> Unit, onSignInAgain: () -> Unit, onOpenDraft: (FieldItemEntity) -> Unit) {
+fun QueueScreen(
+    onBack: () -> Unit,
+    onSignInAgain: () -> Unit,
+    onOpenDraft: (FieldItemEntity) -> Unit,
+    onOpenItem: (FieldItemEntity) -> Unit
+) {
     val container = LocalContext.current.field
     val items by container.database.dao().observeQueue().collectAsState(initial = emptyList())
     val drafts by container.database.dao().observeDrafts().collectAsState(initial = emptyList())
@@ -101,7 +107,7 @@ fun QueueScreen(onBack: () -> Unit, onSignInAgain: () -> Unit, onOpenDraft: (Fie
                     items(drafts, key = { it.id }) { QueueRow(it, onClick = { onOpenDraft(it) }) }
                     item { GroupHeader(stringResource(R.string.field_queue)) }
                 }
-                items(items, key = { it.id }) { QueueRow(it) }
+                items(items, key = { it.id }) { QueueRow(it, onClick = { onOpenItem(it) }) }
             }
         }
     }
@@ -140,8 +146,9 @@ private fun QueueRow(item: FieldItemEntity, onClick: (() -> Unit)? = null) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            ServerStatus.of(item.serverStatus)?.let {
-                Text(statusLabel(it), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
+                ServerStatus.of(item.serverStatus)?.let { StatusBadge(text = statusLabel(it), tone = statusTone(it)) }
+                if (item.serverInfo != null) StatusBadge(text = stringResource(R.string.item_has_answer), tone = Tone.ACCENT)
             }
             item.syncError?.let { error ->
                 Text(

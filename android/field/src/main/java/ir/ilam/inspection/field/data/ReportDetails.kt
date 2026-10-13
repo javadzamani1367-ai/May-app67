@@ -4,15 +4,15 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * What a crypto-mining or illegal-power report says beyond its position and
- * description. Travels as the item's `payload`; the keys below are the wire
- * names, and the screen maps each to its Persian label.
+ * What a crypto-mining, illegal-power or burnt-equipment report says beyond
+ * its position and description. Travels as the item's `payload`; the keys
+ * below are the wire names, and the screen maps each to its Persian label.
  *
  * Every list holds stable keys rather than labels, so renaming a label never
  * changes what an old report means.
  */
 data class ReportDetails(
-    // Crypto mining
+    // Crypto mining (the amperage also serves the burn report)
     val amperage: String = "",
     val minerCount: String = "",
     val minerType: String = "",
@@ -23,24 +23,46 @@ data class ReportDetails(
     val usage: String? = null,
     val violations: Set<String> = emptySet(),
     val meterOrBill: String = "",
-    // For the collection team — both kinds
+    // Burnt equipment: what burnt and how many, on which phases, since when, and why
+    val equipment: Map<String, Int> = emptyMap(),
+    val otherEquipment: String = "",
+    val phases: Set<String> = emptySet(),
+    val causes: Set<String> = emptySet(),
+    val occurred: String? = null,
+    val outage: Boolean? = null,
+    // For the collection team — every report kind
     val answers: Map<String, Boolean> = emptyMap(),
     val bestTime: String? = null,
     val entrances: String = "",
     val entranceNote: String = ""
 ) {
+    /** A burn report names at least one piece of equipment, from the list or in words. */
+    val hasEquipment: Boolean get() = equipment.values.any { it > 0 } || otherEquipment.isNotBlank()
+
     fun toJson(kind: FieldKind): JSONObject = JSONObject().apply {
-        if (kind == FieldKind.CRYPTO) {
-            putNumber("amperage", amperage)
-            putNumber("miner_count", minerCount)
-            putText("miner_type", minerType)
-            put("signs", JSONArray(signs.sorted()))
-        } else {
-            put("consumers", JSONObject(consumers.filterValues { it > 0 }.toSortedMap()))
-            putText("other_consumer", otherConsumer)
-            putOpt("usage", usage)
-            put("violations", JSONArray(violations.sorted()))
-            putText("meter_or_bill", meterOrBill)
+        when (kind) {
+            FieldKind.CRYPTO -> {
+                putNumber("amperage", amperage)
+                putNumber("miner_count", minerCount)
+                putText("miner_type", minerType)
+                put("signs", JSONArray(signs.sorted()))
+            }
+            FieldKind.BURN -> {
+                put("equipment", JSONObject(equipment.filterValues { it > 0 }.toSortedMap()))
+                putText("other_equipment", otherEquipment)
+                put("phases", JSONArray(phases.sorted()))
+                put("causes", JSONArray(causes.sorted()))
+                putOpt("occurred", occurred)
+                putOpt("outage", outage)
+                putNumber("amperage", amperage)
+            }
+            else -> {
+                put("consumers", JSONObject(consumers.filterValues { it > 0 }.toSortedMap()))
+                putText("other_consumer", otherConsumer)
+                putOpt("usage", usage)
+                put("violations", JSONArray(violations.sorted()))
+                putText("meter_or_bill", meterOrBill)
+            }
         }
         put("team", JSONObject().apply {
             answers.toSortedMap().forEach { (key, value) -> put(key, value) }
@@ -54,25 +76,35 @@ data class ReportDetails(
         fun fromJson(text: String?): ReportDetails {
             val json = text?.let { runCatching { JSONObject(it) }.getOrNull() } ?: return ReportDetails()
             val team = json.optJSONObject("team") ?: JSONObject()
-            val consumers = json.optJSONObject("consumers")
             return ReportDetails(
-                amperage = json.optString("amperage").takeUnless { json.isNull("amperage") }.orEmpty(),
-                minerCount = json.optString("miner_count").takeUnless { json.isNull("miner_count") }.orEmpty(),
+                amperage = json.numberText("amperage"),
+                minerCount = json.numberText("miner_count"),
                 minerType = json.optString("miner_type"),
                 signs = json.optJSONArray("signs").strings(),
-                consumers = consumers?.keys()?.asSequence()?.associateWith { consumers.optInt(it) }.orEmpty(),
+                consumers = json.optJSONObject("consumers").counts(),
                 otherConsumer = json.optString("other_consumer"),
                 usage = json.optString("usage").ifBlank { null },
                 violations = json.optJSONArray("violations").strings(),
                 meterOrBill = json.optString("meter_or_bill"),
+                equipment = json.optJSONObject("equipment").counts(),
+                otherEquipment = json.optString("other_equipment"),
+                phases = json.optJSONArray("phases").strings(),
+                causes = json.optJSONArray("causes").strings(),
+                occurred = json.optString("occurred").ifBlank { null },
+                outage = if (json.opt("outage") is Boolean) json.optBoolean("outage") else null,
                 answers = team.keys().asSequence()
                     .filter { team.opt(it) is Boolean }
                     .associateWith { team.optBoolean(it) },
                 bestTime = team.optString("best_time").ifBlank { null },
-                entrances = team.optString("entrances").takeUnless { team.isNull("entrances") }.orEmpty(),
+                entrances = team.numberText("entrances"),
                 entranceNote = team.optString("entrance_note")
             )
         }
+
+        private fun JSONObject.numberText(key: String): String = optString(key).takeUnless { isNull(key) }.orEmpty()
+
+        private fun JSONObject?.counts(): Map<String, Int> =
+            this?.keys()?.asSequence()?.associateWith { optInt(it) }.orEmpty()
 
         private fun JSONArray?.strings(): Set<String> =
             if (this == null) emptySet() else (0 until length()).map { optString(it) }.filter { it.isNotBlank() }.toSet()
@@ -101,6 +133,18 @@ object ReportKeys {
     val TEAM_QUESTIONS = listOf("vehicle_access", "needs_ladder", "needs_police", "guarded", "active_now",
         "safety_hazard", "people_seen")
     val BEST_TIMES = listOf("morning", "afternoon", "night")
+
+    /** Burnt equipment, grouped the way it stands in the network: panel, transformer, line and service. */
+    val EQUIPMENT_PANEL = listOf("main_switch", "fuse_switch", "nh_fuse", "breaker", "busbar", "panel_wiring",
+        "cable_lug", "panel_body")
+    val EQUIPMENT_TRANSFORMER = listOf("transformer", "lv_bushing", "cutout", "cutout_fuse", "arrester")
+    val EQUIPMENT_LINE = listOf("feeder_cable", "lv_line", "connector", "service_cable", "service_breaker",
+        "meter", "meter_box")
+    val EQUIPMENT = EQUIPMENT_PANEL + EQUIPMENT_TRANSFORMER + EQUIPMENT_LINE
+    val PHASES = listOf("r", "s", "t", "n")
+    val CAUSES = listOf("overload_crypto", "overload_illegal", "wrong_fuse", "loose_connection",
+        "phase_imbalance", "weather", "aging", "unknown")
+    val OCCURRED = listOf("just_now", "today", "yesterday", "older")
 }
 
 /** Priority the reporter suggests; the codes are the server's (`field_items.priority`). */

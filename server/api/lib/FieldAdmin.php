@@ -15,7 +15,9 @@ final class FieldAdmin
         Field::KIND_CRYPTO => 'گزارش رمزارز',
         Field::KIND_ILLEGAL => 'برق غیرمجاز',
         Field::KIND_THERMAL => 'ترموویژن',
-        Field::KIND_FEEDER => 'آمپرگیری فیدر',
+        Field::KIND_FEEDER => 'آمپرگیری فیدر تابلو',
+        Field::KIND_BURN => 'سوختگی تجهیزات',
+        Field::KIND_LINE => 'آمپرگیری تیربه‌تیر',
     ];
 
     public const STATUS_NAMES = [

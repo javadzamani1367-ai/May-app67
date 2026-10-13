@@ -110,3 +110,4 @@ require __DIR__ . '/admin_panel.php';
 require __DIR__ . '/field_admin.php';
 require __DIR__ . '/field_admin_tools.php';
 require __DIR__ . '/referrals.php';
+require __DIR__ . '/field_kinds.php';

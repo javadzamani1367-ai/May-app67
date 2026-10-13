@@ -1,0 +1,256 @@
+package ir.ilam.inspection.field.ui.form
+
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import ir.ilam.inspection.field.R
+import ir.ilam.inspection.ui.common.AppCard
+import ir.ilam.inspection.ui.common.BottomActionBar
+import ir.ilam.inspection.ui.common.HeaderAction
+import ir.ilam.inspection.ui.common.PrimaryButton
+import ir.ilam.inspection.ui.common.StatusBadge
+import ir.ilam.inspection.ui.common.TavanTopBar
+import ir.ilam.inspection.ui.common.ToneIcon
+import ir.ilam.inspection.ui.common.ToneProgress
+import ir.ilam.inspection.ui.theme.Spacing
+import ir.ilam.inspection.ui.theme.Tavan
+import ir.ilam.inspection.ui.theme.Tone
+import ir.ilam.inspection.util.PersianNumbers
+
+/** Where a section of a form stands, as its tile shows it. */
+enum class SectionStatus { DONE, MISSING, OPTIONAL, ATTENTION }
+
+/** One tile of a form's hub: what it is, a line of what it holds, and whether it is done. */
+data class HubSection(
+    val key: String,
+    val title: String,
+    val summary: String,
+    val icon: ImageVector,
+    val tone: Tone,
+    val status: SectionStatus
+)
+
+/**
+ * A form as one page of tiles. Each part of the form is a tile that says
+ * whether it is done and what it holds; a tap opens that part on a page of
+ * its own. "Send" is pinned at the bottom, above the phone's own buttons, and
+ * says in words what still stops it.
+ */
+@Composable
+fun FormHub(
+    title: String,
+    sections: List<HubSection>,
+    missing: List<String>,
+    busy: Boolean,
+    onOpen: (String) -> Unit,
+    onFinish: () -> Unit,
+    onDiscard: () -> Unit,
+    onClose: () -> Unit,
+    scroll: ScrollState = rememberScrollState(),
+    header: (@Composable ColumnScope.() -> Unit)? = null,
+    footer: (@Composable ColumnScope.() -> Unit)? = null
+) {
+    var confirming by remember { mutableStateOf(false) }
+    Column(modifier = Modifier.fillMaxSize()) {
+        TavanTopBar(
+            title = title,
+            subtitle = stringResource(R.string.form_autosaved),
+            onBack = onClose,
+            actions = {
+                HeaderAction(Icons.Filled.DeleteOutline, stringResource(R.string.form_discard), onClick = { confirming = true })
+            }
+        )
+        Column(
+            modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(scroll).padding(horizontal = Spacing.screen)
+        ) {
+            ProgressCard(sections)
+            header?.invoke(this)
+            sections.forEach { SectionTile(it, onClick = { onOpen(it.key) }) }
+            footer?.invoke(this)
+            Spacer(Modifier.height(Spacing.lg))
+        }
+        BottomActionBar(note = { FinishNote(missing) }) {
+            PrimaryButton(
+                text = stringResource(R.string.form_finish),
+                onClick = onFinish,
+                enabled = missing.isEmpty() && !busy,
+                busy = busy,
+                icon = Icons.AutoMirrored.Filled.Send,
+                tone = Tone.SUCCESS,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+    if (confirming) DiscardDialog(onDismiss = { confirming = false }, onConfirm = { confirming = false; onDiscard() })
+}
+
+/** How far the form is, in one bar: the first thing seen when it opens. */
+@Composable
+private fun ProgressCard(sections: List<HubSection>) {
+    val done = sections.count { it.status == SectionStatus.DONE }
+    val required = sections.count { it.status == SectionStatus.MISSING }
+    val tone = if (required == 0) Tone.SUCCESS else Tone.ACCENT
+    AppCard(modifier = Modifier.fillMaxWidth().padding(top = Spacing.md, bottom = 6.dp)) {
+        Column(modifier = Modifier.padding(Spacing.lg)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.hub_progress, PersianNumbers.toPersian(done), PersianNumbers.toPersian(sections.size)),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                if (required > 0) {
+                    StatusBadge(stringResource(R.string.hub_required_left, PersianNumbers.toPersian(required)), Tone.DANGER)
+                } else {
+                    StatusBadge(stringResource(R.string.hub_ready_badge), Tone.SUCCESS, icon = Icons.Filled.Check)
+                }
+            }
+            ToneProgress(
+                fraction = if (sections.isEmpty()) 0f else done.toFloat() / sections.size,
+                tone = tone,
+                modifier = Modifier.padding(top = Spacing.sm)
+            )
+            Text(
+                stringResource(R.string.hub_tap_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = Spacing.sm)
+            )
+        }
+    }
+}
+
+/** One part of the form: big enough for a gloved thumb, with its state at the edge. */
+@Composable
+fun SectionTile(section: HubSection, onClick: () -> Unit) {
+    val stripe = when (section.status) {
+        SectionStatus.DONE -> Tavan.colors.success.strong
+        SectionStatus.MISSING -> Tavan.colors.danger.strong
+        SectionStatus.ATTENTION -> Tavan.colors.warning.strong
+        SectionStatus.OPTIONAL -> MaterialTheme.colorScheme.outlineVariant
+    }
+    AppCard(modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp), onClick = onClick) {
+        Row(
+            modifier = Modifier.fillMaxWidth().heightIn(min = 84.dp).height(IntrinsicSize.Min),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(modifier = Modifier.width(5.dp).fillMaxHeight().background(stripe))
+            ToneIcon(icon = section.icon, tone = section.tone, size = 48.dp, modifier = Modifier.padding(start = 12.dp))
+            Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp, vertical = 12.dp)) {
+                Text(section.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    section.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+            StatusMark(section.status)
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatusMark(status: SectionStatus) {
+    when (status) {
+        SectionStatus.DONE -> Icon(Icons.Filled.CheckCircle, contentDescription = stringResource(R.string.hub_done),
+            tint = Tavan.colors.success.strong, modifier = Modifier.size(26.dp))
+        SectionStatus.MISSING -> StatusBadge(stringResource(R.string.hub_required), Tone.DANGER)
+        SectionStatus.ATTENTION -> StatusBadge(stringResource(R.string.hub_attention), Tone.WARNING)
+        SectionStatus.OPTIONAL -> StatusBadge(stringResource(R.string.hub_optional), Tone.NEUTRAL)
+    }
+}
+
+@Composable
+private fun FinishNote(missing: List<String>) {
+    Text(
+        text = if (missing.isEmpty()) stringResource(R.string.hub_ready)
+        else stringResource(R.string.hub_missing_note, missing.joinToString("، ")),
+        style = MaterialTheme.typography.bodySmall,
+        color = if (missing.isEmpty()) Tavan.colors.success.strong else Tavan.colors.danger.strong,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis
+    )
+}
+
+/**
+ * One part of a form on a page of its own. The bottom bar always sits above
+ * the phone's buttons and the keyboard; by default it simply returns to the
+ * list, since everything is already saved as it is typed.
+ */
+@Composable
+fun FormPage(
+    title: String,
+    onBack: () -> Unit,
+    subtitle: String? = null,
+    scroll: ScrollState = rememberScrollState(),
+    above: (@Composable () -> Unit)? = null,
+    bottom: (@Composable RowScope.() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        TavanTopBar(title = title, subtitle = subtitle ?: stringResource(R.string.form_autosaved), onBack = onBack)
+        above?.invoke()
+        Column(
+            modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(scroll)
+                .padding(horizontal = Spacing.screen, vertical = Spacing.sm),
+            content = content
+        )
+        BottomActionBar {
+            if (bottom != null) {
+                bottom()
+            } else {
+                PrimaryButton(
+                    text = stringResource(R.string.hub_back_to_list),
+                    onClick = onBack,
+                    icon = Icons.Filled.Check,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}

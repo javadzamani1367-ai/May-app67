@@ -24,6 +24,8 @@ data class FieldItemEntity(
     @ColumnInfo(name = "sent_at") val sentAt: Long? = null,
     @ColumnInfo(name = "tracking_code") val trackingCode: String? = null,
     @ColumnInfo(name = "server_status") val serverStatus: Int? = null,
+    /** What the office says back: the reason for a rejection, the result. JSON from `GET /field/items`. */
+    @ColumnInfo(name = "server_info") val serverInfo: String? = null,
     val priority: Int? = null,
     val latitude: Double? = null,
     val longitude: Double? = null,

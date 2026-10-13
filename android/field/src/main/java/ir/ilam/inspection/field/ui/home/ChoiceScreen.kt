@@ -3,11 +3,15 @@ package ir.ilam.inspection.field.ui.home
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.ElectricalServices
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Thermostat
+import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -25,17 +29,21 @@ fun ChoiceScreen(group: ChoiceGroup, onBack: () -> Unit, onPick: (FieldKind) -> 
             title = stringResource(if (group == ChoiceGroup.INSPECT) R.string.field_home_inspect else R.string.field_home_report),
             onBack = onBack
         )
-        Column(modifier = Modifier.padding(Spacing.screen)) {
+        Column(modifier = Modifier.verticalScroll(rememberScrollState()).padding(Spacing.screen)) {
             if (group == ChoiceGroup.INSPECT) {
                 OptionCard(stringResource(R.string.field_thermal), stringResource(R.string.field_thermal_hint),
                     Icons.Filled.Thermostat, Tone.ACCENT, enabled = true, onClick = { onPick(FieldKind.THERMAL) })
                 OptionCard(stringResource(R.string.field_feeder), stringResource(R.string.field_feeder_hint),
                     Icons.Filled.ElectricalServices, Tone.INFO, enabled = true, onClick = { onPick(FieldKind.FEEDER) })
+                OptionCard(stringResource(R.string.field_line), stringResource(R.string.field_line_hint),
+                    Icons.Filled.Timeline, Tone.BRAND, enabled = true, onClick = { onPick(FieldKind.FEEDER_LINE) })
             } else {
                 OptionCard(stringResource(R.string.field_crypto), stringResource(R.string.field_crypto_hint),
                     Icons.Filled.Memory, Tone.DANGER, enabled = true, onClick = { onPick(FieldKind.CRYPTO) })
                 OptionCard(stringResource(R.string.field_illegal), stringResource(R.string.field_illegal_hint),
                     Icons.Filled.Bolt, Tone.WARNING, enabled = true, onClick = { onPick(FieldKind.ILLEGAL) })
+                OptionCard(stringResource(R.string.field_burn), stringResource(R.string.field_burn_hint),
+                    Icons.Filled.LocalFireDepartment, Tone.DANGER, enabled = true, onClick = { onPick(FieldKind.BURN) })
             }
         }
     }

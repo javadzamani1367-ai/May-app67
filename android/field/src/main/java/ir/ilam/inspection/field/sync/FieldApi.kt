@@ -17,7 +17,8 @@ data class FieldProfile(
 
 data class PushResult(val trackingCode: String?, val status: Int, val missingFiles: Set<String>)
 
-data class RemoteItem(val id: String, val trackingCode: String?, val status: Int)
+/** An item as the office sees it now; [info] is the reason or result it says back, as JSON, or null. */
+data class RemoteItem(val id: String, val trackingCode: String?, val status: Int, val info: String? = null)
 
 data class ItemsPage(val items: List<RemoteItem>, val serverTime: Long)
 
@@ -51,7 +52,10 @@ suspend fun ServerApi.pullFieldItems(token: String, since: Long): ApiResult<Item
         val items = data.optJSONArray("items") ?: JSONArray()
         ItemsPage(
             items = (0 until items.length()).mapNotNull { items.optJSONObject(it) }.map {
-                RemoteItem(it.optString("id"), it.optString("tracking_code").ifBlank { null }, it.optInt("status"))
+                RemoteItem(
+                    it.optString("id"), it.optString("tracking_code").ifBlank { null }, it.optInt("status"),
+                    it.optJSONObject("info")?.takeIf { info -> info.length() > 0 }?.toString()
+                )
             },
             serverTime = data.optLong("server_time")
         )

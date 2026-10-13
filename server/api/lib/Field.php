@@ -12,14 +12,24 @@ final class Field
     public const KIND_ILLEGAL = 2;
     public const KIND_THERMAL = 3;
     public const KIND_FEEDER = 4;
+    public const KIND_BURN = 5;
+    public const KIND_LINE = 6;
 
-    /** پیشوند کد رهگیری و مجوز لازم برای هر نوع. */
+    /**
+     * پیشوند کد رهگیری و مجوز لازم برای هر نوع. FD آمپرگیری فیدرهای تابلو است
+     * و FT آمپرگیری تیربه‌تیر یک فیدر؛ SK گزارش سوختگی تجهیزات.
+     */
     public const KINDS = [
         self::KIND_CRYPTO  => ['prefix' => 'RZ', 'perm' => Auth::PERM_REPORT],
         self::KIND_ILLEGAL => ['prefix' => 'GH', 'perm' => Auth::PERM_REPORT],
         self::KIND_THERMAL => ['prefix' => 'TV', 'perm' => Auth::PERM_INSPECT],
         self::KIND_FEEDER  => ['prefix' => 'FD', 'perm' => Auth::PERM_INSPECT],
+        self::KIND_BURN    => ['prefix' => 'SK', 'perm' => Auth::PERM_REPORT],
+        self::KIND_LINE    => ['prefix' => 'FT', 'perm' => Auth::PERM_INSPECT],
     ];
+
+    /** گزارش‌ها (نه بازرسی‌ها): شرح و موقعیت اجباری، و تکراری‌یابی با فاصله. */
+    public const REPORT_KINDS = [self::KIND_CRYPTO, self::KIND_ILLEGAL, self::KIND_BURN];
 
     // چرخه وضعیت هر کد.
     public const STATUS_REGISTERED = 0;
@@ -106,7 +116,8 @@ final class Field
             && abs((float) $item['latitude']) <= 90 && abs((float) $item['longitude']) <= 180;
         $plate = trim((string) ($item['plate'] ?? ''));
 
-        if ($kind === self::KIND_CRYPTO || $kind === self::KIND_ILLEGAL) {
+        $payload = is_array($item['payload'] ?? null) ? $item['payload'] : [];
+        if (in_array($kind, self::REPORT_KINDS, true)) {
             if (trim((string) ($item['description'] ?? '')) === '') {
                 return 'توضیح گزارش اجباری است.';
             }
@@ -114,12 +125,23 @@ final class Field
                 return 'موقعیت گزارش ثبت نشده است.';
             }
         }
-        if ($kind === self::KIND_FEEDER) {
+        if ($kind === self::KIND_BURN && !self::namesEquipment($payload)) {
+            return 'دست‌کم یک تجهیز سوخته را انتخاب کنید.';
+        }
+        if ($kind === self::KIND_FEEDER || $kind === self::KIND_LINE) {
             if ($plate === '') {
                 return 'شماره پلاک تابلو اجباری است.';
             }
             if (!$hasPosition) {
                 return 'موقعیت تابلو ثبت نشده است.';
+            }
+        }
+        if ($kind === self::KIND_LINE) {
+            if (trim((string) ($payload['feeder'] ?? '')) === '') {
+                return 'فیدر انتخاب نشده است.';
+            }
+            if (self::measuredPoles($payload) < 2) {
+                return 'دست‌کم دو تیر با آمپر سه فاز لازم است.';
             }
         }
         if (isset($item['payload']) && strlen((string) json_encode($item['payload'])) > self::MAX_PAYLOAD_BYTES) {
@@ -133,6 +155,32 @@ final class Field
             }
         }
         return null;
+    }
+
+    /** گزارش سوختگی دست‌کم یک تجهیز را با تعداد مثبت، یا به نام، می‌گوید. */
+    public static function namesEquipment(array $payload): bool
+    {
+        foreach ((array) ($payload['equipment'] ?? []) as $count) {
+            if (is_numeric($count) && (int) $count > 0) {
+                return true;
+            }
+        }
+        return trim((string) ($payload['other_equipment'] ?? '')) !== '';
+    }
+
+    /** تیرهای اندازه‌گیری‌شده‌ای که هر سه فازشان عدد دارد. */
+    public static function measuredPoles(array $payload): int
+    {
+        $count = 0;
+        foreach ((array) ($payload['poles'] ?? []) as $pole) {
+            $pole = (array) $pole;
+            $phases = (array) ($pole['phases'] ?? []);
+            if (($pole['state'] ?? 'measured') === 'measured'
+                && is_numeric($phases['r'] ?? null) && is_numeric($phases['s'] ?? null) && is_numeric($phases['t'] ?? null)) {
+                $count++;
+            }
+        }
+        return $count;
     }
 
     /** @param array<string, mixed> $file */

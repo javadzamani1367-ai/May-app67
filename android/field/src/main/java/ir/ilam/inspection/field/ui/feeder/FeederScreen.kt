@@ -1,17 +1,12 @@
 package ir.ilam.inspection.field.ui.feeder
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -20,115 +15,116 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.field
 import ir.ilam.inspection.field.ui.form.AddressField
-import ir.ilam.inspection.field.ui.form.FormActions
-import ir.ilam.inspection.field.ui.form.MediaSection
-import ir.ilam.inspection.field.ui.form.MissingCard
+import ir.ilam.inspection.field.ui.form.FormHub
+import ir.ilam.inspection.field.ui.form.FormPage
+import ir.ilam.inspection.field.ui.form.ItemPositionPage
+import ir.ilam.inspection.field.ui.form.MediaPage
+import ir.ilam.inspection.field.ui.form.PAGE_MEDIA
+import ir.ilam.inspection.field.ui.form.PAGE_POSITION
+import ir.ilam.inspection.field.ui.form.rememberFormPage
 import ir.ilam.inspection.ui.common.AppTextField
 import ir.ilam.inspection.ui.common.PrimaryButton
 import ir.ilam.inspection.ui.common.SecondaryButton
 import ir.ilam.inspection.ui.common.SectionCard
 import ir.ilam.inspection.ui.common.TavanTopBar
-import ir.ilam.inspection.ui.location.PositionCard
-import ir.ilam.inspection.ui.theme.Spacing
+import ir.ilam.inspection.ui.location.rememberLiveLocation
 import ir.ilam.inspection.ui.theme.Tone
 
 /**
- * Feeder amperage at a transformer panel, step by step in the order the
- * readings are taken. The panel diagram stays on top the whole way, with the
- * box being filled in highlighted, so the user never reads B for A.
+ * Feeder amperage at a transformer panel. The form's page shows the panel as
+ * the user stands in front of it, each box coloured by its state; a box, or
+ * its tile, opens that reading on a page of its own, and "next" walks on in
+ * the order the readings are taken, so B is never read for A.
  */
 @Composable
 fun FeederScreen(itemId: String?, onClose: () -> Unit) {
     val context = LocalContext.current
     val container = context.field
     val viewModel: FeederViewModel = viewModel(key = "feeder-${itemId ?: "new"}") { FeederViewModel(container, itemId) }
+    rememberLiveLocation()
+    val pageState = rememberFormPage()
+    val hubScroll = rememberScrollState()
     val item = viewModel.item
     val payload = viewModel.payload
-    val step = viewModel.step
+    val title = stringResource(R.string.field_feeder)
+    val back = { pageState.value = null }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TavanTopBar(title = stringResource(R.string.field_feeder), subtitle = stringResource(R.string.form_autosaved), onBack = onClose)
-        if (item == null) return@Column
-        Column(
-            modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())
-                .padding(horizontal = Spacing.screen)
-        ) {
-            PanelDiagram(step, payload.feeders.map { it.state }) { viewModel.step = it }
-            when (step) {
-                FeederStep.PANEL -> {
-                    SectionCard(title = stringResource(R.string.feeder_panel_title), icon = Icons.Filled.Badge, tone = Tone.BRAND) {
-                        Column {
-                            AppTextField(stringResource(R.string.feeder_plate), item.plate.orEmpty(), viewModel::setPlate, ltr = true,
-                                error = if (item.plate.isNullOrBlank()) stringResource(R.string.feeder_plate_required) else null)
-                            AddressField(item.address.orEmpty(), item.latitude, item.longitude, viewModel::setAddress)
-                        }
-                    }
-                    PositionCard(
-                        latitude = item.latitude,
-                        longitude = item.longitude,
-                        accuracy = item.accuracy,
-                        onMeasured = { fix, _ -> viewModel.setMeasured(fix) },
-                        onPicked = { lat, lon -> viewModel.setPosition(lat, lon, null) },
-                        onTyped = { lat, lon -> viewModel.setPosition(lat, lon, null) }
-                    )
-                    MediaSection(viewModel, stampCode = item.plate.orEmpty(), allowVideo = false, allowAudio = false)
+    if (item == null) {
+        Column(Modifier.fillMaxSize()) { TavanTopBar(title = title, onBack = onClose) }
+        return
+    }
+    val page = pageState.value
+    val step = page?.let(::stepOf)
+    when {
+        page == null -> FormHub(
+            title = title,
+            sections = feederSections(viewModel),
+            missing = viewModel.missing().map { missingText(it) }.distinct(),
+            busy = viewModel.busy,
+            onOpen = { pageState.value = it },
+            onFinish = { viewModel.finish(context, onClose) },
+            onDiscard = { viewModel.discard(onClose) },
+            onClose = onClose,
+            scroll = hubScroll,
+            header = {
+                PanelDiagram(null, payload.feeders.map { it.state }) { pageState.value = keyOf(it) }
+            }
+        )
+        page == PAGE_POSITION -> ItemPositionPage(viewModel, item, onBack = back,
+            title = stringResource(R.string.feeder_position_title))
+        page == PAGE_MEDIA -> MediaPage(viewModel, stampCode = item.plate.orEmpty(), onBack = back,
+            allowVideo = false, allowAudio = false)
+        page == PAGE_PANEL -> FormPage(title = stringResource(R.string.feeder_panel_title), onBack = back) {
+            SectionCard(title = stringResource(R.string.feeder_panel_title), icon = Icons.Filled.Badge, tone = Tone.BRAND) {
+                Column {
+                    AppTextField(stringResource(R.string.feeder_plate), item.plate.orEmpty(), viewModel::setPlate, ltr = true,
+                        error = if (item.plate.isNullOrBlank()) stringResource(R.string.feeder_plate_required) else null)
+                    AddressField(item.address.orEmpty(), item.latitude, item.longitude, viewModel::setAddress)
                 }
-                FeederStep.MAIN -> MainSwitchStep(payload.main, viewModel::setMain)
-                FeederStep.A, FeederStep.B, FeederStep.C, FeederStep.D -> {
+            }
+        }
+        page == PAGE_CHECK -> FormPage(title = stringResource(R.string.feeder_check_title), onBack = back) {
+            CheckStep(viewModel.verdict(), viewModel.tolerance)
+            AppTextField(stringResource(R.string.feeder_note), payload.note, viewModel::setNote, singleLine = false, minLines = 2)
+        }
+        step != null -> {
+            val next = FeederStep.entries.getOrNull(step.ordinal + 1)
+            FormPage(
+                title = stringResource(stepTitle(step)),
+                onBack = back,
+                bottom = {
+                    SecondaryButton(
+                        text = stringResource(R.string.hub_list),
+                        onClick = back,
+                        icon = Icons.AutoMirrored.Filled.List,
+                        modifier = Modifier.weight(0.8f)
+                    )
+                    if (next != null) {
+                        PrimaryButton(
+                            text = stringResource(R.string.hub_next_named, stringResource(stepTitle(next))),
+                            onClick = { pageState.value = keyOf(next) },
+                            icon = Icons.AutoMirrored.Filled.ArrowForward,
+                            modifier = Modifier.weight(1.2f)
+                        )
+                    }
+                }
+            ) {
+                PanelDiagram(step, payload.feeders.map { it.state }) { pageState.value = keyOf(it) }
+                if (step == FeederStep.MAIN) {
+                    MainSwitchStep(payload.main, viewModel::setMain)
+                } else {
                     val index = step.ordinal - FeederStep.A.ordinal
                     FeederStepCard(FEEDER_TITLES[index], FEEDER_HINTS[index], payload.feeders[index]) {
                         viewModel.setFeeder(index, it)
                     }
                 }
-                FeederStep.CHECK -> {
-                    CheckStep(viewModel.verdict(), viewModel.tolerance)
-                    AppTextField(stringResource(R.string.feeder_note), payload.note, viewModel::setNote, singleLine = false, minLines = 2)
-                    MissingCard(viewModel.missing().map { missingText(it) })
-                    FormActions(
-                        canFinish = viewModel.missing().isEmpty(),
-                        busy = viewModel.busy,
-                        onFinish = { viewModel.finish(context, onClose) },
-                        onDiscard = { viewModel.discard(onClose) }
-                    )
-                }
-            }
-            if (step != FeederStep.CHECK) {
-                StepButtons(
-                    canGoBack = step != FeederStep.PANEL,
-                    canGoOn = viewModel.stepComplete(step),
-                    onBack = { viewModel.step = FeederStep.entries[step.ordinal - 1] },
-                    onNext = { viewModel.step = FeederStep.entries[step.ordinal + 1] }
-                )
             }
         }
     }
 }
 
 @Composable
-private fun StepButtons(canGoBack: Boolean, canGoOn: Boolean, onBack: () -> Unit, onNext: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.lg),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-    ) {
-        SecondaryButton(
-            text = stringResource(R.string.form_previous),
-            onClick = onBack,
-            enabled = canGoBack,
-            icon = Icons.AutoMirrored.Filled.ArrowBack,
-            modifier = Modifier.weight(1f)
-        )
-        PrimaryButton(
-            text = stringResource(R.string.form_next),
-            onClick = onNext,
-            enabled = canGoOn,
-            icon = Icons.AutoMirrored.Filled.ArrowForward,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-private fun missingText(key: String): String {
+internal fun missingText(key: String): String {
     val feeder = key.substringAfter(':', "")
     return when {
         key == FeederViewModel.KEY_POSITION -> stringResource(R.string.missing_position)
@@ -144,5 +140,35 @@ private fun missingText(key: String): String {
     }
 }
 
-private val FEEDER_TITLES = listOf(R.string.feeder_a, R.string.feeder_b, R.string.feeder_c, R.string.feeder_d)
-private val FEEDER_HINTS = listOf(R.string.feeder_a_hint, R.string.feeder_b_hint, R.string.feeder_c_hint, R.string.feeder_d_hint)
+internal const val PAGE_PANEL = "panel"
+internal const val PAGE_CHECK = "check"
+
+/** The page key of a step of the reading: "main", "A" … "D". */
+internal fun keyOf(step: FeederStep): String = when (step) {
+    FeederStep.PANEL -> PAGE_PANEL
+    FeederStep.CHECK -> PAGE_CHECK
+    FeederStep.MAIN -> "main"
+    else -> step.name
+}
+
+private fun stepOf(key: String): FeederStep? = when (key) {
+    "main" -> FeederStep.MAIN
+    "A" -> FeederStep.A
+    "B" -> FeederStep.B
+    "C" -> FeederStep.C
+    "D" -> FeederStep.D
+    else -> null
+}
+
+internal fun stepTitle(step: FeederStep): Int = when (step) {
+    FeederStep.PANEL -> R.string.feeder_panel_title
+    FeederStep.MAIN -> R.string.feeder_main_title
+    FeederStep.A -> R.string.feeder_a
+    FeederStep.B -> R.string.feeder_b
+    FeederStep.C -> R.string.feeder_c
+    FeederStep.D -> R.string.feeder_d
+    FeederStep.CHECK -> R.string.feeder_check_title
+}
+
+internal val FEEDER_TITLES = listOf(R.string.feeder_a, R.string.feeder_b, R.string.feeder_c, R.string.feeder_d)
+internal val FEEDER_HINTS = listOf(R.string.feeder_a_hint, R.string.feeder_b_hint, R.string.feeder_c_hint, R.string.feeder_d_hint)

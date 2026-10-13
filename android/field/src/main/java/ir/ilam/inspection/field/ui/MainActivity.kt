@@ -5,7 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
@@ -37,18 +43,24 @@ class MainActivity : ComponentActivity() {
         setContent {
             InspectionTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    // Saveable: coming back from a permission dialog or the
-                    // camera app recreates the activity, and must not lock it.
-                    var unlocked by rememberSaveable { mutableStateOf(false) }
-                    var crashToShow by rememberSaveable { mutableStateOf(lastCrash) }
-                    val report = crashToShow
-                    when {
-                        report != null -> CrashScreen(report = report, onDismiss = {
-                            crashReporter.clear()
-                            crashToShow = null
-                        })
-                        unlocked -> FieldNavigation(onSignInAgain = { unlocked = false })
-                        else -> FieldLockScreen(onUnlocked = { unlocked = true })
+                    // The app draws edge to edge. Below the content: the phone's own
+                    // buttons, or the keyboard when it is up — whichever is taller —
+                    // so neither a form's buttons nor the field being typed in ever
+                    // sit underneath them. Consumed here, once, for every screen.
+                    Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))) {
+                        // Saveable: coming back from a permission dialog or the
+                        // camera app recreates the activity, and must not lock it.
+                        var unlocked by rememberSaveable { mutableStateOf(false) }
+                        var crashToShow by rememberSaveable { mutableStateOf(lastCrash) }
+                        val report = crashToShow
+                        when {
+                            report != null -> CrashScreen(report = report, onDismiss = {
+                                crashReporter.clear()
+                                crashToShow = null
+                            })
+                            unlocked -> FieldNavigation(onSignInAgain = { unlocked = false })
+                            else -> FieldLockScreen(onUnlocked = { unlocked = true })
+                        }
                     }
                 }
             }

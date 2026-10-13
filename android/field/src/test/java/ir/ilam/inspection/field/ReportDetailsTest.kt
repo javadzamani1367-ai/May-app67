@@ -62,5 +62,41 @@ class ReportDetailsTest {
         assertEquals(ReportKeys.VIOLATIONS.toSet(), ReportLabels.VIOLATIONS.keys)
         assertEquals(ReportKeys.TEAM_QUESTIONS.toSet(), ReportLabels.TEAM_QUESTIONS.keys)
         assertEquals(ReportKeys.BEST_TIMES.toSet(), ReportLabels.BEST_TIMES.keys)
+        assertEquals(ReportKeys.EQUIPMENT.toSet(), ReportLabels.EQUIPMENT.keys)
+        assertEquals("no equipment in two groups", ReportKeys.EQUIPMENT.size, ReportKeys.EQUIPMENT.toSet().size)
+        assertEquals(ReportKeys.PHASES.toSet(), ReportLabels.PHASES.keys)
+        assertEquals(ReportKeys.CAUSES.toSet(), ReportLabels.CAUSES.keys)
+        assertEquals(ReportKeys.OCCURRED.toSet(), ReportLabels.OCCURRED.keys)
+    }
+
+    @Test
+    fun burnDetailsRoundTripAndStayApartFromOtherKinds() {
+        val details = ReportDetails(
+            equipment = mapOf("main_switch" to 1, "nh_fuse" to 3, "meter" to 0),
+            otherEquipment = "سرکابل",
+            phases = setOf("r", "t"),
+            causes = setOf("overload_crypto", "wrong_fuse"),
+            occurred = "today",
+            outage = true,
+            amperage = "310",
+            answers = mapOf("safety_hazard" to true)
+        )
+        val json = details.toJson(FieldKind.BURN)
+        assertEquals(3, json.getJSONObject("equipment").getInt("nh_fuse"))
+        assertFalse("a zero count is not burnt", json.getJSONObject("equipment").has("meter"))
+        assertTrue(json.getBoolean("outage"))
+        assertEquals(310L, json.getLong("amperage"))
+        assertFalse(json.has("signs"))
+        assertFalse(json.has("consumers"))
+        val back = ReportDetails.fromJson(json.toString())
+        assertEquals(mapOf("main_switch" to 1, "nh_fuse" to 3), back.equipment)
+        assertEquals(setOf("r", "t"), back.phases)
+        assertEquals(details.causes, back.causes)
+        assertEquals("today", back.occurred)
+        assertEquals(true, back.outage)
+        assertEquals("سرکابل", back.otherEquipment)
+        assertTrue(back.hasEquipment)
+        assertFalse(ReportDetails(equipment = mapOf("meter" to 0)).hasEquipment)
+        assertTrue(ReportDetails(otherEquipment = "سرکابل").hasEquipment)
     }
 }

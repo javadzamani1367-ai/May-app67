@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- صفحه هر مورد ارسال‌شده: مسیر مورد، نتیجه و پاسخ دفتر -->
+<resources>
+    <string name="item_timeline">مسیر این مورد</string>
+    <string name="item_step_saved">ثبت در گوشی</string>
+    <string name="item_step_sent">ارسال به دفتر</string>
+    <string name="item_step_received">دریافت در دفتر</string>
+    <string name="item_step_waiting">در انتظار</string>
+    <string name="item_rejected_title">دلیل رد</string>
+    <string name="item_revisit_title">خواسته دفتر برای مراجعه مجدد</string>
+    <string name="item_result_title">نتیجه بررسی</string>
+    <string name="item_result_hidden">نتیجه این مورد ثبت شده است؛ جزئیات آن برای گزارش‌دهنده نمایش داده نمی‌شود.</string>
+    <string name="item_case_title">پرونده بازدید کارشناس</string>
+    <string name="item_case_devices">%1$s دستگاه</string>
+    <string name="item_case_power">%1$s کیلووات توان کشف‌شده</string>
+    <string name="item_outcome_case">بازدید کارشناس ثبت شد</string>
+    <string name="item_details">مشخصات</string>
+    <string name="item_created">زمان ثبت</string>
+    <string name="item_address">آدرس</string>
+    <string name="item_plate">پلاک</string>
+    <string name="item_description">توضیح</string>
+    <string name="item_files">فایل‌ها</string>
+    <string name="item_open">جزئیات و نتیجه</string>
+    <string name="item_has_answer">پاسخ دفتر رسیده</string>
+</resources>

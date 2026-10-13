@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The live-position page and pill shared by every app (ui/location/LivePositionPage.kt). -->
+<resources>
+    <string name="fix_location_off_short">موقعیت‌یاب گوشی خاموش است</string>
+    <string name="live_approximate">موقعیت تقریبی — در حال دقیق‌سازی</string>
+    <string name="live_accuracy">±%1$s متر · %2$s</string>
+    <string name="live_record_me">ثبت موقعیت من</string>
+    <string name="live_record_me_accuracy">ثبت موقعیت من (±%1$s متر)</string>
+    <string name="live_record_pin">ثبت نقطه نشانگر</string>
+    <string name="live_follow_hint">نقشه همراه شما حرکت می‌کند. برای انتخاب نقطه‌ای دیگر، نقشه را بکشید.</string>
+    <string name="live_pick_hint">نشانگر را روی محل بگذارید. «موقعیت من» نقشه را به شما برمی‌گرداند.</string>
+    <string name="live_recorded_hint">نقطه قرمز موقعیتی است که قبلاً ثبت شده</string>
+    <string name="live_record_now">ثبت موقعیت فعلی</string>
+    <string name="live_on_map">روی نقشه</string>
+</resources>

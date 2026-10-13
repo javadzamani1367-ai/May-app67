@@ -50,7 +50,21 @@ final class FieldPresenter
             $add('تخلف', self::labels((array) ($p['violations'] ?? []), FieldLabels::VIOLATIONS));
             $add('شماره کنتور یا قبض', $p['meter_or_bill'] ?? null);
         }
-        if ($kind === Field::KIND_CRYPTO || $kind === Field::KIND_ILLEGAL) {
+        if ($kind === Field::KIND_BURN) {
+            $equipment = [];
+            foreach ((array) ($p['equipment'] ?? []) as $key => $count) {
+                $equipment[] = (FieldLabels::EQUIPMENT[$key] ?? $key)
+                    . ((int) $count > 1 ? ' × ' . Jalali::digits((string) (int) $count) : '');
+            }
+            $add('تجهیزات سوخته', implode('، ', $equipment));
+            $add('تجهیز دیگر', $p['other_equipment'] ?? null);
+            $add('فازهای آسیب‌دیده', self::labels((array) ($p['phases'] ?? []), FieldLabels::PHASES));
+            $add('زمان تقریبی سوختن', isset($p['occurred']) ? (FieldLabels::OCCURRED[$p['occurred']] ?? null) : null);
+            $add('برق مشترکین قطع است', is_bool($p['outage'] ?? null) ? ($p['outage'] ? 'بله' : 'خیر') : null);
+            $add('علت احتمالی', self::labels((array) ($p['causes'] ?? []), FieldLabels::CAUSES));
+            $add('آمپر اندازه‌گیری‌شده', self::numberText($p['amperage'] ?? null));
+        }
+        if (in_array($kind, Field::REPORT_KINDS, true)) {
             $team = (array) ($p['team'] ?? []);
             $yes = array_keys(array_filter($team, static fn ($v) => $v === true));
             $no = array_keys(array_filter($team, static fn ($v) => $v === false));
@@ -62,6 +76,11 @@ final class FieldPresenter
         }
         if ($kind === Field::KIND_FEEDER) {
             foreach (self::feederRows($p) as [$label, $value]) {
+                $add($label, $value);
+            }
+        }
+        if ($kind === Field::KIND_LINE) {
+            foreach (FieldLine::rows($p) as [$label, $value]) {
                 $add($label, $value);
             }
         }

@@ -13,9 +13,9 @@
     <!-- صفحه اصلی -->
     <string name="field_home_greeting">%1$s، خوش آمدید</string>
     <string name="field_home_inspect">بازرسی رمزارز / برق غیرمجاز</string>
-    <string name="field_home_inspect_hint">ترموویژن تیر و تابلو، و آمپرگیری فیدرهای تابلو ترانس</string>
+    <string name="field_home_inspect_hint">ترموویژن تیر و تابلو، آمپرگیری فیدرهای تابلو، و آمپرگیری تیربه‌تیر فیدر</string>
     <string name="field_home_report">گزارش رمزارز / برق غیرمجاز</string>
-    <string name="field_home_report_hint">ثبت مکانی که نشانه ماینر یا برق غیرمجاز دارد</string>
+    <string name="field_home_report_hint">مکانی که نشانه ماینر یا برق غیرمجاز دارد، یا تجهیزی که سوخته</string>
     <string name="field_no_permission">مدیر این بخش را برای حساب شما فعال نکرده است.</string>
     <string name="field_session_expired">نشست شما منقضی شده است. کار آفلاین ادامه دارد؛ برای ارسال به سرور دوباره وارد شوید.</string>
     <string name="field_sign_in_again">ورود دوباره</string>
@@ -50,7 +50,7 @@
     <string name="field_kind_crypto">رمزارز</string>
     <string name="field_kind_illegal">برق غیرمجاز</string>
     <string name="field_kind_thermal">ترموویژن</string>
-    <string name="field_kind_feeder">آمپرگیری فیدر</string>
+    <string name="field_kind_feeder">آمپرگیری فیدر تابلو</string>
     <string name="field_status_registered">ثبت شد</string>
     <string name="field_status_reviewing">در حال بررسی مدیر</string>
     <string name="field_status_referred">ارجاع شد به اکیپ</string>

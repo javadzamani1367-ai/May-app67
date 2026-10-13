@@ -58,6 +58,13 @@ $details = payload_rows((int) $item['kind'], $payload);
 if ($details !== []) {
     array_push($blocks, ['h', 'جزئیات'], ['table', $details]);
 }
+if ((int) $item['kind'] === Field::KIND_LINE) {
+    $poles = array_map(static fn ($r) => ['تیر ' . $r[0] . ($r[1] === '' ? '' : ' — ' . $r[1]),
+        $r[2] . "\nنسبت به قبلی: " . $r[3] . ' · انشعاب ' . $r[4] . "\n" . $r[5]], FieldLine::poleTable($payload));
+    if ($poles !== []) {
+        array_push($blocks, ['h', 'تیرها'], ['table', $poles]);
+    }
+}
 if ($files !== []) {
     array_push($blocks, ['h', 'فایل‌ها'], ['p', 'فایل‌ها روی سرور نگه داشته می‌شوند؛ اثر انگشت هر فایل برای سنجش اصالت آمده است.'],
         ['table', $files]);

@@ -106,6 +106,14 @@ admin_header((string) ($item['tracking_code'] ?? 'مورد'));
 <?php $details = render_payload((int) $item['kind'], $payload); if ($details !== ''): ?>
 <div class="card"><h3>جزئیات</h3><?= $details ?></div>
 <?php endif; ?>
+<?php if ((int) $item['kind'] === Field::KIND_LINE): ?>
+<div class="card"><h3>جریان سه فاز در طول فیدر</h3>
+  <?= FieldLine::svg($payload) ?>
+  <p class="muted"><span style="color:#dc2626">■ R</span> <span style="color:#d97706">■ S</span>
+    <span style="color:#2563eb">■ T</span> — زمینه سرخ: بار قابل توجه، کهربایی: افزایش غیرعادی</p>
+  <?= render_poles($payload) ?>
+</div>
+<?php endif; ?>
 
 <?= render_merge($item, $target, $candidates, $merged) ?>
 <?php if ($error !== null && $next === []): ?><div class="card"><p class="error"><?= e($error) ?></p></div><?php endif; ?>

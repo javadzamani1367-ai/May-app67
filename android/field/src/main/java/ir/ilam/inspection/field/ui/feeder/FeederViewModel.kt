@@ -24,7 +24,6 @@ class FeederViewModel(container: FieldContainer, existingId: String?) :
 
     var payload by mutableStateOf(FeederPayload())
         private set
-    var step by mutableStateOf(FeederStep.PANEL)
 
     private val tolerancePct get() = container.prefs.ampTolerancePct
     private val toleranceMinA get() = container.prefs.ampToleranceMinA
@@ -60,11 +59,11 @@ class FeederViewModel(container: FieldContainer, existingId: String?) :
         }
     }
 
-    /** May the user move past [step]? Only the panel step and the check stop nothing on their own. */
+    /** Is [step] filled in? The panel needs its plate, the switch and each feeder their readings. */
     fun stepComplete(step: FeederStep): Boolean {
         val missing = FeederCheck.missing(payload.main, payload.feeders)
         return when (step) {
-            FeederStep.PANEL -> item?.plate?.isNotBlank() == true && item?.latitude != null
+            FeederStep.PANEL -> item?.plate?.isNotBlank() == true
             FeederStep.MAIN -> missing.none { it.startsWith("main") }
             FeederStep.A, FeederStep.B, FeederStep.C, FeederStep.D -> {
                 val name = step.name

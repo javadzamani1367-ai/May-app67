@@ -3,14 +3,11 @@
     <!-- مشترک فرم‌ها -->
     <string name="field_drafts">پیش‌نویس‌ها — ارسال نشده‌اند، برای ادامه بزنید</string>
     <string name="form_autosaved">هر تغییر خودکار ذخیره می‌شود</string>
-    <string name="form_missing_title">برای ثبت نهایی هنوز لازم است:</string>
     <string name="form_finish">ثبت نهایی و ارسال</string>
     <string name="form_discard">حذف این پیش‌نویس</string>
     <string name="form_discard_title">حذف پیش‌نویس؟</string>
     <string name="form_discard_message">همه اطلاعات و تصاویر این مورد از گوشی پاک می‌شود و برنمی‌گردد.</string>
     <string name="form_discard_yes">بله، حذف شود</string>
-    <string name="form_next">مرحله بعد</string>
-    <string name="form_previous">مرحله قبل</string>
     <string name="form_media_title">تصاویر، فیلم و صدا</string>
     <string name="form_media_hint">از دوربین یا گالری. روی کپی عکس دوربین تاریخ، ساعت و مختصات درج می‌شود و اصل عکس هم نگه داشته می‌شود.</string>
     <string name="form_media_hint_audio">از دوربین یا گالری، و ضبط صدا — صدای فن‌ها نشانه مهمی است. روی کپی عکس دوربین تاریخ، ساعت و مختصات درج می‌شود و اصل عکس هم نگه داشته می‌شود.</string>
@@ -24,6 +21,30 @@
     <string name="form_permission_refused">بدون اجازه دسترسی این کار ممکن نیست. از تنظیمات گوشی اجازه را بدهید.</string>
     <string name="missing_position">موقعیت ثبت نشده است</string>
     <string name="missing_description">توضیح نوشته نشده است</string>
+
+    <!-- صفحه بخش‌های هر فرم -->
+    <string name="hub_progress">%1$s از %2$s بخش کامل</string>
+    <string name="hub_required_left">%1$s بخش اجباری مانده</string>
+    <string name="hub_ready_badge">آماده ارسال</string>
+    <string name="hub_tap_hint">هر بخش را بزنید تا صفحه خودش باز شود. همه چیز خودکار ذخیره می‌شود.</string>
+    <string name="hub_done">کامل</string>
+    <string name="hub_required">اجباری</string>
+    <string name="hub_attention">بررسی شود</string>
+    <string name="hub_optional">اختیاری</string>
+    <string name="hub_ready">همه موارد لازم کامل است؛ می‌توانید ثبت نهایی کنید.</string>
+    <string name="hub_missing_note">برای ثبت نهایی: %1$s</string>
+    <string name="hub_back_to_list">تمام شد، بازگشت به فهرست</string>
+    <string name="hub_list">فهرست</string>
+    <string name="hub_next_named">بعدی: %1$s</string>
+    <string name="hub_empty">هنوز چیزی ثبت نشده</string>
+    <string name="hub_position_title">موقعیت مکانی</string>
+    <string name="hub_position_done">ثبت شد · دقت ±%1$s متر</string>
+    <string name="hub_position_picked">از روی نقشه انتخاب شد</string>
+    <string name="hub_position_missing">ثبت نشده — اجباری</string>
+    <string name="hub_media_summary">%1$s عکس، %2$s فیلم، %3$s صدا</string>
+    <string name="hub_selected_count">%1$s مورد انتخاب شده</string>
+    <string name="hub_answers">%1$s پاسخ</string>
+    <string name="hub_priority">اولویت %1$s</string>
 
     <!-- گزارش رمزارز و برق غیرمجاز -->
     <string name="report_place">آدرس و نشانی</string>

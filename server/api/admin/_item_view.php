@@ -51,6 +51,21 @@ function render_payload(int $kind, array $p): string
     return rows_table(payload_rows($kind, $p));
 }
 
+/** جدول تیرهای آمپرگیری تیربه‌تیر. */
+function render_poles(array $p): string
+{
+    $rows = FieldLine::poleTable($p);
+    if ($rows === []) {
+        return '';
+    }
+    $html = '<table><tr><th>تیر</th><th>پلاک</th><th>آمپر</th><th>نسبت به قبلی</th><th>انشعاب</th><th>مختصات</th></tr>';
+    foreach ($rows as $r) {
+        $html .= '<tr><td>' . e($r[0]) . '</td><td>' . e(ltr($r[1])) . '</td><td>' . e($r[2]) . '</td><td>' . e($r[3])
+            . '</td><td>' . e($r[4]) . '</td><td dir="ltr">' . e($r[5]) . '</td></tr>';
+    }
+    return $html . '</table>';
+}
+
 /** فایل‌ها با پیش‌نمایش عکس؛ دماهای ترموویژن از payload. */
 function render_files(array $files, array $payload): string
 {

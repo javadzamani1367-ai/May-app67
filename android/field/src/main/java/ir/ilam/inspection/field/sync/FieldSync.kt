@@ -154,7 +154,7 @@ class FieldSync(
     private suspend fun pull(api: ServerApi, token: String): SyncOutcome? {
         when (val page = api.pullFieldItems(token, prefs.lastPull)) {
             is ApiResult.Ok -> {
-                page.value.items.forEach { dao.setServerState(it.id, it.trackingCode, it.status) }
+                page.value.items.forEach { dao.setRemoteState(it.id, it.trackingCode, it.status, it.info) }
                 prefs.lastPull = page.value.serverTime
             }
             is ApiResult.Refused -> return refused(page.code)

@@ -165,6 +165,43 @@ foreach ($phpFiles as $file) {
 }
 check('همه فایل‌های PHP پیدا شدند', count($phpFiles) >= 15, count($phpFiles) . ' فایل');
 
+// بارگذاری بی composer یک فهرست صریح است: کلاسی که فقط در فهرست جا بماند،
+// فقط وقتی آن مسیر صدا زده شود خطای داخلی سرور می‌دهد. هر کلاس lib که از
+// ورودی (index.php یا پنل مدیر) یا از کلاس‌های بارشده‌اش صدا زده شود باید در فهرست باشد.
+$lib = __DIR__ . '/../api/lib/';
+$loadedBy = static function (string $entry) use ($lib): array {
+    preg_match('/foreach \(\[(.*?)\] as \$class\)/s', (string) file_get_contents($entry), $m);
+    preg_match_all("/'([A-Za-z]+)'/", $m[1] ?? '', $names);
+    return $names[1];
+};
+$referenced = static function (array $files) use ($lib): array {
+    $found = [];
+    foreach ($files as $file) {
+        preg_match_all('/\b(?:new\s+)?([A-Z][A-Za-z0-9]+)::|new\s+([A-Z][A-Za-z0-9]+)\(/', (string) file_get_contents($file), $m);
+        foreach (array_filter(array_merge($m[1], $m[2])) as $name) {
+            if (is_file($lib . $name . '.php')) {
+                $found[$name] = basename($file);
+            }
+        }
+    }
+    return $found;
+};
+foreach ([
+    'index.php' => [__DIR__ . '/../api/index.php', glob($lib . 'Controllers/*.php') ?: []],
+    'پنل مدیر' => [__DIR__ . '/../api/admin/_boot.php', glob(__DIR__ . '/../api/admin/*.php') ?: []],
+] as $label => [$entry, $pages]) {
+    $loaded = $loadedBy($entry);
+    // کلاسی که خود یک فایل lib با require_once می‌آورد (QrLayout در Qr) هم بارشده است.
+    foreach ($loaded as $name) {
+        preg_match_all("/require_once __DIR__ \\. '\\/([A-Za-z]+)\\.php'/", (string) file_get_contents($lib . $name . '.php'), $req);
+        $loaded = array_merge($loaded, $req[1]);
+    }
+    $files = array_merge($pages, array_map(static fn ($n) => $lib . $n . '.php', $loaded));
+    $missing = array_diff_key($referenced($files), array_flip($loaded));
+    check("هر کلاس lib که $label به کار می‌برد بار می‌شود", $missing === [],
+        implode(', ', array_map(static fn ($k, $v) => "$k ($v)", array_keys($missing), $missing)));
+}
+
 // ---------------------------------------------------------------------------
 echo "\n— یکسانی اسکیما با گوشی —\n";
 $sql = file_get_contents(__DIR__ . '/../schema.sql');
@@ -333,6 +370,40 @@ $frame = ['id' => '11111111-2222-3333-4444-999999999999', 'role' => Field::ROLE_
 equals('تصویر ترموویژن با نوع و پلاک پذیرفته می‌شود', null, Field::problem($thermal, [$frame]));
 check('تصویر ترموویژن بی‌پلاک رد می‌شود', Field::problem($thermal, [['plate' => ''] + $frame]) !== null);
 check('تصویر ترموویژن بی‌نوع رد می‌شود', Field::problem($thermal, [['asset_type' => null] + $frame]) !== null);
+
+$burn = ['kind' => Field::KIND_BURN, 'payload' => ['equipment' => ['main_switch' => 1, 'meter' => 0]]] + $report;
+equals('سوختگی با تجهیز پذیرفته می‌شود', null, Field::problem($burn, []));
+check('سوختگی بی‌تجهیز رد می‌شود', Field::problem(['payload' => ['equipment' => ['meter' => 0]]] + $burn, []) !== null);
+equals('سوختگی با تجهیز نام‌برده پذیرفته می‌شود', null,
+    Field::problem(['payload' => ['other_equipment' => 'سرکابل']] + $burn, []));
+check('سوختگی بی‌شرح رد می‌شود', Field::problem(['description' => ''] + $burn, []) !== null);
+equals('پیشوند کد سوختگی', 'SK', Field::KINDS[Field::KIND_BURN]['prefix']);
+equals('پیشوند کد تیربه‌تیر', 'FT', Field::KINDS[Field::KIND_LINE]['prefix']);
+
+$pole = static fn (float $r, float $s, float $t): array => ['state' => 'measured', 'phases' => ['r' => $r, 's' => $s, 't' => $t]];
+$line = ['kind' => Field::KIND_LINE, 'payload' => ['feeder' => 'A', 'start' => ['r' => 100, 's' => 100, 't' => 100],
+    'poles' => [$pole(95, 96, 94), ['state' => 'not_measured', 'reason' => 'ارتفاع'], $pole(40, 45, 38)],
+    'analysis' => ['heavy' => [['from' => 1, 'to' => 3, 'drop' => 162]], 'rises' => []]]] + $feeder;
+equals('تیربه‌تیر کامل پذیرفته می‌شود', null, Field::problem($line, []));
+check('تیربه‌تیر با یک تیر رد می‌شود',
+    Field::problem(['payload' => ['feeder' => 'A', 'poles' => [$pole(1, 2, 3)]]] + $line, []) !== null);
+check('تیربه‌تیر بی‌فیدر رد می‌شود',
+    Field::problem(['payload' => ['poles' => [$pole(1, 2, 3), $pole(1, 2, 3)]]] + $line, []) !== null);
+check('تیربه‌تیر بی‌پلاک تابلو رد می‌شود', Field::problem(['plate' => ''] + $line, []) !== null);
+foreach (['FieldPresenter', 'FieldLabels', 'FieldLine'] as $class) {
+    require_once __DIR__ . '/../api/lib/' . $class . '.php';
+}
+equals('تابلو و دو تیر اندازه‌گیری‌شده', [0, 1, 3], array_column(FieldLine::points($line['payload']), 'pole'));
+$table = FieldLine::poleTable($line['payload']);
+equals('افت تیر ۱ نسبت به تابلو', 'افت ۱۵', $table[0][3]);
+equals('افت تیر ۳ نسبت به آخرین تیر اندازه‌گیری‌شده', 'افت ۱۶۲', $table[2][3]);
+$svg = FieldLine::svg($line['payload']);
+check('نمودار سه خط دارد', substr_count($svg, '<polyline') === 3);
+check('بازه پرافت سایه می‌خورد', str_contains($svg, '#fee2e2'));
+$burnRows = FieldPresenter::rows(Field::KIND_BURN, ['equipment' => ['nh_fuse' => 3], 'outage' => true, 'team' => []]);
+check('سوختگی: تجهیز با تعداد', in_array(['تجهیزات سوخته', 'فیوز کاردی (فیدر) × ۳'], $burnRows, true)
+    || in_array(['تجهیزات سوخته', FieldLabels::EQUIPMENT['nh_fuse'] . ' × ۳'], $burnRows, true));
+check('سوختگی: قطع برق', in_array(['برق مشترکین قطع است', 'بله'], $burnRows, true));
 
 // ---------------------------------------------------------------------------
 echo "\n";

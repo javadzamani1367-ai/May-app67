@@ -1,7 +1,6 @@
 package ir.ilam.inspection.field.ui.form
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -18,13 +16,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ir.ilam.inspection.field.R
-import ir.ilam.inspection.ui.common.AppCard
 import ir.ilam.inspection.ui.common.ToneChip
 import ir.ilam.inspection.ui.theme.Spacing
-import ir.ilam.inspection.ui.theme.Tavan
 import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.util.PersianNumbers
 
@@ -64,29 +58,6 @@ fun CountRow(label: String, count: Int, onChange: (Int) -> Unit) {
         Text(PersianNumbers.toPersian(count), style = MaterialTheme.typography.titleMedium)
         FilledTonalIconButton(onClick = { onChange(count + 1) }) {
             Icon(Icons.Filled.Add, contentDescription = null)
-        }
-    }
-}
-
-/** What still stops the item from being finished, in words, before the user tries. */
-@Composable
-fun MissingCard(items: List<String>) {
-    if (items.isEmpty()) return
-    val warning = Tavan.colors.warning
-    AppCard(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.WarningAmber, contentDescription = null, tint = warning.strong)
-                Text(
-                    stringResource(R.string.form_missing_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = warning.strong,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-            items.forEach {
-                Text("• $it", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
-            }
         }
     }
 }

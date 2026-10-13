@@ -74,20 +74,26 @@ final class FieldController
         ]);
     }
 
-    /** موردهای خود کاربر که از `since` به بعد روی سرور تغییر کرده‌اند. */
+    /**
+     * موردهای خود کاربر که از `since` به بعد روی سرور تغییر کرده‌اند، با آنچه
+     * دفتر به گزارش‌دهنده می‌گوید (دلیل رد، نتیجه — FieldFeedback).
+     */
     public function items(Request $request): void
     {
         $user = Auth::require($request, Auth::ROLE_FIELD);
         $since = max(0, (int) $request->int('since', 0));
         $rows = Db::all(
-            'SELECT id, kind, tracking_code, status, updated_at FROM field_items
+            'SELECT id, kind, tracking_code, status, updated_at, result FROM field_items
              WHERE user_id = ? AND updated_at > ? ORDER BY updated_at LIMIT 500',
             [$user['id'], $since]
         );
+        $detail = (int) FieldSettings::all()['reporter_result_detail'];
         foreach ($rows as &$row) {
             $row['kind'] = (int) $row['kind'];
             $row['status'] = (int) $row['status'];
             $row['updated_at'] = (int) $row['updated_at'];
+            $row['info'] = FieldFeedback::forReporter($row, $detail);
+            unset($row['result']);
         }
         Response::json(['items' => $rows, 'server_time' => Db::now()]);
     }

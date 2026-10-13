@@ -78,7 +78,9 @@ class FieldPrefs(context: Context) {
         const val KEY_AMP_MIN = "amp_tolerance_min_a"
         const val KEY_PURGE = "purge_after_sync"
         const val KEY_EXPIRED = "session_expired"
-        const val KEY_LAST_PULL = "last_pull"
+        // "_v2": the pull now brings the office's result and notes too, so a
+        // phone updated from 0.4 asks once more for everything it has sent.
+        const val KEY_LAST_PULL = "last_pull_v2"
         const val KEY_LAST_SYNC = "last_sync_at"
     }
 }

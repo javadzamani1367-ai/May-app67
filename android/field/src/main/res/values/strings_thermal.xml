@@ -45,6 +45,12 @@
     <string name="thermal_uncertain">موقعیت نامطمئن</string>
     <string name="thermal_no_position">بدون موقعیت</string>
     <string name="thermal_export">خروجی Google Earth و اکسل</string>
+    <string name="thermal_export_hint">مسیر و فایل‌ها به صورت KML برای Google Earth و CSV برای اکسل فرستاده می‌شوند.</string>
+    <string name="thermal_hub_route_idle">پیش از اولین عکس شروع کنید</string>
+    <string name="thermal_hub_route_live">در حال ثبت · %1$s نقطه</string>
+    <string name="thermal_hub_route_done">%1$s نقطه ثبت شد</string>
+    <string name="thermal_hub_find_locked">اول ثبت مسیر را شروع کنید؛ فایل‌ها با زمان مسیر پیدا می‌شوند.</string>
+    <string name="thermal_hub_files_summary">%1$s فایل · %2$s بدون تخصیص · %3$s با دما</string>
 
     <!-- Temperatures -->
     <string name="thermal_temps_title">دماها</string>

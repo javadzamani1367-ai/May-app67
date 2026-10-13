@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- گزارش سوختگی تجهیزات -->
+<resources>
+    <string name="field_burn">گزارش سوختگی تجهیزات</string>
+    <string name="field_burn_hint">کلید، فیوز، تابلو، کات‌اوت یا هر تجهیزی که سوخته — اغلب نشانه اضافه‌بار ماینر یا برق غیرمجاز</string>
+    <string name="field_kind_burn">سوختگی تجهیزات</string>
+    <string name="report_description_hint_burn">چه چیزی سوخته و چه دیدید؟ (بوی سوختگی، دود، ذوب عایق، فیوز سیم‌پیچی‌شده…)</string>
+    <string name="burn_equipment_title">تجهیزات سوخته — اجباری</string>
+    <string name="burn_equipment_hint">هر تجهیزی را که سوخته بزنید، بعد تعدادش را تنظیم کنید.</string>
+    <string name="burn_group_panel">تابلو و کلیدها</string>
+    <string name="burn_group_transformer">ترانسفورماتور و فشار متوسط</string>
+    <string name="burn_group_line">شبکه، انشعاب و کنتور</string>
+    <string name="burn_counts">تعداد هر تجهیز</string>
+    <string name="burn_other_equipment">تجهیز دیگر (نام)</string>
+    <string name="burn_details_title">جزئیات رخداد</string>
+    <string name="burn_phases">فازهای آسیب‌دیده</string>
+    <string name="burn_occurred">زمان تقریبی سوختن</string>
+    <string name="burn_outage">برق مشترکین قطع است؟</string>
+    <string name="burn_causes">علت احتمالی، به نظر شما</string>
+    <string name="burn_amperage">آمپر اندازه‌گیری‌شده، اگر گرفتید (آمپر)</string>
+    <string name="missing_equipment">تجهیز سوخته انتخاب نشده است</string>
+
+    <string name="equipment_main_switch">کلید کل</string>
+    <string name="equipment_fuse_switch">کلید فیوز</string>
+    <string name="equipment_nh_fuse">فیوز کاردی (فیوز فیدر)</string>
+    <string name="equipment_breaker">کلید اتوماتیک</string>
+    <string name="equipment_busbar">شینه تابلو</string>
+    <string name="equipment_panel_wiring">سیم‌کشی تابلو</string>
+    <string name="equipment_cable_lug">کابلشو و سرسیم</string>
+    <string name="equipment_panel_body">بدنه تابلو</string>
+    <string name="equipment_transformer">ترانسفورماتور</string>
+    <string name="equipment_lv_bushing">بوشینگ فشار ضعیف ترانس</string>
+    <string name="equipment_cutout">کات‌اوت</string>
+    <string name="equipment_cutout_fuse">فیوز کات‌اوت (فیوز لینک)</string>
+    <string name="equipment_arrester">برقگیر</string>
+    <string name="equipment_feeder_cable">کابل خروجی فیدر</string>
+    <string name="equipment_lv_line">سیم یا کابل خودنگهدار شبکه</string>
+    <string name="equipment_connector">کلمپ و اتصالات شبکه</string>
+    <string name="equipment_service_cable">سیم یا کابل انشعاب مشترک</string>
+    <string name="equipment_service_breaker">کلید مینیاتوری یا فیوز مشترک</string>
+    <string name="equipment_meter">کنتور</string>
+    <string name="equipment_meter_box">جعبه کنتور</string>
+
+    <string name="phase_r">فاز R</string>
+    <string name="phase_s">فاز S</string>
+    <string name="phase_t">فاز T</string>
+    <string name="phase_n">نول</string>
+
+    <string name="cause_overload_crypto">اضافه‌بار به‌خاطر ماینر رمزارز</string>
+    <string name="cause_overload_illegal">اضافه‌بار از انشعاب غیرمجاز</string>
+    <string name="cause_wrong_fuse">فیوز نامتناسب یا سیم به‌جای فیوز</string>
+    <string name="cause_loose_connection">اتصال سست یا شل</string>
+    <string name="cause_phase_imbalance">عدم تعادل بار فازها</string>
+    <string name="cause_weather">باران، رطوبت یا عوامل جوی</string>
+    <string name="cause_aging">فرسودگی تجهیز</string>
+    <string name="cause_unknown">نامشخص</string>
+
+    <string name="occurred_just_now">همین حالا، کمتر از یک ساعت</string>
+    <string name="occurred_today">امروز</string>
+    <string name="occurred_yesterday">دیروز</string>
+    <string name="occurred_older">بیش از یک روز پیش</string>
+</resources>

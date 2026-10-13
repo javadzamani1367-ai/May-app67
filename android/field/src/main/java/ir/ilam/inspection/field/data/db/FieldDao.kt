@@ -42,6 +42,13 @@ interface FieldDao {
     @Query("UPDATE field_item SET tracking_code = :code, server_status = :status WHERE id = :id")
     suspend fun setServerState(id: String, code: String?, status: Int?)
 
+    /** The office's side of an item, from the status pull: code, status, and what it says back. */
+    @Query("UPDATE field_item SET tracking_code = :code, server_status = :status, server_info = :info WHERE id = :id")
+    suspend fun setRemoteState(id: String, code: String?, status: Int?, info: String?)
+
+    @Query("SELECT * FROM field_item WHERE id = :id")
+    fun observeItem(id: String): Flow<FieldItemEntity?>
+
     @Query("SELECT * FROM field_file WHERE item_id = :itemId")
     suspend fun files(itemId: String): List<FieldFileEntity>
 

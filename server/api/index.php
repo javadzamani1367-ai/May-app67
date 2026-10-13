@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSchema', 'Migrations', 'Storage',
           'Notifications', 'Jalali', 'Field', 'FieldCodes', 'FieldSettings', 'Users', 'FieldLabels',
-          'FieldPresenter', 'FieldAdmin', 'FieldReferrals'] as $class) {
+          'FieldPresenter', 'FieldLine', 'FieldFeedback', 'FieldAdmin', 'FieldReferrals'] as $class) {
     require_once __DIR__ . '/lib/' . $class . '.php';
 }
 foreach (glob(__DIR__ . '/lib/Controllers/*.php') ?: [] as $controller) {

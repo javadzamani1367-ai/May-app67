@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feeder_panel_title">تابلو</string>
+    <string name="feeder_position_title">موقعیت تابلو</string>
+    <string name="feeder_amps">R %1$s · S %2$s · T %3$s آمپر</string>
+    <string name="feeder_check_pending">بعد از ورود آمپرها محاسبه می‌شود</string>
     <string name="feeder_plate">شماره پلاک تابلو — اجباری</string>
     <string name="feeder_plate_required">شماره پلاک تابلو نوشته نشده است</string>
     <string name="feeder_back_row">پشت تابلو</string>

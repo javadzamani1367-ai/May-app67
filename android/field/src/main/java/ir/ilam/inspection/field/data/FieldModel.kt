@@ -13,12 +13,21 @@ object Permission {
     fun has(granted: Int, permission: Int): Boolean = (granted and permission) != 0
 }
 
-/** The four kinds of item; [permission] is the bit an account needs to make one. */
+/**
+ * The kinds of item; [permission] is the bit an account needs to make one.
+ * FEEDER is the panel (main switch and feeders A to D); FEEDER_LINE walks one
+ * feeder pole by pole. BURN is a report of burnt network equipment.
+ */
 enum class FieldKind(val code: Int, val permission: Int) {
     CRYPTO(1, Permission.REPORT),
     ILLEGAL(2, Permission.REPORT),
     THERMAL(3, Permission.INSPECT),
-    FEEDER(4, Permission.INSPECT);
+    FEEDER(4, Permission.INSPECT),
+    BURN(5, Permission.REPORT),
+    FEEDER_LINE(6, Permission.INSPECT);
+
+    /** The three report kinds share one form: place, description, details, team, media. */
+    val isReport: Boolean get() = this == CRYPTO || this == ILLEGAL || this == BURN
 
     companion object {
         fun of(code: Int): FieldKind = entries.firstOrNull { it.code == code } ?: CRYPTO

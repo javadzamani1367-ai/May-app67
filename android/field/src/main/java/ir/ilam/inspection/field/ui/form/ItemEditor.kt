@@ -83,14 +83,21 @@ abstract class ItemEditor(
      * A photo from the app's camera: the original is kept untouched as the
      * evidence, and a copy gets the date, time and position burned in. Both
      * carry the same capture time, which is how the screen pairs them.
+     * [onSaved] gets that time, for a form that ties the photo to one part of
+     * itself — a pole of a feeder walk, whose own [place] the photo then carries.
      */
-    fun addCameraPhoto(raw: File, stampCode: String) = withItem { current ->
+    fun addCameraPhoto(raw: File, stampCode: String, place: Fix? = null, onSaved: (Long) -> Unit = {}) {
         val now = System.currentTimeMillis()
-        attach(raw, FileRole.PHOTO, MIME_JPEG, now)
-        val stamped = newFile("jpg")
-        val stamp = PhotoStamp(stampCode, container.account.userCode, now, current.latitude, current.longitude)
-        if (container.mediaProcessor.processPhoto(raw, stamped, stamp)) {
-            attach(stamped, FileRole.PHOTO_STAMPED, MIME_JPEG, now)
+        withItem(after = { onSaved(now) }) { current ->
+            val at = place ?: current.latitude?.let { lat ->
+                current.longitude?.let { lon -> Fix(lat, lon, current.accuracy ?: 0.0) }
+            }
+            attach(raw, FileRole.PHOTO, MIME_JPEG, now, at)
+            val stamped = newFile("jpg")
+            val stamp = PhotoStamp(stampCode, container.account.userCode, now, at?.latitude, at?.longitude)
+            if (container.mediaProcessor.processPhoto(raw, stamped, stamp)) {
+                attach(stamped, FileRole.PHOTO_STAMPED, MIME_JPEG, now, at)
+            }
         }
     }
 
@@ -162,20 +169,26 @@ abstract class ItemEditor(
         }
     }
 
-    private suspend fun attach(file: File, role: Int, mime: String, at: Long) {
+    private suspend fun attach(file: File, role: Int, mime: String, at: Long, place: Fix? = null) {
         val current = item ?: return
         withContext(Dispatchers.IO) {
-            container.drafts.attach(current.id, file, role, mime, at, current.latitude, current.longitude, current.accuracy)
+            if (place != null) {
+                container.drafts.attach(current.id, file, role, mime, at, place.latitude, place.longitude,
+                    place.accuracy.takeIf { it > 0 })
+            } else {
+                container.drafts.attach(current.id, file, role, mime, at, current.latitude, current.longitude, current.accuracy)
+            }
         }
     }
 
-    private fun withItem(block: suspend (FieldItemEntity) -> Unit) {
+    private fun withItem(after: () -> Unit = {}, block: suspend (FieldItemEntity) -> Unit) {
         val current = item ?: return
         viewModelScope.launch {
             busy = true
             withContext(Dispatchers.IO) { block(current) }
             files = container.drafts.files(current.id)
             busy = false
+            after()
         }
     }
 

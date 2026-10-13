@@ -11,7 +11,9 @@ import ir.ilam.inspection.field.ui.feeder.FeederScreen
 import ir.ilam.inspection.field.ui.home.ChoiceGroup
 import ir.ilam.inspection.field.ui.home.ChoiceScreen
 import ir.ilam.inspection.field.ui.home.HomeScreen
+import ir.ilam.inspection.field.ui.line.LineScreen
 import ir.ilam.inspection.field.ui.map.MapScreen
+import ir.ilam.inspection.field.ui.queue.ItemScreen
 import ir.ilam.inspection.field.ui.queue.QueueScreen
 import ir.ilam.inspection.field.ui.report.ReportScreen
 import ir.ilam.inspection.field.ui.thermal.ThermalScreen
@@ -24,11 +26,14 @@ private object Routes {
     const val REPORT = "report/{kind}?id={id}"
     const val FEEDER = "feeder?id={id}"
     const val THERMAL = "thermal?id={id}"
+    const val LINE = "line?id={id}"
+    const val ITEM = "item/{id}"
 
     fun choice(group: ChoiceGroup) = "choice/${group.name}"
     fun report(kind: FieldKind, id: String? = null) = "report/${kind.code}" + (id?.let { "?id=$it" } ?: "")
     fun feeder(id: String? = null) = "feeder" + (id?.let { "?id=$it" } ?: "")
     fun thermal(id: String? = null) = "thermal" + (id?.let { "?id=$it" } ?: "")
+    fun line(id: String? = null) = "line" + (id?.let { "?id=$it" } ?: "")
 }
 
 private val optionalId = navArgument("id") { type = NavType.StringType; nullable = true; defaultValue = null }
@@ -39,8 +44,9 @@ fun FieldNavigation(onSignInAgain: () -> Unit) {
     val nav = rememberNavController()
     fun open(kind: FieldKind, id: String? = null) = nav.navigate(
         when (kind) {
-            FieldKind.CRYPTO, FieldKind.ILLEGAL -> Routes.report(kind, id)
+            FieldKind.CRYPTO, FieldKind.ILLEGAL, FieldKind.BURN -> Routes.report(kind, id)
             FieldKind.FEEDER -> Routes.feeder(id)
+            FieldKind.FEEDER_LINE -> Routes.line(id)
             FieldKind.THERMAL -> Routes.thermal(id)
         }
     )
@@ -68,6 +74,9 @@ fun FieldNavigation(onSignInAgain: () -> Unit) {
         composable(Routes.FEEDER, arguments = listOf(optionalId)) { entry ->
             FeederScreen(itemId = entry.arguments?.getString("id"), onClose = { nav.popBackStack() })
         }
+        composable(Routes.LINE, arguments = listOf(optionalId)) { entry ->
+            LineScreen(itemId = entry.arguments?.getString("id"), onClose = { nav.popBackStack() })
+        }
         composable(Routes.MAP) {
             MapScreen(onBack = { nav.popBackStack() })
         }
@@ -75,8 +84,12 @@ fun FieldNavigation(onSignInAgain: () -> Unit) {
             QueueScreen(
                 onBack = { nav.popBackStack() },
                 onSignInAgain = onSignInAgain,
-                onOpenDraft = { item -> open(FieldKind.of(item.kind), item.id) }
+                onOpenDraft = { item -> open(FieldKind.of(item.kind), item.id) },
+                onOpenItem = { item -> nav.navigate("item/${item.id}") }
             )
+        }
+        composable(Routes.ITEM, arguments = listOf(navArgument("id") { type = NavType.StringType })) { entry ->
+            ItemScreen(itemId = entry.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() })
         }
         composable(Routes.THERMAL, arguments = listOf(optionalId)) { entry ->
             ThermalScreen(itemId = entry.arguments?.getString("id"), onClose = { nav.popBackStack() })

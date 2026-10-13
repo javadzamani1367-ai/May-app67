@@ -19,7 +19,7 @@ final class FieldDuplicates
     public const REPORT_DAYS = 30;
     public const INSPECTION_DAYS = 3;
 
-    private const REPORT_KINDS = [Field::KIND_CRYPTO, Field::KIND_ILLEGAL];
+    private const REPORT_KINDS = Field::REPORT_KINDS;
     /** کادر جستجو در درجه؛ کمی بزرگ‌تر از ۱۵۰ متر در عرض ایلام، فاصله دقیق بعد حساب می‌شود. */
     private const BOX_LAT = 0.0015;
     private const BOX_LON = 0.0019;

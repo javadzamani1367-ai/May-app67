@@ -31,10 +31,11 @@ import ir.ilam.inspection.ui.theme.Tavan
  * behind B, D behind A. Laid out left to right on purpose: in a right-to-left
  * layout the boxes would be mirrored and "right" would be on the left.
  *
- * The box being filled in is highlighted; a tap jumps to that box's step.
+ * The box being filled in is highlighted; a tap opens that box's page. On the
+ * form's own page nothing is highlighted and each box shows its state.
  */
 @Composable
-fun PanelDiagram(step: FeederStep, states: List<FeederState?>, onPick: (FeederStep) -> Unit) {
+fun PanelDiagram(step: FeederStep?, states: List<FeederState?>, onPick: (FeederStep) -> Unit) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
@@ -68,7 +69,7 @@ fun PanelDiagram(step: FeederStep, states: List<FeederState?>, onPick: (FeederSt
 private fun RowScope.Slot(
     target: FeederStep,
     label: Int,
-    current: FeederStep,
+    current: FeederStep?,
     state: FeederState?,
     back: Boolean,
     onPick: (FeederStep) -> Unit
