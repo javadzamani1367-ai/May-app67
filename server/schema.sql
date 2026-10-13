@@ -294,6 +294,8 @@ CREATE TABLE IF NOT EXISTS field_items (
   merged_into       CHAR(36)     NULL,
   assigned_to       CHAR(36)     NULL,
   due_at            BIGINT       NULL,
+  report_id         CHAR(36)     NULL,
+  result            TEXT         NULL,
   UNIQUE KEY uq_field_items_code (tracking_code),
   KEY idx_field_items_kind (kind),
   KEY idx_field_items_status (status),
@@ -302,7 +304,8 @@ CREATE TABLE IF NOT EXISTS field_items (
   KEY idx_field_items_updated (updated_at),
   KEY idx_field_items_position (latitude, longitude),
   KEY idx_field_items_plate (plate),
-  KEY idx_field_items_assigned (assigned_to)
+  KEY idx_field_items_assigned (assigned_to),
+  KEY idx_field_items_report (report_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS field_files (
@@ -360,4 +363,4 @@ CREATE TABLE IF NOT EXISTS schema_meta (
   id      TINYINT NOT NULL PRIMARY KEY,
   version INT     NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 3);
+INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 4);

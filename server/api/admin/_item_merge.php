@@ -41,3 +41,19 @@ function render_merge(array $item, ?array $target, array $candidates, array $mer
     }
     return $html;
 }
+
+/** نتیجه‌ای که کارشناس برگرداند: فرم سبک، یا پرونده بازدیدی که از ارجاع ساخت. */
+function referral_result(array $item): ?string
+{
+    $result = json_decode((string) ($item['result'] ?? ''), true);
+    $case = $item['report_id'] === null ? null
+        : Db::one('SELECT tracking_code FROM reports WHERE id = ?', [$item['report_id']]);
+    if (!is_array($result)) {
+        return $case === null ? null : 'پرونده بازدید ساخته شد: ' . ltr((string) $case['tracking_code']);
+    }
+    $text = ($result['outcome'] ?? '') === 'case'
+        ? 'بازدید ثبت شد؛ پرونده ' . ltr((string) ($case['tracking_code'] ?? ''))
+        : (FieldReferrals::OUTCOMES[$result['outcome'] ?? ''] ?? '—');
+    $text .= ' — ' . (string) ($result['by'] ?? '') . '، ' . Jalali::format((int) ($result['at'] ?? 0));
+    return trim($text . "\n" . (string) ($result['note'] ?? ''));
+}

@@ -46,6 +46,12 @@ final class Migrations
                 static fn () => self::addColumn('field_items', 'due_at', 'BIGINT NULL'),
                 static fn () => self::addIndex('field_items', 'idx_field_items_assigned', 'assigned_to'),
             ],
+            // نتیجه ارجاع: پرونده‌ای که کارشناس از آن ساخت، و نتیجه فرم سبک.
+            4 => [
+                static fn () => self::addColumn('field_items', 'report_id', 'CHAR(36) NULL'),
+                static fn () => self::addColumn('field_items', 'result', 'TEXT NULL'),
+                static fn () => self::addIndex('field_items', 'idx_field_items_report', 'report_id'),
+            ],
         ];
     }
 

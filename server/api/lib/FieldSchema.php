@@ -37,6 +37,8 @@ final class FieldSchema
            merged_into       CHAR(36)     NULL,
            assigned_to       CHAR(36)     NULL,
            due_at            BIGINT       NULL,
+           report_id         CHAR(36)     NULL,
+           result            TEXT         NULL,
            UNIQUE KEY uq_field_items_code (tracking_code),
            KEY idx_field_items_kind (kind),
            KEY idx_field_items_status (status),
@@ -45,7 +47,8 @@ final class FieldSchema
            KEY idx_field_items_updated (updated_at),
            KEY idx_field_items_position (latitude, longitude),
            KEY idx_field_items_plate (plate),
-           KEY idx_field_items_assigned (assigned_to)
+           KEY idx_field_items_assigned (assigned_to),
+           KEY idx_field_items_report (report_id)
          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
         "CREATE TABLE IF NOT EXISTS field_files (

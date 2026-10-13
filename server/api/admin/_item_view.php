@@ -18,7 +18,7 @@ const FILE_ROLE_NAMES = [
 ];
 
 const EVENT_NAMES = ['registered' => 'ثبت از گوشی', 'status' => 'تغییر وضعیت', 'merged' => 'ادغام',
-    'unmerged' => 'جدا شدن از ادغام'];
+    'unmerged' => 'جدا شدن از ادغام', 'accepted' => 'پذیرش کارشناس', 'result' => 'نتیجه ارجاع'];
 
 /** یک ردیف «عنوان: مقدار»؛ مقدار خالی نوشته نمی‌شود. */
 function detail_row(string $label, ?string $value): string
@@ -29,70 +29,15 @@ function detail_row(string $label, ?string $value): string
     return '<tr><th style="width:35%">' . e($label) . '</th><td>' . nl2br(e($value)) . '</td></tr>';
 }
 
-/** کلیدهای چک‌لیست به برچسب فارسی؛ کلید ناشناخته همان‌طور نوشته می‌شود تا گم نشود. */
-function labels(array $keys, array $names): string
-{
-    return implode('، ', array_map(static fn ($k) => $names[$k] ?? (string) $k, $keys));
-}
-
 function number_text(mixed $value): ?string
 {
-    return is_numeric($value) ? fa_digits((string) $value) : null;
+    return FieldPresenter::numberText($value);
 }
 
-/**
- * چک‌لیست هر نوع گزارش، از payload، به صورت ردیف‌های [عنوان، مقدار]؛ صفحه،
- * برگه ارجاع و خروجی Word همه از همین ساخته می‌شوند. مقدار خالی کنار گذاشته می‌شود.
- *
- * @return array<int, array{0:string, 1:string}>
- */
+/** @return array<int, array{0:string, 1:string}> */
 function payload_rows(int $kind, array $p): array
 {
-    $rows = [];
-    $add = static function (string $label, ?string $value) use (&$rows): void {
-        if ($value !== null && trim($value) !== '') {
-            $rows[] = [$label, $value];
-        }
-    };
-    if ($kind === Field::KIND_CRYPTO) {
-        $add('آمپر اندازه‌گیری‌شده', number_text($p['amperage'] ?? null));
-        $add('تعداد تقریبی دستگاه', number_text($p['miner_count'] ?? null));
-        $add('نوع دستگاه', $p['miner_type'] ?? null);
-        $add('نشانه‌ها', labels((array) ($p['signs'] ?? []), FieldLabels::SIGNS));
-    }
-    if ($kind === Field::KIND_ILLEGAL) {
-        $consumers = [];
-        foreach ((array) ($p['consumers'] ?? []) as $key => $count) {
-            $consumers[] = (FieldLabels::CONSUMERS[$key] ?? $key) . ' × ' . fa_digits((string) $count);
-        }
-        $add('مصرف‌کننده‌ها', implode('، ', $consumers));
-        $add('مصرف‌کننده دیگر', $p['other_consumer'] ?? null);
-        $add('کاربری', isset($p['usage']) ? (FieldLabels::USAGES[$p['usage']] ?? (string) $p['usage']) : null);
-        $add('تخلف', labels((array) ($p['violations'] ?? []), FieldLabels::VIOLATIONS));
-        $add('شماره کنتور یا قبض', $p['meter_or_bill'] ?? null);
-    }
-    if ($kind === Field::KIND_CRYPTO || $kind === Field::KIND_ILLEGAL) {
-        $team = (array) ($p['team'] ?? []);
-        $yes = array_keys(array_filter($team, static fn ($v) => $v === true));
-        $no = array_keys(array_filter($team, static fn ($v) => $v === false));
-        $add('برای اکیپ: بله', labels($yes, FieldLabels::TEAM_QUESTIONS));
-        $add('برای اکیپ: خیر', labels($no, FieldLabels::TEAM_QUESTIONS));
-        $add('بهترین زمان', isset($team['best_time']) ? (FieldLabels::BEST_TIMES[$team['best_time']] ?? null) : null);
-        $add('تعداد ورودی', number_text($team['entrances'] ?? null));
-        $add('توضیح ورودی', $team['entrance_note'] ?? null);
-    }
-    if ($kind === Field::KIND_FEEDER) {
-        foreach (feeder_rows($p) as [$label, $value]) {
-            $add($label, $value);
-        }
-    }
-    if ($kind === Field::KIND_THERMAL) {
-        $add('شروع مسیر', isset($p['started_at']) ? Jalali::format((int) $p['started_at']) : null);
-        $add('پایان مسیر', isset($p['ended_at']) ? Jalali::format((int) $p['ended_at']) : null);
-        $add('نقطه‌های مسیر', number_text($p['points'] ?? null));
-        $add('اختلاف ساعت گوشی با GPS (ثانیه)', number_text($p['clock_skew_s'] ?? null));
-    }
-    return $rows;
+    return FieldPresenter::rows($kind, $p);
 }
 
 /** ردیف‌ها به جدول HTML. */
@@ -104,42 +49,6 @@ function rows_table(array $rows): string
 function render_payload(int $kind, array $p): string
 {
     return rows_table(payload_rows($kind, $p));
-}
-
-function phases_text(mixed $phases): string
-{
-    $p = (array) $phases;
-    return 'R ' . (number_text($p['r'] ?? null) ?? '—') . ' / S ' . (number_text($p['s'] ?? null) ?? '—')
-        . ' / T ' . (number_text($p['t'] ?? null) ?? '—');
-}
-
-/** @return array<int, array{0:string, 1:?string}> */
-function feeder_rows(array $p): array
-{
-    $rows = [['کلید کل (آمپر)', phases_text($p['main'] ?? [])]];
-    $states = ['measured' => 'اندازه‌گیری شد', 'absent' => 'وجود ندارد یا قطع است', 'not_measured' => 'اندازه‌گیری نشد'];
-    foreach ((array) ($p['feeders'] ?? []) as $name => $feeder) {
-        $feeder = (array) $feeder;
-        $state = (string) ($feeder['state'] ?? '');
-        $text = $states[$state] ?? '—';
-        if ($state === 'measured') {
-            $text .= ': ' . phases_text($feeder['phases'] ?? []);
-        } elseif ($state === 'not_measured') {
-            $text .= ' — ' . (string) ($feeder['reason'] ?? '');
-        }
-        $rows[] = ['فیدر ' . $name, $text];
-    }
-    $check = (array) ($p['check'] ?? []);
-    if ($check !== []) {
-        $verdict = ($check['possible'] ?? false) !== true ? 'کنترل مجموع ممکن نبود'
-            : (($check['ok'] ?? false) === true ? 'مجموع فیدرها با کلید کل می‌خواند' : 'اختلاف بیش از حد مجاز');
-        $verdict .= ' (حد مجاز ' . fa_digits((string) ($check['tolerance_pct'] ?? '—')) . '٪، کف '
-            . fa_digits((string) ($check['tolerance_min_a'] ?? '—')) . ' آمپر)';
-        $rows[] = ['کنترل مجموع', $verdict];
-        $rows[] = ['عدم تعادل فازها (٪)', number_text($check['imbalance_pct'] ?? null)];
-    }
-    $rows[] = ['توضیح', $p['note'] ?? null];
-    return $rows;
 }
 
 /** فایل‌ها با پیش‌نمایش عکس؛ دماهای ترموویژن از payload. */

@@ -106,7 +106,7 @@ echo "\n— به‌روزرسانی پایگاه داده به گام ۳ —\n";
 $pdo->exec('ALTER TABLE field_items DROP INDEX idx_field_items_assigned, DROP COLUMN assigned_to, DROP COLUMN due_at');
 $pdo->exec('UPDATE schema_meta SET version = 2 WHERE id = 1');
 $probe->page('admin/index.php', $jar);
-equals('نصب قدیمی خودش به نسخه ۳ رسید', 3, (int) $pdo->query('SELECT version FROM schema_meta WHERE id = 1')->fetchColumn());
+equals('نصب قدیمی خودش به آخرین نسخه رسید', Migrations::latest(), (int) $pdo->query('SELECT version FROM schema_meta WHERE id = 1')->fetchColumn());
 equals('ستون‌های ارجاع و نمایه برگشتند', 3, (int) $pdo->query(
     "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'field_items'
      AND column_name IN ('assigned_to', 'due_at')")->fetchColumn()

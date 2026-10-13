@@ -90,6 +90,7 @@ admin_header((string) ($item['tracking_code'] ?? 'مورد'));
     <?= detail_row('زمان رسیدن به سرور', Jalali::format((int) $item['received_at'])) ?>
     <?= detail_row('ارجاع به', $item['expert'] === null ? null
         : $item['expert'] . ($item['due_at'] === null ? '' : '، مهلت ' . Jalali::format((int) $item['due_at'], false))) ?>
+    <?= detail_row('نتیجه ارجاع', referral_result($item)) ?>
     <?= detail_row('آدرس', $item['address']) ?>
     <?= detail_row('پلاک', $item['plate']) ?>
     <?= detail_row('شرح', $item['description']) ?>

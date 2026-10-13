@@ -91,6 +91,8 @@ final class SyncController
             'id', 'report_id', 'category', 'title', 'file_path', 'mime_type', 'added_at', 'note',
         ]);
         $this->mergeDispatches($report['dispatches'] ?? [], (string) $report['id'], $user);
+        // پرونده‌ای که از ارجاع میدانی ساخته شده، با رسیدن بازدیدش نتیجه ارجاع می‌شود.
+        FieldReferrals::onCasePushed($report, $user);
 
         Db::run(
             'INSERT INTO sync_log (device_code, user_id, last_seen_at, last_updated_at, report_count)
