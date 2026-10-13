@@ -4,6 +4,7 @@ import android.content.Context
 import ir.ilam.inspection.data.db.AppDatabase
 import ir.ilam.inspection.data.repo.CaseContentRepository
 import ir.ilam.inspection.data.repo.ImportRepository
+import ir.ilam.inspection.data.repo.ReferralRepository
 import ir.ilam.inspection.data.repo.ReportRepository
 import ir.ilam.inspection.data.repo.AccountRepository
 import ir.ilam.inspection.data.repo.PerformanceRepository
@@ -49,6 +50,9 @@ class AppContainer(private val context: Context) {
         PerformanceRepository(database, vault, settingsRepository)
     }
     val reportRepository: ReportRepository by lazy { ReportRepository(database, settingsRepository, fileStore) }
+    val referralRepository: ReferralRepository by lazy {
+        ReferralRepository(database, settingsRepository, vault, context.cacheDir)
+    }
     val contentRepository: CaseContentRepository by lazy {
         CaseContentRepository(database, reportRepository, fileStore)
     }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FactCheck
 import androidx.compose.material.icons.filled.Map
@@ -52,7 +53,8 @@ fun HomeScreen(
     onSettings: () -> Unit,
     onStats: () -> Unit,
     onApprovals: () -> Unit,
-    onMap: () -> Unit
+    onMap: () -> Unit,
+    onReferrals: () -> Unit
 ) {
     val container = LocalContext.current.container
     val lists: CaseListViewModel = viewModel(
@@ -62,6 +64,7 @@ fun HomeScreen(
         factory = remember { ContainerViewModelFactory(container) { DashboardViewModel(it) } }
     )
     val summary by dashboard.state.collectAsStateWithLifecycle()
+    val openReferrals by remember { container.referralRepository.openCount() }.collectAsStateWithLifecycle(0)
     val cases by lists.cases.collectAsStateWithLifecycle()
     val query by lists.query.collectAsStateWithLifecycle()
     val deviceCounts by lists.deviceCounts.collectAsStateWithLifecycle()
@@ -98,6 +101,14 @@ fun HomeScreen(
                         contentDescription = stringResource(R.string.approval_pending_title),
                         onClick = onApprovals,
                         badge = summary.counts.awaitingApproval.toInt()
+                    )
+                }
+                if (!UserRole.isManager) {
+                    HeaderAction(
+                        icon = Icons.AutoMirrored.Filled.Assignment,
+                        contentDescription = stringResource(R.string.referrals_title),
+                        onClick = onReferrals,
+                        badge = openReferrals
                     )
                 }
                 HeaderAction(Icons.Filled.Map, stringResource(R.string.cases_map_title), onMap)

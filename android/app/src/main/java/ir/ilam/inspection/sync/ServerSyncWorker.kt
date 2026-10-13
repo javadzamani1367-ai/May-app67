@@ -1,6 +1,7 @@
 package ir.ilam.inspection.sync
 
 import android.content.Context
+import ir.ilam.inspection.data.model.UserRole
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -40,6 +41,9 @@ class ServerSyncWorker(
         }
 
         val outcome = container.serverCaseSync.run()
+        // An expert's referral results waiting on the phone go with the cases,
+        // and the list is refreshed for the next visit out of signal.
+        if (!UserRole.isManager && outcome.reachedServer) container.referralRepository.refresh()
         return when {
             // Reached and finished: done, whatever the numbers were.
             outcome.reachedServer && outcome.failed == 0 -> Result.success()

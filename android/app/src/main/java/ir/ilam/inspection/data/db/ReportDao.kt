@@ -141,6 +141,9 @@ interface ReportDao {
     @Query("SELECT report_id AS bucket, COUNT(*) AS total FROM devices GROUP BY report_id")
     fun deviceCounts(): Flow<List<TextBucket>>
 
+    @Query("SELECT id FROM reports WHERE tracking_code = :code LIMIT 1")
+    suspend fun idByTrackingCode(code: String): String?
+
     @Query("SELECT COUNT(*) FROM reports WHERE tracking_code = :code")
     suspend fun countByTrackingCode(code: String): Int
 

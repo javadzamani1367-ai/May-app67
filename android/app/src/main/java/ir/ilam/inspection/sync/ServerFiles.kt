@@ -60,12 +60,16 @@ class ServerFiles(private val baseUrl: String, private val token: String) {
      * first: a transfer cut off half way through would otherwise leave a file
      * that exists, opens, and shows a grey half-image in an official report.
      */
-    suspend fun download(kind: String, id: String, target: File): Boolean = withContext(Dispatchers.IO) {
+    suspend fun download(kind: String, id: String, target: File): Boolean =
+        downloadRoute("sync/file&kind=$kind&id=$id", target)
+
+    /** The same download for any route that answers with raw bytes — a referral's photo. */
+    suspend fun downloadRoute(route: String, target: File): Boolean = withContext(Dispatchers.IO) {
         var connection: HttpURLConnection? = null
         val partial = File(target.parentFile, target.name + ".part")
         try {
             target.parentFile?.mkdirs()
-            connection = open("GET", kind, id)
+            connection = openRoute("GET", route)
             if (connection.responseCode >= 400) return@withContext false
 
             connection.inputStream.use { input ->
@@ -84,9 +88,12 @@ class ServerFiles(private val baseUrl: String, private val token: String) {
         }
     }
 
-    private fun open(method: String, kind: String, id: String): HttpURLConnection {
+    private fun open(method: String, kind: String, id: String): HttpURLConnection =
+        openRoute(method, "sync/file&kind=$kind&id=$id")
+
+    private fun openRoute(method: String, route: String): HttpURLConnection {
         val base = baseUrl.trim().trimEnd('/')
-        val url = "$base/index.php?route=sync/file&kind=$kind&id=$id"
+        val url = "$base/index.php?route=$route"
         return (URL(url).openConnection() as HttpURLConnection).apply {
             requestMethod = method
             connectTimeout = CONNECT_TIMEOUT

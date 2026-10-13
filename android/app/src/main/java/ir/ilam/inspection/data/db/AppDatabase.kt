@@ -20,7 +20,7 @@ const val SCHEMA_VERSION = 4
  * gains a table the archive has no business knowing about — a local typing
  * convenience must not make an up-to-date archive look incompatible.
  */
-const val DATABASE_VERSION = 8
+const val DATABASE_VERSION = 9
 
 @Database(
     entities = [
@@ -34,7 +34,8 @@ const val DATABASE_VERSION = 8
         SnippetEntity::class,
         UserEntity::class,
         ServerSyncEntity::class,
-        LocationFixEntity::class
+        LocationFixEntity::class,
+        ReferralEntity::class
     ],
     version = DATABASE_VERSION,
     exportSchema = true
@@ -52,6 +53,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun serverSyncDao(): ServerSyncDao
     abstract fun locationFixDao(): LocationFixDao
+    abstract fun referralDao(): ReferralDao
 
     companion object {
         private const val DB_NAME = "inspection.db"
@@ -214,6 +216,22 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** Field referrals sent to this expert, cached for work with no signal. Phone only. */
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS referrals (" +
+                        "id TEXT NOT NULL PRIMARY KEY, " +
+                        "json TEXT NOT NULL, " +
+                        "status INTEGER NOT NULL, " +
+                        "due_at INTEGER, " +
+                        "report_id TEXT, " +
+                        "pending_result TEXT, " +
+                        "fetched_at INTEGER NOT NULL)"
+                )
+            }
+        }
+
         private fun build(context: Context): AppDatabase {
             return Room.databaseBuilder(context, AppDatabase::class.java, DB_NAME)
                 .openHelperFactory(SecureDatabase.factory(context))
@@ -224,7 +242,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_4_5,
                     MIGRATION_5_6,
                     MIGRATION_6_7,
-                    MIGRATION_7_8
+                    MIGRATION_7_8,
+                    MIGRATION_8_9
                 )
                 .build()
         }

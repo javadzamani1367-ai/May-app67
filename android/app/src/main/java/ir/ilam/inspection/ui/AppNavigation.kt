@@ -11,6 +11,8 @@ import ir.ilam.inspection.ui.archive.CaseDetailScreen
 import ir.ilam.inspection.ui.dispatch.DispatchScreen
 import ir.ilam.inspection.ui.intake.IntakeScreen
 import ir.ilam.inspection.ui.map.CasesMapScreen
+import ir.ilam.inspection.ui.referrals.ReferralDetailScreen
+import ir.ilam.inspection.ui.referrals.ReferralsScreen
 import ir.ilam.inspection.ui.pending.HomeScreen
 import ir.ilam.inspection.ui.settings.SettingsScreen
 import ir.ilam.inspection.ui.approvals.ApprovalsScreen
@@ -32,6 +34,8 @@ object Routes {
     const val APPROVALS = "approvals"
     const val PERFORMANCE = "performance"
     const val MAP = "map"
+    const val REFERRALS = "referrals"
+    const val REFERRAL = "referral/{id}"
 
     fun visit(id: String) = "visit/$id"
     fun detail(id: String) = "case/$id"
@@ -51,7 +55,21 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                 onSettings = { navController.navigate(Routes.SETTINGS) },
                 onApprovals = { navController.navigate(Routes.APPROVALS) },
                 onStats = { navController.navigate(Routes.STATS) },
-                onMap = { navController.navigate(Routes.MAP) }
+                onMap = { navController.navigate(Routes.MAP) },
+                onReferrals = { navController.navigate(Routes.REFERRALS) }
+            )
+        }
+        composable(Routes.REFERRALS) {
+            ReferralsScreen(
+                onBack = { navController.popBackStack() },
+                onOpen = { navController.navigate("referral/$it") }
+            )
+        }
+        composable(Routes.REFERRAL, arguments = listOf(navArgument(ARG_ID) { type = NavType.StringType })) { entry ->
+            ReferralDetailScreen(
+                id = entry.arguments?.getString(ARG_ID).orEmpty(),
+                onBack = { navController.popBackStack() },
+                onOpenCase = { navController.navigate(Routes.visit(it)) }
             )
         }
         composable(Routes.MAP) {

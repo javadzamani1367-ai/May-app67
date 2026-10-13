@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- «ارجاع‌های من»: field reports referred to this expert -->
+    <string name="referrals_title">ارجاع‌های من</string>
+    <string name="referrals_scan">اسکن QR برگه ارجاع</string>
+    <string name="referrals_refresh">به‌روزرسانی از سرور</string>
+    <string name="referrals_empty">ارجاعی به شما نرسیده است. ارجاع‌های تازه با اتصال به سرور می‌آیند؛ برگه چاپی را هم می‌توانید با دکمه QR باز کنید.</string>
+    <string name="referrals_due">مهلت: %1$s</string>
+    <string name="referrals_offline">سرور در دسترس نیست؛ آخرین فهرست ذخیره‌شده روی گوشی نمایش داده می‌شود.</string>
+    <string name="referrals_refused">سرور نپذیرفت: %1$s</string>
+    <string name="referrals_not_ours">این ارجاع به شما نیست یا دیگر وجود ندارد.</string>
+    <string name="referrals_not_a_referral">این QR مربوط به برگه ارجاع نیست.</string>
+    <string name="referrals_scan_offline">این ارجاع روی گوشی نیست و سرور هم در دسترس نیست. با اتصال دوباره اسکن کنید.</string>
+
+    <string name="referral_state_open">باز</string>
+    <string name="referral_state_overdue">مهلت گذشته</string>
+    <string name="referral_state_in_visit">در حال بازدید</string>
+    <string name="referral_state_waiting_send">نتیجه در صف ارسال</string>
+    <string name="referral_state_done">نتیجه ثبت شد</string>
+
+    <string name="referral_code">کد رهگیری</string>
+    <string name="referral_reported_at">زمان گزارش</string>
+    <string name="referral_due_label">مهلت اعلام نتیجه</string>
+    <string name="referral_reporter">گزارش‌دهنده</string>
+    <string name="referral_reporter_hidden">گزارش همکار</string>
+    <string name="referral_address">آدرس</string>
+    <string name="referral_plate">پلاک</string>
+    <string name="referral_description">شرح گزارش</string>
+    <string name="referral_result">نتیجه</string>
+    <string name="referral_details">آنچه گزارش‌دهنده دید</string>
+    <string name="referral_location">موقعیت گزارش‌شده</string>
+    <string name="referral_navigate">مسیریابی تا محل</string>
+    <string name="referral_photos">عکس‌های گزارش‌دهنده</string>
+    <string name="referral_photo_unavailable">عکس با اتصال به سرور دریافت می‌شود</string>
+
+    <string name="referral_make_case">ساخت پرونده «گزارش همکار» و شروع بازدید</string>
+    <string name="referral_make_case_hint">پرونده با همین کد رهگیری ساخته می‌شود. وقتی بازدید تمام و پرونده به سرور فرستاده شد، ارجاع خودش نتیجه می‌گیرد.</string>
+    <string name="referral_open_case">ادامه پرونده بازدید</string>
+    <string name="referral_result_without_case">ثبت نتیجه بدون بازدید (مثلاً دسترسی نشد)</string>
+    <string name="referral_record_result">ثبت نتیجه</string>
+    <string name="referral_result_hint">نتیجه روی گوشی ذخیره و با اولین اتصال به سرور فرستاده می‌شود.</string>
+    <string name="referral_result_note">توضیح</string>
+    <string name="referral_result_note_required">برای «سایر»، توضیح بنویسید</string>
+    <string name="referral_result_queued">نتیجه روی گوشی ذخیره شد و با اولین اتصال فرستاده می‌شود.</string>
+    <string name="referral_result_sent">نتیجه به دفتر رسید.</string>
+
+    <string name="referral_outcome_confirmed">تخلف تأیید شد</string>
+    <string name="referral_outcome_not_found">تخلفی دیده نشد</string>
+    <string name="referral_outcome_no_access">دسترسی به محل نشد</string>
+    <string name="referral_outcome_other">سایر</string>
+    <string name="referral_outcome_case">بازدید ثبت شد</string>
+</resources>
