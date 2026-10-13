@@ -6,7 +6,8 @@ declare(strict_types=1);
  * همه راست‌به‌چپ. بدون کتابخانه، با ZipArchive — همان راهی که اپ برای Word
  * می‌رود (ساخت مستقیم OOXML). قلم Tahoma است که روی ویندوز ۷ هم هست.
  *
- * بلوک‌ها: ['h', متن] عنوان، ['p', متن] بند، ['table', [[عنوان، مقدار]...]].
+ * بلوک‌ها: ['h', متن] عنوان، ['p', متن] بند، ['table', [[عنوان، مقدار]...]]،
+ * ['grid', [سرستون‌ها، سطرها]] جدول چندستونی، ['image', [مسیر فایل، شرح]] تصویر.
  */
 final class Docx
 {
@@ -36,16 +37,13 @@ final class Docx
             . '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
             . '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
             . '<Default Extension="xml" ContentType="application/xml"/>'
+            . '<Default Extension="jpg" ContentType="image/jpeg"/>'
             . '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
             . '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>'
             . '</Types>');
         $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
             . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
-            . '</Relationships>');
-        $zip->addFromString('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
             . '</Relationships>');
         $font = '<w:rFonts w:ascii="' . self::FONT . '" w:hAnsi="' . self::FONT . '" w:cs="' . self::FONT . '"/>';
         $zip->addFromString('word/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
@@ -64,19 +62,32 @@ final class Docx
             . '</w:styles>');
 
         $body = '';
+        $images = [];
         foreach ($blocks as $i => [$type, $content]) {
             $body .= match ($type) {
                 'h' => self::paragraph((string) $content, $i === 0 ? 'Heading1' : 'Heading2'),
                 'table' => self::table((array) $content),
+                'grid' => self::grid((array) $content[0], (array) $content[1]),
+                'image' => self::image($zip, (string) $content[0], (string) $content[1], $images),
                 default => self::paragraph((string) $content),
             };
         }
+        $zip->addFromString('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+            . implode('', array_map(static fn ($n) => '<Relationship Id="rImg' . $n . '" Type="http://schemas.openxmlformats.org/'
+                . 'officeDocument/2006/relationships/image" Target="media/image' . $n . '.jpg"/>', $images))
+            . '</Relationships>');
         // صفحه A4 با حاشیه ۲ سانتی‌متر؛ بخش آخر هم راست‌به‌چپ.
         $body .= '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>'
             . '<w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/>'
             . '<w:bidi/></w:sectPr>';
         $zip->addFromString('word/document.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'
+            . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" '
+            . 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
+            . 'xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" '
+            . 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
+            . 'xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>'
             . $body . '</w:body></w:document>');
         $zip->close();
     }
@@ -135,6 +146,66 @@ final class Docx
         }
         // پس از جدول یک بند خالی لازم است، وگرنه دو جدول پشت هم به هم می‌چسبند.
         return $xml . '</w:tbl><w:p/>';
+    }
+
+    /**
+     * جدول چندستونی با سطر عنوان پررنگ؛ ستون‌ها هم‌عرض، از راست.
+     *
+     * @param list<string> $header
+     * @param list<list<string>> $rows
+     */
+    private static function grid(array $header, array $rows): string
+    {
+        if ($rows === [] || $header === []) {
+            return '';
+        }
+        $width = intdiv(9600, count($header));
+        $cell = static fn (string $text, bool $head) => '<w:tc><w:tcPr><w:tcW w:w="' . $width . '" w:type="dxa"/>'
+            . ($head ? '<w:shd w:val="clear" w:color="auto" w:fill="EEEEEE"/>' : '') . '</w:tcPr><w:p>'
+            . self::pPr($text, null, true) . self::runs($text, $head) . '</w:p></w:tc>';
+        $xml = '<w:tbl><w:tblPr><w:bidiVisual/><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>'
+            . '<w:top w:val="single" w:sz="4" w:color="888888"/><w:bottom w:val="single" w:sz="4" w:color="888888"/>'
+            . '<w:left w:val="single" w:sz="4" w:color="888888"/><w:right w:val="single" w:sz="4" w:color="888888"/>'
+            . '<w:insideH w:val="single" w:sz="4" w:color="888888"/><w:insideV w:val="single" w:sz="4" w:color="888888"/>'
+            . '</w:tblBorders></w:tblPr><w:tblGrid>' . str_repeat('<w:gridCol w:w="' . $width . '"/>', count($header))
+            . '</w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr>'
+            . implode('', array_map(static fn ($h) => $cell((string) $h, true), $header)) . '</w:tr>';
+        foreach ($rows as $row) {
+            $xml .= '<w:tr>' . implode('', array_map(static fn ($v) => $cell((string) $v, false), $row)) . '</w:tr>';
+        }
+        return $xml . '</w:tbl><w:p/>';
+    }
+
+    /**
+     * یک تصویر JPEG در عرض حداکثر ۱۶ سانتی‌متر، با شرحش زیرش. فایلی که JPEG
+     * نیست یا خوانده نمی‌شود فقط شرحش را می‌گذارد.
+     *
+     * @param list<int> $images شماره تصویرهای افزوده‌شده، برای رابطه‌ها
+     */
+    private static function image(ZipArchive $zip, string $path, string $caption, array &$images): string
+    {
+        $size = is_file($path) ? @getimagesize($path) : false;
+        if ($size === false || ($size[2] ?? 0) !== IMAGETYPE_JPEG) {
+            return self::paragraph($caption);
+        }
+        $n = count($images) + 1;
+        $images[] = $n;
+        $zip->addFile($path, 'word/media/image' . $n . '.jpg');
+        $cx = 5760000;
+        $cy = (int) round($cx * $size[1] / max(1, $size[0]));
+        if ($cy > 6480000) {
+            $cx = (int) round($cx * 6480000 / $cy);
+            $cy = 6480000;
+        }
+        $drawing = '<w:r><w:drawing><wp:inline><wp:extent cx="' . $cx . '" cy="' . $cy . '"/>'
+            . '<wp:docPr id="' . $n . '" name="image' . $n . '"/><a:graphic><a:graphicData '
+            . 'uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr>'
+            . '<pic:cNvPr id="' . $n . '" name="image' . $n . '.jpg"/><pic:cNvPicPr/></pic:nvPicPr>'
+            . '<pic:blipFill><a:blip r:embed="rImg' . $n . '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
+            . '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' . $cx . '" cy="' . $cy . '"/></a:xfrm>'
+            . '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic>'
+            . '</wp:inline></w:drawing></w:r>';
+        return '<w:p><w:pPr><w:keepNext/><w:jc w:val="center"/></w:pPr>' . $drawing . '</w:p>' . self::paragraph($caption);
     }
 
     private static function xml(string $text): string

@@ -15,12 +15,23 @@ final class Xlsx
      */
     public static function send(string $name, string $sheetTitle, array $header, array $rows): void
     {
+        self::sendBook($name, [[$sheetTitle, $header, $rows]]);
+    }
+
+    /**
+     * چند برگه در یک فایل؛ هر برگه [عنوان، سطر عنوان، سطرها]. بی ZipArchive فقط
+     * برگه اول به صورت CSV می‌رود.
+     *
+     * @param list<array{0:string, 1:array<int, string>, 2:array<int, array<int, string|int|float|null>>}> $sheets
+     */
+    public static function sendBook(string $name, array $sheets): void
+    {
         if (!class_exists('ZipArchive')) {
-            self::sendCsv($name, $header, $rows);
+            self::sendCsv($name, $sheets[0][1], $sheets[0][2]);
             return;
         }
         $path = tempnam(sys_get_temp_dir(), 'xlsx');
-        self::write($path, $sheetTitle, $header, $rows);
+        self::writeBook($path, $sheets);
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment; filename="' . $name . '.xlsx"');
         header('Content-Length: ' . filesize($path));
@@ -35,16 +46,32 @@ final class Xlsx
      */
     public static function write(string $path, string $sheetTitle, array $header, array $rows): void
     {
+        self::writeBook($path, [[$sheetTitle, $header, $rows]]);
+    }
+
+    /** @param list<array{0:string, 1:array<int, string>, 2:array<int, array<int, string|int|float|null>>}> $sheets */
+    public static function writeBook(string $path, array $sheets): void
+    {
         $zip = new ZipArchive();
         if ($zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
             throw new RuntimeException('cannot create xlsx');
+        }
+        $overrides = '';
+        $entries = '';
+        $rels = '';
+        foreach (array_values($sheets) as $i => [$title]) {
+            $n = $i + 1;
+            $overrides .= '<Override PartName="/xl/worksheets/sheet' . $n . '.xml" '
+                . 'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+            $entries .= '<sheet name="' . self::xml(mb_substr($title, 0, 31)) . '" sheetId="' . $n . '" r:id="rId' . $n . '"/>';
+            $rels .= '<Relationship Id="rId' . $n . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' . $n . '.xml"/>';
         }
         $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             . '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
             . '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
             . '<Default Extension="xml" ContentType="application/xml"/>'
             . '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
-            . '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            . $overrides
             . '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
             . '</Types>');
         $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
@@ -54,11 +81,10 @@ final class Xlsx
         $zip->addFromString('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             . '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
             . 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-            . '<sheets><sheet name="' . self::xml(mb_substr($sheetTitle, 0, 31)) . '" sheetId="1" r:id="rId1"/></sheets></workbook>');
+            . '<sheets>' . $entries . '</sheets></workbook>');
         $zip->addFromString('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
-            . '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' . $rels
+            . '<Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
             . '</Relationships>');
         // سبک ۱: پررنگ با زمینه خاکستری، برای سطر عنوان.
         $zip->addFromString('xl/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
@@ -73,16 +99,17 @@ final class Xlsx
             . '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
             . '</styleSheet>');
 
-        $sheet = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-            . '<sheetViews><sheetView rightToLeft="1" workbookViewId="0">'
-            . '<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
-            . '<sheetData>' . self::row(1, $header, 1);
-        foreach (array_values($rows) as $i => $row) {
-            $sheet .= self::row($i + 2, $row, 0);
+        foreach (array_values($sheets) as $i => [, $header, $rows]) {
+            $sheet = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+                . '<sheetViews><sheetView rightToLeft="1" workbookViewId="0">'
+                . '<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
+                . '<sheetData>' . self::row(1, $header, 1);
+            foreach (array_values($rows) as $r => $row) {
+                $sheet .= self::row($r + 2, $row, 0);
+            }
+            $zip->addFromString('xl/worksheets/sheet' . ($i + 1) . '.xml', $sheet . '</sheetData></worksheet>');
         }
-        $sheet .= '</sheetData></worksheet>';
-        $zip->addFromString('xl/worksheets/sheet1.xml', $sheet);
         $zip->close();
     }
 
