@@ -110,6 +110,16 @@ equals('متن بی‌ربط تاریخ نیست', null, Jalali::parse('فردا
 equals('اسفند سال کبیسه ۳۰ روز دارد', [1403, 12, 30], Jalali::parse('1403/12/30'));
 equals('و سال عادی ۲۹ روز', null, Jalali::parse('1404/12/30'));
 
+// قاعده پروژه: هیچ فایلی بیش از ۳۰۰ خط. اندروید را tools/verify-resources.py می‌سنجد، سرور را این.
+$long = [];
+$files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__ . '/../api', FilesystemIterator::SKIP_DOTS));
+foreach ($files as $file) {
+    if ($file->getExtension() === 'php' && count(file($file->getPathname())) > 300) {
+        $long[] = basename($file->getPathname());
+    }
+}
+equals('هیچ فایل PHP سرور بیش از ۳۰۰ خط نیست', [], $long);
+
 // ---------------------------------------------------------------------------
 echo "\n— کد QR —\n";
 require_once __DIR__ . '/../api/lib/Qr.php';
