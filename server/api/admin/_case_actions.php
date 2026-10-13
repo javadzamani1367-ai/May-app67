@@ -41,7 +41,9 @@ function case_actions_handle(string $id, array $manager): array
 function case_approval_card(array $r, array $history, ?string $error): string
 {
     $pending = $history !== [] && (int) $history[0]['decision'] === CaseActions::PENDING;
-    $html = '<div class="card" id="approval"><h3>تأیید مدیر — ' . e((string) CaseLabels::of(CaseLabels::APPROVALS, $r['approval_state'])) . '</h3>';
+    // درخواست در انتظار بر ستون پرونده مقدم است: آن ستون با ارسال بعدی گوشی به‌روز می‌شود.
+    $state = $pending ? 'در انتظار تأیید' : (string) CaseLabels::of(CaseLabels::APPROVALS, $r['approval_state']);
+    $html = '<div class="card" id="approval"><h3>تأیید مدیر — ' . e($state) . '</h3>';
     if (($_GET['done'] ?? '') === 'decided') {
         $html .= '<p class="notice">تصمیم ثبت شد و به کارشناس اعلان رفت.</p>';
     }
