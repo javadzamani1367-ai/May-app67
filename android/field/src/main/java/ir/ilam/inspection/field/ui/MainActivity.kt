@@ -1,5 +1,6 @@
 package ir.ilam.inspection.field.ui
 
+import ir.ilam.inspection.util.KeepLocationWarm
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -58,7 +59,11 @@ class MainActivity : ComponentActivity() {
                                 crashReporter.clear()
                                 crashToShow = null
                             })
-                            unlocked -> FieldNavigation(onSignInAgain = { unlocked = false })
+                            unlocked -> {
+                                // Satellites locked by the time a map is opened.
+                                KeepLocationWarm()
+                                FieldNavigation(onSignInAgain = { unlocked = false })
+                            }
                             else -> FieldLockScreen(onUnlocked = { unlocked = true })
                         }
                     }

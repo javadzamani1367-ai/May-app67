@@ -98,7 +98,9 @@ class LocationProvider(private val context: Context) {
             }
             val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, INTERVAL_MILLIS)
                 .setMinUpdateIntervalMillis(INTERVAL_MILLIS / 2)
-                .setWaitForAccurateLocation(true)
+                // Not waiting for an "accurate" fix: that held back the first answer
+                // for tens of seconds. Every fix comes now; the refiner decides.
+                .setWaitForAccurateLocation(false)
                 .build()
             runCatching {
                 LocationServices.getFusedLocationProviderClient(context)
@@ -137,6 +139,19 @@ class LocationProvider(private val context: Context) {
             .filter { now - it.time <= LAST_KNOWN_MAX_AGE_MILLIS && !isMock(it) }
             .minByOrNull { it.accuracy }
             ?.let { Fix(it.latitude, it.longitude, it.accuracy.toDouble(), fromGoogle = false) }
+    }
+
+    /**
+     * Asks the receiver to download fresh satellite orbits and time (A-GPS)
+     * when there is a connection. Without them a cold receiver has to read the
+     * orbits from the satellites themselves, which is most of a minute; with
+     * them, a few seconds. Harmless without internet, ignored where unsupported.
+     */
+    fun assist() {
+        val manager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return
+        runCatching { manager.sendExtraCommand(LocationManager.GPS_PROVIDER, "force_time_injection", null) }
+        runCatching { manager.sendExtraCommand(LocationManager.GPS_PROVIDER, "force_xtra_injection", null) }
+        runCatching { manager.sendExtraCommand(LocationManager.GPS_PROVIDER, "force_psds_injection", null) }
     }
 
     fun isLocationEnabled(): Boolean {

@@ -58,6 +58,7 @@ object LocationWarmup {
     /** Satellites the receiver is using for its fix right now; 0 under a roof. */
     val satellites: StateFlow<Int> = used.asStateFlow()
     private var gnss: Pair<LocationManager, GnssStatus.Callback>? = null
+    private var assisted = false
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val window = ArrayDeque<Pair<Long, Fix>>()
@@ -90,6 +91,7 @@ object LocationWarmup {
             gnss?.let { (manager, callback) -> runCatching { manager.unregisterGnssStatusCallback(callback) } }
             gnss = null
             used.value = 0
+            assisted = false
         }
     }
 
@@ -103,6 +105,10 @@ object LocationWarmup {
         seed(context)
         watchSatellites(context)
         val provider = LocationProvider(context)
+        if (!assisted) {
+            provider.assist()
+            assisted = true
+        }
         listening = scope.launch {
             runCatching {
                 provider.fixes().collect { fix -> add(fix) }
@@ -112,6 +118,15 @@ object LocationWarmup {
 
     private fun add(fix: Fix) {
         val now = SystemClock.elapsedRealtime()
+        // The user walked on: a satellite fix clearly away from the current
+        // estimate starts a new window, instead of the old spot holding the
+        // dot back for the rest of the window.
+        val current = state.value
+        if (fix.gps && current != null && current.live &&
+            LocationRefiner.distanceMeters(fix, current.fix) > maxOf(fix.accuracy, current.fix.accuracy) * MOVED_FACTOR
+        ) {
+            window.clear()
+        }
         window.addLast(now to fix)
         while (window.isNotEmpty() && now - window.first().first > WINDOW_MILLIS) window.removeFirst()
         val refiner = LocationRefiner()
@@ -173,6 +188,23 @@ object LocationWarmup {
 
     /** A reading older than this is no longer where the user is. */
     const val STALE_MILLIS = 15_000L
-    private const val WINDOW_MILLIS = 10_000L
+    private const val WINDOW_MILLIS = 6_000L
+    /** Farther than this many accuracies from the estimate, the user has moved. */
+    private const val MOVED_FACTOR = 1.5
     private const val GRACE_MILLIS = 60_000L
+}
+
+/**
+ * Keeps the receiver on while the app is on screen — from the moment it opens,
+ * not from the moment a form does — and lets it go when the app goes to the
+ * background, so it never drains the battery unseen. By the time the user
+ * reaches a map, the satellites are already locked.
+ */
+@androidx.compose.runtime.Composable
+fun KeepLocationWarm() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    androidx.lifecycle.compose.LifecycleStartEffect(Unit) {
+        LocationWarmup.acquire(context)
+        onStopOrDispose { LocationWarmup.release() }
+    }
 }

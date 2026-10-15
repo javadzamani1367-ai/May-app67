@@ -1,5 +1,7 @@
 package ir.ilam.inspection.ui
 
+import ir.ilam.inspection.data.model.UserRole
+import ir.ilam.inspection.util.KeepLocationWarm
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.SystemBarStyle
@@ -76,6 +78,9 @@ class MainActivity : ComponentActivity() {
                                         .put(SettingsRepository.KEY_EXPERT_CODE, code)
                                 }
                             }
+                            // The expert's satellites are locked by the time a map opens;
+                            // the manager app records no positions and leaves the GPS off.
+                            if (!UserRole.isManager) KeepLocationWarm()
                             AppNavigation()
                         }
                         else -> LockScreen(vault = vault, onUnlocked = { unlocked = true })

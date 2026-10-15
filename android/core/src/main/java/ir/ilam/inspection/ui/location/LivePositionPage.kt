@@ -111,8 +111,18 @@ fun LivePositionPage(
                     return false
                 }
             })
+            // Only a real drag sets the pin down. A gloved tap wobbles a few
+            // pixels; counting that as a drag stopped the pin following the
+            // user, and it then sat on the first rough fix as if the map were slow.
+            val slop = android.view.ViewConfiguration.get(context).scaledTouchSlop * 2f
+            var downX = 0f
+            var downY = 0f
             setOnTouchListener { _, event ->
-                if (event.action == MotionEvent.ACTION_MOVE) following = false
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> { downX = event.x; downY = event.y }
+                    MotionEvent.ACTION_MOVE -> if (kotlin.math.hypot(event.x - downX, event.y - downY) > slop) following = false
+                    MotionEvent.ACTION_POINTER_DOWN -> following = false
+                }
                 false
             }
         }

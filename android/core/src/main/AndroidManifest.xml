@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Lets the app ask the receiver to fetch satellite orbit data (A-GPS)
+         over the internet: a first fix in seconds instead of a minute. A
+         normal permission, granted at install. -->
+    <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />
+
     <application>
         <!-- The barcode window. Declared here, with the class, so any app that
              uses the scanner gets the entry without repeating it. -->
