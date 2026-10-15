@@ -14,7 +14,8 @@ final class SyncController
     private const REPORT_COLUMNS = [
         'id', 'tracking_code', 'temp_code', 'report_type', 'status', 'expert_code',
         'report_date', 'visit_date', 'created_at', 'updated_at', 'county', 'area_code', 'district',
-        'address', 'postal_code', 'latitude', 'longitude', 'gps_accuracy', 'file_number',
+        'address', 'postal_code', 'latitude', 'longitude', 'gps_accuracy', 'position_at', 'observer_latitude',
+        'observer_longitude', 'observer_accuracy', 'file_number',
         'bill_number', 'subscription_number', 'usage_type', 'owner_name', 'owner_national_id',
         'owner_phone', 'owner_relation', 'meter_amperage', 'connection_type', 'seal_status',
         'measured_amperage', 'tap_point', 'phase_type', 'amperage_r', 'amperage_s', 'amperage_t',

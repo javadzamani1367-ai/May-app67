@@ -39,6 +39,7 @@
     <string name="fi_address">آدرس</string>
     <string name="fi_plate">پلاک</string>
     <string name="fi_description">توضیح</string>
+    <string name="fi_position_note">ثبت موقعیت</string>
     <string name="fi_files">فایل‌های رسیده</string>
     <string name="fi_location">موقعیت</string>
     <string name="fi_navigate">مسیریابی تا محل</string>

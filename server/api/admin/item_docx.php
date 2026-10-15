@@ -60,7 +60,7 @@ if ($details !== []) {
 }
 if ((int) $item['kind'] === Field::KIND_LINE) {
     $poles = array_map(static fn ($r) => ['تیر ' . $r[0] . ($r[1] === '' ? '' : ' — ' . $r[1]),
-        $r[2] . "\nنسبت به قبلی: " . $r[3] . ' · انشعاب ' . $r[4] . "\n" . $r[5]], FieldLine::poleTable($payload));
+        $r[2] . "\nنسبت به قبلی: " . $r[3] . ' · انشعاب ' . $r[4] . "\n" . $r[5] . ($r[6] !== '' ? "\n" . $r[6] : '')], FieldLine::poleTable($payload));
     if ($poles !== []) {
         array_push($blocks, ['h', 'تیرها'], ['table', $poles]);
     }

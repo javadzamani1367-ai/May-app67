@@ -11,7 +11,6 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.ElectricalServices
-import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.AlertDialog
@@ -44,6 +43,7 @@ import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tavan
 import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.util.LocationWarmup
+import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.PersianNumbers
 import kotlin.math.abs
 
@@ -83,7 +83,7 @@ fun PolePage(
             PrimaryButton(
                 text = if (next != null) stringResource(R.string.line_next_pole)
                 else stringResource(R.string.line_add_pole, PersianNumbers.toPersian(number + 1)),
-                onClick = { onOpenPole(next?.id ?: viewModel.addPole(reading?.fix?.takeIf { fresh })) },
+                onClick = { onOpenPole(next?.id ?: viewModel.addPole()) },
                 icon = if (next != null) Icons.AutoMirrored.Filled.ArrowForward else Icons.Filled.Add,
                 modifier = Modifier.weight(1.2f)
             )
@@ -107,22 +107,20 @@ fun PolePage(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = Spacing.xs)
                 )
-                Row(modifier = Modifier.fillMaxWidth().padding(top = Spacing.md), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                    PrimaryButton(
-                        text = stringResource(R.string.live_record_now),
-                        onClick = { reading?.fix?.let { viewModel.locatePole(pole.id, it.latitude, it.longitude, it.accuracy) } },
-                        enabled = fresh,
-                        icon = Icons.Filled.GpsFixed,
-                        tone = Tone.SUCCESS,
-                        modifier = Modifier.weight(1.2f)
-                    )
-                    SecondaryButton(
-                        text = stringResource(R.string.live_on_map),
-                        onClick = onPickOnMap,
-                        icon = Icons.Filled.Map,
-                        modifier = Modifier.weight(0.8f)
+                pole.positionAt?.let { at ->
+                    Text(
+                        stringResource(R.string.place_recorded_at, PersianDate.formatWithTime(at)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                PrimaryButton(
+                    text = stringResource(if (pole.hasPosition) R.string.place_change_on_map else R.string.place_record_on_map),
+                    onClick = onPickOnMap,
+                    icon = Icons.Filled.Map,
+                    tone = if (pole.hasPosition) Tone.BRAND else Tone.SUCCESS,
+                    modifier = Modifier.fillMaxWidth().padding(top = Spacing.md)
+                )
             }
         }
         SectionCard(title = stringResource(R.string.line_pole_state), icon = Icons.Filled.ElectricalServices, tone = Tone.ACCENT) {

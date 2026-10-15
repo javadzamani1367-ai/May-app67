@@ -101,4 +101,25 @@ class LocationRefinerTest {
         val hundredNorth = near(100.0, 0.0, 4.0)
         assertEquals(100.0, LocationRefiner.distanceMeters(site, hundredNorth), 1.0)
     }
+
+    @Test
+    fun `once satellites answer, a confident wifi fix 200 m away is ignored`() {
+        val refiner = LocationRefiner()
+        refiner.add(near(200.0, 0.0, 12.0))
+        assertFalse(refiner.precise)
+        refiner.add(near(0.0, 0.0, 6.0).copy(gps = true))
+        refiner.add(near(1.0, 1.0, 7.0).copy(gps = true))
+        val estimate = refiner.estimate()!!
+        assertTrue(estimate.gps)
+        assertTrue(LocationRefiner.distanceMeters(site, estimate) < 3.0)
+        assertTrue(refiner.precise)
+        assertEquals(2, refiner.count)
+    }
+
+    @Test
+    fun `a satellite fix that is still rough is not precise`() {
+        val refiner = LocationRefiner()
+        refiner.add(near(0.0, 0.0, 35.0).copy(gps = true))
+        assertFalse(refiner.precise)
+    }
 }

@@ -1,6 +1,10 @@
 # اسکیمای مشترک — مرجع سمت ویندوز
 
-نسخه اسکیما: **۴** (`SCHEMA_VERSION = 4`)
+نسخه اسکیما: **۵** (`SCHEMA_VERSION = 5`)
+
+> نسخه ۵: چهار ستون ثبت موقعیت روی نقشه در `reports` — `position_at` (زمان ثبت)، و `observer_latitude`،
+> `observer_longitude`، `observer_accuracy` (موقعیت ماهواره‌ای کارشناس در همان لحظه). آرشیو قدیمی‌تر آن‌ها را
+> با `ALTER TABLE` می‌افزاید (`Schema.AddedColumns`).
 
 > `SCHEMA_VERSION` فقط برای جدول‌های مشترک گوشی و ویندوز است و در دست‌دادن همگام‌سازی بررسی می‌شود.
 > نسخه پایگاه داده Room جداست (`DATABASE_VERSION`) و وقتی گوشی جدولی می‌گیرد که به آرشیو ربطی ندارد
@@ -38,6 +42,7 @@ CREATE TABLE reports (
   area_code TEXT,
   district TEXT, address TEXT, postal_code TEXT,
   latitude REAL, longitude REAL, gps_accuracy REAL,
+  position_at INTEGER, observer_latitude REAL, observer_longitude REAL, observer_accuracy REAL,
   file_number TEXT, bill_number TEXT, subscription_number TEXT, usage_type TEXT,
   owner_name TEXT, owner_national_id TEXT, owner_phone TEXT, owner_relation TEXT,
   -- ستون‌های نسخه ۱؛ دیگر نوشته نمی‌شوند ولی برای سازگاری باقی مانده‌اند

@@ -43,3 +43,13 @@ check('کارشناس اعلان ارجاع گرفت', (int) $pdo->query("SELECT
 equals('وضعیت ناممکن رد می‌شود', 409,
     $probe->json('POST', 'manage/field/status', ['id' => $burn['id'], 'status' => 4], $managerToken)['status']);
 equals('عکس ناموجود ۴۰۴', 404, $probe->raw('manage/field/file&id=00000000-0000-4000-8000-000000000000', $managerToken)['status']);
+
+echo "\n— ثبت موقعیت روی نقشه: زمان و موقعیت کاربر —\n";
+$placed = ['id' => $newId(), 'position_at' => 1760000100000, 'observer_lat' => 33.65009, 'observer_lon' => 46.45,
+           'observer_accuracy' => 4.4] + $burn;
+$probe->json('POST', 'field/item', ['item' => $placed, 'files' => []], $reporter);
+$row = $pdo->query("SELECT position_at, observer_lat, observer_accuracy FROM field_items WHERE id = '{$placed['id']}'")->fetch(PDO::FETCH_ASSOC);
+equals('زمان و موقعیت کاربر ذخیره شد', [1760000100000, 33.65009, 4.4],
+    [(int) $row['position_at'], (float) $row['observer_lat'], (float) $row['observer_accuracy']]);
+$note = $probe->json('GET', 'manage/field/item&id=' . $placed['id'], [], $managerToken)['body']['data']['item']['position_note'] ?? '';
+check('اپ مدیر فاصله کاربر از نقطه را می‌بیند', str_contains((string) $note, 'کاربر ۱۰ متر از نقطه'), (string) $note);

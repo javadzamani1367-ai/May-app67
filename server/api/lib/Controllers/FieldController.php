@@ -107,8 +107,8 @@ final class FieldController
         Db::run(
             'INSERT INTO field_items (id, kind, tracking_code, user_id, device_code, created_at,
                 client_updated_at, received_at, updated_at, status, priority, latitude, longitude,
-                accuracy, address, plate, description, payload)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                accuracy, position_at, observer_lat, observer_lon, observer_accuracy, address, plate, description, payload)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             array_merge(
                 [$item['id'], $kind, $code, $user['id'], self::text($item['device_code'] ?? null, 64),
                  (int) $item['created_at'], (int) ($item['updated_at'] ?? $item['created_at']),
@@ -123,7 +123,8 @@ final class FieldController
     private function update(array $item): void
     {
         Db::run(
-            'UPDATE field_items SET priority = ?, latitude = ?, longitude = ?, accuracy = ?, address = ?,
+            'UPDATE field_items SET priority = ?, latitude = ?, longitude = ?, accuracy = ?, position_at = ?,
+                observer_lat = ?, observer_lon = ?, observer_accuracy = ?, address = ?,
                 plate = ?, description = ?, payload = ?, client_updated_at = ?, updated_at = ?
              WHERE id = ?',
             array_merge(self::content($item), [(int) $item['updated_at'], Db::now(), $item['id']])
@@ -177,6 +178,10 @@ final class FieldController
             self::floatOrNull($item['latitude'] ?? null),
             self::floatOrNull($item['longitude'] ?? null),
             self::floatOrNull($item['accuracy'] ?? null),
+            self::intOrNull($item['position_at'] ?? null),
+            self::floatOrNull($item['observer_lat'] ?? null),
+            self::floatOrNull($item['observer_lon'] ?? null),
+            self::floatOrNull($item['observer_accuracy'] ?? null),
             self::text($item['address'] ?? null, 500),
             self::text($item['plate'] ?? null, 64),
             self::text($item['description'] ?? null, 20000),

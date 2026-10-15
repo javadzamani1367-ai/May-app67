@@ -53,13 +53,22 @@ class LocationProvider(private val context: Context) {
             return ageNanos in 0..MAX_AGE_NANOS
         }
 
+        // A position from a "fake GPS" app is never passed on: the field's
+        // positions decide where a crew was, and with it their overtime.
+        fun genuine(location: Location): Boolean {
+            if (!isMock(location)) return true
+            MockLocation.seen()
+            return false
+        }
+
         // Every method overridden, not a lambda: before Android 11 the other
         // three were abstract in the platform's interface, and the platform
         // calling one of them on a listener that lacks it is a crash.
         val platformListener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
-                if (fresh(location)) {
-                    trySend(Fix(location.latitude, location.longitude, location.accuracy.toDouble(), false))
+                if (fresh(location) && genuine(location)) {
+                    trySend(Fix(location.latitude, location.longitude, location.accuracy.toDouble(), false,
+                        gps = location.provider == LocationManager.GPS_PROVIDER))
                 }
             }
 
@@ -82,7 +91,7 @@ class LocationProvider(private val context: Context) {
         if (hasGooglePlayServices()) {
             val callback = object : LocationCallback() {
                 override fun onLocationResult(result: LocationResult) {
-                    result.locations.filter(::fresh).forEach { location ->
+                    result.locations.filter { fresh(it) && genuine(it) }.forEach { location ->
                         trySend(Fix(location.latitude, location.longitude, location.accuracy.toDouble(), true))
                     }
                 }
@@ -125,7 +134,7 @@ class LocationProvider(private val context: Context) {
         val now = System.currentTimeMillis()
         return listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER)
             .mapNotNull { provider -> runCatching { manager.getLastKnownLocation(provider) }.getOrNull() }
-            .filter { now - it.time <= LAST_KNOWN_MAX_AGE_MILLIS }
+            .filter { now - it.time <= LAST_KNOWN_MAX_AGE_MILLIS && !isMock(it) }
             .minByOrNull { it.accuracy }
             ?.let { Fix(it.latitude, it.longitude, it.accuracy.toDouble(), fromGoogle = false) }
     }
@@ -139,8 +148,28 @@ class LocationProvider(private val context: Context) {
     }
 
     private companion object {
+        fun isMock(location: Location): Boolean = MockLocation.isMock(location)
+
         const val INTERVAL_MILLIS = 1_000L
         const val MAX_AGE_NANOS = 10_000_000_000L
         const val LAST_KNOWN_MAX_AGE_MILLIS = 10 * 60_000L
     }
+}
+
+/**
+ * Whether a mock-location app was caught feeding positions since the app
+ * started. Those positions are dropped; this lets the screens say why the map
+ * is waiting instead of leaving the user puzzled.
+ */
+object MockLocation {
+    private val state = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val detected: kotlinx.coroutines.flow.StateFlow<Boolean> = state
+
+    fun seen() {
+        state.value = true
+    }
+
+    @Suppress("DEPRECATION")
+    fun isMock(location: Location): Boolean =
+        if (android.os.Build.VERSION.SDK_INT >= 31) location.isMock else location.isFromMockProvider
 }

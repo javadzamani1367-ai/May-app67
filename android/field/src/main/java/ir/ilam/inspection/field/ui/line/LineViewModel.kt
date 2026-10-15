@@ -14,7 +14,7 @@ import ir.ilam.inspection.field.data.PhaseReading
 import ir.ilam.inspection.field.data.PoleReading
 import ir.ilam.inspection.field.data.db.FieldItemEntity
 import ir.ilam.inspection.field.ui.form.ItemEditor
-import ir.ilam.inspection.util.Fix
+import ir.ilam.inspection.util.PlacedPoint
 
 /**
  * Pole-by-pole amperage of one feeder: the panel it leaves, then each pole
@@ -42,18 +42,9 @@ class LineViewModel(container: FieldContainer, existingId: String?, state: Saved
     fun pole(id: String): PoleReading? = payload.poles.firstOrNull { it.id == id }
     fun number(id: String): Int = payload.poles.indexOfFirst { it.id == id } + 1
 
-    /**
-     * A new pole at the end of the walk. If the phone already has a live fix,
-     * the pole is located at once — the user is standing at it — and can
-     * re-take or move it on its page.
-     */
-    fun addPole(here: Fix?): String {
-        val pole = PoleReading(
-            latitude = here?.latitude,
-            longitude = here?.longitude,
-            accuracy = here?.accuracy,
-            positionAt = here?.let { System.currentTimeMillis() }
-        )
+    /** A new pole at the end of the walk; it is marked on the map on its page, standing at it. */
+    fun addPole(): String {
+        val pole = PoleReading()
         edit { it.copy(poles = it.poles + pole) }
         return pole.id
     }
@@ -61,8 +52,13 @@ class LineViewModel(container: FieldContainer, existingId: String?, state: Saved
     fun updatePole(id: String, transform: (PoleReading) -> PoleReading) =
         edit { p -> p.copy(poles = p.poles.map { if (it.id == id) transform(it) else it }) }
 
-    fun locatePole(id: String, latitude: Double, longitude: Double, accuracy: Double?) = updatePole(id) {
-        it.copy(latitude = latitude, longitude = longitude, accuracy = accuracy, positionAt = System.currentTimeMillis())
+    /** A pole marked on the map, with the moment and where the user stood. */
+    fun placePole(id: String, point: PlacedPoint) = updatePole(id) {
+        it.copy(
+            latitude = point.latitude, longitude = point.longitude, accuracy = point.accuracy, positionAt = point.at,
+            observerLat = point.observer?.latitude, observerLon = point.observer?.longitude,
+            observerAccuracy = point.observer?.accuracy
+        )
     }
 
     fun removePole(id: String) {

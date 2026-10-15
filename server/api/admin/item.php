@@ -100,6 +100,9 @@ admin_header((string) ($item['tracking_code'] ?? 'مورد'));
       <?= $item['accuracy'] === null ? '' : '± ' . (int) round((float) $item['accuracy']) . ' m' ?>
       — <a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=<?= $lat ?>&amp;mlon=<?= $lon ?>#map=18/<?= $lat ?>/<?= $lon ?>">OpenStreetMap</a>
       — <a target="_blank" rel="noopener" href="https://www.google.com/maps?q=<?= $lat ?>,<?= $lon ?>">Google Maps</a></p>
+    <?php $audit = PositionAudit::text($item['position_at'] ?? null, $lat, $lon, $item['observer_lat'] ?? null,
+        $item['observer_lon'] ?? null, $item['observer_accuracy'] ?? null); ?>
+    <?php if ($audit !== null): ?><p><strong>ثبت موقعیت:</strong> <?= e($audit) ?></p><?php endif; ?>
   <?php endif; ?>
 </div>
 

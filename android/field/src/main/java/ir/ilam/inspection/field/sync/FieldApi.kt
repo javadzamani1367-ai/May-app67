@@ -12,7 +12,8 @@ data class FieldProfile(
     val permissions: Int,
     val ampTolerancePct: Int,
     val ampToleranceMinA: Int,
-    val purgeAfterSync: Boolean
+    val purgeAfterSync: Boolean,
+    val presenceLimitM: Int = 200
 )
 
 data class PushResult(val trackingCode: String?, val status: Int, val missingFiles: Set<String>)
@@ -33,7 +34,8 @@ suspend fun ServerApi.fieldMe(token: String): ApiResult<FieldProfile> = get("fie
         permissions = user.optInt("permissions"),
         ampTolerancePct = settings.optInt("amp_tolerance_pct", 10),
         ampToleranceMinA = settings.optInt("amp_tolerance_min_a", 5),
-        purgeAfterSync = settings.optInt("purge_after_sync", 0) == 1
+        purgeAfterSync = settings.optInt("purge_after_sync", 0) == 1,
+        presenceLimitM = settings.optInt("presence_limit_m", 200)
     )
 }
 

@@ -18,10 +18,12 @@ final class FieldSettings
         'show_reporter_to_team' => 0,
         // آنچه گزارش‌دهنده از نتیجه می‌بیند: ۰ هیچ، ۱ فقط نتیجه، ۲ با جزئیات.
         'reporter_result_detail' => 1,
+        // بیشترین فاصله کاربر از تابلو یا تیری که موقعیتش را ثبت می‌کند (متر).
+        'presence_limit_m' => 200,
     ];
 
     /** کلیدهایی که به گوشی کاربر میدانی می‌روند. */
-    private const FOR_PHONE = ['amp_tolerance_pct', 'amp_tolerance_min_a', 'purge_after_sync'];
+    private const FOR_PHONE = ['amp_tolerance_pct', 'amp_tolerance_min_a', 'purge_after_sync', 'presence_limit_m'];
 
     /** @return array<string, int> */
     public static function all(): array

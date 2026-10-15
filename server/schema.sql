@@ -79,6 +79,10 @@ CREATE TABLE IF NOT EXISTS reports (
   latitude            DOUBLE       NULL,
   longitude           DOUBLE       NULL,
   gps_accuracy        DOUBLE       NULL,
+  position_at         BIGINT       NULL,   -- زمان ثبت موقعیت روی نقشه
+  observer_latitude   DOUBLE       NULL,   -- موقعیت ماهواره‌ای کارشناس در همان لحظه
+  observer_longitude  DOUBLE       NULL,
+  observer_accuracy   DOUBLE       NULL,
   file_number         VARCHAR(64)  NULL,
   bill_number         VARCHAR(64)  NULL,
   subscription_number VARCHAR(64)  NULL,
@@ -287,6 +291,10 @@ CREATE TABLE IF NOT EXISTS field_items (
   latitude          DOUBLE       NULL,
   longitude         DOUBLE       NULL,
   accuracy          DOUBLE       NULL,
+  position_at       BIGINT       NULL,
+  observer_lat      DOUBLE       NULL,
+  observer_lon      DOUBLE       NULL,
+  observer_accuracy DOUBLE       NULL,
   address           VARCHAR(500) NULL,
   plate             VARCHAR(64)  NULL,
   description       TEXT         NULL,
@@ -363,4 +371,4 @@ CREATE TABLE IF NOT EXISTS schema_meta (
   id      TINYINT NOT NULL PRIMARY KEY,
   version INT     NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 4);
+INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 5);

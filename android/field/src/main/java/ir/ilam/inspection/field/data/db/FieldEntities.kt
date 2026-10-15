@@ -30,6 +30,11 @@ data class FieldItemEntity(
     val latitude: Double? = null,
     val longitude: Double? = null,
     val accuracy: Double? = null,
+    /** When the position was recorded on the map, and where the user's own receiver put them then. */
+    @ColumnInfo(name = "position_at") val positionAt: Long? = null,
+    @ColumnInfo(name = "observer_lat") val observerLat: Double? = null,
+    @ColumnInfo(name = "observer_lon") val observerLon: Double? = null,
+    @ColumnInfo(name = "observer_accuracy") val observerAccuracy: Double? = null,
     val address: String? = null,
     val plate: String? = null,
     val description: String? = null,

@@ -57,10 +57,10 @@ function render_poles(array $p): string
     if ($rows === []) {
         return '';
     }
-    $html = '<table><tr><th>تیر</th><th>پلاک</th><th>آمپر</th><th>نسبت به قبلی</th><th>انشعاب</th><th>مختصات</th></tr>';
+    $html = '<table><tr><th>تیر</th><th>پلاک</th><th>آمپر</th><th>نسبت به قبلی</th><th>انشعاب</th><th>مختصات</th><th>ثبت موقعیت</th></tr>';
     foreach ($rows as $r) {
         $html .= '<tr><td>' . e($r[0]) . '</td><td>' . e(ltr($r[1])) . '</td><td>' . e($r[2]) . '</td><td>' . e($r[3])
-            . '</td><td>' . e($r[4]) . '</td><td dir="ltr">' . e($r[5]) . '</td></tr>';
+            . '</td><td>' . e($r[4]) . '</td><td dir="ltr">' . e($r[5]) . '</td><td>' . e($r[6] ?: '—') . '</td></tr>';
     }
     return $html . '</table>';
 }

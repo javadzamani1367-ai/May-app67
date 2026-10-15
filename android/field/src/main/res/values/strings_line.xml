@@ -28,7 +28,7 @@
     <string name="line_pole_located">ثبت شد · ±%1$s متر</string>
     <string name="line_pole_picked">از روی نقشه انتخاب شد</string>
     <string name="line_pole_unlocated">موقعیت این تیر ثبت نشده</string>
-    <string name="line_pole_auto">کنار تیر بایستید؛ موقعیت با یک ضربه ثبت می‌شود. تیر تازه اگر موقعیت زنده باشد خودکار ثبت می‌شود.</string>
+    <string name="line_pole_auto">کنار تیر بایستید و موقعیت آن را روی نقشه ثبت کنید. نقشه روی شما باز می‌شود؛ اگر بیش از حد مجاز از تیر دور باشید، ثبت نمی‌شود.</string>
     <string name="line_pole_plate">شماره پلاک تیر (اختیاری)</string>
     <string name="line_pole_state">آمپر این تیر</string>
     <string name="line_state_measured">اندازه‌گیری شد</string>

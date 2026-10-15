@@ -36,6 +36,11 @@ class FieldPrefs(context: Context) {
         get() = prefs.getInt(KEY_AMP_MIN, 5)
         set(value) = prefs.edit().putInt(KEY_AMP_MIN, value).apply()
 
+    /** Farthest the user may stand from a panel or pole they mark, in metres (manager's setting). */
+    var presenceLimitM: Int
+        get() = prefs.getInt(KEY_PRESENCE, 200)
+        set(value) = prefs.edit().putInt(KEY_PRESENCE, value).apply()
+
     var purgeAfterSync: Boolean
         get() = prefs.getBoolean(KEY_PURGE, false)
         set(value) = prefs.edit().putBoolean(KEY_PURGE, value).apply()
@@ -76,6 +81,7 @@ class FieldPrefs(context: Context) {
         const val KEY_PERMISSIONS = "permissions"
         const val KEY_AMP_PCT = "amp_tolerance_pct"
         const val KEY_AMP_MIN = "amp_tolerance_min_a"
+        const val KEY_PRESENCE = "presence_limit_m"
         const val KEY_PURGE = "purge_after_sync"
         const val KEY_EXPIRED = "session_expired"
         // "_v2": the pull now brings the office's result and notes too, so a

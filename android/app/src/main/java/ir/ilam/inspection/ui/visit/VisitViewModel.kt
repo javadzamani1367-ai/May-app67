@@ -16,7 +16,7 @@ import ir.ilam.inspection.data.model.MediaCaptions
 import ir.ilam.inspection.data.model.MediaType
 import ir.ilam.inspection.data.model.ReportDetail
 import ir.ilam.inspection.data.model.TechnicalInput
-import ir.ilam.inspection.util.Fix
+import ir.ilam.inspection.util.PlacedPoint
 import ir.ilam.inspection.util.PersianNumbers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -101,20 +101,21 @@ class VisitViewModel(private val container: AppContainer, private val reportId: 
     val locationFix: StateFlow<LocationFixEntity?> = container.database.locationFixDao().observe(reportId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    fun applyFix(fix: Fix, samples: Int = 1) {
-        edit { it.copy(latitude = fix.latitude, longitude = fix.longitude, gpsAccuracy = fix.accuracy) }
-        recordSource(LocationSource.SENSOR, samples)
-    }
-
     /**
-     * A coordinate the expert did not read off the sensor — picked on the map,
-     * or typed in from a figure recorded elsewhere. No accuracy is written,
-     * because inventing a metre figure would put a false precision into an
-     * official report.
+     * The point recorded on the map, with the moment and the expert's own
+     * satellite position then. An accuracy is written only when the point is
+     * where the expert stood: a point placed by hand has no measured accuracy,
+     * and inventing one would put a false precision into an official report.
      */
-    fun setCoordinates(latitude: Double, longitude: Double, source: LocationSource) {
-        edit { it.copy(latitude = latitude, longitude = longitude, gpsAccuracy = null) }
-        recordSource(source, samples = 0)
+    fun placePosition(point: PlacedPoint) {
+        edit {
+            it.copy(
+                latitude = point.latitude, longitude = point.longitude, gpsAccuracy = point.accuracy,
+                positionAt = point.at, observerLatitude = point.observer?.latitude,
+                observerLongitude = point.observer?.longitude, observerAccuracy = point.observer?.accuracy
+            )
+        }
+        recordSource(if (point.accuracy != null) LocationSource.SENSOR else LocationSource.MAP, samples = 0)
     }
 
     private fun recordSource(source: LocationSource, samples: Int) {

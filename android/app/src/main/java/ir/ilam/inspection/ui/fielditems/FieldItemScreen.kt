@@ -140,6 +140,7 @@ private fun Overview(item: FieldManage.Detail) {
             ValueRow(stringResource(R.string.fi_address), row.address)
             ValueRow(stringResource(R.string.fi_plate), row.plate, ltr = true)
             ValueRow(stringResource(R.string.fi_description), item.description)
+            ValueRow(stringResource(R.string.fi_position_note), item.positionNote)
             if (item.fileCount > 0) ValueRow(stringResource(R.string.fi_files), PersianNumbers.toPersian(item.fileCount))
         }
     }

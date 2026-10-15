@@ -53,6 +53,8 @@ object FieldManage {
         val longitude: Double?,
         val accuracy: Double?,
         val description: String?,
+        /** When the position was recorded and how far the user stood from it, in words from the server. */
+        val positionNote: String?,
         val mergedInto: String?,
         val details: List<Pair<String, String>>,
         val resultName: String?,
@@ -92,6 +94,7 @@ object FieldManage {
             longitude = o.optDoubleOrNull("longitude"),
             accuracy = o.optDoubleOrNull("accuracy"),
             description = o.optStringOrNull("description"),
+            positionNote = o.optStringOrNull("position_note"),
             mergedInto = o.optStringOrNull("merged_into"),
             details = o.optJSONArray("details").objects().map { it.optString("label") to it.optString("value") },
             resultName = o.optStringOrNull("result_name"),

@@ -19,6 +19,10 @@ data class PoleReading(
     val longitude: Double? = null,
     val accuracy: Double? = null,
     val positionAt: Long? = null,
+    /** Where the user's receiver put them when the pole was marked. */
+    val observerLat: Double? = null,
+    val observerLon: Double? = null,
+    val observerAccuracy: Double? = null,
     val state: PoleState = PoleState.MEASURED,
     val phases: PhaseReading = PhaseReading(),
     val neutral: String = "",
@@ -61,6 +65,9 @@ data class LinePayload(
                     putOpt("lon", pole.longitude)
                     putOpt("acc", pole.accuracy?.let { Math.round(it * 10) / 10.0 })
                     putOpt("at", pole.positionAt)
+                    putOpt("olat", pole.observerLat)
+                    putOpt("olon", pole.observerLon)
+                    putOpt("oacc", pole.observerAccuracy?.let { Math.round(it * 10) / 10.0 })
                     put("state", pole.state.name.lowercase())
                     if (pole.state == PoleState.MEASURED) {
                         put("phases", pole.phases.toJson())
@@ -102,6 +109,9 @@ data class LinePayload(
             longitude = p.double("lon"),
             accuracy = p.double("acc"),
             positionAt = if (p.has("at") && !p.isNull("at")) p.optLong("at") else null,
+            observerLat = p.double("olat"),
+            observerLon = p.double("olon"),
+            observerAccuracy = p.double("oacc"),
             state = if (p.optString("state") == "not_measured") PoleState.NOT_MEASURED else PoleState.MEASURED,
             phases = phases(p.optJSONObject("phases")),
             neutral = number(p, "neutral"),

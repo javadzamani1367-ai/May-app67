@@ -72,14 +72,21 @@ fun mediaSection(files: List<FieldFileEntity>, title: String = stringResource(R.
 
 /** The form's own position, on the live map page. */
 @Composable
-fun ItemPositionPage(editor: ItemEditor, item: FieldItemEntity, onBack: () -> Unit, title: String = stringResource(R.string.hub_position_title)) {
+fun ItemPositionPage(
+    editor: ItemEditor,
+    item: FieldItemEntity,
+    onBack: () -> Unit,
+    title: String = stringResource(R.string.hub_position_title),
+    /** For a point the user must stand at (a panel): the farthest they may be, in metres. */
+    presenceLimit: Double? = null
+) {
     LivePositionPage(
         title = title,
         recordedLatitude = item.latitude,
         recordedLongitude = item.longitude,
-        onRecordFix = { fix, _ -> editor.setMeasured(fix) },
-        onRecordPoint = { lat, lon -> editor.setPosition(lat, lon, null) },
-        onBack = onBack
+        onRecord = editor::setPlaced,
+        onBack = onBack,
+        presenceLimit = presenceLimit
     )
 }
 

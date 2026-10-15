@@ -40,6 +40,8 @@ import ir.ilam.inspection.ui.common.ValueRow
 import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tavan
 import ir.ilam.inspection.ui.theme.Tone
+import ir.ilam.inspection.ui.location.distanceFrom
+import ir.ilam.inspection.util.Fix
 import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.PersianNumbers
 import java.util.Locale
@@ -67,9 +69,23 @@ fun LocationFacts(report: ReportEntity, meta: LocationFixEntity?) {
         )
         InfoTile(
             label = stringResource(R.string.location_captured_at),
-            value = meta?.let { PersianDate.formatWithTime(it.capturedAt) } ?: stringResource(R.string.value_empty),
+            value = (report.positionAt ?: meta?.capturedAt)?.let { PersianDate.formatWithTime(it) }
+                ?: stringResource(R.string.value_empty),
             icon = Icons.Filled.Schedule,
             modifier = Modifier.weight(1.4f)
+        )
+    }
+    report.positionAt?.let {
+        val olat = report.observerLatitude
+        val olon = report.observerLongitude
+        val distance = if (olat != null && olon != null) distanceFrom(Fix(olat, olon, 0.0), lat, lon) else null
+        Text(
+            if (distance != null) stringResource(R.string.position_observer, formatMetres(distance),
+                formatMetres(report.observerAccuracy ?: 0.0))
+            else stringResource(R.string.position_observer_none),
+            style = MaterialTheme.typography.bodySmall,
+            color = if (distance == null) Tavan.colors.warning.strong else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = Spacing.xs)
         )
     }
     if (meta != null) {

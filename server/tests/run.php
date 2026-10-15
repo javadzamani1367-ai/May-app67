@@ -397,6 +397,19 @@ equals('تابلو و دو تیر اندازه‌گیری‌شده', [0, 1, 3], 
 $table = FieldLine::poleTable($line['payload']);
 equals('افت تیر ۱ نسبت به تابلو', 'افت ۱۵', $table[0][3]);
 equals('افت تیر ۳ نسبت به آخرین تیر اندازه‌گیری‌شده', 'افت ۱۶۲', $table[2][3]);
+equals('تیر بی زمان ثبت، ستون ثبت خالی', '', $table[0][6]);
+// ثبت موقعیت روی نقشه: فاصله کاربر از نقطه، و متن خوانا برای پنل.
+$hundredNorth = 33.6 + 100 / 6_371_000 * 180 / M_PI;
+check('فاصله صد متری درست است', abs(PositionAudit::distance(33.6, 46.4, $hundredNorth, 46.4) - 100) < 0.5);
+equals('بی موقعیت کاربر، فاصله‌ای نیست', null, PositionAudit::observerDistance(33.6, 46.4, null, null));
+check('متن ثبت با فاصله و دقت', str_contains((string) PositionAudit::text(1760000000000, 33.6, 46.4, $hundredNorth, 46.4, 4.2),
+    'کاربر ۱۰۰ متر از نقطه (دقت ±۴ متر)'));
+check('متن ثبت بی موقعیت دقیق کاربر', str_contains((string) PositionAudit::text(1760000000000, 33.6, 46.4, null, null, null),
+    'در دست نبود'));
+equals('داده قدیمی بی زمان ثبت، متنی ندارد', null, PositionAudit::text(null, 33.6, 46.4, null, null, null));
+$withAt = $line['payload'];
+$withAt['poles'][0] += ['lat' => 33.6, 'lon' => 46.4601, 'at' => 1760000000000, 'olat' => 33.6, 'olon' => 46.46, 'oacc' => 5];
+check('جدول تیرها زمان و فاصله ثبت را دارد', str_contains(FieldLine::poleTable($withAt)[0][6], 'متر از نقطه'));
 $svg = FieldLine::svg($line['payload']);
 check('نمودار سه خط دارد', substr_count($svg, '<polyline') === 3);
 check('بازه پرافت سایه می‌خورد', str_contains($svg, '#fee2e2'));

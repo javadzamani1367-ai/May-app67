@@ -22,7 +22,7 @@ abstract class FieldDatabase : RoomDatabase() {
     abstract fun dao(): FieldDao
 
     companion object {
-        const val VERSION = 2
+        const val VERSION = 3
         private const val NAME = "field.db"
 
         @Volatile private var instance: FieldDatabase? = null
@@ -34,10 +34,20 @@ abstract class FieldDatabase : RoomDatabase() {
             }
         }
 
+        /** 0.7: when a position was recorded, and where the user stood then. */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE field_item ADD COLUMN position_at INTEGER")
+                db.execSQL("ALTER TABLE field_item ADD COLUMN observer_lat REAL")
+                db.execSQL("ALTER TABLE field_item ADD COLUMN observer_lon REAL")
+                db.execSQL("ALTER TABLE field_item ADD COLUMN observer_accuracy REAL")
+            }
+        }
+
         fun get(context: Context): FieldDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(context.applicationContext, FieldDatabase::class.java, NAME)
                 .openHelperFactory(SecureDatabase.factory(context))
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
                 .also { instance = it }
         }

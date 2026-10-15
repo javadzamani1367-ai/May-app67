@@ -4,6 +4,10 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.GnssStatus
+import android.location.LocationManager
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
@@ -36,12 +40,24 @@ import kotlinx.coroutines.launch
 object LocationWarmup {
 
     /** The best estimate now: [live] false while it is only the phone's last known position. */
-    data class Reading(val fix: Fix, val samples: Int, val receivedAt: Long, val live: Boolean) {
+    data class Reading(
+        val fix: Fix,
+        val samples: Int,
+        val receivedAt: Long,
+        val live: Boolean,
+        /** A satellite fix within [LocationRefiner.PRECISE_METERS]: good enough to measure from. */
+        val precise: Boolean = false
+    ) {
         fun isFresh(now: Long = SystemClock.elapsedRealtime()): Boolean = live && now - receivedAt <= STALE_MILLIS
     }
 
     private val state = MutableStateFlow<Reading?>(null)
     val reading: StateFlow<Reading?> = state.asStateFlow()
+
+    private val used = MutableStateFlow(0)
+    /** Satellites the receiver is using for its fix right now; 0 under a roof. */
+    val satellites: StateFlow<Int> = used.asStateFlow()
+    private var gnss: Pair<LocationManager, GnssStatus.Callback>? = null
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val window = ArrayDeque<Pair<Long, Fix>>()
@@ -71,6 +87,9 @@ object LocationWarmup {
             listening?.cancel()
             listening = null
             window.clear()
+            gnss?.let { (manager, callback) -> runCatching { manager.unregisterGnssStatusCallback(callback) } }
+            gnss = null
+            used.value = 0
         }
     }
 
@@ -82,6 +101,7 @@ object LocationWarmup {
     private fun ensureRunning(context: Context) {
         if (listening?.isActive == true || !hasPermission(context)) return
         seed(context)
+        watchSatellites(context)
         val provider = LocationProvider(context)
         listening = scope.launch {
             runCatching {
@@ -97,7 +117,26 @@ object LocationWarmup {
         val refiner = LocationRefiner()
         window.forEach { refiner.add(it.second) }
         val estimate = refiner.estimate() ?: return
-        state.value = Reading(estimate, refiner.count, now, live = true)
+        state.value = Reading(estimate, refiner.count, now, live = true, precise = refiner.precise)
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun watchSatellites(context: Context) {
+        if (gnss != null) return
+        val manager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return
+        val callback = object : GnssStatus.Callback() {
+            override fun onSatelliteStatusChanged(status: GnssStatus) {
+                used.value = (0 until status.satelliteCount).count { status.usedInFix(it) }
+            }
+
+            override fun onStopped() {
+                used.value = 0
+            }
+        }
+        val registered = runCatching {
+            manager.registerGnssStatusCallback(callback, Handler(Looper.getMainLooper()))
+        }.getOrDefault(false)
+        if (registered) gnss = manager to callback
     }
 
     /** The last known position, only while nothing live has come in. */
@@ -111,7 +150,7 @@ object LocationWarmup {
             runCatching {
                 LocationServices.getFusedLocationProviderClient(context).lastLocation
                     .addOnSuccessListener { location ->
-                        if (location != null) {
+                        if (location != null && !MockLocation.isMock(location)) {
                             offer(Fix(location.latitude, location.longitude, location.accuracy.toDouble(), true), now)
                         }
                     }

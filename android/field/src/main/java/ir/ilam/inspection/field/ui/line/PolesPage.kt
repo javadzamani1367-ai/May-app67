@@ -56,7 +56,7 @@ import ir.ilam.inspection.util.PersianNumbers
  * at the bottom, already numbered.
  */
 @Composable
-fun PolesPage(viewModel: LineViewModel, here: Fix?, onBack: () -> Unit, onOpenPole: (String) -> Unit) {
+fun PolesPage(viewModel: LineViewModel, onBack: () -> Unit, onOpenPole: (String) -> Unit) {
     val poles = viewModel.payload.poles
     val verdict = viewModel.verdict()
     FormPage(
@@ -65,7 +65,7 @@ fun PolesPage(viewModel: LineViewModel, here: Fix?, onBack: () -> Unit, onOpenPo
         bottom = {
             PrimaryButton(
                 text = stringResource(R.string.line_add_pole, PersianNumbers.toPersian(poles.size + 1)),
-                onClick = { onOpenPole(viewModel.addPole(here)) },
+                onClick = { onOpenPole(viewModel.addPole()) },
                 icon = Icons.Filled.Add,
                 modifier = Modifier.weight(1f)
             )

@@ -76,12 +76,16 @@ equals('مدیر حساب خودش را غیرفعال یا کارشناس نم�
     $pdo->query("SELECT role, active FROM users WHERE user_code = 'mgr'")->fetch(PDO::FETCH_ASSOC) ?: []));
 
 $settings = $probe->page('admin/settings.php', $jar, ['amp_tolerance_pct' => '15', 'amp_tolerance_min_a' => '4',
-    'reporter_result_detail' => '2', 'csrf' => $token]);
+    'reporter_result_detail' => '2', 'presence_limit_m' => '150', 'csrf' => $token]);
 check('تنظیمات ذخیره شد', str_contains($settings['body'], 'ذخیره شد'));
 $fieldToken = (string) ($probe->json('POST', 'auth/login', ['user_code' => 'f-300', 'password' => 'field-pass-new',
     'device_code' => 'P3', 'app' => 'field'])['body']['data']['token'] ?? '');
 $me = $probe->json('GET', 'field/me', [], $fieldToken)['body']['data']['settings'] ?? [];
-equals('گوشی تنظیم تازه را می‌گیرد', [15, 4], [$me['amp_tolerance_pct'] ?? null, $me['amp_tolerance_min_a'] ?? null]);
+equals('گوشی تنظیم تازه را می‌گیرد', [15, 4, 150],
+    [$me['amp_tolerance_pct'] ?? null, $me['amp_tolerance_min_a'] ?? null, $me['presence_limit_m'] ?? null]);
+$tooNear = $probe->page('admin/settings.php', $jar, ['amp_tolerance_pct' => '15', 'amp_tolerance_min_a' => '4',
+    'presence_limit_m' => '5', 'csrf' => $token]);
+check('فاصله حضور کمتر از ۲۰ متر پذیرفته نیست', str_contains($tooNear['body'], 'بین ۲۰ و ۲۰۰۰ متر'));
 
 $probe->page('admin/logout.php', $jar);
 equals('بعد از خروج، دوباره به صفحه ورود', 'login.php', $probe->page('admin/users.php', $jar)['location']);

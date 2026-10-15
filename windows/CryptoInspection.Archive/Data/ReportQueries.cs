@@ -34,7 +34,7 @@ namespace CryptoInspection.Archive.Data
             // ReadReport takes its values by position, so inserting one beside
             // the column it belongs with silently shifts every field after it
             // — addresses arriving as districts, with nothing failing.
-            "area_code";
+            "area_code, position_at, observer_latitude, observer_longitude, observer_accuracy";
 
         private readonly Database _database;
 
@@ -328,7 +328,11 @@ namespace CryptoInspection.Archive.Data
                 ApprovalState = Database.GetInt(record, 48),
                 ApprovalComment = Database.GetString(record, 49),
                 ApprovalAt = Database.GetNullableLong(record, 50),
-                AreaCode = Database.GetString(record, 51)
+                AreaCode = Database.GetString(record, 51),
+                PositionAt = Database.GetNullableLong(record, 52),
+                ObserverLatitude = Database.GetNullableDouble(record, 53),
+                ObserverLongitude = Database.GetNullableDouble(record, 54),
+                ObserverAccuracy = Database.GetNullableDouble(record, 55)
             };
         }
     }

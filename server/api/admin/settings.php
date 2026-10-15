@@ -10,9 +10,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     csrf_check();
     $pct = (int) ($_POST['amp_tolerance_pct'] ?? -1);
     $min = (int) ($_POST['amp_tolerance_min_a'] ?? -1);
+    $presence = (int) ($_POST['presence_limit_m'] ?? FieldSettings::all()['presence_limit_m']);
     if ($pct < 1 || $pct > 50 || $min < 0 || $min > 100) {
         $error = 'درصد باید بین ۱ و ۵۰ و حداقل مطلق بین ۰ و ۱۰۰ آمپر باشد.';
+    } elseif ($presence < 20 || $presence > 2000) {
+        $error = 'فاصله مجاز حضور باید بین ۲۰ و ۲۰۰۰ متر باشد.';
     } else {
+        FieldSettings::set('presence_limit_m', $presence);
         FieldSettings::set('amp_tolerance_pct', $pct);
         FieldSettings::set('amp_tolerance_min_a', $min);
         FieldSettings::set('purge_after_sync', isset($_POST['purge_after_sync']) ? 1 : 0);
@@ -42,6 +46,12 @@ admin_header('تنظیمات میدانی');
         <input name="amp_tolerance_min_a" type="number" min="0" max="100" value="<?= (int) $s['amp_tolerance_min_a'] ?>" dir="ltr">
       </label>
     </div>
+
+    <h3 style="margin-top:16px">حضور در محل</h3>
+    <label>بیشترین فاصله کاربر از تابلو یا تیری که موقعیتش را ثبت می‌کند (متر)
+      <input name="presence_limit_m" type="number" min="20" max="2000" value="<?= (int) $s['presence_limit_m'] ?>" dir="ltr">
+    </label>
+    <p class="muted">اگر موقعیت دقیق ماهواره‌ای کاربر دورتر از این فاصله باشد، اپ اجازه ثبت نمی‌دهد و می‌گوید در محل حاضر شود.</p>
 
     <h3 style="margin-top:16px">داده روی گوشی</h3>
     <label class="check"><input type="checkbox" name="purge_after_sync" <?= $s['purge_after_sync'] === 1 ? 'checked' : '' ?>>

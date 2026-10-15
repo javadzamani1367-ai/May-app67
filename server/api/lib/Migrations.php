@@ -52,6 +52,17 @@ final class Migrations
                 static fn () => self::addColumn('field_items', 'result', 'TEXT NULL'),
                 static fn () => self::addIndex('field_items', 'idx_field_items_report', 'report_id'),
             ],
+            // ثبت موقعیت روی نقشه: زمان ثبت، و موقعیت ماهواره‌ای خود کاربر در آن لحظه.
+            5 => [
+                static fn () => self::addColumn('field_items', 'position_at', 'BIGINT NULL'),
+                static fn () => self::addColumn('field_items', 'observer_lat', 'DOUBLE NULL'),
+                static fn () => self::addColumn('field_items', 'observer_lon', 'DOUBLE NULL'),
+                static fn () => self::addColumn('field_items', 'observer_accuracy', 'DOUBLE NULL'),
+                static fn () => self::addColumn('reports', 'position_at', 'BIGINT NULL'),
+                static fn () => self::addColumn('reports', 'observer_latitude', 'DOUBLE NULL'),
+                static fn () => self::addColumn('reports', 'observer_longitude', 'DOUBLE NULL'),
+                static fn () => self::addColumn('reports', 'observer_accuracy', 'DOUBLE NULL'),
+            ],
         ];
     }
 

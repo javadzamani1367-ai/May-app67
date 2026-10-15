@@ -30,6 +30,12 @@ namespace CryptoInspection.Archive.Data
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
         public double? GpsAccuracy { get; set; }
+        /// <summary>When the point was recorded on the map (unix ms).</summary>
+        public long? PositionAt { get; set; }
+        /// <summary>The expert's own satellite position at that moment.</summary>
+        public double? ObserverLatitude { get; set; }
+        public double? ObserverLongitude { get; set; }
+        public double? ObserverAccuracy { get; set; }
         public string FileNumber { get; set; }
         public string BillNumber { get; set; }
         public string SubscriptionNumber { get; set; }

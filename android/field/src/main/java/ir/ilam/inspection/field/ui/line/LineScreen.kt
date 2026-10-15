@@ -115,7 +115,7 @@ fun LineScreen(itemId: String?, onClose: () -> Unit) {
                 PhaseInputs(payload.start, viewModel::setStart)
             }
         }
-        page == PAGE_POLES -> PolesPage(viewModel, here = reading?.fix?.takeIf { fresh }, onBack = back, onOpenPole = openPole)
+        page == PAGE_POLES -> PolesPage(viewModel, onBack = back, onOpenPole = openPole)
         page == PAGE_ANALYSIS -> FormPage(title = stringResource(R.string.line_analysis_title), onBack = back) {
             LineFindings(viewModel.verdict())
         }
@@ -138,9 +138,10 @@ fun LineScreen(itemId: String?, onClose: () -> Unit) {
                 title = stringResource(R.string.line_pole_title, PersianNumbers.toPersian(viewModel.number(id))),
                 recordedLatitude = pole?.latitude,
                 recordedLongitude = pole?.longitude,
-                onRecordFix = { fix, _ -> viewModel.locatePole(id, fix.latitude, fix.longitude, fix.accuracy) },
-                onRecordPoint = { lat, lon -> viewModel.locatePole(id, lat, lon, null) },
-                onBack = { openPole(id) }
+                onRecord = { viewModel.placePole(id, it) },
+                onBack = { openPole(id) },
+                // The user stands at the pole to measure it, so the point must be where they are.
+                presenceLimit = container.prefs.presenceLimitM.toDouble()
             )
         }
     }

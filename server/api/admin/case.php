@@ -104,7 +104,13 @@ echo case_styles();
 </div>
 <?= case_section2('۴ — مشخصات فنی', CaseReport::technicalRows($r)) ?>
 <?php if (is_numeric($r['latitude']) && is_numeric($r['longitude'])): $lat = (float) $r['latitude']; $lon = (float) $r['longitude']; ?>
-<div class="card"><p dir="ltr" style="text-align:right;margin:0">
+<?php
+// چگونگی ثبت موقعیت فقط برای مدیر است؛ در فرم رسمی که برای واحدها می‌رود نمی‌آید.
+$audit = PositionAudit::text($r['position_at'] ?? null, $lat, $lon, $r['observer_latitude'] ?? null,
+    $r['observer_longitude'] ?? null, $r['observer_accuracy'] ?? null, 'کارشناس');
+?>
+<div class="card"><?php if ($audit !== null): ?><p style="margin:0 0 6px"><strong>ثبت موقعیت:</strong> <?= e($audit) ?></p><?php endif; ?>
+<p dir="ltr" style="text-align:right;margin:0">
   <a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=<?= $lat ?>&amp;mlon=<?= $lon ?>#map=18/<?= $lat ?>/<?= $lon ?>">OpenStreetMap</a>
   — <a target="_blank" rel="noopener" href="https://www.google.com/maps?q=<?= $lat ?>,<?= $lon ?>">Google Maps</a></p></div>
 <?php endif; ?>

@@ -104,7 +104,8 @@ namespace CryptoInspection.Archive.Data
                     seal_external, seal_external_serial, seal_internal,
                     meter_appearance_ok, meter_tampered,
                     approval_state, approval_comment, approval_at,
-                    description, actions_taken)
+                    description, actions_taken,
+                    position_at, observer_latitude, observer_longitude, observer_accuracy)
                   VALUES (
                     $id, $tracking_code, $temp_code, $report_type, $status, $expert_code,
                     $report_date, $visit_date, $created_at, $updated_at, $synced_at,
@@ -117,7 +118,8 @@ namespace CryptoInspection.Archive.Data
                     $seal_external, $seal_external_serial, $seal_internal,
                     $meter_appearance_ok, $meter_tampered,
                     $approval_state, $approval_comment, $approval_at,
-                    $description, $actions_taken)",
+                    $description, $actions_taken,
+                    $position_at, $observer_latitude, $observer_longitude, $observer_accuracy)",
                 transaction,
                 command =>
                 {
@@ -140,6 +142,10 @@ namespace CryptoInspection.Archive.Data
                     Database.Bind(command, "$latitude", report.Latitude);
                     Database.Bind(command, "$longitude", report.Longitude);
                     Database.Bind(command, "$gps_accuracy", report.GpsAccuracy);
+                    Database.Bind(command, "$position_at", report.PositionAt);
+                    Database.Bind(command, "$observer_latitude", report.ObserverLatitude);
+                    Database.Bind(command, "$observer_longitude", report.ObserverLongitude);
+                    Database.Bind(command, "$observer_accuracy", report.ObserverAccuracy);
                     Database.Bind(command, "$file_number", report.FileNumber);
                     Database.Bind(command, "$bill_number", report.BillNumber);
                     Database.Bind(command, "$subscription_number", report.SubscriptionNumber);

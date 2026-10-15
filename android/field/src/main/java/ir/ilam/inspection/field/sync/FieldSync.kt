@@ -64,6 +64,7 @@ class FieldSync(
                 prefs.ampTolerancePct = ampTolerancePct
                 prefs.ampToleranceMinA = ampToleranceMinA
                 prefs.purgeAfterSync = purgeAfterSync
+                prefs.presenceLimitM = presenceLimitM
                 prefs.sessionExpired = false
             }
             is ApiResult.Refused -> {

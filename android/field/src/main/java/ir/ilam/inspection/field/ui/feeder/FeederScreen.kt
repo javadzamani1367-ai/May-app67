@@ -81,8 +81,10 @@ fun FeederScreen(itemId: String?, onClose: () -> Unit) {
         )
         page == PAGE_POSITION -> {
             BackHandler { pageState.value = PAGE_PANEL }
+            // The panel is read standing at it: the point must be where the user is.
             ItemPositionPage(viewModel, item, onBack = { pageState.value = PAGE_PANEL },
-                title = stringResource(R.string.feeder_position_title))
+                title = stringResource(R.string.feeder_position_title),
+                presenceLimit = container.prefs.presenceLimitM.toDouble())
         }
         page == PAGE_MEDIA -> MediaPage(viewModel, stampCode = item.plate.orEmpty(), onBack = back,
             allowVideo = false, allowAudio = false)

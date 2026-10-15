@@ -9,7 +9,14 @@ data class Fix(
     val latitude: Double,
     val longitude: Double,
     val accuracy: Double,
-    val fromGoogle: Boolean = true
+    val fromGoogle: Boolean = true,
+    /**
+     * From the satellite receiver itself (the platform's GPS provider). Wi-Fi
+     * and cell-tower positions report an accuracy they often do not have —
+     * a "15 m" Wi-Fi fix two hundred metres off is what the field kept seeing
+     * — so once satellites answer, only they count.
+     */
+    val gps: Boolean = false
 )
 
 /**
@@ -37,18 +44,29 @@ class LocationRefiner(
     /** Good enough to stop on its own, in metres. */
     private val targetMeters: Double = TARGET_METERS
 ) {
-    private val samples = ArrayList<Fix>()
+    private val all = ArrayList<Fix>()
+
+    /** The satellite fixes once there is one; until then, whatever came. */
+    private val samples: List<Fix>
+        get() = all.filter { it.gps }.ifEmpty { all }
 
     val count: Int get() = samples.size
 
     /** The single most accurate fix so far. */
     val best: Fix? get() = samples.minByOrNull { it.accuracy }
 
+    /**
+     * Precise enough to measure from: a satellite fix within [PRECISE_METERS].
+     * A network position never is, however sure it claims to be.
+     */
+    val precise: Boolean
+        get() = best?.let { it.gps && it.accuracy <= PRECISE_METERS } == true
+
     fun add(fix: Fix) {
         // A fix with no accuracy, or an absurd one, is not information.
         if (fix.accuracy.isNaN() || fix.accuracy <= 0.0 || fix.accuracy > MAX_USEFUL_METERS) return
         if (fix.latitude !in -90.0..90.0 || fix.longitude !in -180.0..180.0) return
-        samples += fix
+        all += fix
     }
 
     /**
@@ -80,7 +98,8 @@ class LocationRefiner(
             latitude = lat / weightSum,
             longitude = lon / weightSum,
             accuracy = top.accuracy,
-            fromGoogle = top.fromGoogle
+            fromGoogle = top.fromGoogle,
+            gps = top.gps
         )
     }
 
@@ -99,6 +118,8 @@ class LocationRefiner(
 
     companion object {
         const val TARGET_METERS = 5.0
+        /** A satellite fix this good is one to measure a distance from. */
+        const val PRECISE_METERS = 20.0
         const val MAX_USEFUL_METERS = 500.0
         private const val MIN_AGREEING = 3
         private const val ACCURACY_SLACK = 1.5

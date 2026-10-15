@@ -19,6 +19,7 @@ import ir.ilam.inspection.field.data.db.FieldItemEntity
 import ir.ilam.inspection.field.sync.FieldSyncWorker
 import ir.ilam.inspection.util.Fix
 import ir.ilam.inspection.util.PhotoStamp
+import ir.ilam.inspection.util.PlacedPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -111,7 +112,14 @@ abstract class ItemEditor(
     fun setPosition(latitude: Double, longitude: Double, accuracy: Double?) =
         update { it.copy(latitude = latitude, longitude = longitude, accuracy = accuracy) }
 
-    fun setMeasured(fix: Fix) = setPosition(fix.latitude, fix.longitude, fix.accuracy)
+    /** A point recorded on the map, with its moment and the user's own position then. */
+    fun setPlaced(point: PlacedPoint) = update {
+        it.copy(
+            latitude = point.latitude, longitude = point.longitude, accuracy = point.accuracy,
+            positionAt = point.at, observerLat = point.observer?.latitude, observerLon = point.observer?.longitude,
+            observerAccuracy = point.observer?.accuracy
+        )
+    }
 
     fun newFile(extension: String): File = container.drafts.newFile(item?.id ?: "pending", extension)
 

@@ -13,14 +13,14 @@ import ir.ilam.inspection.data.SecureDatabase
  * with `windows/SCHEMA.md`; the sync handshake refuses to talk to an archive
  * built against a different version.
  */
-const val SCHEMA_VERSION = 4
+const val SCHEMA_VERSION = 5
 
 /**
  * Room's own version. It moves ahead of [SCHEMA_VERSION] whenever the phone
  * gains a table the archive has no business knowing about — a local typing
  * convenience must not make an up-to-date archive look incompatible.
  */
-const val DATABASE_VERSION = 9
+const val DATABASE_VERSION = 10
 
 @Database(
     entities = [
@@ -232,6 +232,16 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** Shared schema 5: when the point was recorded on the map, and where the expert stood then. */
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE reports ADD COLUMN position_at INTEGER")
+                db.execSQL("ALTER TABLE reports ADD COLUMN observer_latitude REAL")
+                db.execSQL("ALTER TABLE reports ADD COLUMN observer_longitude REAL")
+                db.execSQL("ALTER TABLE reports ADD COLUMN observer_accuracy REAL")
+            }
+        }
+
         private fun build(context: Context): AppDatabase {
             return Room.databaseBuilder(context, AppDatabase::class.java, DB_NAME)
                 .openHelperFactory(SecureDatabase.factory(context))
@@ -243,7 +253,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_5_6,
                     MIGRATION_6_7,
                     MIGRATION_7_8,
-                    MIGRATION_8_9
+                    MIGRATION_8_9,
+                    MIGRATION_9_10
                 )
                 .build()
         }

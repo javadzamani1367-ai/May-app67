@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.ilam.inspection.data.db.ReportEntity
-import ir.ilam.inspection.data.model.LocationSource
 import ir.ilam.inspection.ui.location.PositionCard
 
 /**
@@ -22,9 +21,7 @@ fun LocationCard(report: ReportEntity, viewModel: VisitViewModel) {
         latitude = report.latitude,
         longitude = report.longitude,
         accuracy = report.gpsAccuracy,
-        onMeasured = { fix, samples -> viewModel.applyFix(fix, samples) },
-        onPicked = { lat, lon -> viewModel.setCoordinates(lat, lon, LocationSource.MAP) },
-        onTyped = { lat, lon -> viewModel.setCoordinates(lat, lon, LocationSource.MANUAL) }
+        onPlaced = viewModel::placePosition
     ) {
         LocationFacts(report = report, meta = meta)
     }

@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/PositionAudit.php';
+
 /**
  * آمپرگیری تیربه‌تیر یک فیدر (نوع FT) برای خواندن آدم: ردیف‌های خلاصه، جدول
  * تیرها با افت هر بازه، و نمودار SVG جریان سه فاز در طول مسیر.
@@ -93,7 +95,7 @@ final class FieldLine
 
     /**
      * جدول تیرها: هر تیر با پلاک، سه فاز، تغییر نسبت به نقطه اندازه‌گیری‌شده قبلی،
-     * انشعاب و مختصات.
+     * انشعاب، مختصات، و زمان ثبت موقعیت با فاصله کاربر از تیر.
      *
      * @return list<list<string>>
      */
@@ -117,6 +119,8 @@ final class FieldLine
                 $change,
                 Jalali::digits((string) (int) ($pole['branches'] ?? 0)),
                 $lat,
+                (string) PositionAudit::text($pole['at'] ?? null, $pole['lat'] ?? null, $pole['lon'] ?? null,
+                    $pole['olat'] ?? null, $pole['olon'] ?? null, $pole['oacc'] ?? null),
             ];
             if ($phases !== null) {
                 $previous = $phases;

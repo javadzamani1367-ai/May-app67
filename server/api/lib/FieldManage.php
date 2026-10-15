@@ -98,7 +98,8 @@ final class FieldManage
         $details = FieldPresenter::rows((int) $row['kind'], $payload);
         if ((int) $row['kind'] === Field::KIND_LINE) {
             foreach (FieldLine::poleTable($payload) as $pole) {
-                $details[] = ['تیر ' . $pole[0] . ($pole[1] === '' ? '' : ' — ' . $pole[1]), $pole[2] . ' · ' . $pole[3]];
+                $details[] = ['تیر ' . $pole[0] . ($pole[1] === '' ? '' : ' — ' . $pole[1]),
+                    $pole[2] . ' · ' . $pole[3] . ($pole[6] === '' ? '' : "\n" . $pole[6])];
             }
         }
 
@@ -108,6 +109,8 @@ final class FieldManage
             'longitude' => $row['longitude'] === null ? null : (float) $row['longitude'],
             'accuracy' => $row['accuracy'] === null ? null : (float) $row['accuracy'],
             'description' => $row['description'],
+            'position_note' => PositionAudit::text($row['position_at'] ?? null, $row['latitude'], $row['longitude'],
+                $row['observer_lat'] ?? null, $row['observer_lon'] ?? null, $row['observer_accuracy'] ?? null),
             'merged_into' => $row['merged_into'],
             'report_id' => $row['report_id'],
             'details' => array_map(static fn ($r) => ['label' => $r[0], 'value' => $r[1]], $details),

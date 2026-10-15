@@ -48,6 +48,12 @@ data class ReportEntity(
     @ColumnInfo(name = "latitude") val latitude: Double? = null,
     @ColumnInfo(name = "longitude") val longitude: Double? = null,
     @ColumnInfo(name = "gps_accuracy") val gpsAccuracy: Double? = null,
+    /** When the point was recorded on the map. */
+    @ColumnInfo(name = "position_at") val positionAt: Long? = null,
+    /** The expert's own satellite position at that moment: the office can see they stood there. */
+    @ColumnInfo(name = "observer_latitude") val observerLatitude: Double? = null,
+    @ColumnInfo(name = "observer_longitude") val observerLongitude: Double? = null,
+    @ColumnInfo(name = "observer_accuracy") val observerAccuracy: Double? = null,
     @ColumnInfo(name = "file_number") val fileNumber: String? = null,
     @ColumnInfo(name = "bill_number") val billNumber: String? = null,
     @ColumnInfo(name = "subscription_number") val subscriptionNumber: String? = null,

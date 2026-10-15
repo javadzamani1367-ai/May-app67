@@ -14,21 +14,20 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import ir.ilam.inspection.core.R
@@ -40,21 +39,28 @@ import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tavan
 import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.util.Fix
+import ir.ilam.inspection.util.LocationRefiner
+import ir.ilam.inspection.util.LocationWarmup
 import ir.ilam.inspection.util.MapConfig
+import ir.ilam.inspection.util.MockLocation
+import ir.ilam.inspection.util.PlacedPoint
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
 import org.osmdroid.util.GeoPoint
 
 /**
- * The location of an item, as one page: a map that opens on the user, at once.
+ * Recording a position, the one way every app does it: on the map.
  *
- * The map follows the blue dot — the phone's live position, warmed up since
- * the form opened — and "record my position" takes it with its accuracy. To
- * mark a point somewhere else (the house across the field), the user drags
- * the map: a pin appears at the centre and the button records the pin. "My
- * position" brings the map back. There is no typed-in coordinate: a mistyped
- * digit puts a report in the next village.
+ * The pin sits in the middle of the map. The map opens on the user's own
+ * satellite position and follows it, so standing at the spot, one tap on
+ * «ثبت این نقطه» records it; if the point is elsewhere or the receiver is off,
+ * the user drags the map until the pin is on it. The moment, the user's own
+ * position and the distance between them are recorded with the point.
+ *
+ * [presenceLimit] (metres) is for points the user must be standing at — a
+ * panel, a pole: with a precise fix farther than that from the pin, recording
+ * is refused; without a precise fix, it waits for one.
  */
 @SuppressLint("ClickableViewAccessibility")
 @Composable
@@ -62,25 +68,30 @@ fun LivePositionPage(
     title: String,
     recordedLatitude: Double?,
     recordedLongitude: Double?,
-    onRecordFix: (Fix, Int) -> Unit,
-    onRecordPoint: (Double, Double) -> Unit,
+    onRecord: (PlacedPoint) -> Unit,
     onBack: () -> Unit,
-    subtitle: String? = null
+    subtitle: String? = null,
+    presenceLimit: Double? = null
 ) {
     val context = LocalContext.current
     val reading = rememberLiveLocation()
     val fresh = rememberFresh(reading)
+    val satellites by LocationWarmup.satellites.collectAsState()
+    val mock by MockLocation.detected.collectAsState()
     val hasRecord = recordedLatitude != null && recordedLongitude != null
+    val precise = reading?.takeIf { fresh && it.precise }?.fix
 
-    /** True while the map follows the user; a drag turns it into picking. */
-    var following by remember { mutableStateOf(true) }
+    /** True while the pin rides on the user's position; a drag sets it down where the finger leaves it. */
+    var following by remember { mutableStateOf(!hasRecord) }
     var centre by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+    var imagery by rememberSaveable { mutableStateOf(false) }
+    var refusal by remember { mutableStateOf<Refusal?>(null) }
     val me = remember { DotOverlay(context, Color(0xFF2563EB)) }
     val recorded = remember { DotOverlay(context, Color(0xFFDC2626)) }
     val map = remember {
         val start = when {
-            reading != null -> GeoPoint(reading.fix.latitude, reading.fix.longitude)
             hasRecord -> GeoPoint(recordedLatitude!!, recordedLongitude!!)
+            reading != null -> GeoPoint(reading.fix.latitude, reading.fix.longitude)
             else -> GeoPoint(MapConfig.DEFAULT_LATITUDE, MapConfig.DEFAULT_LONGITUDE)
         }
         newMapView(context).apply {
@@ -113,9 +124,12 @@ fun LivePositionPage(
             map.onDetach()
         }
     }
+    LaunchedEffect(imagery) {
+        if (imagery) MapLayers.satellite(context, map) else if (map.tileProvider.tileSource.name() == IMAGERY) MapLayers.streets(context, map)
+    }
     recorded.point = if (hasRecord) GeoPoint(recordedLatitude!!, recordedLongitude!!) else null
 
-    // The blue dot moves with every reading; while following, the map does too.
+    // The blue dot moves with every reading; while following, the pin does too.
     var firstCentre by remember { mutableStateOf(reading == null) }
     LaunchedEffect(reading) {
         val current = reading ?: return@LaunchedEffect
@@ -128,6 +142,7 @@ fun LivePositionPage(
                 firstCentre = false
             }
             map.controller.animateTo(point)
+            centre = current.fix.latitude to current.fix.longitude
         }
         map.invalidate()
     }
@@ -137,82 +152,81 @@ fun LivePositionPage(
         reading?.let { map.controller.animateTo(GeoPoint(it.fix.latitude, it.fix.longitude), maxOf(map.zoomLevelDouble, CLOSE_ZOOM), 600L) }
     }
 
+    fun record() {
+        val pin = centre ?: (map.mapCenter.latitude to map.mapCenter.longitude)
+        val point = PlacedPoint(
+            latitude = pin.first,
+            longitude = pin.second,
+            accuracy = null,
+            at = System.currentTimeMillis(),
+            observer = precise,
+            satellites = satellites
+        )
+        val distance = point.distance
+        if (presenceLimit != null) {
+            if (distance == null) {
+                refusal = Refusal.NO_FIX
+                return
+            }
+            if (distance > presenceLimit) {
+                refusal = Refusal.TOO_FAR
+                return
+            }
+        }
+        // Standing on the point: the receiver's accuracy is the point's accuracy.
+        val onMe = precise != null && distance != null && distance <= maxOf(precise.accuracy, ON_ME_METERS)
+        onRecord(point.copy(accuracy = if (onMe) precise!!.accuracy else null))
+        onBack()
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         TavanTopBar(title = title, subtitle = subtitle, onBack = onBack)
         Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
             AndroidView(factory = { map }, modifier = Modifier.fillMaxSize())
-            if (!following) {
-                Icon(
-                    imageVector = Icons.Filled.Place,
-                    contentDescription = null,
-                    tint = Tavan.colors.danger.strong,
-                    modifier = Modifier.size(52.dp).align(Alignment.Center).offset(y = (-24).dp)
+            Icon(
+                imageVector = Icons.Filled.Place,
+                contentDescription = null,
+                tint = Tavan.colors.danger.strong,
+                modifier = Modifier.size(52.dp).align(Alignment.Center).offset(y = (-24).dp)
+            )
+            PositionStatus(reading, fresh, satellites, mock, modifier = Modifier.align(Alignment.TopCenter).padding(top = Spacing.md))
+            Column(modifier = Modifier.align(Alignment.BottomEnd).padding(Spacing.lg)) {
+                LayerSwitch(imagery = imagery, onToggle = { imagery = !imagery })
+                MapControls(
+                    locating = !fresh,
+                    onZoomIn = { map.controller.zoomIn() },
+                    onZoomOut = { map.controller.zoomOut() },
+                    onMyLocation = ::followMe,
+                    modifier = Modifier.padding(top = Spacing.sm)
                 )
             }
-            LiveAccuracyPill(reading, fresh, modifier = Modifier.align(Alignment.TopCenter).padding(top = Spacing.md))
-            MapControls(
-                locating = !fresh,
-                onZoomIn = { map.controller.zoomIn() },
-                onZoomOut = { map.controller.zoomOut() },
-                onMyLocation = ::followMe,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(Spacing.lg)
+        }
+        BottomActionBar(note = { PositionNote(centre, precise, following, hasRecord, imagery) }) {
+            SecondaryButton(
+                text = stringResource(R.string.map_my_location),
+                onClick = ::followMe,
+                icon = Icons.Filled.MyLocation,
+                modifier = Modifier.weight(0.8f)
+            )
+            PrimaryButton(
+                text = stringResource(R.string.live_record_pin),
+                onClick = ::record,
+                enabled = centre != null || reading != null || hasRecord,
+                icon = Icons.Filled.Check,
+                tone = Tone.SUCCESS,
+                modifier = Modifier.weight(1.2f)
             )
         }
-        BottomActionBar(note = { PageNote(following, hasRecord, centre, reading?.fix?.takeIf { fresh }) }) {
-            if (following) {
-                PrimaryButton(
-                    text = if (fresh) stringResource(R.string.live_record_me_accuracy, formatMetres(reading!!.fix.accuracy))
-                    else stringResource(R.string.live_record_me),
-                    onClick = { reading?.let { onRecordFix(it.fix, it.samples); onBack() } },
-                    enabled = fresh,
-                    icon = Icons.Filled.Check,
-                    tone = Tone.SUCCESS,
-                    modifier = Modifier.weight(1f)
-                )
-            } else {
-                SecondaryButton(
-                    text = stringResource(R.string.map_my_location),
-                    onClick = ::followMe,
-                    icon = Icons.Filled.MyLocation,
-                    modifier = Modifier.weight(0.8f)
-                )
-                PrimaryButton(
-                    text = stringResource(R.string.live_record_pin),
-                    onClick = { centre?.let { onRecordPoint(it.first, it.second); onBack() } },
-                    enabled = centre != null,
-                    icon = Icons.Filled.Check,
-                    modifier = Modifier.weight(1.2f)
-                )
-            }
-        }
     }
+    refusal?.let { RefusalDialog(it, presenceLimit ?: 0.0, onDismiss = { refusal = null }) }
 }
 
-@Composable
-private fun PageNote(following: Boolean, hasRecord: Boolean, centre: Pair<Double, Double>?, me: Fix?) {
-    Column(modifier = Modifier.fillMaxWidth().padding(top = Spacing.xs)) {
-        val shown = if (following) me?.let { it.latitude to it.longitude } else centre
-        if (shown != null) {
-            Text(
-                formatCoordinates(shown.first, shown.second),
-                style = MaterialTheme.typography.titleSmall.copy(textDirection = TextDirection.Ltr),
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-        Text(
-            stringResource(if (following) R.string.live_follow_hint else R.string.live_pick_hint),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        if (hasRecord) {
-            Text(
-                stringResource(R.string.live_recorded_hint),
-                style = MaterialTheme.typography.labelSmall,
-                color = Tavan.colors.danger.strong
-            )
-        }
-    }
-}
+/** Distance from the user to a point, or null without a precise position. */
+fun distanceFrom(me: Fix?, latitude: Double, longitude: Double): Double? =
+    me?.let { LocationRefiner.distanceMeters(it, Fix(latitude, longitude, 0.0)) }
 
 private const val CLOSE_ZOOM = 18.0
 private const val REGION_ZOOM = 11.0
+/** Within this of the user, a pin counts as "where I stand". */
+private const val ON_ME_METERS = 5.0
+internal const val IMAGERY = "esri-world-imagery"
