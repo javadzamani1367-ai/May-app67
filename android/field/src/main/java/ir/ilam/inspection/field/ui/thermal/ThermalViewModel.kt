@@ -1,5 +1,6 @@
 package ir.ilam.inspection.field.ui.thermal
 
+import androidx.lifecycle.SavedStateHandle
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,8 +34,8 @@ data class ImportSummary(val added: Int, val exifKept: Int, val exifDropped: Int
  * A thermal inspection: the route, the HIKMICRO files found for it, and what
  * each file shows — pole or panel, its plate, a note, its temperatures.
  */
-class ThermalViewModel(container: FieldContainer, existingId: String?) :
-    ItemEditor(container, FieldKind.THERMAL, existingId) {
+class ThermalViewModel(container: FieldContainer, existingId: String?, state: SavedStateHandle? = null) :
+    ItemEditor(container, FieldKind.THERMAL, existingId, state) {
 
     var payload by mutableStateOf(ThermalPayload())
         private set

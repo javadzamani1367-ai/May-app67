@@ -7,11 +7,13 @@ import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.field.FieldContainer
 import ir.ilam.inspection.field.data.FieldKind
 import ir.ilam.inspection.field.data.FileRole
+import ir.ilam.inspection.field.data.SyncState
 import ir.ilam.inspection.field.data.db.FieldFileEntity
 import ir.ilam.inspection.field.data.db.FieldItemEntity
 import ir.ilam.inspection.field.sync.FieldSyncWorker
@@ -32,7 +34,14 @@ import java.io.FileOutputStream
 abstract class ItemEditor(
     protected val container: FieldContainer,
     private val kind: FieldKind,
-    existingId: String?
+    existingId: String?,
+    /**
+     * The screen's saved state. A new form remembers the draft it made here:
+     * when Android closes the app in the background (a phone call, the camera,
+     * another app) and the user comes back, the same draft opens again instead
+     * of an empty new one.
+     */
+    private val state: SavedStateHandle? = null
 ) : ViewModel() {
 
     var item by mutableStateOf<FieldItemEntity?>(null)
@@ -45,13 +54,20 @@ abstract class ItemEditor(
     /** The address last drafted from the map, so a new position may replace it — but never the user's own words. */
     var autoAddress by mutableStateOf<String?>(null)
 
+    /** Anything entered yet? A form left untouched is not worth a question, or a draft. */
+    var touched by mutableStateOf(false)
+        private set
+
     private var saveJob: Job? = null
 
     init {
         viewModelScope.launch {
-            val loaded = existingId?.let { container.drafts.item(it) } ?: container.drafts.create(kind)
+            val id = existingId ?: state?.get<String>(KEY_DRAFT)
+            val loaded = id?.let { container.drafts.item(it) } ?: container.drafts.create(kind)
+            state?.set(KEY_DRAFT, loaded.id)
             item = loaded
             files = container.drafts.files(loaded.id)
+            touched = loaded.updatedAt > loaded.createdAt || files.isNotEmpty()
             onLoaded(loaded)
         }
     }
@@ -63,12 +79,29 @@ abstract class ItemEditor(
     fun update(transform: (FieldItemEntity) -> FieldItemEntity) {
         val current = item ?: return
         item = transform(current)
+        touched = true
         saveJob?.cancel()
         saveJob = viewModelScope.launch {
             delay(SAVE_DELAY)
             item?.let { container.drafts.save(it) }
         }
     }
+
+    /**
+     * Writes the pending edit at once: the app is going to the background and
+     * may be closed there before the usual short delay is over.
+     */
+    fun saveNow() {
+        if (saveJob?.isActive != true) return
+        saveJob?.cancel()
+        val current = item ?: return
+        container.backgroundScope.launch { container.drafts.save(current) }
+    }
+
+
+    /** A draft can be thrown away; an item already sent or queued cannot. */
+    val isDraft: Boolean
+        get() = item?.syncState == SyncState.DRAFT.code
 
     protected suspend fun flush() {
         saveJob?.cancel()
@@ -164,6 +197,15 @@ abstract class ItemEditor(
         }
     }
 
+    /** Leaves the form keeping the draft: whatever is pending is written first. */
+    fun keepAndClose(onDone: () -> Unit) {
+        viewModelScope.launch {
+            flush()
+            state?.remove<String>(KEY_DRAFT)
+            onDone()
+        }
+    }
+
     fun discard(onDone: () -> Unit) {
         viewModelScope.launch {
             saveJob?.cancel()
@@ -186,6 +228,7 @@ abstract class ItemEditor(
 
     private fun withItem(after: () -> Unit = {}, block: suspend (FieldItemEntity) -> Unit) {
         val current = item ?: return
+        touched = true
         viewModelScope.launch {
             busy = true
             withContext(Dispatchers.IO) { block(current) }
@@ -199,5 +242,6 @@ abstract class ItemEditor(
         const val MIME_JPEG = "image/jpeg"
         const val MIME_PNG = "image/png"
         private const val SAVE_DELAY = 400L
+        private const val KEY_DRAFT = "draft_id"
     }
 }

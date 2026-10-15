@@ -1,5 +1,8 @@
 package ir.ilam.inspection.field.ui.line
 
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.createSavedStateHandle
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,10 +45,12 @@ import ir.ilam.inspection.util.PersianNumbers
 fun LineScreen(itemId: String?, onClose: () -> Unit) {
     val context = LocalContext.current
     val container = context.field
-    val viewModel: LineViewModel = viewModel(key = "line-${itemId ?: "new"}") { LineViewModel(container, itemId) }
+    val viewModel: LineViewModel = viewModel(key = "line-${itemId ?: "new"}") { LineViewModel(container, itemId, createSavedStateHandle()) }
     val reading = rememberLiveLocation()
     val fresh = rememberFresh(reading)
     val pageState = rememberFormPage()
+    // The app may be closed in the background (a call, another app): write the last edit now.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.saveNow() }
     val hubScroll = rememberScrollState()
     val item = viewModel.item
     val payload = viewModel.payload
@@ -69,6 +74,7 @@ fun LineScreen(itemId: String?, onClose: () -> Unit) {
             onFinish = { viewModel.finish(context, onClose) },
             onDiscard = { viewModel.discard(onClose) },
             onClose = onClose,
+            editor = viewModel,
             scroll = hubScroll,
             header = { LineHubHeader(viewModel) }
         )

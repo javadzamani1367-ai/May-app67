@@ -107,6 +107,7 @@
     <string name="step_short_media">مستندات</string>
     <string name="step_short_owner">تکمیل</string>
     <string name="step_short_review">بررسی</string>
+    <string name="visit_leave_message">همه اطلاعات این بازدید ذخیره شده و بعداً از تب «در دست اقدام» ادامه می‌دهید. از بازدید خارج می‌شوید؟</string>
     <string name="visit_progress">مرحله %1$s از %2$s · ذخیره خودکار</string>
     <string name="review_title">آمادگی برای پایان بازدید</string>
     <string name="review_ready">همه موارد لازم تکمیل است. با «پایان بازدید» پرونده به «بازدید شده» می‌رود و گزارش رسمی آن آماده می‌شود.</string>

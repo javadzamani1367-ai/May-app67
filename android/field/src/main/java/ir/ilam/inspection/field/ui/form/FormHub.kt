@@ -1,5 +1,6 @@
 package ir.ilam.inspection.field.ui.form
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -71,16 +72,29 @@ fun FormHub(
     onFinish: () -> Unit,
     onDiscard: () -> Unit,
     onClose: () -> Unit,
+    /** The form's item: whether leaving needs a question, and how to keep it. */
+    editor: ItemEditor,
     scroll: ScrollState = rememberScrollState(),
     header: (@Composable ColumnScope.() -> Unit)? = null,
     footer: (@Composable ColumnScope.() -> Unit)? = null
 ) {
     var confirming by remember { mutableStateOf(false) }
+    var leaving by remember { mutableStateOf(false) }
+    // Back, by the arrow or the phone's own button: nothing entered → the empty
+    // draft goes quietly; something entered → ask; already sent → just leave.
+    val requestExit = {
+        when {
+            !editor.isDraft -> onClose()
+            !editor.touched -> onDiscard()
+            else -> leaving = true
+        }
+    }
+    BackHandler(onBack = requestExit)
     Column(modifier = Modifier.fillMaxSize()) {
         TavanTopBar(
             title = title,
             subtitle = stringResource(R.string.form_autosaved),
-            onBack = onClose,
+            onBack = requestExit,
             actions = {
                 HeaderAction(Icons.Filled.DeleteOutline, stringResource(R.string.form_discard), onClick = { confirming = true })
             }
@@ -107,6 +121,13 @@ fun FormHub(
         }
     }
     if (confirming) DiscardDialog(onDismiss = { confirming = false }, onConfirm = { confirming = false; onDiscard() })
+    if (leaving) {
+        ExitDialog(
+            onKeep = { leaving = false; editor.keepAndClose(onClose) },
+            onDelete = { leaving = false; onDiscard() },
+            onStay = { leaving = false }
+        )
+    }
 }
 
 /** How far the form is, in one bar: the first thing seen when it opens. */

@@ -1,5 +1,6 @@
 package ir.ilam.inspection.field.ui.feeder
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -19,8 +20,8 @@ import ir.ilam.inspection.field.ui.form.ItemEditor
  */
 enum class FeederStep { PANEL, MAIN, A, B, C, D, CHECK }
 
-class FeederViewModel(container: FieldContainer, existingId: String?) :
-    ItemEditor(container, FieldKind.FEEDER, existingId) {
+class FeederViewModel(container: FieldContainer, existingId: String?, state: SavedStateHandle? = null) :
+    ItemEditor(container, FieldKind.FEEDER, existingId, state) {
 
     var payload by mutableStateOf(FeederPayload())
         private set

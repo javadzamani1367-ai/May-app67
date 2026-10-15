@@ -1,5 +1,6 @@
 package ir.ilam.inspection.field.ui.line
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -20,8 +21,8 @@ import ir.ilam.inspection.util.Fix
  * as the user walks the line. The item's own position follows the first
  * located pole, so the office's map shows where the walk began.
  */
-class LineViewModel(container: FieldContainer, existingId: String?) :
-    ItemEditor(container, FieldKind.FEEDER_LINE, existingId) {
+class LineViewModel(container: FieldContainer, existingId: String?, state: SavedStateHandle? = null) :
+    ItemEditor(container, FieldKind.FEEDER_LINE, existingId, state) {
 
     var payload by mutableStateOf(LinePayload())
         private set

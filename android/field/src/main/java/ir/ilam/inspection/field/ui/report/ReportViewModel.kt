@@ -1,5 +1,6 @@
 package ir.ilam.inspection.field.ui.report
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,8 +12,8 @@ import ir.ilam.inspection.field.data.db.FieldItemEntity
 import ir.ilam.inspection.field.ui.form.ItemEditor
 
 /** A crypto-mining, illegal-power or burnt-equipment report: one item, its details in the payload. */
-class ReportViewModel(container: FieldContainer, val kind: FieldKind, existingId: String?) :
-    ItemEditor(container, kind, existingId) {
+class ReportViewModel(container: FieldContainer, val kind: FieldKind, existingId: String?, state: SavedStateHandle? = null) :
+    ItemEditor(container, kind, existingId, state) {
 
     var details by mutableStateOf(ReportDetails())
         private set

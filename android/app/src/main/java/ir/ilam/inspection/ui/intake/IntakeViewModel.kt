@@ -1,5 +1,6 @@
 package ir.ilam.inspection.ui.intake
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.R
@@ -34,22 +35,85 @@ data class IntakeState(
     val needsManualCode: Boolean get() = type != null && !type.generatesCode
 }
 
-class IntakeViewModel(private val container: AppContainer) : ViewModel() {
+class IntakeViewModel(
+    private val container: AppContainer,
+    /**
+     * The typed fields, kept in the screen's saved state: when Android closes
+     * the app in the background (a call, a message) the form comes back as it
+     * was, not empty.
+     */
+    private val saved: SavedStateHandle? = null
+) : ViewModel() {
 
     private val _state = MutableStateFlow(IntakeState())
     val state: StateFlow<IntakeState> = _state.asStateFlow()
 
     init {
-        _state.update { it.copy(counties = container.counties.defaults) }
+        val counties = container.counties.defaults
+        _state.update { current ->
+            val s = saved ?: return@update current.copy(counties = counties)
+            current.copy(
+                counties = counties,
+                type = s.get<Int>(K_TYPE)?.let { code -> ReportType.entries.firstOrNull { it.code == code } },
+                county = s.get<Int>(K_COUNTY)?.let { index -> counties.firstOrNull { it.index == index } },
+                district = s[K_DISTRICT] ?: "",
+                address = s[K_ADDRESS] ?: "",
+                subscription = s[K_SUBSCRIPTION] ?: "",
+                manualTrackingCode = s[K_CODE] ?: "",
+                reportDate = s[K_DATE] ?: current.reportDate
+            )
+        }
     }
 
-    fun setType(type: ReportType) = _state.update { it.copy(type = type, typeError = null) }
-    fun setCounty(county: County) = _state.update { it.copy(county = county, countyError = null) }
-    fun setDistrict(value: String) = _state.update { it.copy(district = value) }
-    fun setAddress(value: String) = _state.update { it.copy(address = value, addressError = null) }
-    fun setSubscription(value: String) = _state.update { it.copy(subscription = value) }
-    fun setManualCode(value: String) = _state.update { it.copy(manualTrackingCode = value, trackingError = null) }
-    fun setReportDate(millis: Long) = _state.update { it.copy(reportDate = millis) }
+    /** Anything typed or chosen: leaving then asks first. */
+    val dirty: Boolean
+        get() = _state.value.let {
+            it.type != null || it.county != null || it.district.isNotBlank() || it.address.isNotBlank() ||
+                it.subscription.isNotBlank() || it.manualTrackingCode.isNotBlank()
+        }
+
+    private fun keep(key: String, value: Any?) {
+        saved?.set(key, value)
+    }
+
+    fun setType(type: ReportType) {
+        keep(K_TYPE, type.code)
+        _state.update { it.copy(type = type, typeError = null) }
+    }
+    fun setCounty(county: County) {
+        keep(K_COUNTY, county.index)
+        _state.update { it.copy(county = county, countyError = null) }
+    }
+    fun setDistrict(value: String) {
+        keep(K_DISTRICT, value)
+        _state.update { it.copy(district = value) }
+    }
+    fun setAddress(value: String) {
+        keep(K_ADDRESS, value)
+        _state.update { it.copy(address = value, addressError = null) }
+    }
+    fun setSubscription(value: String) {
+        keep(K_SUBSCRIPTION, value)
+        _state.update { it.copy(subscription = value) }
+    }
+    fun setManualCode(value: String) {
+        keep(K_CODE, value)
+        _state.update { it.copy(manualTrackingCode = value, trackingError = null) }
+    }
+    fun setReportDate(millis: Long) {
+        keep(K_DATE, millis)
+        _state.update { it.copy(reportDate = millis) }
+    }
+
+    private companion object {
+        const val K_TYPE = "type"
+        const val K_COUNTY = "county"
+        const val K_DISTRICT = "district"
+        const val K_ADDRESS = "address"
+        const val K_SUBSCRIPTION = "subscription"
+        const val K_CODE = "code"
+        const val K_DATE = "date"
+    }
 
     fun submit() {
         val current = _state.value

@@ -1,5 +1,6 @@
 package ir.ilam.inspection.ui.dispatch
 
+import ir.ilam.inspection.ui.common.rememberLeaveGuard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -64,6 +65,12 @@ fun DispatchScreen(reportId: String, onBack: () -> Unit) {
     )
     val detail by viewModel.detail.collectAsStateWithLifecycle()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // A dispatch half chosen (documents ticked, a note typed) asks before it is dropped.
+    val leave = rememberLeaveGuard(
+        dirty = state.note.isNotBlank() || state.deadlineDays.isNotBlank() ||
+            state.mediaIds.isNotEmpty() || state.attachmentIds.isNotEmpty(),
+        onLeave = onBack
+    )
     val selected = state.mediaIds.size + state.attachmentIds.size + if (state.includeReportForm) 1 else 0
 
     Scaffold(
@@ -71,7 +78,7 @@ fun DispatchScreen(reportId: String, onBack: () -> Unit) {
             TavanTopBar(
                 title = stringResource(R.string.dispatch_title),
                 subtitle = detail?.report?.displayCode?.let { TrackingCode.forDisplay(it) },
-                onBack = onBack
+                onBack = leave
             )
         },
         bottomBar = {

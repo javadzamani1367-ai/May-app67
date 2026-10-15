@@ -39,7 +39,8 @@ import ir.ilam.inspection.R
 import ir.ilam.inspection.container
 import ir.ilam.inspection.ui.common.AppTextField
 import ir.ilam.inspection.ui.common.BottomActionBar
-import ir.ilam.inspection.ui.common.ContainerViewModelFactory
+import ir.ilam.inspection.ui.common.rememberLeaveGuard
+import androidx.lifecycle.createSavedStateHandle
 import ir.ilam.inspection.ui.common.DateRow
 import ir.ilam.inspection.ui.common.DropdownField
 import ir.ilam.inspection.ui.common.JalaliDatePickerDialog
@@ -60,10 +61,10 @@ import ir.ilam.inspection.util.PersianNumbers
 @Composable
 fun IntakeScreen(onBack: () -> Unit, onCreated: (String) -> Unit) {
     val container = LocalContext.current.container
-    val viewModel: IntakeViewModel = viewModel(
-        factory = remember { ContainerViewModelFactory(container) { IntakeViewModel(it) } }
-    )
+    val viewModel: IntakeViewModel = viewModel { IntakeViewModel(container, createSavedStateHandle()) }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // Nothing is filed until «ثبت»: leaving with something typed asks first.
+    val leave = rememberLeaveGuard(dirty = viewModel.dirty && state.createdId == null, onLeave = onBack)
     var pickingDate by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.createdId) {
@@ -75,7 +76,7 @@ fun IntakeScreen(onBack: () -> Unit, onCreated: (String) -> Unit) {
             TavanTopBar(
                 title = stringResource(R.string.intake_title),
                 subtitle = stringResource(R.string.intake_subtitle),
-                onBack = onBack
+                onBack = leave
             )
         },
         bottomBar = {

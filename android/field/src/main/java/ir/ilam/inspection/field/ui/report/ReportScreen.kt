@@ -1,5 +1,8 @@
 package ir.ilam.inspection.field.ui.report
 
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.createSavedStateHandle
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,12 +45,14 @@ fun ReportScreen(kind: FieldKind, itemId: String?, onClose: () -> Unit) {
     val context = LocalContext.current
     val container = context.field
     val viewModel: ReportViewModel = viewModel(key = "report-${itemId ?: "new"}-${kind.code}") {
-        ReportViewModel(container, kind, itemId)
+        ReportViewModel(container, kind, itemId, createSavedStateHandle())
     }
     // The receiver starts now, so the position is ready by the time it is asked for.
     val reading = rememberLiveLocation()
     val fresh = rememberFresh(reading)
     val pageState = rememberFormPage()
+    // The app may be closed in the background (a call, another app): write the last edit now.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.saveNow() }
     val hubScroll = rememberScrollState()
     val item = viewModel.item
     val title = stringResource(reportTitle(kind))
@@ -67,6 +72,7 @@ fun ReportScreen(kind: FieldKind, itemId: String?, onClose: () -> Unit) {
             onFinish = { viewModel.finish(context, onClose) },
             onDiscard = { viewModel.discard(onClose) },
             onClose = onClose,
+            editor = viewModel,
             scroll = hubScroll
         )
         PAGE_POSITION -> {

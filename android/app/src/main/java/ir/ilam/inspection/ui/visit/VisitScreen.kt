@@ -1,5 +1,7 @@
 package ir.ilam.inspection.ui.visit
 
+import androidx.activity.compose.BackHandler
+import ir.ilam.inspection.ui.common.rememberLeaveGuard
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -69,6 +71,13 @@ fun VisitScreen(reportId: String, onBack: () -> Unit, onFinished: (String) -> Un
         if (finished) onFinished(reportId)
     }
 
+    // Every edit is already written, so leaving loses nothing — but a slip of
+    // the thumb should not drop the expert out of the visit: the arrow asks,
+    // and the phone's back button walks back one step before it asks.
+    val leave = rememberLeaveGuard(dirty = true, onLeave = onBack,
+        message = stringResource(R.string.visit_leave_message))
+    BackHandler(enabled = step > 0, onBack = viewModel::previous)
+
     val current = detail
     val visitStep = VisitStep.entries[step]
     Scaffold(
@@ -83,7 +92,7 @@ fun VisitScreen(reportId: String, onBack: () -> Unit, onFinished: (String) -> Un
                         PersianNumbers.toPersian(VISIT_STEP_COUNT)
                     )
                 ).joinToString(" · "),
-                onBack = onBack,
+                onBack = leave,
                 below = current?.let { { WorkflowStepper(current = step, detail = it, onStep = viewModel::goToStep) } }
             )
         },

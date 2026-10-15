@@ -13,6 +13,9 @@ import ir.ilam.inspection.util.AppFonts
 import ir.ilam.inspection.util.FileStore
 import ir.ilam.inspection.util.MediaProcessor
 import ir.ilam.inspection.util.MapConfig
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 /** The field app's few dependencies, made once and by hand — no framework for this size. */
 class FieldContainer(private val context: Context) {
@@ -24,6 +27,8 @@ class FieldContainer(private val context: Context) {
     val sync by lazy { FieldSync(database.dao(), prefs, account, files) }
     val drafts by lazy { FieldDrafts(database.dao(), files) }
     val mediaProcessor by lazy { MediaProcessor(AppFonts.typeface(context)) }
+    /** For a write that must finish even when the screen that asked for it is gone. */
+    val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 }
 
 class FieldApp : Application() {

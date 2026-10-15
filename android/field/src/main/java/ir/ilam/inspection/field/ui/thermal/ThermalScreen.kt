@@ -1,5 +1,8 @@
 package ir.ilam.inspection.field.ui.thermal
 
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.createSavedStateHandle
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,10 +52,12 @@ import kotlinx.coroutines.withContext
 fun ThermalScreen(itemId: String?, onClose: () -> Unit) {
     val context = LocalContext.current
     val container = context.field
-    val viewModel: ThermalViewModel = viewModel(key = "thermal-${itemId ?: "new"}") { ThermalViewModel(container, itemId) }
+    val viewModel: ThermalViewModel = viewModel(key = "thermal-${itemId ?: "new"}") { ThermalViewModel(container, itemId, createSavedStateHandle()) }
     val track by TrackRecorder.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val pageState = rememberFormPage()
+    // The app may be closed in the background (a call, another app): write the last edit now.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.saveNow() }
     val hubScroll = rememberScrollState()
     val item = viewModel.item
     var selected by remember { mutableStateOf<Set<String>>(emptySet()) }
@@ -82,6 +87,7 @@ fun ThermalScreen(itemId: String?, onClose: () -> Unit) {
                 viewModel.discard(onClose)
             },
             onClose = onClose,
+            editor = viewModel,
             scroll = hubScroll,
             header = { if (otherRecording) Warning(stringResource(R.string.thermal_other_recording)) }
         )

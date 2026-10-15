@@ -114,7 +114,24 @@ function portal_mark(): string
 
 function portal_footer(): void
 {
+    // فرمی که چیزی در آن نوشته شده و هنوز ثبت نشده، پیش از ترک صفحه هشدار
+    // مرورگر می‌دهد. فرم‌های جستجو (GET) و دکمه ثبت خودِ فرم مستثنا هستند.
     ?></main>
+<script>
+(function () {
+  var dirty = false;
+  document.querySelectorAll('form[method="post"]').forEach(function (form) {
+    form.addEventListener('input', function () { dirty = true; });
+    form.addEventListener('change', function () { dirty = true; });
+    form.addEventListener('submit', function () { dirty = false; });
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (!dirty) { return; }
+    e.preventDefault();
+    e.returnValue = '';
+  });
+})();
+</script>
 </body></html><?php
 }
 

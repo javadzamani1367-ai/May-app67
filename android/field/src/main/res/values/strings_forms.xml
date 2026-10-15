@@ -8,6 +8,11 @@
     <string name="form_discard_title">حذف پیش‌نویس؟</string>
     <string name="form_discard_message">همه اطلاعات و تصاویر این مورد از گوشی پاک می‌شود و برنمی‌گردد.</string>
     <string name="form_discard_yes">بله، حذف شود</string>
+    <string name="form_exit_title">خروج از فرم؟</string>
+    <string name="form_exit_message">اطلاعاتی که وارد کرده‌اید را چه کنیم؟ اگر حذف کنید، همه اطلاعات و تصاویر این فرم پاک می‌شود و برنمی‌گردد.</string>
+    <string name="form_exit_keep">ذخیره پیش‌نویس و خروج</string>
+    <string name="form_exit_delete">حذف اطلاعات و خروج</string>
+    <string name="form_exit_stay">ادامه کار در فرم</string>
     <string name="form_media_title">تصاویر، فیلم و صدا</string>
     <string name="form_media_hint">از دوربین یا گالری. روی کپی عکس دوربین تاریخ، ساعت و مختصات درج می‌شود و اصل عکس هم نگه داشته می‌شود.</string>
     <string name="form_media_hint_audio">از دوربین یا گالری، و ضبط صدا — صدای فن‌ها نشانه مهمی است. روی کپی عکس دوربین تاریخ، ساعت و مختصات درج می‌شود و اصل عکس هم نگه داشته می‌شود.</string>
