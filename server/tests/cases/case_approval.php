@@ -112,5 +112,6 @@ require __DIR__ . '/field_admin_tools.php';
 require __DIR__ . '/referrals.php';
 require __DIR__ . '/field_kinds.php';
 require __DIR__ . '/field_manage.php';
+require __DIR__ . '/crew_work.php';
 require __DIR__ . '/case_archive.php';
 require __DIR__ . '/web_manager.php';

@@ -11,7 +11,7 @@ declare(strict_types=1);
  */
 foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSchema', 'Migrations', 'Storage',
           'Notifications', 'Jalali', 'Field', 'FieldSettings', 'Users', 'FieldAdmin', 'FieldLabels', 'Xlsx', 'FieldDuplicates', 'Qr', 'Docx', 'FieldPresenter', 'FieldLine', 'FieldReferrals', 'FieldManage',
-          'CaseLabels', 'CaseReport', 'CaseArchive', 'CaseActions', 'PositionAudit', 'FieldRoster', 'FieldSubscribers', 'CrewCalendar', 'GeoPlaces', 'CrewWork', 'CrewDays', 'CrewReport'] as $class) {
+          'CaseLabels', 'CaseReport', 'CaseArchive', 'CaseActions', 'PositionAudit', 'FieldRoster', 'FieldSubscribers', 'CrewCalendar', 'GeoPlaces', 'CrewWork', 'CrewDays', 'CrewReport', 'CrewMap', 'CrewSheets', 'CrewDocx'] as $class) {
     require_once dirname(__DIR__) . '/lib/' . $class . '.php';
 }
 require_once dirname(__DIR__) . '/portal/_layout.php';

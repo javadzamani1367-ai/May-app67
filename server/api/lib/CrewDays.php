@@ -82,8 +82,12 @@ final class CrewDays
         $visits = [];
         foreach ($events as $i => $e) {
             $v = &$visits[$keys[$i]];
-            $v ??= ['label' => $e['plate'] !== '' ? $e['plate'] : $e['code'], 'named' => false,
-                'first' => $e['at'], 'last' => $e['at'], 'inspections' => 0, 'types' => [], 'place' => $e['place']];
+            $v ??= ['key' => $day . '|' . $keys[$i], 'label' => $e['plate'] !== '' ? $e['plate'] : $e['code'], 'named' => false,
+                'first' => $e['at'], 'last' => $e['at'], 'inspections' => 0, 'types' => [], 'place' => $e['place'],
+                'lat' => null, 'lon' => null];
+            if ($v['lat'] === null && $e['lat'] !== null) {
+                [$v['lat'], $v['lon']] = [$e['lat'], $e['lon']];
+            }
             // A visit is named by its panel's plate, as first written that day.
             if ($e['type'] === 'panel' && $e['plate'] !== '' && !$v['named']) {
                 $v['label'] = $e['plate'];
@@ -132,7 +136,8 @@ final class CrewDays
             'places' => array_slice(array_keys($places), 0, 3),
             'points' => array_map(static fn (array $e, int $i): array => ['at' => $e['at'], 'type' => $e['type'],
                 'lat' => $e['lat'], 'lon' => $e['lon'], 'plate' => $e['plate'], 'code' => $e['code'],
-                'inspection' => $e['inspection'], 'visit' => $keys[$i]], $events, array_keys($events)),
+                'inspection' => $e['inspection'], 'visit' => $keys[$i], 'outside' => $e['outside'], 'place' => $e['place']],
+                $events, array_keys($events)),
         ];
     }
 

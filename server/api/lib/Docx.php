@@ -7,7 +7,7 @@ declare(strict_types=1);
  * می‌رود (ساخت مستقیم OOXML). قلم Tahoma است که روی ویندوز ۷ هم هست.
  *
  * بلوک‌ها: ['h', متن] عنوان، ['p', متن] بند، ['table', [[عنوان، مقدار]...]]،
- * ['grid', [سرستون‌ها، سطرها]] جدول چندستونی، ['image', [مسیر فایل، شرح]] تصویر.
+ * ['grid', [سرستون‌ها، سطرها، پهنا]] جدول چندستونی (پهنای اختیاری هر ستون به درصد)، ['image', [مسیر فایل، شرح]] تصویر.
  */
 final class Docx
 {
@@ -67,7 +67,7 @@ final class Docx
             $body .= match ($type) {
                 'h' => self::paragraph((string) $content, $i === 0 ? 'Heading1' : 'Heading2'),
                 'table' => self::table((array) $content),
-                'grid' => self::grid((array) $content[0], (array) $content[1]),
+                'grid' => self::grid((array) $content[0], (array) $content[1], (array) ($content[2] ?? [])),
                 'image' => self::image($zip, (string) $content[0], (string) $content[1], $images),
                 default => self::paragraph((string) $content),
             };
@@ -149,29 +149,38 @@ final class Docx
     }
 
     /**
-     * جدول چندستونی با سطر عنوان پررنگ؛ ستون‌ها هم‌عرض، از راست.
+     * جدول چندستونی با سطر عنوان پررنگ؛ ستون‌ها از راست، هم‌عرض مگر پهنایشان داده شده باشد.
      *
      * @param list<string> $header
      * @param list<list<string>> $rows
+     * @param list<int|float> $percents پهنای هر ستون به درصد
      */
-    private static function grid(array $header, array $rows): string
+    private static function grid(array $header, array $rows, array $percents = []): string
     {
         if ($rows === [] || $header === []) {
             return '';
         }
-        $width = intdiv(9600, count($header));
-        $cell = static fn (string $text, bool $head) => '<w:tc><w:tcPr><w:tcW w:w="' . $width . '" w:type="dxa"/>'
-            . ($head ? '<w:shd w:val="clear" w:color="auto" w:fill="EEEEEE"/>' : '') . '</w:tcPr><w:p>'
-            . self::pPr($text, null, true) . self::runs($text, $head) . '</w:p></w:tc>';
+        $widths = count($percents) === count($header)
+            ? array_map(static fn ($p): int => (int) round(9600 * $p / array_sum($percents)), $percents)
+            : array_fill(0, count($header), intdiv(9600, count($header)));
+        $column = 0;
+        $cell = static function (string $text, bool $head) use (&$column, $widths): string {
+            $width = $widths[$column++ % count($widths)];
+            return '<w:tc><w:tcPr><w:tcW w:w="' . $width . '" w:type="dxa"/>'
+                . ($head ? '<w:shd w:val="clear" w:color="auto" w:fill="EEEEEE"/>' : '') . '</w:tcPr><w:p>'
+                . self::pPr($text, null, true) . self::runs($text, $head) . '</w:p></w:tc>';
+        };
         $xml = '<w:tbl><w:tblPr><w:bidiVisual/><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>'
             . '<w:top w:val="single" w:sz="4" w:color="888888"/><w:bottom w:val="single" w:sz="4" w:color="888888"/>'
             . '<w:left w:val="single" w:sz="4" w:color="888888"/><w:right w:val="single" w:sz="4" w:color="888888"/>'
             . '<w:insideH w:val="single" w:sz="4" w:color="888888"/><w:insideV w:val="single" w:sz="4" w:color="888888"/>'
-            . '</w:tblBorders></w:tblPr><w:tblGrid>' . str_repeat('<w:gridCol w:w="' . $width . '"/>', count($header))
+            . '</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>'
+            . implode('', array_map(static fn (int $w): string => '<w:gridCol w:w="' . $w . '"/>', $widths))
             . '</w:tblGrid><w:tr><w:trPr><w:tblHeader/></w:trPr>'
             . implode('', array_map(static fn ($h) => $cell((string) $h, true), $header)) . '</w:tr>';
         foreach ($rows as $row) {
-            $xml .= '<w:tr>' . implode('', array_map(static fn ($v) => $cell((string) $v, false), $row)) . '</w:tr>';
+            $column = 0;
+            $xml .= '<w:tr><w:trPr><w:cantSplit/></w:trPr>' . implode('', array_map(static fn ($v) => $cell((string) $v, false), $row)) . '</w:tr>';
         }
         return $xml . '</w:tbl><w:p/>';
     }
