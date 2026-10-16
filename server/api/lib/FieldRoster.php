@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * فهرست‌هایی که مدیر برای اپ میدانی تعریف می‌کند: اعضای اکیپ (مسئول، سیم‌بان،
- * راننده) و فیدرهای فشار متوسط. اپ از همین فهرست انتخاب می‌کند تا یک نفر یا یک
+ * راننده، مجری رمزارز، کارشناس حراست، مسئول غیرمجاز) و فیدرهای فشار متوسط. اپ از همین فهرست انتخاب می‌کند تا یک نفر یا یک
  * فیدر با دو املای مختلف دو بار شمرده نشود — گزارش عملکرد هر نفر به همین بسته است.
  */
 final class FieldRoster
@@ -11,7 +11,18 @@ final class FieldRoster
     public const ROLE_LEAD = 0;
     public const ROLE_LINEMAN = 1;
     public const ROLE_DRIVER = 2;
-    public const ROLE_NAMES = [self::ROLE_LEAD => 'مسئول اکیپ', self::ROLE_LINEMAN => 'سیم‌بان', self::ROLE_DRIVER => 'راننده'];
+    public const ROLE_CRYPTO = 3;
+    public const ROLE_SECURITY = 4;
+    public const ROLE_ILLEGAL = 5;
+    public const ROLE_NAMES = [
+        self::ROLE_LEAD => 'مسئول اکیپ', self::ROLE_LINEMAN => 'سیم‌بان', self::ROLE_DRIVER => 'راننده',
+        self::ROLE_CRYPTO => 'مجری رمزارز', self::ROLE_SECURITY => 'کارشناس حراست', self::ROLE_ILLEGAL => 'مسئول غیرمجاز',
+    ];
+    /** کلید هر نقش در payload.crew، همان که گوشی می‌نویسد (Crew.kt). */
+    public const CREW_KEYS = [
+        'lead' => self::ROLE_LEAD, 'lineman' => self::ROLE_LINEMAN, 'driver' => self::ROLE_DRIVER,
+        'crypto' => self::ROLE_CRYPTO, 'security' => self::ROLE_SECURITY, 'illegal' => self::ROLE_ILLEGAL,
+    ];
 
     public const TABLES = [
         "CREATE TABLE IF NOT EXISTS crew_members (

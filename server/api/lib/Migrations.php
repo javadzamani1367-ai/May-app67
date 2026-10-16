@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/FieldRoster.php';
+require_once __DIR__ . '/CrewCalendar.php';
 
 /**
  * به‌روزرسانی خودکار پایگاه داده.
@@ -67,6 +68,8 @@ final class Migrations
             ],
             // فهرست‌های مدیر برای اپ میدانی: اعضای اکیپ و فیدرهای فشار متوسط.
             6 => FieldRoster::TABLES,
+            // عملکرد اکیپ: تعطیلات قمری که مدیر می‌نویسد، و اضافه‌کار تأییدشده هر نفر.
+            7 => CrewCalendar::TABLES,
         ];
     }
 

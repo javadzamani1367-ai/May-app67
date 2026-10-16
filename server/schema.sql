@@ -387,9 +387,26 @@ CREATE TABLE IF NOT EXISTS mv_feeders (
   UNIQUE KEY uq_mv_feeders_name (name, county)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS holidays (
+  day        CHAR(10)     NOT NULL PRIMARY KEY,
+  title      VARCHAR(191) NOT NULL,
+  created_at BIGINT       NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS crew_overtime (
+  member_key VARCHAR(200) NOT NULL,
+  from_day   CHAR(10)     NOT NULL,
+  to_day     CHAR(10)     NOT NULL,
+  hours      DECIMAL(6,1) NOT NULL,
+  note       VARCHAR(500) NULL,
+  user_id    CHAR(36)     NULL,
+  updated_at BIGINT       NOT NULL,
+  PRIMARY KEY (member_key, from_day, to_day)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- آنجا یکی باشد؛ تست run.php همین را می‌سنجد.
 CREATE TABLE IF NOT EXISTS schema_meta (
   id      TINYINT NOT NULL PRIMARY KEY,
   version INT     NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 6);
+INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 7);

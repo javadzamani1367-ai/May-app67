@@ -32,6 +32,8 @@ final class Field
 
     /** گزارش‌ها (نه بازرسی‌ها): شرح و موقعیت اجباری، و تکراری‌یابی با فاصله. */
     public const REPORT_KINDS = [self::KIND_CRYPTO, self::KIND_ILLEGAL, self::KIND_BURN];
+    /** نوع‌هایی که اکیپ دارند و در گزارش عملکرد اکیپ شمرده می‌شوند. */
+    public const CREW_KINDS = [self::KIND_CRYPTO, self::KIND_ILLEGAL, self::KIND_THERMAL, self::KIND_FEEDER, self::KIND_LINE];
 
     // چرخه وضعیت هر کد.
     public const STATUS_REGISTERED = 0;
@@ -137,13 +139,14 @@ final class Field
             if (!$hasPosition) {
                 return 'موقعیت تابلو ثبت نشده است.';
             }
-            // از نسخه ۲ (اپ ۰٫۸) اکیپ پیش از کار انتخاب می‌شود: مسئول و سیم‌بان اجباری.
-            if ((int) ($payload['v'] ?? 1) >= 2) {
-                $crew = (array) ($payload['crew'] ?? []);
-                foreach (['lead' => 'مسئول اکیپ', 'lineman' => 'سیم‌بان'] as $role => $label) {
-                    if (trim((string) (((array) ($crew[$role] ?? []))['name'] ?? '')) === '') {
-                        return $label . ' انتخاب نشده است.';
-                    }
+        }
+        // از payload نسخه ۲ اکیپ پیش از کار انتخاب می‌شود: مسئول و سیم‌بان اجباری، بقیه اختیاری.
+        // داده گوشی‌های قدیمی (بی v) همان‌طور پذیرفته می‌ماند.
+        if (in_array($kind, self::CREW_KINDS, true) && (int) ($payload['v'] ?? 1) >= 2) {
+            $crew = (array) ($payload['crew'] ?? []);
+            foreach (['lead' => 'مسئول اکیپ', 'lineman' => 'سیم‌بان'] as $role => $label) {
+                if (trim((string) (((array) ($crew[$role] ?? []))['name'] ?? '')) === '') {
+                    return $label . ' انتخاب نشده است.';
                 }
             }
         }

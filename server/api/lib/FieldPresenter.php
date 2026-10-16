@@ -74,7 +74,7 @@ final class FieldPresenter
             $add('تعداد ورودی', self::numberText($team['entrances'] ?? null));
             $add('توضیح ورودی', $team['entrance_note'] ?? null);
         }
-        if (in_array($kind, [Field::KIND_FEEDER, Field::KIND_LINE, Field::KIND_THERMAL], true)) {
+        if (in_array($kind, Field::CREW_KINDS, true)) {
             foreach (self::crewRows($p) as [$label, $value]) {
                 $add($label, $value);
             }
@@ -104,13 +104,13 @@ final class FieldPresenter
         $name = static fn (mixed $pick): ?string => is_array($pick) && trim((string) ($pick['name'] ?? '')) !== ''
             ? trim((string) $pick['name']) : null;
         $crew = (array) ($p['crew'] ?? []);
-        return [
-            ['مسئول اکیپ', $name($crew['lead'] ?? null)],
-            ['سیم‌بان', $name($crew['lineman'] ?? null)],
-            ['راننده', $name($crew['driver'] ?? null)],
-            ['پلاک خودرو', isset($crew['vehicle']) ? (string) $crew['vehicle'] : null],
-            ['فیدر فشار متوسط', $name($p['mv_feeder'] ?? null)],
-        ];
+        $rows = [];
+        foreach (FieldRoster::CREW_KEYS as $key => $role) {
+            $rows[] = [FieldRoster::ROLE_NAMES[$role], $name($crew[$key] ?? null)];
+        }
+        $rows[] = ['پلاک خودرو', isset($crew['vehicle']) ? (string) $crew['vehicle'] : null];
+        $rows[] = ['فیدر فشار متوسط', $name($p['mv_feeder'] ?? null)];
+        return $rows;
     }
 
     public static function phasesText(mixed $phases): string

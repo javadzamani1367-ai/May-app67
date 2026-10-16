@@ -14,13 +14,27 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $presence = (int) ($_POST['presence_limit_m'] ?? $current['presence_limit_m']);
     $single = (int) ($_POST['abnormal_single_a'] ?? $current['abnormal_single_a']);
     $three = (int) ($_POST['abnormal_three_a'] ?? $current['abnormal_three_a']);
+    // «۷:۳۰» یا «07:30» به دقیقه از نیمه‌شب؛ نیامده، همان مقدار فعلی.
+    $minutes = static function (string $key, int $fallback): ?int {
+        if (!isset($_POST[$key])) {
+            return $fallback;
+        }
+        return preg_match('/^(\d{1,2}):(\d{2})$/', Jalali::latin(trim((string) $_POST[$key])), $m) === 1
+            && (int) $m[1] < 24 && (int) $m[2] < 60 ? (int) $m[1] * 60 + (int) $m[2] : null;
+    };
+    $officeStart = $minutes('office_start', $current['office_start_min']);
+    $officeEnd = $minutes('office_end', $current['office_end_min']);
     if ($pct < 1 || $pct > 50 || $min < 0 || $min > 100) {
         $error = 'درصد باید بین ۱ و ۵۰ و حداقل مطلق بین ۰ و ۱۰۰ آمپر باشد.';
     } elseif ($presence < 20 || $presence > 2000) {
         $error = 'فاصله مجاز حضور باید بین ۲۰ و ۲۰۰۰ متر باشد.';
     } elseif ($single < 1 || $single > 500 || $three < 1 || $three > 500) {
         $error = 'آمپر نامتعارف باید بین ۱ و ۵۰۰ آمپر باشد.';
+    } elseif ($officeStart === null || $officeEnd === null || $officeEnd <= $officeStart) {
+        $error = 'ساعت اداری را مثل ۰۷:۰۰ تا ۱۴:۳۰ بنویسید؛ پایان بعد از شروع باشد.';
     } else {
+        FieldSettings::set('office_start_min', $officeStart);
+        FieldSettings::set('office_end_min', $officeEnd);
         FieldSettings::set('abnormal_single_a', $single);
         FieldSettings::set('abnormal_three_a', $three);
         FieldSettings::set('presence_limit_m', $presence);
@@ -70,6 +84,19 @@ admin_header('تنظیمات میدانی');
       </label>
     </div>
     <p class="muted">اپ آمپر بالاتر از این حد را سرخ و «نامتعارف» نشان می‌دهد.</p>
+
+    <h3 style="margin-top:16px">ساعت اداری (عملکرد اکیپ)</h3>
+    <?php $hm = static fn (int $m): string => sprintf('%02d:%02d', intdiv($m, 60), $m % 60); ?>
+    <div class="grid">
+      <label>شروع کار روزهای شنبه تا چهارشنبه
+        <input name="office_start" value="<?= e($hm((int) $s['office_start_min'])) ?>" placeholder="07:00" dir="ltr">
+      </label>
+      <label>پایان کار
+        <input name="office_end" value="<?= e($hm((int) $s['office_end_min'])) ?>" placeholder="14:30" dir="ltr">
+      </label>
+    </div>
+    <p class="muted">کار بیرون از این ساعت، و همه کار پنجشنبه، جمعه و تعطیلات رسمی، اضافه‌کار حساب می‌شود.
+      تعطیلات قمری هر سال را در <a href="holidays.php">تعطیلات</a> بنویسید.</p>
 
     <h3 style="margin-top:16px">داده روی گوشی</h3>
     <label class="check"><input type="checkbox" name="purge_after_sync" <?= $s['purge_after_sync'] === 1 ? 'checked' : '' ?>>

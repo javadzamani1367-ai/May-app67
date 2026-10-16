@@ -223,7 +223,7 @@ check('هر ستون گوشی روی سرور هست', $missingOnServer === [], 
 check('سرور ستون اضافه ندارد', $extraOnServer === [], implode(', ', $extraOnServer));
 
 $tableCount = preg_match_all('/CREATE TABLE IF NOT EXISTS/', $sql);
-check('هر ۲۳ جدول در schema.sql هست', $tableCount === 23, "$tableCount جدول");
+check('هر ۲۵ جدول در schema.sql هست', $tableCount === 25, "$tableCount جدول");
 
 // نسخه اسکیما در سه زبان نوشته شده و هیچ کامپایلری آن سه را با هم مقایسه
 // نمی‌کند. اگر یکی جا بماند، سرور در /ping عددی را اعلام می‌کند که اسکیمای
@@ -390,7 +390,7 @@ check('تیربه‌تیر با یک تیر رد می‌شود',
 check('تیربه‌تیر بی‌فیدر رد می‌شود',
     Field::problem(['payload' => ['poles' => [$pole(1, 2, 3), $pole(1, 2, 3)]]] + $line, []) !== null);
 check('تیربه‌تیر بی‌پلاک تابلو رد می‌شود', Field::problem(['plate' => ''] + $line, []) !== null);
-foreach (['FieldPresenter', 'FieldLabels', 'FieldLine'] as $class) {
+foreach (['FieldPresenter', 'FieldLabels', 'FieldLine', 'FieldRoster', 'CrewCalendar'] as $class) {
     require_once __DIR__ . '/../api/lib/' . $class . '.php';
 }
 equals('تابلو و دو تیر اندازه‌گیری‌شده', [0, 1, 3], array_column(FieldLine::points($line['payload']), 'pole'));
@@ -456,6 +456,31 @@ check('ردیف پلاک خودرو', in_array(['پلاک خودرو', '۱۲ب۳
 check('ردیف فیدر فشار متوسط', in_array(['فیدر فشار متوسط', 'فیدر ۲۰ کیلوولت چوار'], $lineRows, true));
 check('ترموویژن فیدر فشار متوسط دارد', in_array(['فیدر فشار متوسط', 'چوار ۲'],
     FieldPresenter::rows(Field::KIND_THERMAL, ['mv_feeder' => ['name' => 'چوار ۲']]), true));
+
+// نسخه ج: نقش‌های تازه اکیپ و زمان کار.
+$crypto = ['kind' => Field::KIND_CRYPTO, 'payload' => ['v' => 2, 'crew' => ['lead' => ['name' => 'الف'], 'lineman' => ['name' => 'ب'],
+    'crypto' => ['name' => 'مجری'], 'security' => ['name' => 'حراست']]]] + $report;
+equals('گزارش رمزارز نسخه ۲ با اکیپ پذیرفته می‌شود', null, Field::problem($crypto, []));
+check('گزارش رمزارز نسخه ۲ بی‌سیم‌بان رد می‌شود',
+    Field::problem(['payload' => ['v' => 2, 'crew' => ['lead' => ['name' => 'الف']]]] + $crypto, []) !== null);
+equals('گزارش رمزارز قدیمی بی‌اکیپ پذیرفته می‌ماند', null, Field::problem(['payload' => []] + $crypto, []));
+check('ترموویژن نسخه ۲ بی‌اکیپ رد می‌شود', Field::problem(['payload' => ['v' => 2]] + $thermal, [$frame]) !== null);
+check('ردیف مجری رمزارز', in_array(['مجری رمزارز', 'مجری'], FieldPresenter::rows(Field::KIND_CRYPTO, $crypto['payload']), true));
+$tehran = static fn (string $local): int => (new DateTimeImmutable($local, new DateTimeZone('Asia/Tehran')))->getTimestamp() * 1000;
+$sunday = $tehran('2026-10-18 09:30'); // یکشنبه ۲۶ مهر ۱۴۰۵
+$calendar = new CrewCalendar(420, 870, ['1405-07-27' => 'تعطیلی آزمون']);
+equals('روز شمسی به وقت ایران', '1405-07-26', CrewCalendar::day($sunday));
+equals('ساعت ۹:۳۰ صبح است', 'morning', CrewCalendar::bucket($sunday));
+equals('ساعت ۱۲ ظهر است', 'noon', CrewCalendar::bucket($tehran('2026-10-18 12:00')));
+equals('ساعت ۱:۲۰ بامداد نیمه‌شب است', 'midnight', CrewCalendar::bucket($tehran('2026-10-18 01:20')));
+check('یکشنبه ۹:۳۰ اداری است', !$calendar->overtime($sunday));
+check('یکشنبه ۱۶:۰۰ اضافه‌کار است', $calendar->overtime($tehran('2026-10-18 16:00')));
+check('پنجشنبه اضافه‌کار است', $calendar->overtime($tehran('2026-10-22 10:00')));
+equals('جمعه تعطیل است', 'جمعه', $calendar->holiday($tehran('2026-10-23 10:00')));
+equals('تعطیلی نوشته‌شده مدیر', 'تعطیلی آزمون', $calendar->holiday($tehran('2026-10-19 10:00')));
+equals('نوروز تعطیل ثابت است', 'نوروز', $calendar->holiday($tehran('2027-03-22 10:00')));
+equals('۱۳:۰۰ تا ۱۶:۳۰ یکشنبه: دو ساعت اضافه‌کار', 2.0, $calendar->overtimeHours($tehran('2026-10-18 13:00'), $tehran('2026-10-18 16:30')));
+equals('سه ساعت روز جمعه همه اضافه‌کار', 3.0, $calendar->overtimeHours($tehran('2026-10-23 08:00'), $tehran('2026-10-23 11:00')));
 
 // ---------------------------------------------------------------------------
 echo "\n";
