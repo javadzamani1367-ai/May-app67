@@ -5,7 +5,7 @@ import org.json.JSONObject
 
 /**
  * The crew performance report, as the manager app reads it from the server
- * (`/manage/crew/*`): the same figures as the web panel's crew page, built
+ * (`/manage/crew/report`, `overtime`, `export`): the same figures as the web panel's crew page, built
  * there from the moments panels and poles were recorded on the map.
  */
 object CrewWork {
