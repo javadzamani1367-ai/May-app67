@@ -20,8 +20,8 @@ android {
         applicationId = "ir.ilam.inspection"
         minSdk = 26
         targetSdk = 34
-        versionCode = 9
-        versionName = "1.4.4"
+        versionCode = 10
+        versionName = "1.5.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += listOf("fa")
 
