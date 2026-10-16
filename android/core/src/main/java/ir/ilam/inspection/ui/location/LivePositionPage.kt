@@ -31,6 +31,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import ir.ilam.inspection.core.R
 import ir.ilam.inspection.ui.common.BottomActionBar
 import ir.ilam.inspection.ui.common.PrimaryButton
@@ -85,9 +87,8 @@ fun LivePositionPage(
     // function reference to a local function is remembered by the Compose
     // compiler with the values of the first frame: the record button then
     // kept seeing "no precise position yet" however precise the dot became.
+    // Recording now reads the receiver itself (LocationWarmup), not a frame.
     val latestReading by rememberUpdatedState(reading)
-    val latestPrecise by rememberUpdatedState(precise)
-    val latestSatellites by rememberUpdatedState(satellites)
     val latestOnRecord by rememberUpdatedState(onRecord)
     val latestOnBack by rememberUpdatedState(onBack)
 
@@ -96,6 +97,8 @@ fun LivePositionPage(
     var centre by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var imagery by rememberSaveable { mutableStateOf(false) }
     var refusal by remember { mutableStateOf<Refusal?>(null) }
+    /** «Record» was pressed before a precise fix: it records by itself when one comes. */
+    var waiting by remember { mutableStateOf(false) }
     val me = remember { DotOverlay(context, Color(0xFF2563EB)) }
     val recorded = remember { DotOverlay(context, Color(0xFFDC2626)) }
     val map = remember {
@@ -173,31 +176,42 @@ fun LivePositionPage(
     }
 
     val record: () -> Unit = record@{
-        val pin = centre ?: (map.mapCenter.latitude to map.mapCenter.longitude)
-        val me = latestPrecise
+        // The receiver's reading at the moment of pressing — never a value
+        // the screen kept from an earlier frame.
+        val me = LocationWarmup.reading.value?.takeIf { it.isFresh() && it.precise }?.fix
+        if (presenceLimit != null && me == null) {
+            // No precise fix yet: wait for one and record then, rather than refuse.
+            waiting = true
+            return@record
+        }
+        // While following, the pin rides on the user: the point is where they stand.
+        val pin = if (following && me != null) me.latitude to me.longitude
+        else centre ?: (map.mapCenter.latitude to map.mapCenter.longitude)
         val point = PlacedPoint(
             latitude = pin.first,
             longitude = pin.second,
             accuracy = null,
             at = System.currentTimeMillis(),
             observer = me,
-            satellites = latestSatellites
+            satellites = LocationWarmup.satellites.value
         )
         val distance = point.distance
-        if (presenceLimit != null) {
-            if (distance == null) {
-                refusal = Refusal.NO_FIX
-                return@record
-            }
-            if (distance > presenceLimit) {
-                refusal = Refusal.TOO_FAR
-                return@record
-            }
+        if (presenceLimit != null && distance != null && distance > presenceLimit) {
+            refusal = Refusal.TOO_FAR
+            return@record
         }
         // Standing on the point: the receiver's accuracy is the point's accuracy.
         val onMe = me != null && distance != null && distance <= maxOf(me.accuracy, ON_ME_METERS)
         latestOnRecord(point.copy(accuracy = if (onMe) me!!.accuracy else null))
         latestOnBack()
+    }
+    LaunchedEffect(waiting) {
+        if (!waiting) return@LaunchedEffect
+        val got = withTimeoutOrNull(PRECISE_WAIT_MILLIS) {
+            LocationWarmup.reading.first { it != null && it.isFresh() && it.precise }
+        }
+        waiting = false
+        if (got != null) record() else refusal = Refusal.NO_FIX
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -230,8 +244,9 @@ fun LivePositionPage(
                 modifier = Modifier.weight(0.8f)
             )
             PrimaryButton(
-                text = stringResource(R.string.live_record_pin),
+                text = stringResource(if (waiting) R.string.live_waiting_precise else R.string.live_record_pin),
                 onClick = record,
+                busy = waiting,
                 enabled = centre != null || reading != null || hasRecord,
                 icon = Icons.Filled.Check,
                 tone = Tone.SUCCESS,
@@ -247,6 +262,8 @@ fun distanceFrom(me: Fix?, latitude: Double, longitude: Double): Double? =
     me?.let { LocationRefiner.distanceMeters(it, Fix(latitude, longitude, 0.0)) }
 
 private const val CLOSE_ZOOM = 18.0
+/** How long «record» waits for a precise fix before saying it has none. */
+private const val PRECISE_WAIT_MILLIS = 30_000L
 private const val REGION_ZOOM = 11.0
 /** Within this of the user, a pin counts as "where I stand". */
 private const val ON_ME_METERS = 5.0

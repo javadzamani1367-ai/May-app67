@@ -20,6 +20,7 @@
     <string name="form_camera_video">عکس یا فیلم</string>
     <string name="form_gallery">از گالری</string>
     <string name="import_rejected">پذیرفته نشد: %1$s. فقط عکس و فیلم ۲۴ ساعت اخیر قبول می‌شود.</string>
+    <string name="import_partly">%1$s مورد اضافه شد. پذیرفته نشد: %2$s. فقط عکس و فیلم ۲۴ ساعت اخیر قبول می‌شود.</string>
     <string name="import_too_old">%1$s مورد قدیمی‌تر از ۲۴ ساعت</string>
     <string name="import_no_date">%1$s مورد بی‌تاریخ</string>
     <string name="import_failed">%1$s مورد خوانده نشد</string>

@@ -128,6 +128,7 @@ abstract class ItemEditor(
      */
     fun addCameraPhoto(raw: File, stampCode: String, place: Fix? = null, onSaved: (Long) -> Unit = {}) {
         val now = System.currentTimeMillis()
+        lastImport = null
         withItem(after = { onSaved(now) }) { current ->
             val at = place ?: current.latitude?.let { lat ->
                 current.longitude?.let { lon -> Fix(lat, lon, current.accuracy ?: 0.0) }
@@ -140,6 +141,13 @@ abstract class ItemEditor(
             }
         }
     }
+
+    /**
+     * Pages whose plate was typed but whose position was not, on which the map
+     * already came up once by itself this visit; the next «back» then leaves.
+     * Cleared each time a page is opened from the form's list.
+     */
+    val mapOffered = mutableSetOf<String>()
 
     /** The last gallery pick: how many came in, and why the others did not. */
     var lastImport by mutableStateOf<ImportOutcome?>(null)
@@ -156,6 +164,8 @@ abstract class ItemEditor(
      * a form that ties them to one part of itself (a subscriber's evidence).
      */
     fun importGallery(context: Context, uris: List<Uri>, onAdded: (List<Long>) -> Unit = {}) {
+        // The note is about this pick only: the last one's refusal must not linger over it.
+        lastImport = null
         val added = mutableListOf<Long>()
         var old = 0
         var undated = 0
@@ -188,10 +198,11 @@ abstract class ItemEditor(
     /** A clip from the app's camera; [onSaved] gets its capture time, as for a photo. */
     fun addVideo(file: File, onSaved: (Long) -> Unit = {}) {
         val now = System.currentTimeMillis()
+        lastImport = null
         withItem(after = { onSaved(now) }) { attach(file, FileRole.VIDEO, MIME_MP4, now) }
     }
 
-    fun addAudio(file: File) = withItem { attach(file, FileRole.AUDIO, "audio/mp4", System.currentTimeMillis()) }
+    fun addAudio(file: File) = withItem(after = { lastImport = null }) { attach(file, FileRole.AUDIO, "audio/mp4", System.currentTimeMillis()) }
 
     /** Removes a capture: a camera photo goes together with its stamped copy. */
     fun remove(file: FieldFileEntity) = withItem {

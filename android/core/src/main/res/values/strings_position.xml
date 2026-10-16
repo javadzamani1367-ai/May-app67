@@ -7,6 +7,7 @@
     <string name="live_record_me">ثبت موقعیت من</string>
     <string name="live_record_me_accuracy">ثبت موقعیت من (±%1$s متر)</string>
     <string name="live_record_pin">ثبت این نقطه</string>
+    <string name="live_waiting_precise">منتظر موقعیت دقیق… خودکار ثبت می‌شود</string>
     <string name="live_follow_hint">نشانگر روی موقعیت شماست و همراهتان حرکت می‌کند. اگر محل جای دیگری است، نقشه را بکشید تا نشانگر روی آن بنشیند.</string>
     <string name="live_pick_hint">نشانگر را روی محل بگذارید. «موقعیت من» نقشه را به شما برمی‌گرداند.</string>
     <string name="live_recorded_hint">نقطه قرمز موقعیتی است که قبلاً ثبت شده</string>

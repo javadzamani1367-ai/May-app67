@@ -26,6 +26,7 @@ import ir.ilam.inspection.field.ui.form.FormHub
 import ir.ilam.inspection.field.ui.form.FormPage
 import ir.ilam.inspection.field.ui.form.ItemPositionPage
 import ir.ilam.inspection.field.ui.form.MediaPage
+import ir.ilam.inspection.field.ui.form.MAP_PANEL
 import ir.ilam.inspection.field.ui.form.PAGE_MEDIA
 import ir.ilam.inspection.field.ui.form.PAGE_POSITION
 import ir.ilam.inspection.field.ui.form.rememberFormPage
@@ -72,7 +73,7 @@ fun FeederScreen(itemId: String?, onClose: () -> Unit) {
             sections = feederSections(viewModel),
             missing = viewModel.missing().map { missingText(it) }.distinct(),
             busy = viewModel.busy,
-            onOpen = { pageState.value = it },
+            onOpen = { viewModel.mapOffered.clear(); pageState.value = it },
             onFinish = { viewModel.finish(context, onClose) },
             onDiscard = { viewModel.discard(onClose) },
             onClose = onClose,
@@ -95,7 +96,12 @@ fun FeederScreen(itemId: String?, onClose: () -> Unit) {
             CrewSection(payload.crew, viewModel.roster, viewModel::setCrew)
             MvFeederSection(payload.mvFeeder, viewModel.roster, viewModel::setMvFeeder)
         }
-        page == PAGE_PANEL -> FormPage(title = stringResource(R.string.place_panel_title), onBack = back) {
+        page == PAGE_PANEL -> FormPage(title = stringResource(R.string.place_panel_title), onBack = {
+            // Plate typed, no position yet: leaving brings the map up once, to record it standing there.
+            val located = item.latitude != null && item.longitude != null
+            if (!located && !item.plate.isNullOrBlank() && viewModel.mapOffered.add(MAP_PANEL)) pageState.value = PAGE_POSITION
+            else back()
+        }) {
             // Plate, then the map at once: the panel's position is recorded standing at it.
             PlateThenMap(
                 title = stringResource(R.string.feeder_panel_title),

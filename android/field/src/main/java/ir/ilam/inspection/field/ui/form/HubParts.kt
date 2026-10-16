@@ -103,4 +103,6 @@ fun preview(text: String?, max: Int = 90): String? =
     text?.trim()?.replace('\n', ' ')?.takeIf { it.isNotEmpty() }?.let { if (it.length > max) it.take(max) + "…" else it }
 
 const val PAGE_POSITION = "position"
+/** [ItemEditor.mapOffered] key for a panel page. */
+const val MAP_PANEL = "panel"
 const val PAGE_MEDIA = "media"

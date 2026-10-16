@@ -192,6 +192,8 @@ fun FormPage(
     bottom: (@Composable RowScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    // The phone's back button does what the arrow does — a page may first bring up its map.
+    BackHandler(onBack = onBack)
     Column(modifier = Modifier.fillMaxSize()) {
         TavanTopBar(title = title, subtitle = subtitle ?: stringResource(R.string.form_autosaved), onBack = onBack)
         above?.invoke()

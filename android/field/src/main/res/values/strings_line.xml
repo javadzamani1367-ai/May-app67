@@ -27,7 +27,7 @@
     <string name="line_pole_position">موقعیت تیر</string>
     <string name="line_pole_unlocated">موقعیت این تیر ثبت نشده</string>
     <string name="line_pole_plate">شماره پلاک تیر (اختیاری)</string>
-    <string name="line_pole_state">آمپر این تیر</string>
+    <string name="line_pole_state">آمپر ورود به این تیر</string>
     <string name="line_state_measured">اندازه‌گیری شد</string>
     <string name="line_state_not_measured">اندازه‌گیری نشد</string>
     <string name="line_neutral">نول (اختیاری)</string>

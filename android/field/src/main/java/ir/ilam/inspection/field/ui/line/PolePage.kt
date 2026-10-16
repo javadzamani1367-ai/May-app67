@@ -1,6 +1,5 @@
 package ir.ilam.inspection.field.ui.line
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -63,14 +62,14 @@ fun PolePage(
     var deleting by remember { mutableStateOf(false) }
     var leaving by remember { mutableStateOf(false) }
     fun edit(transform: (PoleReading) -> PoleReading) = viewModel.updatePole(pole.id, transform)
-    // Back to the list is allowed without a position, but only after saying so.
+    // Without a position, leaving first brings the map up; the second time it asks.
     val back = {
         when {
             pole.hasPosition -> onList()
+            viewModel.mapOffered.add(pole.id) -> onPickOnMap()
             else -> leaving = true
         }
     }
-    BackHandler(onBack = back)
 
     FormPage(
         title = stringResource(R.string.line_pole_title, PersianNumbers.toPersian(number)),
@@ -85,8 +84,8 @@ fun PolePage(
             PrimaryButton(
                 text = if (next != null) stringResource(R.string.line_next_pole)
                 else stringResource(R.string.line_add_pole, PersianNumbers.toPersian(number + 1)),
-                onClick = { onOpenPole(next?.id ?: viewModel.addPole()) },
-                enabled = pole.hasPosition,
+                // The next pole waits for this one's position: the button opens the map until then.
+                onClick = { if (pole.hasPosition) onOpenPole(next?.id ?: viewModel.addPole()) else onPickOnMap() },
                 icon = if (next != null) Icons.AutoMirrored.Filled.ArrowForward else Icons.Filled.Add,
                 modifier = Modifier.weight(1.2f)
             )

@@ -11,6 +11,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,6 +27,8 @@ import ir.ilam.inspection.util.PersianNumbers
  */
 @Composable
 fun ImportNote(editor: ItemEditor) {
+    // Left with the page: a refusal seen once is not shown again over later captures.
+    DisposableEffect(editor) { onDispose { editor.clearImportNote() } }
     val outcome = editor.lastImport ?: return
     if (outcome.rejected == 0) return
     val parts = buildList {
@@ -35,7 +38,11 @@ fun ImportNote(editor: ItemEditor) {
     }
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm)) {
         Text(
-            stringResource(R.string.import_rejected, parts.joinToString("، ")),
+            if (outcome.added > 0) {
+                stringResource(R.string.import_partly, PersianNumbers.toPersian(outcome.added), parts.joinToString("، "))
+            } else {
+                stringResource(R.string.import_rejected, parts.joinToString("، "))
+            },
             style = MaterialTheme.typography.bodySmall,
             color = Tavan.colors.warning.strong,
             modifier = Modifier.weight(1f)
