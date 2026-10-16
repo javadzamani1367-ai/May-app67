@@ -12,7 +12,7 @@ declare(strict_types=1);
 foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSchema', 'Migrations', 'Storage',
           'Notifications', 'Jalali', 'Field', 'FieldCodes', 'FieldSettings', 'Users', 'FieldLabels',
           'FieldPresenter', 'FieldLine', 'FieldFeedback', 'FieldAdmin', 'FieldReferrals', 'FieldManage',
-          'CaseLabels', 'CaseActions', 'PositionAudit', 'FieldRoster', 'FieldSubscribers', 'CrewCalendar', 'GeoPlaces', 'CrewWork', 'CrewDays', 'CrewReport', 'CrewMap', 'CrewSheets', 'CrewDocx'] as $class) {
+          'CaseLabels', 'CaseActions', 'PositionAudit', 'FieldRoster', 'FieldSubscribers', 'CrewCalendar', 'GeoPlaces', 'CrewWork', 'CrewDays', 'CrewReport', 'CrewMap', 'CrewSheets', 'CrewDocx', 'Docx', 'Xlsx'] as $class) {
     require_once __DIR__ . '/lib/' . $class . '.php';
 }
 foreach (glob(__DIR__ . '/lib/Controllers/*.php') ?: [] as $controller) {
@@ -77,6 +77,9 @@ $routes = [
     'GET /manage/field/item'     => [FieldManageController::class, 'item'],
     'GET /manage/field/file'     => [FieldManageController::class, 'file'],
     'POST /manage/field/status'  => [FieldManageController::class, 'status'],
+    'GET /manage/crew/report'    => [CrewController::class, 'report'],
+    'POST /manage/crew/overtime' => [CrewController::class, 'overtime'],
+    'GET /manage/crew/export'    => [CrewController::class, 'export'],
 
     'POST /approvals/submit'     => [ApprovalController::class, 'submit'],
     'POST /approvals/decide'     => [ApprovalController::class, 'decide'],

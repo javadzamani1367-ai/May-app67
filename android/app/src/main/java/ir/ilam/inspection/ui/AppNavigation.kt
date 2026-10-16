@@ -14,6 +14,7 @@ import ir.ilam.inspection.container
 import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.ui.archive.CaseDetailScreen
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
+import ir.ilam.inspection.ui.crew.CrewScreen
 import ir.ilam.inspection.ui.fielditems.FieldItemScreen
 import ir.ilam.inspection.ui.fielditems.FieldItemsScreen
 import ir.ilam.inspection.ui.fielditems.FieldItemsViewModel
@@ -47,6 +48,7 @@ object Routes {
     const val REFERRAL = "referral/{id}"
     const val FIELD_ITEMS = "field-items"
     const val FIELD_ITEM = "field-item/{id}"
+    const val CREW = "crew"
 
     fun visit(id: String) = "visit/$id"
     fun detail(id: String) = "case/$id"
@@ -149,11 +151,15 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
         composable(Routes.STATS) {
             StatsScreen(
                 onBack = { navController.popBackStack() },
-                onPerformance = { navController.navigate(Routes.PERFORMANCE) }
+                onPerformance = { navController.navigate(Routes.PERFORMANCE) },
+                onCrew = { navController.navigate(Routes.CREW) }
             )
         }
         composable(Routes.USERS) {
             UsersScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.CREW) {
+            CrewScreen(onBack = { navController.popBackStack() })
         }
         composable(Routes.PERFORMANCE) {
             PerformanceScreen(onBack = { navController.popBackStack() })

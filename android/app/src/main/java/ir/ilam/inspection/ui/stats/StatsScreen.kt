@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PendingActions
 import androidx.compose.material.icons.filled.TableView
 import androidx.compose.material.icons.filled.TaskAlt
+import androidx.compose.material.icons.filled.Engineering
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -66,7 +67,7 @@ import java.util.Locale
 
 /** The figures, the breakdowns as charts, and the filtered Excel export the office asks for. */
 @Composable
-fun StatsScreen(onBack: () -> Unit, onPerformance: () -> Unit) {
+fun StatsScreen(onBack: () -> Unit, onPerformance: () -> Unit, onCrew: () -> Unit) {
     val context = LocalContext.current
     val appContainer = context.container
     val viewModel: StatsViewModel = viewModel(
@@ -104,20 +105,8 @@ fun StatsScreen(onBack: () -> Unit, onPerformance: () -> Unit) {
             // Manager only: how the units are performing is a different
             // question from how many cases exist, and it has its own report.
             if (UserRole.isManager) {
-                AppCard(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), onClick = onPerformance) {
-                    Row(modifier = Modifier.padding(Spacing.lg), verticalAlignment = Alignment.CenterVertically) {
-                        ToneIcon(icon = Icons.Filled.Groups, tone = Tone.BRAND)
-                        Column(modifier = Modifier.weight(1f).padding(horizontal = Spacing.md)) {
-                            Text(stringResource(R.string.performance_title), style = MaterialTheme.typography.titleMedium)
-                            Text(
-                                stringResource(R.string.stats_performance_hint),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
-                    }
-                }
+                ReportLink(Icons.Filled.Groups, stringResource(R.string.performance_title), stringResource(R.string.stats_performance_hint), onPerformance)
+                ReportLink(Icons.Filled.Engineering, stringResource(R.string.cw_title), stringResource(R.string.stats_crew_hint), onCrew)
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(vertical = 5.dp)) {
@@ -249,5 +238,20 @@ fun StatsScreen(onBack: () -> Unit, onPerformance: () -> Unit) {
                 pickingTo = false
             }
         )
+    }
+}
+
+/** A card that opens one of the manager's reports. */
+@Composable
+private fun ReportLink(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, hint: String, onClick: () -> Unit) {
+    AppCard(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), onClick = onClick) {
+        Row(modifier = Modifier.padding(Spacing.lg), verticalAlignment = Alignment.CenterVertically) {
+            ToneIcon(icon = icon, tone = Tone.BRAND)
+            Column(modifier = Modifier.weight(1f).padding(horizontal = Spacing.md)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(hint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+        }
     }
 }

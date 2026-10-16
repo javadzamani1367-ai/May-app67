@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- عملکرد اکیپ در اپ مدیر (ui/crew) -->
+    <string name="cw_title">عملکرد اکیپ</string>
+    <string name="cw_period">%1$s تا %2$s</string>
+    <string name="cw_refresh">تازه‌سازی</string>
+    <string name="cw_this_month">این ماه</string>
+    <string name="cw_days">%1$s روز</string>
+    <string name="cw_no_data">گزارش هنوز نیامده؛ اتصال به سرور را بررسی کنید.</string>
+    <string name="cw_empty">در این بازه کاری با اکیپ ثبت نشده</string>
+    <string name="cw_empty_hint">کار اکیپ‌ها از اپ بازرسی میدانی (نسخه ۰٫۸ به بعد) با نام اعضای اکیپ می‌رسد.</string>
+    <string name="cw_offline">به سرور وصل نشد؛ آدرس سرور و اینترنت را بررسی کنید.</string>
+    <string name="cw_people">نفر</string>
+    <string name="cw_visits">بازدید</string>
+    <string name="cw_inspections">بازرسی</string>
+    <string name="cw_map">نقشه</string>
+    <string name="cw_files">خروجی</string>
+    <string name="cw_files_hint">همان اکسل و گزارش Word پنل وب، با نقشه، نمودار و توضیحات؛ برای اشتراک‌گذاری.</string>
+    <string name="cw_word">گزارش Word</string>
+    <string name="cw_excel">اکسل</string>
+    <string name="cw_overtime_badge">اضافه‌کار %1$s ساعت</string>
+    <string name="cw_member_line">%1$s روز · %2$s بازدید · %3$s بازرسی · شروع %4$s، پایان %5$s</string>
+    <string name="cw_approved_line">اضافه‌کار تأییدشده: %1$s ساعت</string>
+    <string name="cw_summary">خلاصه</string>
+    <string name="cw_days_worked">روزهای کار</string>
+    <string name="cw_holidays_suffix">(%1$s روز تعطیل)</string>
+    <string name="cw_visits_inspections">بازدید و بازرسی</string>
+    <string name="cw_vi">%1$s بازدید، %2$s بازرسی</string>
+    <string name="cw_subscribers">مشترک نامتعارف کشف‌شده</string>
+    <string name="cw_start_end">شروع و پایان (میانگین)</string>
+    <string name="cw_range">%1$s تا %2$s</string>
+    <string name="cw_overtime_computed">اضافه‌کار محاسبه‌شده</string>
+    <string name="cw_hours">%1$s ساعت</string>
+    <string name="cw_overtime_inspections">%1$s بازرسی بیرون از ساعت اداری</string>
+    <string name="cw_outside">بازرسی بیرون از شهر</string>
+    <string name="cw_km">مسافت تقریبی</string>
+    <string name="cw_km_value">%1$s کیلومتر</string>
+    <string name="cw_buckets">ساعات شبانه‌روز</string>
+    <string name="cw_daily">روز به روز</string>
+    <string name="cw_word_member">Word همین نفر</string>
+    <string name="cw_approve_title">اضافه‌کار تأییدشده</string>
+    <string name="cw_approve_hint">ساعتی که برای این نفر در همین بازه تأیید می‌کنید؛ در اکسل و Word می‌آید. خالی یعنی تأیید نشده.</string>
+    <string name="cw_approve_hours">ساعت اضافه‌کار</string>
+    <string name="cw_approve_note">توضیح (اختیاری)</string>
+    <string name="cw_approve_save">ثبت اضافه‌کار</string>
+    <string name="cw_day_line">%1$s تا %2$s · %3$s بازدید · %4$s بازرسی</string>
+    <string name="cw_day_overtime">اضافه‌کار %1$s ساعت</string>
+    <string name="cw_day_outside">%1$s بیرون از شهر</string>
+    <string name="stats_crew_hint">بازدید، بازرسی، ساعت کار و اضافه‌کار هر عضو اکیپ، با نقشه و گزارش Word</string>
+</resources>

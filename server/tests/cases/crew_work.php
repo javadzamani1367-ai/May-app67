@@ -49,3 +49,20 @@ $docx = $probe->page('admin/crew_docx.php?' . $range, $jar);
 check('گزارش Word عملکرد اکیپ', $docx['status'] === 200 && str_starts_with($docx['body'], 'PK'));
 $probe->page('admin/logout.php', $jar);
 @unlink($jar);
+
+// اپ مدیر: همان گزارش، اضافه‌کار و فایل‌ها.
+$range = '&from=' . $at('00:00') . '&to=' . ($at('23:59') + 59_999);
+equals('کارشناس گزارش اکیپ را نمی‌بیند', 403, $probe->json('GET', 'manage/crew/report' . $range, [], $expertToken)['status']);
+$api = $probe->json('GET', 'manage/crew/report' . $range, [], $managerToken)['body']['data'] ?? [];
+equals('اپ مدیر: سه نفر و دو بازدید', [3, 2], [count($api['members'] ?? []), count($api['visits'] ?? [])]);
+$leadRow = array_values(array_filter($api['members'] ?? [], static fn ($m) => $m['name'] === 'رهبر آزمون'))[0] ?? [];
+equals('اپ مدیر: اضافه‌کار تأییدشده پنل دیده می‌شود', 2.5, $leadRow['approved']['hours'] ?? null);
+equals('اپ مدیر: پنج بازرسی', 5, $leadRow['total']['inspections'] ?? null);
+$saved = $probe->json('POST', 'manage/crew/overtime', ['member_key' => 'name:سیم‌بان آزمون', 'hours' => '۳',
+    'from' => $at('00:00'), 'to' => $at('23:59') + 59_999], $managerToken);
+equals('اپ مدیر اضافه‌کار ثبت می‌کند', 200, $saved['status'], $saved['raw']);
+equals('عدد نادرست اضافه‌کار رد می‌شود', 422, $probe->json('POST', 'manage/crew/overtime', ['member_key' => 'x', 'hours' => 'abc',
+    'from' => $at('00:00'), 'to' => $at('23:59')], $managerToken)['status']);
+$file = $probe->raw('manage/crew/export' . $range . '&format=docx', $managerToken);
+check('اپ مدیر Word می‌گیرد', $file['status'] === 200 && str_starts_with($file['bytes'], 'PK'), (string) $file['status']);
+
