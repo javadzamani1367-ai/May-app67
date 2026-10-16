@@ -64,6 +64,17 @@ if ((int) $item['kind'] === Field::KIND_LINE) {
     if ($poles !== []) {
         array_push($blocks, ['h', 'تیرها'], ['table', $poles]);
     }
+    $subscribers = array_map(static fn ($r) => ['تیر ' . $r[0] . ' — مشترک ' . $r[1] . ($r[2] === '' ? '' : ' — ' . $r[2]),
+        implode("\n", array_filter([$r[3] . ' · ' . $r[4], $r[5] === '' ? '' : 'کد پستی: ' . $r[5], $r[6], $r[7], $r[8], $r[9]]))],
+        FieldSubscribers::table($payload));
+    if ($subscribers !== []) {
+        $limits = FieldSubscribers::limitsText($payload);
+        array_push($blocks, ['h', 'مشترکان نامتعارف']);
+        if ($limits !== null) {
+            $blocks[] = ['p', $limits];
+        }
+        $blocks[] = ['table', $subscribers];
+    }
 }
 if ($files !== []) {
     array_push($blocks, ['h', 'فایل‌ها'], ['p', 'فایل‌ها روی سرور نگه داشته می‌شوند؛ اثر انگشت هر فایل برای سنجش اصالت آمده است.'],

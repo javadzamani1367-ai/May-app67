@@ -125,7 +125,8 @@ class LineViewModel(container: FieldContainer, existingId: String?, state: Saved
         val next = transform(payload)
         payload = next
         // The item's own position is the panel's, recorded on its own page.
-        update { it.copy(payload = next.toJson(LineAnalysis.verdict(next)).toString()) }
+        val prefs = container.prefs
+        update { it.copy(payload = next.toJson(LineAnalysis.verdict(next), prefs.abnormalSingleA, prefs.abnormalThreeA).toString()) }
     }
 
     companion object {

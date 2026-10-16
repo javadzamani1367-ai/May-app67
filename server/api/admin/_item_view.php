@@ -65,6 +65,26 @@ function render_poles(array $p): string
     return $html . '</table>';
 }
 
+/** مشترکان نامتعارف تیرها، با حد مجاز روز ارسال. */
+function render_subscribers(array $p): string
+{
+    $rows = FieldSubscribers::table($p);
+    if ($rows === []) {
+        return '';
+    }
+    $limits = FieldSubscribers::limitsText($p);
+    $html = ($limits === null ? '' : '<p class="muted">' . e($limits) . '</p>')
+        . '<table><tr><th>تیر</th><th>مشترک</th><th>نام</th><th>آمپر</th><th>داوری</th><th>کد پستی</th>'
+        . '<th>پرونده و اشتراک</th><th>مختصات منزل</th><th>ثبت موقعیت</th><th>عکس و فیلم</th></tr>';
+    foreach ($rows as $r) {
+        $tag = $r[4] === 'نامتعارف' ? '<span class="tag tag-overdue">' . e($r[4]) . '</span>' : e($r[4]);
+        $html .= '<tr><td>' . e($r[0]) . '</td><td>' . e($r[1]) . '</td><td>' . e($r[2] ?: '—') . '</td><td>' . e($r[3])
+            . '</td><td>' . $tag . '</td><td dir="ltr">' . e($r[5] ?: '—') . '</td><td>' . e($r[6] ?: '—')
+            . '</td><td dir="ltr">' . e($r[7]) . '</td><td>' . e($r[8] ?: '—') . '</td><td>' . e($r[9] ?: '—') . '</td></tr>';
+    }
+    return $html . '</table>';
+}
+
 /** فایل‌ها با پیش‌نمایش عکس؛ دماهای ترموویژن از payload. */
 function render_files(array $files, array $payload): string
 {

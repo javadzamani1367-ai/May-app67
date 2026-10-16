@@ -42,6 +42,26 @@ $probe->page('admin/login.php', $jar, ['user_code' => 'mgr', 'password' => 'mana
 $page = $probe->page('admin/item.php?id=' . $line['id'], $jar)['body'];
 check('پنل نمودار و جدول تیرها را نشان می‌دهد',
     substr_count($page, '<polyline') === 3 && str_contains($page, 'بیشترین افت') && str_contains($page, 'افت ۱۶۲'));
+// نسخه ب: اکیپ، فیدر فشار متوسط و مشترک نامتعارف؛ بی‌سیم‌بان پذیرفته نمی‌شود.
+$house = ['phase' => 1, 'amps' => ['r' => 32], 'lat' => 33.6603, 'lon' => 46.4602, 'at' => 1760000100000,
+          'olat' => 33.6603, 'olon' => 46.46021, 'oacc' => 3, 'name' => 'مغازه آزمون', 'postal_codes' => ['6931234567'],
+          'abnormal' => true, 'amp_photos' => [1760000100500]];
+$lineV2 = ['id' => $newId(), 'payload' => ['v' => 2, 'crew' => ['lead' => ['name' => 'مسئول آزمون']],
+    'mv_feeder' => ['name' => 'فیدر ۲۰ آزمون'], 'abnormal_a' => ['single' => 25, 'three' => 40]] + $line['payload']] + $line;
+$lineV2['payload']['poles'][0] += ['b1' => 2, 'b3' => 0, 'branches' => 2, 'subscribers' => [$house]];
+equals('تیربه‌تیر نسخه ۲ بی‌سیم‌بان رد می‌شود', 422,
+    $probe->json('POST', 'field/item', ['item' => $lineV2, 'files' => []], $inspector)['status']);
+$lineV2['payload']['crew']['lineman'] = ['name' => 'سیم‌بان آزمون'];
+$sent = $probe->json('POST', 'field/item', ['item' => $lineV2, 'files' => []], $inspector);
+equals('تیربه‌تیر نسخه ۲ با اکیپ و مشترک پذیرفته می‌شود', 200, $sent['status'], $sent['raw']);
+$page = $probe->page('admin/item.php?id=' . $lineV2['id'], $jar)['body'];
+check('پنل اکیپ و فیدر فشار متوسط را نشان می‌دهد',
+    str_contains($page, 'مسئول آزمون') && str_contains($page, 'سیم‌بان آزمون') && str_contains($page, 'فیدر ۲۰ آزمون'));
+check('پنل جدول مشترکان نامتعارف را دارد', str_contains($page, 'مشترکان نامتعارف') && str_contains($page, 'مغازه آزمون')
+    && str_contains($page, '6931234567') && str_contains($page, 'حد مجاز: تکفاز ۲۵'));
+check('جدول تیرها انشعاب تکفاز و سه فاز را دارد', str_contains($page, 'تکفاز ۲، سه فاز ۰'));
+$docx = $probe->page('admin/item_docx.php?id=' . $lineV2['id'], $jar);
+check('Word مشترکان نامتعارف را دارد', $docx['status'] === 200 && str_starts_with($docx['body'], 'PK'));
 $page = $probe->page('admin/item.php?id=' . $burn['id'], $jar)['body'];
 check('پنل تجهیزات سوخته را به فارسی نشان می‌دهد', str_contains($page, 'کلید کل') && str_contains($page, '× ۳'));
 check('فیلتر نوع، دو نوع تازه را دارد',

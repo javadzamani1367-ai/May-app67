@@ -116,6 +116,9 @@ admin_header((string) ($item['tracking_code'] ?? 'مورد'));
     <span style="color:#2563eb">■ T</span> — زمینه سرخ: بار قابل توجه، کهربایی: افزایش غیرعادی</p>
   <?= render_poles($payload) ?>
 </div>
+<?php $subscribers = render_subscribers($payload); if ($subscribers !== ''): ?>
+<div class="card"><h3>مشترکان نامتعارف</h3><?= $subscribers ?></div>
+<?php endif; ?>
 <?php endif; ?>
 
 <?= render_merge($item, $target, $candidates, $merged) ?>

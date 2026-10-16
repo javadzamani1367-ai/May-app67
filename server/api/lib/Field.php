@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/FieldSubscribers.php';
+
 /**
  * قواعد موردهای اپ بازرسی میدانی: نوع‌ها، وضعیت‌ها، نقش فایل‌ها، و بررسی
  * ورودی. سرور هر قاعده‌ای را که اپ اجرا می‌کند دوباره اجرا می‌کند — اپ قدیمی
@@ -135,6 +137,15 @@ final class Field
             if (!$hasPosition) {
                 return 'موقعیت تابلو ثبت نشده است.';
             }
+            // از نسخه ۲ (اپ ۰٫۸) اکیپ پیش از کار انتخاب می‌شود: مسئول و سیم‌بان اجباری.
+            if ((int) ($payload['v'] ?? 1) >= 2) {
+                $crew = (array) ($payload['crew'] ?? []);
+                foreach (['lead' => 'مسئول اکیپ', 'lineman' => 'سیم‌بان'] as $role => $label) {
+                    if (trim((string) (((array) ($crew[$role] ?? []))['name'] ?? '')) === '') {
+                        return $label . ' انتخاب نشده است.';
+                    }
+                }
+            }
         }
         if ($kind === self::KIND_LINE) {
             if (trim((string) ($payload['feeder'] ?? '')) === '') {
@@ -142,6 +153,10 @@ final class Field
             }
             if (self::measuredPoles($payload) < 2) {
                 return 'دست‌کم دو تیر با آمپر سه فاز لازم است.';
+            }
+            $subscribers = FieldSubscribers::problem($payload);
+            if ($subscribers !== null) {
+                return $subscribers;
             }
         }
         if (isset($item['payload']) && strlen((string) json_encode($item['payload'])) > self::MAX_PAYLOAD_BYTES) {

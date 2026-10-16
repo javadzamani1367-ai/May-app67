@@ -74,6 +74,11 @@ final class FieldPresenter
             $add('تعداد ورودی', self::numberText($team['entrances'] ?? null));
             $add('توضیح ورودی', $team['entrance_note'] ?? null);
         }
+        if (in_array($kind, [Field::KIND_FEEDER, Field::KIND_LINE, Field::KIND_THERMAL], true)) {
+            foreach (self::crewRows($p) as [$label, $value]) {
+                $add($label, $value);
+            }
+        }
         if ($kind === Field::KIND_FEEDER) {
             foreach (self::feederRows($p) as [$label, $value]) {
                 $add($label, $value);
@@ -91,6 +96,21 @@ final class FieldPresenter
             $add('اختلاف ساعت گوشی با GPS (ثانیه)', self::numberText($p['clock_skew_s'] ?? null));
         }
         return $rows;
+    }
+
+    /** اکیپ و فیدر فشار متوسط (payload نسخه ۲)؛ ترموویژن فقط فیدر فشار متوسط دارد. */
+    public static function crewRows(array $p): array
+    {
+        $name = static fn (mixed $pick): ?string => is_array($pick) && trim((string) ($pick['name'] ?? '')) !== ''
+            ? trim((string) $pick['name']) : null;
+        $crew = (array) ($p['crew'] ?? []);
+        return [
+            ['مسئول اکیپ', $name($crew['lead'] ?? null)],
+            ['سیم‌بان', $name($crew['lineman'] ?? null)],
+            ['راننده', $name($crew['driver'] ?? null)],
+            ['پلاک خودرو', isset($crew['vehicle']) ? (string) $crew['vehicle'] : null],
+            ['فیدر فشار متوسط', $name($p['mv_feeder'] ?? null)],
+        ];
     }
 
     public static function phasesText(mixed $phases): string

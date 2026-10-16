@@ -117,7 +117,7 @@ final class FieldLine
                 (string) ($pole['plate'] ?? ''),
                 $phases === null ? 'اندازه‌گیری نشد: ' . (string) ($pole['reason'] ?? '') : FieldPresenter::phasesText($pole['phases']),
                 $change,
-                Jalali::digits((string) (int) ($pole['branches'] ?? 0)),
+                self::branchesText($pole),
                 $lat,
                 (string) PositionAudit::text($pole['at'] ?? null, $pole['lat'] ?? null, $pole['lon'] ?? null,
                     $pole['olat'] ?? null, $pole['olon'] ?? null, $pole['oacc'] ?? null),
@@ -127,6 +127,17 @@ final class FieldLine
             }
         }
         return $table;
+    }
+
+    /** انشعاب‌ها: از نسخه ۲ تکفاز و سه فاز جدا، و مشترکان نامتعارف کنارش. */
+    private static function branchesText(array $pole): string
+    {
+        if (!isset($pole['b1']) && !isset($pole['b3'])) {
+            return Jalali::digits((string) (int) ($pole['branches'] ?? 0));
+        }
+        $text = 'تکفاز ' . Jalali::digits((string) (int) ($pole['b1'] ?? 0)) . '، سه فاز ' . Jalali::digits((string) (int) ($pole['b3'] ?? 0));
+        $subs = count((array) ($pole['subscribers'] ?? []));
+        return $subs === 0 ? $text : $text . ' · ' . Jalali::digits((string) $subs) . ' مشترک نامتعارف';
     }
 
     /** نمودار جریان سه فاز در طول مسیر؛ بازه پرافت سرخ و بازه افزایش کهربایی. */

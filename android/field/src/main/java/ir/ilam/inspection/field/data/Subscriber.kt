@@ -61,7 +61,7 @@ data class Subscriber(
         putOpt("olat", observerLat)
         putOpt("olon", observerLon)
         putOpt("oacc", observerAccuracy?.let { Math.round(it * 10) / 10.0 })
-        val codes = postalCodes.map { it.trim() }.filter { it.isNotEmpty() }
+        val codes = postalCodes.map { latinDigits(it) }.filter { it.isNotEmpty() }
         if (codes.isNotEmpty()) put("postal_codes", JSONArray(codes))
         if (fileNumber.isNotBlank()) put("file_number", fileNumber.trim())
         if (subscription.isNotBlank()) put("subscription", subscription.trim())

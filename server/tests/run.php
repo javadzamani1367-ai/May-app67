@@ -418,6 +418,45 @@ check('سوختگی: تجهیز با تعداد', in_array(['تجهیزات سو
     || in_array(['تجهیزات سوخته', FieldLabels::EQUIPMENT['nh_fuse'] . ' × ۳'], $burnRows, true));
 check('سوختگی: قطع برق', in_array(['برق مشترکین قطع است', 'بله'], $burnRows, true));
 
+// نسخه ب: اکیپ، فیدر فشار متوسط، انشعاب تکفاز و سه فاز، مشترکان نامتعارف.
+$crew = ['lead' => ['id' => '3', 'name' => 'رضا کریمی'], 'lineman' => ['name' => 'علی نوری'], 'vehicle' => '۱۲ب۳۴۵'];
+$v2 = ['payload' => ['v' => 2, 'crew' => $crew] + $line['payload']] + $line;
+equals('تیربه‌تیر نسخه ۲ با اکیپ پذیرفته می‌شود', null, Field::problem($v2, []));
+check('نسخه ۲ بی‌سیم‌بان رد می‌شود', Field::problem(['payload' => ['crew' => ['lead' => $crew['lead']]] + $v2['payload']] + $v2, []) !== null);
+check('آمپرگیری تابلو نسخه ۲ بی‌اکیپ رد می‌شود', Field::problem(['payload' => ['v' => 2]] + $feeder, []) !== null);
+equals('آمپرگیری تابلو نسخه قدیم بی‌اکیپ هم پذیرفته می‌شود', null, Field::problem(['payload' => []] + $feeder, []));
+$house = ['phase' => 3, 'amps' => ['r' => 30, 's' => 45, 't' => 12], 'lat' => 33.61, 'lon' => 46.41, 'name' => 'ساختمان نور',
+          'postal_codes' => ['6931234567'], 'file_number' => '12', 'abnormal' => true, 'amp_photos' => [1, 2], 'amp_videos' => [3]];
+$withSub = $v2;
+$withSub['payload']['poles'][0] += ['b1' => 1, 'b3' => 1, 'branches' => 2, 'subscribers' => [$house]];
+$withSub['payload']['abnormal_a'] = ['single' => 25, 'three' => 40];
+equals('مشترک نامتعارف کامل پذیرفته می‌شود', null, Field::problem($withSub, []));
+$bad = static function (array $change) use ($withSub): ?string {
+    $copy = $withSub;
+    $copy['payload']['poles'][0]['subscribers'][0] = $change + $copy['payload']['poles'][0]['subscribers'][0];
+    return Field::problem($copy, []);
+};
+check('مشترک بی‌موقعیت منزل رد می‌شود', $bad(['lat' => null]) !== null);
+check('کد پستی نه‌رقمی رد می‌شود', $bad(['postal_codes' => ['693123456']]) !== null);
+check('بیش از ۲۰ کد پستی رد می‌شود', $bad(['postal_codes' => array_fill(0, 21, '6931234567')]) !== null);
+$crowded = $withSub;
+$crowded['payload']['poles'][0]['subscribers'] = [$house, $house, $house];
+check('مشترک بیش از انشعاب رد می‌شود', Field::problem($crowded, []) !== null);
+$subs = FieldSubscribers::table($withSub['payload']);
+equals('جدول مشترکان یک ردیف', 1, count($subs));
+equals('آمپر سه فاز مشترک', 'سه فاز R ۳۰ / S ۴۵ / T ۱۲', $subs[0][3]);
+equals('داوری گوشی نشان داده می‌شود', 'نامتعارف', $subs[0][4]);
+equals('تعداد عکس و فیلم مشترک', 'عکس آمپراژ ۲، فیلم آمپراژ ۱', $subs[0][9]);
+equals('حد مجاز روز ارسال', 'حد مجاز: تکفاز ۲۵ آمپر، سه فاز ۴۰ آمپر هر فاز', FieldSubscribers::limitsText($withSub['payload']));
+equals('انشعاب تکفاز و سه فاز در جدول تیرها', 'تکفاز ۱، سه فاز ۱ · ۱ مشترک نامتعارف', FieldLine::poleTable($withSub['payload'])[0][4]);
+equals('انشعاب داده قدیمی همان عدد', '۳', FieldLine::poleTable(['poles' => [['branches' => 3]]])[0][4]);
+$lineRows = FieldPresenter::rows(Field::KIND_LINE, $withSub['payload'] + ['mv_feeder' => ['name' => 'فیدر ۲۰ کیلوولت چوار']]);
+check('ردیف مسئول اکیپ', in_array(['مسئول اکیپ', 'رضا کریمی'], $lineRows, true));
+check('ردیف پلاک خودرو', in_array(['پلاک خودرو', '۱۲ب۳۴۵'], $lineRows, true));
+check('ردیف فیدر فشار متوسط', in_array(['فیدر فشار متوسط', 'فیدر ۲۰ کیلوولت چوار'], $lineRows, true));
+check('ترموویژن فیدر فشار متوسط دارد', in_array(['فیدر فشار متوسط', 'چوار ۲'],
+    FieldPresenter::rows(Field::KIND_THERMAL, ['mv_feeder' => ['name' => 'چوار ۲']]), true));
+
 // ---------------------------------------------------------------------------
 echo "\n";
 echo "$passed تست موفق";

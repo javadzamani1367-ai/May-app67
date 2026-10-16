@@ -99,7 +99,11 @@ final class FieldManage
         if ((int) $row['kind'] === Field::KIND_LINE) {
             foreach (FieldLine::poleTable($payload) as $pole) {
                 $details[] = ['تیر ' . $pole[0] . ($pole[1] === '' ? '' : ' — ' . $pole[1]),
-                    $pole[2] . ' · ' . $pole[3] . ($pole[6] === '' ? '' : "\n" . $pole[6])];
+                    $pole[2] . ' · ' . $pole[3] . ' · انشعاب ' . $pole[4] . ($pole[6] === '' ? '' : "\n" . $pole[6])];
+            }
+            foreach (FieldSubscribers::table($payload) as $s) {
+                $details[] = ['تیر ' . $s[0] . ' — مشترک نامتعارف ' . $s[1] . ($s[2] === '' ? '' : ' — ' . $s[2]),
+                    implode("\n", array_filter([$s[3] . ' · ' . $s[4], $s[5] === '' ? '' : 'کد پستی: ' . $s[5], $s[6], $s[8], $s[9]]))];
             }
         }
 

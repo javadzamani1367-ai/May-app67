@@ -58,7 +58,11 @@ data class LinePayload(
     /** The medium-voltage feeder the panel hangs on; optional. */
     val mvFeeder: Pick? = null
 ) {
-    fun toJson(verdict: LineVerdict): JSONObject = JSONObject().apply {
+    /**
+     * [singleA] and [threeA] are the manager's abnormal-current limits of the
+     * day: each subscriber goes with the verdict the user saw on the phone.
+     */
+    fun toJson(verdict: LineVerdict, singleA: Int? = null, threeA: Int? = null): JSONObject = JSONObject().apply {
         // 2: crew, MV feeder, panel position, branches by phase, abnormal subscribers.
         put("v", 2)
         put("crew", crew.toJson())
@@ -90,13 +94,18 @@ data class LinePayload(
                     if (pole.branches > 0) put("branches", pole.branches)
                     if (pole.branches1 > 0) put("b1", pole.branches1)
                     if (pole.branches3 > 0) put("b3", pole.branches3)
-                    if (pole.subscribers.isNotEmpty()) put("subscribers", JSONArray(pole.subscribers.map { it.toJson() }))
+                    if (pole.subscribers.isNotEmpty()) put("subscribers", JSONArray(pole.subscribers.map { sub ->
+                        sub.toJson().apply {
+                            if (singleA != null && threeA != null && sub.ampsComplete) put("abnormal", sub.abnormal(singleA, threeA))
+                        }
+                    }))
                     if (pole.note.isNotBlank()) put("note", pole.note.trim())
                     if (pole.photos.isNotEmpty()) put("photos", JSONArray(pole.photos))
                 })
             }
         })
         put("analysis", verdict.toJson())
+        if (singleA != null && threeA != null) put("abnormal_a", JSONObject().put("single", singleA).put("three", threeA))
         if (note.isNotBlank()) put("note", note.trim())
     }
 

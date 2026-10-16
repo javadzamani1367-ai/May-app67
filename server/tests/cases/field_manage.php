@@ -26,6 +26,10 @@ check('تاریخچه ثبت از گوشی را دارد', ($one['events'][0]['w
 check('ارجاع با نیاز به کارشناس در گام‌های بعدی',
     in_array(['status' => 2, 'name' => 'ارجاع‌شده', 'needs_note' => false, 'needs_expert' => true], $one['next'] ?? [], true));
 check('فهرست کارشناسان برای ارجاع', ($one['experts'] ?? []) !== []);
+$v2 = $probe->json('GET', 'manage/field/item&id=' . $lineV2['id'], [], $managerToken)['body']['data']['item'] ?? [];
+$labels = array_column($v2['details'] ?? [], 'label');
+check('اپ مدیر: اکیپ و مشترک نامتعارف در جزئیات', in_array('مسئول اکیپ', $labels, true)
+    && count(array_filter($labels, static fn ($l) => str_contains($l, 'مشترک نامتعارف'))) === 1);
 equals('مورد ناموجود ۴۰۴', 404,
     $probe->json('GET', 'manage/field/item&id=00000000-0000-4000-8000-000000000000', [], $managerToken)['status']);
 
