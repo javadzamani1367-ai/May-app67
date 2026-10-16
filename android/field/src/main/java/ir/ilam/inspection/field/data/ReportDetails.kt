@@ -34,12 +34,19 @@ data class ReportDetails(
     val answers: Map<String, Boolean> = emptyMap(),
     val bestTime: String? = null,
     val entrances: String = "",
-    val entranceNote: String = ""
+    val entranceNote: String = "",
+    /** Crypto and illegal-power reports: who went (payload v2). */
+    val crew: Crew = Crew()
 ) {
     /** A burn report names at least one piece of equipment, from the list or in words. */
     val hasEquipment: Boolean get() = equipment.values.any { it > 0 } || otherEquipment.isNotBlank()
 
     fun toJson(kind: FieldKind): JSONObject = JSONObject().apply {
+        if (CrewSlot.hasCrew(kind)) {
+            // 2: the crew went along; the server then needs its lead and lineman.
+            put("v", 2)
+            put("crew", crew.toJson())
+        }
         when (kind) {
             FieldKind.CRYPTO -> {
                 putNumber("amperage", amperage)
@@ -97,7 +104,8 @@ data class ReportDetails(
                     .associateWith { team.optBoolean(it) },
                 bestTime = team.optString("best_time").ifBlank { null },
                 entrances = team.numberText("entrances"),
-                entranceNote = team.optString("entrance_note")
+                entranceNote = team.optString("entrance_note"),
+                crew = Crew.fromJson(json.optJSONObject("crew"))
             )
         }
 

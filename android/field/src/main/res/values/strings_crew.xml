@@ -3,11 +3,14 @@
     <!-- اکیپ و فیدر فشار متوسط (ui/form/CrewParts.kt) -->
     <string name="crew_title">اکیپ</string>
     <string name="crew_and_feeder_title">اکیپ و فیدر فشار متوسط</string>
-    <string name="crew_hint">پیش از شروع کار: مسئول اکیپ و سیم‌بان اجباری، راننده و خودرو اختیاری. نام‌ها از فهرست مدیر.</string>
+    <string name="crew_hint">پیش از شروع کار: مسئول اکیپ و سیم‌بان اجباری، بقیه اختیاری. نام‌ها از فهرست مدیر؛ هر کس اینجا نام برده شود در گزارش عملکرد اکیپ حساب می‌شود.</string>
     <string name="crew_hint_typed">فهرست اکیپ هنوز از سرور نرسیده؛ نام‌ها را بنویسید. پس از همگام‌سازی، از فهرست انتخاب می‌شوند.</string>
     <string name="crew_lead">مسئول اکیپ</string>
     <string name="crew_lineman">سیم‌بان</string>
     <string name="crew_driver">راننده (اختیاری)</string>
+    <string name="crew_crypto">مجری رمزارز (اختیاری)</string>
+    <string name="crew_security">کارشناس حراست (اختیاری)</string>
+    <string name="crew_illegal">مسئول غیرمجاز (اختیاری)</string>
     <string name="crew_vehicle">پلاک خودرو (اختیاری)</string>
     <string name="crew_required">اجباری است</string>
     <string name="crew_clear">پاک کردن انتخاب</string>

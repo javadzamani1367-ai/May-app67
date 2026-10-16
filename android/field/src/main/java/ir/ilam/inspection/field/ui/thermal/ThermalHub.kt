@@ -11,10 +11,12 @@ import androidx.compose.ui.res.stringResource
 import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.ui.form.HubSection
 import ir.ilam.inspection.field.ui.form.SectionStatus
+import ir.ilam.inspection.field.ui.form.crewSection
 import ir.ilam.inspection.field.ui.form.preview
 import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.util.PersianNumbers
 
+internal const val PAGE_CREW = "crew"
 internal const val PAGE_ROUTE = "route"
 internal const val PAGE_FIND = "find"
 internal const val PAGE_FILES = "files"
@@ -32,6 +34,7 @@ fun thermalSections(viewModel: ThermalViewModel, recording: Boolean, livePoints:
     val withTemps = originals.count { payload.files[it.id]?.temperatures?.isEmpty() == false }
     val points = PersianNumbers.toPersian(if (recording) livePoints else payload.points)
     return listOf(
+        crewSection(PAGE_CREW, payload.crew, null, stringResource(R.string.crew_title)),
         HubSection(
             key = PAGE_ROUTE,
             title = stringResource(R.string.thermal_route_title),

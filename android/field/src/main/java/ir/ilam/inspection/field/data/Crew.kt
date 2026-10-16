@@ -20,19 +20,27 @@ data class Pick(val id: String?, val name: String) {
     }
 }
 
-/** The crew of an inspection: lead and lineman required, driver and vehicle optional. */
+/**
+ * The crew of an inspection: lead and lineman required; driver, crypto
+ * executor, security expert and illegal-power officer optional, as the kind
+ * of work has them ([CrewSlot.forKind]). Everyone named counts in the crew's
+ * performance report.
+ */
 data class Crew(
     val lead: Pick? = null,
     val lineman: Pick? = null,
     val driver: Pick? = null,
-    val vehicle: String = ""
+    val vehicle: String = "",
+    val crypto: Pick? = null,
+    val security: Pick? = null,
+    val illegal: Pick? = null
 ) {
     val complete: Boolean get() = lead != null && lineman != null
 
     fun toJson(): JSONObject = JSONObject().apply {
         lead?.let { put("lead", it.toJson()) }
         lineman?.let { put("lineman", it.toJson()) }
-        driver?.let { put("driver", it.toJson()) }
+        CrewSlot.entries.forEach { slot -> slot.of(this@Crew)?.let { put(slot.key, it.toJson()) } }
         if (vehicle.isNotBlank()) put("vehicle", vehicle.trim())
     }
 
@@ -41,8 +49,46 @@ data class Crew(
             lead = Pick.fromJson(json.optJSONObject("lead")),
             lineman = Pick.fromJson(json.optJSONObject("lineman")),
             driver = Pick.fromJson(json.optJSONObject("driver")),
-            vehicle = json.optString("vehicle")
+            vehicle = json.optString("vehicle"),
+            crypto = Pick.fromJson(json.optJSONObject("crypto")),
+            security = Pick.fromJson(json.optJSONObject("security")),
+            illegal = Pick.fromJson(json.optJSONObject("illegal"))
         )
+    }
+}
+
+/** The optional people of a crew: their key in the JSON, their role in the manager's list. */
+enum class CrewSlot(val key: String, val role: Int) {
+    CRYPTO("crypto", Roster.ROLE_CRYPTO),
+    ILLEGAL("illegal", Roster.ROLE_ILLEGAL),
+    SECURITY("security", Roster.ROLE_SECURITY),
+    DRIVER("driver", Roster.ROLE_DRIVER);
+
+    fun of(crew: Crew): Pick? = when (this) {
+        DRIVER -> crew.driver
+        CRYPTO -> crew.crypto
+        SECURITY -> crew.security
+        ILLEGAL -> crew.illegal
+    }
+
+    fun set(crew: Crew, pick: Pick?): Crew = when (this) {
+        DRIVER -> crew.copy(driver = pick)
+        CRYPTO -> crew.copy(crypto = pick)
+        SECURITY -> crew.copy(security = pick)
+        ILLEGAL -> crew.copy(illegal = pick)
+    }
+
+    companion object {
+        /** Who may go along on each kind of work, besides the lead and the lineman. */
+        fun forKind(kind: FieldKind): List<CrewSlot> = when (kind) {
+            FieldKind.FEEDER -> listOf(DRIVER)
+            FieldKind.ILLEGAL -> listOf(ILLEGAL, SECURITY, DRIVER)
+            FieldKind.CRYPTO, FieldKind.THERMAL, FieldKind.FEEDER_LINE -> listOf(CRYPTO, SECURITY, DRIVER)
+            FieldKind.BURN -> emptyList()
+        }
+
+        /** Kinds whose form starts with the crew. */
+        fun hasCrew(kind: FieldKind): Boolean = kind != FieldKind.BURN
     }
 }
 
@@ -61,6 +107,9 @@ data class Roster(val crew: List<RosterEntry> = emptyList(), val feeders: List<R
         const val ROLE_LEAD = 0
         const val ROLE_LINEMAN = 1
         const val ROLE_DRIVER = 2
+        const val ROLE_CRYPTO = 3
+        const val ROLE_SECURITY = 4
+        const val ROLE_ILLEGAL = 5
 
         /** The `roster` object of `GET /field/me`, which is also what the phone stores. */
         fun fromJson(text: String?): Roster {

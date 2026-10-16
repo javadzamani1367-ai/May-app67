@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.ilam.inspection.field.R
+import ir.ilam.inspection.field.data.FieldKind
 import ir.ilam.inspection.field.field
 import ir.ilam.inspection.field.ui.form.CrewSection
 import ir.ilam.inspection.field.ui.form.MvFeederSection
@@ -108,7 +109,7 @@ fun FeederScreen(itemId: String?, onClose: () -> Unit) {
         page == PAGE_MEDIA -> MediaPage(viewModel, stampCode = item.plate.orEmpty(), onBack = back,
             allowVideo = false, allowAudio = false)
         page == PAGE_CREW -> FormPage(title = stringResource(R.string.crew_and_feeder_title), onBack = back) {
-            CrewSection(payload.crew, viewModel.roster, viewModel::setCrew)
+            CrewSection(payload.crew, viewModel.roster, FieldKind.FEEDER, viewModel::setCrew)
             MvFeederSection(payload.mvFeeder, viewModel.roster, viewModel::setMvFeeder)
         }
         page == PAGE_PANEL -> FormPage(title = stringResource(R.string.place_panel_title), onBack = {

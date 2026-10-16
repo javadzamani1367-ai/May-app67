@@ -15,6 +15,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.data.Crew
+import ir.ilam.inspection.field.data.CrewSlot
+import ir.ilam.inspection.field.data.FieldKind
 import ir.ilam.inspection.field.data.Pick
 import ir.ilam.inspection.field.data.Roster
 import ir.ilam.inspection.field.data.RosterEntry
@@ -25,12 +27,13 @@ import ir.ilam.inspection.ui.theme.Tone
 
 /**
  * Who is on the crew, before the work starts: the lead and the lineman are
- * required, the driver and the vehicle are not. Names come from the
- * manager's list, so one person is always one record in the reports; until
- * the list has reached the phone, they are typed.
+ * required; the others the kind of work has ([CrewSlot.forKind]) and the
+ * vehicle are not. Names come from the manager's list, so one person is
+ * always one record in the reports; until the list has reached the phone,
+ * they are typed.
  */
 @Composable
-fun CrewSection(crew: Crew, roster: Roster, onChange: (Crew) -> Unit) {
+fun CrewSection(crew: Crew, roster: Roster, kind: FieldKind, onChange: (Crew) -> Unit) {
     SectionCard(
         title = stringResource(R.string.crew_title),
         subtitle = stringResource(if (roster.crew.isEmpty()) R.string.crew_hint_typed else R.string.crew_hint),
@@ -44,19 +47,33 @@ fun CrewSection(crew: Crew, roster: Roster, onChange: (Crew) -> Unit) {
             PersonPicker(stringResource(R.string.crew_lineman), crew.lineman, roster.crewFor(Roster.ROLE_LINEMAN), required = true) {
                 onChange(crew.copy(lineman = it))
             }
-            PersonPicker(stringResource(R.string.crew_driver), crew.driver, roster.crewFor(Roster.ROLE_DRIVER), required = false) {
-                onChange(crew.copy(driver = it))
+            CrewSlot.forKind(kind).forEach { slot ->
+                PersonPicker(stringResource(slotLabel(slot)), slot.of(crew), roster.crewFor(slot.role), required = false) {
+                    onChange(slot.set(crew, it))
+                }
             }
             AppTextField(stringResource(R.string.crew_vehicle), crew.vehicle, { onChange(crew.copy(vehicle = it)) })
         }
     }
 }
 
+private fun slotLabel(slot: CrewSlot): Int = when (slot) {
+    CrewSlot.DRIVER -> R.string.crew_driver
+    CrewSlot.CRYPTO -> R.string.crew_crypto
+    CrewSlot.SECURITY -> R.string.crew_security
+    CrewSlot.ILLEGAL -> R.string.crew_illegal
+}
+
 /** The crew tile of a hub: required until the lead and the lineman are chosen. */
 @Composable
-fun crewSection(key: String, crew: Crew, mvFeeder: Pick?): HubSection = HubSection(
+fun crewSection(
+    key: String,
+    crew: Crew,
+    mvFeeder: Pick?,
+    title: String = stringResource(R.string.crew_and_feeder_title)
+): HubSection = HubSection(
     key = key,
-    title = stringResource(R.string.crew_and_feeder_title),
+    title = title,
     summary = if (crew.complete) stringResource(R.string.crew_summary, crew.lead!!.name, crew.lineman!!.name) +
         (mvFeeder?.let { " · " + it.name } ?: "")
     else stringResource(R.string.crew_missing),

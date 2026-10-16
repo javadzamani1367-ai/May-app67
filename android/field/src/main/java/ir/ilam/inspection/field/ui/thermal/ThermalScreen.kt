@@ -25,12 +25,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.ilam.inspection.field.R
+import ir.ilam.inspection.field.data.FieldKind
 import ir.ilam.inspection.field.data.db.FieldFileEntity
 import ir.ilam.inspection.field.field
 import ir.ilam.inspection.field.thermal.Temperatures
 import ir.ilam.inspection.field.thermal.TrackRecorder
 import ir.ilam.inspection.field.ui.form.AddressField
+import ir.ilam.inspection.field.ui.form.CrewSection
 import ir.ilam.inspection.field.ui.form.MvFeederSection
+import ir.ilam.inspection.field.ui.form.gated
 import ir.ilam.inspection.field.ui.form.FormHub
 import ir.ilam.inspection.field.ui.form.FormPage
 import ir.ilam.inspection.field.ui.form.rememberFormPage
@@ -78,7 +81,9 @@ fun ThermalScreen(itemId: String?, onClose: () -> Unit) {
     when (pageState.value) {
         null -> FormHub(
             title = title,
-            sections = thermalSections(viewModel, recording, track.points),
+            // The crew first: until the lead and the lineman are chosen, the route waits.
+            sections = thermalSections(viewModel, recording, track.points)
+                .gated(if (payload.crew.complete) null else stringResource(R.string.gate_crew), setOf(PAGE_CREW)),
             missing = viewModel.missing(recording).map { missingText(it) },
             busy = viewModel.busy,
             onOpen = { pageState.value = it },
@@ -92,6 +97,9 @@ fun ThermalScreen(itemId: String?, onClose: () -> Unit) {
             scroll = hubScroll,
             header = { if (otherRecording) Warning(stringResource(R.string.thermal_other_recording)) }
         )
+        PAGE_CREW -> FormPage(title = stringResource(R.string.crew_title), onBack = back) {
+            CrewSection(payload.crew, viewModel.roster, FieldKind.THERMAL, viewModel::setCrew)
+        }
         PAGE_ROUTE -> FormPage(title = stringResource(R.string.thermal_route_title), onBack = back) {
             // First on the page: which MV feeder this walk inspects (optional).
             MvFeederSection(payload.mvFeeder, viewModel.roster, viewModel::setMvFeeder)
@@ -193,6 +201,7 @@ fun ThermalScreen(itemId: String?, onClose: () -> Unit) {
 
 @Composable
 private fun missingText(key: String): String = when {
+    key == ThermalViewModel.KEY_CREW -> stringResource(R.string.crew_missing)
     key == ThermalViewModel.KEY_RECORDING -> stringResource(R.string.thermal_missing_recording)
     key == ThermalViewModel.KEY_NO_FILES -> stringResource(R.string.thermal_missing_files)
     key.startsWith(ThermalViewModel.KEY_UNASSIGNED) ->

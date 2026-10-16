@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.field.FieldContainer
+import ir.ilam.inspection.field.data.Crew
 import ir.ilam.inspection.field.data.Pick
 import ir.ilam.inspection.field.data.Roster
 import ir.ilam.inspection.field.data.FieldDrafts
@@ -159,6 +160,7 @@ class ThermalViewModel(container: FieldContainer, existingId: String?, state: Sa
 
     /** Nothing may be finished while the route is still recording, or with a file nobody assigned. */
     fun missing(recording: Boolean): List<String> = buildList {
+        if (!payload.crew.complete) add(KEY_CREW)
         if (recording) add(KEY_RECORDING)
         if (originals.isEmpty()) add(KEY_NO_FILES)
         originals.count { it.assetType == null || it.plate.isNullOrBlank() }.takeIf { it > 0 }?.let { add("$KEY_UNASSIGNED:$it") }
@@ -179,6 +181,7 @@ class ThermalViewModel(container: FieldContainer, existingId: String?, state: Sa
 
     /** The MV feeder inspected; optional, chosen from the manager's list. */
     fun setMvFeeder(pick: Pick?) = writePayload(payload.copy(mvFeeder = pick))
+    fun setCrew(crew: Crew) = writePayload(payload.copy(crew = crew))
     val roster: Roster get() = container.prefs.roster
 
     private fun writePayload(next: ThermalPayload) {
@@ -188,6 +191,7 @@ class ThermalViewModel(container: FieldContainer, existingId: String?, state: Sa
 
     companion object {
         const val KEY_RECORDING = "recording"
+        const val KEY_CREW = "crew"
         const val KEY_NO_FILES = "no_files"
         const val KEY_UNASSIGNED = "unassigned"
     }

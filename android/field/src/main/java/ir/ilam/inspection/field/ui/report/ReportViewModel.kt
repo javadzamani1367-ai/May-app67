@@ -5,7 +5,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import ir.ilam.inspection.field.FieldContainer
+import ir.ilam.inspection.field.data.Crew
+import ir.ilam.inspection.field.data.CrewSlot
 import ir.ilam.inspection.field.data.FieldKind
+import ir.ilam.inspection.field.data.Roster
 import ir.ilam.inspection.field.data.Priority
 import ir.ilam.inspection.field.data.ReportDetails
 import ir.ilam.inspection.field.data.db.FieldItemEntity
@@ -32,6 +35,9 @@ class ReportViewModel(container: FieldContainer, val kind: FieldKind, existingId
     fun setAddress(text: String) = update { it.copy(address = text) }
     fun setPlate(text: String) = update { it.copy(plate = text) }
     fun setPriority(priority: Priority) = update { it.copy(priority = priority.code) }
+    fun setCrew(crew: Crew) = edit { it.copy(crew = crew) }
+    val roster: Roster get() = container.prefs.roster
+    val hasCrew: Boolean get() = CrewSlot.hasCrew(kind)
 
     /**
      * What stops the report from being sent, as keys the screen words. The
@@ -41,6 +47,7 @@ class ReportViewModel(container: FieldContainer, val kind: FieldKind, existingId
     fun missing(): List<MissingKey> {
         val current = item ?: return emptyList()
         return buildList {
+            if (hasCrew && !details.crew.complete) add(MissingKey.CREW)
             if (current.latitude == null || current.longitude == null) add(MissingKey.POSITION)
             if (current.description.isNullOrBlank()) add(MissingKey.DESCRIPTION)
             if (kind == FieldKind.BURN && !details.hasEquipment) add(MissingKey.EQUIPMENT)
@@ -48,4 +55,4 @@ class ReportViewModel(container: FieldContainer, val kind: FieldKind, existingId
     }
 }
 
-enum class MissingKey { POSITION, DESCRIPTION, EQUIPMENT }
+enum class MissingKey { CREW, POSITION, DESCRIPTION, EQUIPMENT }

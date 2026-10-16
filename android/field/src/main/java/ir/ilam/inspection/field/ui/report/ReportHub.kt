@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import ir.ilam.inspection.field.R
+import ir.ilam.inspection.field.data.CrewSlot
 import ir.ilam.inspection.field.data.FieldKind
 import ir.ilam.inspection.field.data.Priority
 import ir.ilam.inspection.field.data.ReportDetails
@@ -17,6 +18,7 @@ import ir.ilam.inspection.field.data.db.FieldFileEntity
 import ir.ilam.inspection.field.data.db.FieldItemEntity
 import ir.ilam.inspection.field.ui.form.HubSection
 import ir.ilam.inspection.field.ui.form.SectionStatus
+import ir.ilam.inspection.field.ui.form.crewSection
 import ir.ilam.inspection.field.ui.form.mediaSection
 import ir.ilam.inspection.field.ui.form.preview
 import ir.ilam.inspection.ui.theme.Tone
@@ -25,6 +27,7 @@ import ir.ilam.inspection.util.PersianNumbers
 const val PAGE_PLACE = "place"
 const val PAGE_DETAILS = "details"
 const val PAGE_TEAM = "team"
+const val PAGE_CREW = "crew"
 
 /** The tiles of a report, in the order the work is done on site. */
 @Composable
@@ -32,7 +35,8 @@ fun reportSections(kind: FieldKind, item: FieldItemEntity, details: ReportDetail
     val empty = stringResource(R.string.hub_empty)
     val hasFix = item.latitude != null && item.longitude != null
     val described = !item.description.isNullOrBlank()
-    return listOf(
+    val crew = if (CrewSlot.hasCrew(kind)) listOf(crewSection(PAGE_CREW, details.crew, null, stringResource(R.string.crew_title))) else emptyList()
+    return crew + listOf(
         HubSection(
             key = PAGE_PLACE,
             title = stringResource(R.string.place_title),

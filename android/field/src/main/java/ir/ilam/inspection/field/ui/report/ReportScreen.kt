@@ -18,6 +18,7 @@ import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.data.FieldKind
 import ir.ilam.inspection.field.data.Priority
 import ir.ilam.inspection.field.field
+import ir.ilam.inspection.field.ui.form.CrewSection
 import ir.ilam.inspection.field.ui.form.LockGate
 import ir.ilam.inspection.field.ui.form.PlaceBlock
 import ir.ilam.inspection.field.ui.form.gated
@@ -64,14 +65,19 @@ fun ReportScreen(kind: FieldKind, itemId: String?, onClose: () -> Unit) {
         Column(Modifier.fillMaxSize()) { TavanTopBar(title = title, onBack = onClose) }
         return
     }
-    // A report starts with its position: until it is on the map, the rest waits.
+    // A report starts with its crew (crypto, illegal power), then its position: until then, the rest waits.
     val located = item.latitude != null && item.longitude != null
-    val gate = if (located) null else stringResource(R.string.gate_report)
+    val crewDone = !viewModel.hasCrew || viewModel.details.crew.complete
+    val gate = when {
+        !crewDone -> stringResource(R.string.gate_crew)
+        !located -> stringResource(R.string.gate_report)
+        else -> null
+    }
     val toMap = { pageState.value = PAGE_POSITION }
     when (pageState.value) {
         null -> FormHub(
             title = title,
-            sections = reportSections(kind, item, viewModel.details, viewModel.files).gated(gate, setOf(PAGE_PLACE)),
+            sections = reportSections(kind, item, viewModel.details, viewModel.files).gated(gate, if (crewDone) setOf(PAGE_CREW, PAGE_PLACE) else setOf(PAGE_CREW)),
             missing = viewModel.missing().map { missingText(it) },
             busy = viewModel.busy,
             onOpen = { pageState.value = it },
@@ -106,6 +112,9 @@ fun ReportScreen(kind: FieldKind, itemId: String?, onClose: () -> Unit) {
                 }
             }
         }
+        PAGE_CREW -> FormPage(title = stringResource(R.string.crew_title), onBack = back) {
+            CrewSection(viewModel.details.crew, viewModel.roster, kind, viewModel::setCrew)
+        }
         PAGE_DETAILS -> FormPage(title = stringResource(detailsTitle(kind)), onBack = back) {
             when (kind) {
                 FieldKind.CRYPTO -> CryptoDetails(viewModel.details, viewModel::edit)
@@ -126,6 +135,7 @@ fun ReportScreen(kind: FieldKind, itemId: String?, onClose: () -> Unit) {
 @Composable
 private fun missingText(key: MissingKey): String = stringResource(
     when (key) {
+        MissingKey.CREW -> R.string.crew_missing
         MissingKey.POSITION -> R.string.missing_position
         MissingKey.DESCRIPTION -> R.string.missing_description
         MissingKey.EQUIPMENT -> R.string.missing_equipment

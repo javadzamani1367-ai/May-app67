@@ -1,5 +1,6 @@
 package ir.ilam.inspection.field.thermal
 
+import ir.ilam.inspection.field.data.Crew
 import ir.ilam.inspection.field.data.Pick
 import org.json.JSONObject
 
@@ -57,9 +58,13 @@ data class ThermalPayload(
     val clockSkewSeconds: Long? = null,
     val files: Map<String, ThermalFileInfo> = emptyMap(),
     /** The medium-voltage feeder inspected; optional. */
-    val mvFeeder: Pick? = null
+    val mvFeeder: Pick? = null,
+    /** Who walked the route (payload v2): lead and lineman required. */
+    val crew: Crew = Crew()
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
+        put("v", 2)
+        put("crew", crew.toJson())
         mvFeeder?.let { put("mv_feeder", it.toJson()) }
         putOpt("started_at", startedAt)
         putOpt("ended_at", endedAt)
@@ -87,7 +92,8 @@ data class ThermalPayload(
                     val f = list.optJSONObject(id) ?: JSONObject()
                     ThermalFileInfo(f.optString("name"), Temperatures.fromJson(f.optJSONObject("temperatures")))
                 },
-                mvFeeder = Pick.fromJson(json.optJSONObject("mv_feeder"))
+                mvFeeder = Pick.fromJson(json.optJSONObject("mv_feeder")),
+                crew = Crew.fromJson(json.optJSONObject("crew"))
             )
         }
     }
