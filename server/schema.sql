@@ -366,9 +366,30 @@ CREATE TABLE IF NOT EXISTS field_settings (
 
 -- نسخه پایگاه داده. نصب تازه از اینجا شروع می‌کند و از این به بعد سرور گام‌های
 -- تازه را خودش اجرا می‌کند (api/lib/Migrations.php). این عدد باید با آخرین گام
+
+-- اعضای اکیپ و فیدرهای فشار متوسط، تعریف مدیر برای اپ میدانی ---------------
+CREATE TABLE IF NOT EXISTS crew_members (
+  id         CHAR(36)     NOT NULL PRIMARY KEY,
+  full_name  VARCHAR(191) NOT NULL,
+  role       TINYINT      NOT NULL,
+  county     VARCHAR(100) NULL,
+  active     TINYINT      NOT NULL DEFAULT 1,
+  created_at BIGINT       NOT NULL,
+  KEY idx_crew_role (role, active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS mv_feeders (
+  id         CHAR(36)     NOT NULL PRIMARY KEY,
+  name       VARCHAR(191) NOT NULL,
+  county     VARCHAR(100) NULL,
+  active     TINYINT      NOT NULL DEFAULT 1,
+  created_at BIGINT       NOT NULL,
+  UNIQUE KEY uq_mv_feeders_name (name, county)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- آنجا یکی باشد؛ تست run.php همین را می‌سنجد.
 CREATE TABLE IF NOT EXISTS schema_meta (
   id      TINYINT NOT NULL PRIMARY KEY,
   version INT     NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 5);
+INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 6);

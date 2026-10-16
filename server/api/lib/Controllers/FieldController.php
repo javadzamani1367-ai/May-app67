@@ -17,6 +17,8 @@ final class FieldController
         Response::json([
             'user' => AuthController::publicUser($user),
             'settings' => FieldSettings::forPhone(),
+            // اعضای اکیپ و فیدرهای فشار متوسط، برای انتخاب در فرم‌ها حتی بی‌اینترنت.
+            'roster' => FieldRoster::forPhone(),
             'server_time' => Db::now(),
         ]);
     }

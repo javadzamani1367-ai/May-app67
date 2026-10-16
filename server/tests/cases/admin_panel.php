@@ -87,6 +87,28 @@ $tooNear = $probe->page('admin/settings.php', $jar, ['amp_tolerance_pct' => '15'
     'presence_limit_m' => '5', 'csrf' => $token]);
 check('فاصله حضور کمتر از ۲۰ متر پذیرفته نیست', str_contains($tooNear['body'], 'بین ۲۰ و ۲۰۰۰ متر'));
 
+// اکیپ و فیدرها: مدیر تعریف می‌کند، گوشی میدانی در /field/me می‌گیرد.
+$roster = $probe->page('admin/roster.php', $jar)['body'];
+$rosterToken = $csrf($roster);
+$probe->page('admin/roster.php', $jar, ['what' => 'member', 'name' => '  علی   رضایی ', 'role' => '0', 'county' => 'ایلام', 'csrf' => $rosterToken]);
+$probe->page('admin/roster.php', $jar, ['what' => 'member', 'name' => 'حسن سیم‌بان', 'role' => '1', 'csrf' => $rosterToken]);
+$probe->page('admin/roster.php', $jar, ['what' => 'feeder', 'name' => 'فیدر ۲۰ کیلوولت بانک', 'county' => 'ایلام', 'csrf' => $rosterToken]);
+$dup = $probe->page('admin/roster.php', $jar, ['what' => 'feeder', 'name' => 'فیدر ۲۰ کیلوولت بانک', 'county' => 'ایلام', 'csrf' => $rosterToken]);
+check('فیدر تکراری در همان شهرستان رد می‌شود', str_contains($dup['body'], 'از قبل ثبت شده'));
+$noRole = $probe->page('admin/roster.php', $jar, ['what' => 'member', 'name' => 'بی نقش', 'role' => '9', 'csrf' => $rosterToken]);
+check('عضو بی نقش رد می‌شود', str_contains($noRole['body'], 'نقش عضو اکیپ'));
+$probe->page('admin/settings.php', $jar, ['amp_tolerance_pct' => '15', 'amp_tolerance_min_a' => '4', 'presence_limit_m' => '150',
+    'abnormal_single_a' => '30', 'abnormal_three_a' => '45', 'csrf' => $token]);
+$me = $probe->json('GET', 'field/me', [], $fieldToken)['body']['data'] ?? [];
+$crewNames = array_column($me['roster']['crew'] ?? [], 'name');
+check('گوشی اعضای اکیپ را با نام یکدست می‌گیرد', in_array('علی رضایی', $crewNames, true) && in_array('حسن سیم‌بان', $crewNames, true));
+equals('گوشی فیدر فشار متوسط را می‌گیرد', ['فیدر ۲۰ کیلوولت بانک'], array_column($me['roster']['mv_feeders'] ?? [], 'name'));
+equals('گوشی حد آمپر نامتعارف را می‌گیرد', [30, 45], [$me['settings']['abnormal_single_a'] ?? null, $me['settings']['abnormal_three_a'] ?? null]);
+$aliId = (string) $pdo->query("SELECT id FROM crew_members WHERE full_name = 'علی رضایی'")->fetchColumn();
+$probe->page('admin/roster.php', $jar, ['what' => 'member', 'id' => $aliId, 'name' => 'علی رضایی', 'role' => '0', 'csrf' => $rosterToken]);
+$me = $probe->json('GET', 'field/me', [], $fieldToken)['body']['data'] ?? [];
+check('عضو غیرفعال به گوشی نمی‌رود', !in_array('علی رضایی', array_column($me['roster']['crew'] ?? [], 'name'), true));
+
 $probe->page('admin/logout.php', $jar);
 equals('بعد از خروج، دوباره به صفحه ورود', 'login.php', $probe->page('admin/users.php', $jar)['location']);
 @unlink($jar);

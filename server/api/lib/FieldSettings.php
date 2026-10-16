@@ -20,10 +20,14 @@ final class FieldSettings
         'reporter_result_detail' => 1,
         // بیشترین فاصله کاربر از تابلو یا تیری که موقعیتش را ثبت می‌کند (متر).
         'presence_limit_m' => 200,
+        // آمپری که از آن بالاتر، مصرف مشترک «نامتعارف» نشان داده می‌شود (هر فاز).
+        'abnormal_single_a' => 25,
+        'abnormal_three_a' => 40,
     ];
 
     /** کلیدهایی که به گوشی کاربر میدانی می‌روند. */
-    private const FOR_PHONE = ['amp_tolerance_pct', 'amp_tolerance_min_a', 'purge_after_sync', 'presence_limit_m'];
+    private const FOR_PHONE = ['amp_tolerance_pct', 'amp_tolerance_min_a', 'purge_after_sync', 'presence_limit_m',
+        'abnormal_single_a', 'abnormal_three_a'];
 
     /** @return array<string, int> */
     public static function all(): array

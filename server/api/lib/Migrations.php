@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/FieldRoster.php';
+
 /**
  * به‌روزرسانی خودکار پایگاه داده.
  *
@@ -63,6 +65,8 @@ final class Migrations
                 static fn () => self::addColumn('reports', 'observer_longitude', 'DOUBLE NULL'),
                 static fn () => self::addColumn('reports', 'observer_accuracy', 'DOUBLE NULL'),
             ],
+            // فهرست‌های مدیر برای اپ میدانی: اعضای اکیپ و فیدرهای فشار متوسط.
+            6 => FieldRoster::TABLES,
         ];
     }
 

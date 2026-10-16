@@ -10,12 +10,19 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     csrf_check();
     $pct = (int) ($_POST['amp_tolerance_pct'] ?? -1);
     $min = (int) ($_POST['amp_tolerance_min_a'] ?? -1);
-    $presence = (int) ($_POST['presence_limit_m'] ?? FieldSettings::all()['presence_limit_m']);
+    $current = FieldSettings::all();
+    $presence = (int) ($_POST['presence_limit_m'] ?? $current['presence_limit_m']);
+    $single = (int) ($_POST['abnormal_single_a'] ?? $current['abnormal_single_a']);
+    $three = (int) ($_POST['abnormal_three_a'] ?? $current['abnormal_three_a']);
     if ($pct < 1 || $pct > 50 || $min < 0 || $min > 100) {
         $error = 'درصد باید بین ۱ و ۵۰ و حداقل مطلق بین ۰ و ۱۰۰ آمپر باشد.';
     } elseif ($presence < 20 || $presence > 2000) {
         $error = 'فاصله مجاز حضور باید بین ۲۰ و ۲۰۰۰ متر باشد.';
+    } elseif ($single < 1 || $single > 500 || $three < 1 || $three > 500) {
+        $error = 'آمپر نامتعارف باید بین ۱ و ۵۰۰ آمپر باشد.';
     } else {
+        FieldSettings::set('abnormal_single_a', $single);
+        FieldSettings::set('abnormal_three_a', $three);
         FieldSettings::set('presence_limit_m', $presence);
         FieldSettings::set('amp_tolerance_pct', $pct);
         FieldSettings::set('amp_tolerance_min_a', $min);
@@ -52,6 +59,17 @@ admin_header('تنظیمات میدانی');
       <input name="presence_limit_m" type="number" min="20" max="2000" value="<?= (int) $s['presence_limit_m'] ?>" dir="ltr">
     </label>
     <p class="muted">اگر موقعیت دقیق ماهواره‌ای کاربر دورتر از این فاصله باشد، اپ اجازه ثبت نمی‌دهد و می‌گوید در محل حاضر شود.</p>
+
+    <h3 style="margin-top:16px">مشترکین با آمپر نامتعارف (آمپرگیری تیربه‌تیر)</h3>
+    <div class="grid">
+      <label>مشترک تکفاز: بالاتر از (آمپر)
+        <input name="abnormal_single_a" type="number" min="1" max="500" value="<?= (int) $s['abnormal_single_a'] ?>" dir="ltr">
+      </label>
+      <label>مشترک سه‌فاز: هر فاز بالاتر از (آمپر)
+        <input name="abnormal_three_a" type="number" min="1" max="500" value="<?= (int) $s['abnormal_three_a'] ?>" dir="ltr">
+      </label>
+    </div>
+    <p class="muted">اپ آمپر بالاتر از این حد را سرخ و «نامتعارف» نشان می‌دهد.</p>
 
     <h3 style="margin-top:16px">داده روی گوشی</h3>
     <label class="check"><input type="checkbox" name="purge_after_sync" <?= $s['purge_after_sync'] === 1 ? 'checked' : '' ?>>
