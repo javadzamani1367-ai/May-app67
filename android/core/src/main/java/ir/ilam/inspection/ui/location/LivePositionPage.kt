@@ -21,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -80,6 +81,15 @@ fun LivePositionPage(
     val mock by MockLocation.detected.collectAsState()
     val hasRecord = recordedLatitude != null && recordedLongitude != null
     val precise = reading?.takeIf { fresh && it.precise }?.fix
+    // The buttons act on the position of the moment they are pressed. A
+    // function reference to a local function is remembered by the Compose
+    // compiler with the values of the first frame: the record button then
+    // kept seeing "no precise position yet" however precise the dot became.
+    val latestReading by rememberUpdatedState(reading)
+    val latestPrecise by rememberUpdatedState(precise)
+    val latestSatellites by rememberUpdatedState(satellites)
+    val latestOnRecord by rememberUpdatedState(onRecord)
+    val latestOnBack by rememberUpdatedState(onBack)
 
     /** True while the pin rides on the user's position; a drag sets it down where the finger leaves it. */
     var following by remember { mutableStateOf(!hasRecord) }
@@ -157,36 +167,37 @@ fun LivePositionPage(
         map.invalidate()
     }
 
-    fun followMe() {
+    val followMe: () -> Unit = {
         following = true
-        reading?.let { map.controller.animateTo(GeoPoint(it.fix.latitude, it.fix.longitude), maxOf(map.zoomLevelDouble, CLOSE_ZOOM), 600L) }
+        latestReading?.let { map.controller.animateTo(GeoPoint(it.fix.latitude, it.fix.longitude), maxOf(map.zoomLevelDouble, CLOSE_ZOOM), 600L) }
     }
 
-    fun record() {
+    val record: () -> Unit = record@{
         val pin = centre ?: (map.mapCenter.latitude to map.mapCenter.longitude)
+        val me = latestPrecise
         val point = PlacedPoint(
             latitude = pin.first,
             longitude = pin.second,
             accuracy = null,
             at = System.currentTimeMillis(),
-            observer = precise,
-            satellites = satellites
+            observer = me,
+            satellites = latestSatellites
         )
         val distance = point.distance
         if (presenceLimit != null) {
             if (distance == null) {
                 refusal = Refusal.NO_FIX
-                return
+                return@record
             }
             if (distance > presenceLimit) {
                 refusal = Refusal.TOO_FAR
-                return
+                return@record
             }
         }
         // Standing on the point: the receiver's accuracy is the point's accuracy.
-        val onMe = precise != null && distance != null && distance <= maxOf(precise.accuracy, ON_ME_METERS)
-        onRecord(point.copy(accuracy = if (onMe) precise!!.accuracy else null))
-        onBack()
+        val onMe = me != null && distance != null && distance <= maxOf(me.accuracy, ON_ME_METERS)
+        latestOnRecord(point.copy(accuracy = if (onMe) me!!.accuracy else null))
+        latestOnBack()
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -206,7 +217,7 @@ fun LivePositionPage(
                     locating = !fresh,
                     onZoomIn = { map.controller.zoomIn() },
                     onZoomOut = { map.controller.zoomOut() },
-                    onMyLocation = ::followMe,
+                    onMyLocation = followMe,
                     modifier = Modifier.padding(top = Spacing.sm)
                 )
             }
@@ -214,13 +225,13 @@ fun LivePositionPage(
         BottomActionBar(note = { PositionNote(centre, precise, following, hasRecord, imagery) }) {
             SecondaryButton(
                 text = stringResource(R.string.map_my_location),
-                onClick = ::followMe,
+                onClick = followMe,
                 icon = Icons.Filled.MyLocation,
                 modifier = Modifier.weight(0.8f)
             )
             PrimaryButton(
                 text = stringResource(R.string.live_record_pin),
-                onClick = ::record,
+                onClick = record,
                 enabled = centre != null || reading != null || hasRecord,
                 icon = Icons.Filled.Check,
                 tone = Tone.SUCCESS,

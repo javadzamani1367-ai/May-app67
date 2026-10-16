@@ -56,7 +56,7 @@ class LocationRefiner(
     val best: Fix? get() = samples.minByOrNull { it.accuracy }
 
     /**
-     * Precise enough to measure from: a satellite fix within [PRECISE_METERS].
+     * Precise enough to measure from: a satellite fix within [PRECISE_METERS] (50 m).
      * A network position never is, however sure it claims to be.
      */
     val precise: Boolean
@@ -119,7 +119,7 @@ class LocationRefiner(
     companion object {
         const val TARGET_METERS = 5.0
         /** A satellite fix this good is one to measure a distance from. */
-        const val PRECISE_METERS = 20.0
+        const val PRECISE_METERS = 50.0
         const val MAX_USEFUL_METERS = 500.0
         private const val MIN_AGREEING = 3
         private const val ACCURACY_SLACK = 1.5

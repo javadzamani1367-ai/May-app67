@@ -119,7 +119,7 @@ class LocationRefinerTest {
     @Test
     fun `a satellite fix that is still rough is not precise`() {
         val refiner = LocationRefiner()
-        refiner.add(near(0.0, 0.0, 35.0).copy(gps = true))
+        refiner.add(near(0.0, 0.0, 70.0).copy(gps = true))
         assertFalse(refiner.precise)
     }
 }

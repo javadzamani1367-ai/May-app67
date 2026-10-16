@@ -21,7 +21,7 @@
     <string name="position_far_title">شما در محل نیستید</string>
     <string name="position_far_message">شما در مختصات مورد نظر نیستید؛ فاصله شما از نقطه بیش از %1$s متر است. لطفاً در مختصات مورد نظر حضور داشته باشید و مختصات را وارد کنید.</string>
     <string name="position_wait_title">منتظر موقعیت دقیق</string>
-    <string name="position_wait_message">برای ثبت این نقطه باید موقعیت دقیق ماهواره‌ای شما معلوم باشد. چند لحظه در فضای باز بمانید تا دقت به زیر ۲۰ متر برسد و دوباره تلاش کنید.</string>
+    <string name="position_wait_message">برای ثبت این نقطه باید موقعیت دقیق ماهواره‌ای شما معلوم باشد. چند لحظه در فضای باز بمانید تا دقت به زیر ۵۰ متر برسد و دوباره تلاش کنید.</string>
     <string name="position_ok">متوجه شدم</string>
     <string name="position_record_on_map">ثبت موقعیت روی نقشه</string>
     <string name="position_change_on_map">تغییر موقعیت روی نقشه</string>
