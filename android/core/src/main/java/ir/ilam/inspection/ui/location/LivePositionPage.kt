@@ -62,8 +62,9 @@ import org.osmdroid.util.GeoPoint
  * position and the distance between them are recorded with the point.
  *
  * [presenceLimit] (metres) is for points the user must be standing at — a
- * panel, a pole: with a precise fix farther than that from the pin, recording
- * is refused; without a precise fix, it waits for one.
+ * panel, a pole: farther than that from the pin — or than the fix's own
+ * accuracy, when that is rougher — recording is refused. Without any
+ * satellite fix it waits for one and records by itself.
  */
 @SuppressLint("ClickableViewAccessibility")
 @Composable
@@ -99,6 +100,7 @@ fun LivePositionPage(
     var refusal by remember { mutableStateOf<Refusal?>(null) }
     /** «Record» was pressed before a precise fix: it records by itself when one comes. */
     var waiting by remember { mutableStateOf(false) }
+    var refusalLimit by remember { mutableStateOf(presenceLimit ?: 0.0) }
     val me = remember { DotOverlay(context, Color(0xFF2563EB)) }
     val recorded = remember { DotOverlay(context, Color(0xFFDC2626)) }
     val map = remember {
@@ -196,7 +198,10 @@ fun LivePositionPage(
             satellites = LocationWarmup.satellites.value
         )
         val distance = point.distance
-        if (presenceLimit != null && distance != null && distance > presenceLimit) {
+        // A rough fix cannot prove the user is away: the limit is never tighter than its accuracy.
+        val limit = presenceLimit?.let { maxOf(it, me?.accuracy ?: 0.0) }
+        if (limit != null && distance != null && distance > limit) {
+            refusalLimit = limit
             refusal = Refusal.TOO_FAR
             return@record
         }
@@ -254,7 +259,7 @@ fun LivePositionPage(
             )
         }
     }
-    refusal?.let { RefusalDialog(it, presenceLimit ?: 0.0, onDismiss = { refusal = null }) }
+    refusal?.let { RefusalDialog(it, refusalLimit, onDismiss = { refusal = null }) }
 }
 
 /** Distance from the user to a point, or null without a precise position. */
@@ -262,7 +267,7 @@ fun distanceFrom(me: Fix?, latitude: Double, longitude: Double): Double? =
     me?.let { LocationRefiner.distanceMeters(it, Fix(latitude, longitude, 0.0)) }
 
 private const val CLOSE_ZOOM = 18.0
-/** How long «record» waits for a precise fix before saying it has none. */
+/** How long «record» waits for a satellite fix before saying it has none. */
 private const val PRECISE_WAIT_MILLIS = 30_000L
 private const val REGION_ZOOM = 11.0
 /** Within this of the user, a pin counts as "where I stand". */

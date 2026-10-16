@@ -28,6 +28,7 @@ import ir.ilam.inspection.field.data.SegmentKind
 import ir.ilam.inspection.field.ui.feeder.PhaseInputs
 import ir.ilam.inspection.field.ui.form.CountRow
 import ir.ilam.inspection.field.ui.form.FormPage
+import ir.ilam.inspection.field.ui.form.LockGate
 import ir.ilam.inspection.field.ui.form.PlateThenMap
 import ir.ilam.inspection.ui.common.AppTextField
 import ir.ilam.inspection.ui.common.ChoiceRow
@@ -96,36 +97,38 @@ fun PolePage(
             onOpenMap = onPickOnMap,
             needsPlate = false
         )
-        SectionCard(title = stringResource(R.string.line_pole_state), icon = Icons.Filled.ElectricalServices, tone = Tone.ACCENT) {
-            Column {
-                ChoiceRow(
-                    label = stringResource(R.string.line_pole_state),
-                    options = PoleState.entries.toList(),
-                    selected = pole.state,
-                    optionLabel = {
-                        stringResource(if (it == PoleState.MEASURED) R.string.line_state_measured else R.string.line_state_not_measured)
-                    },
-                    onSelect = { state -> edit { it.copy(state = state) } },
-                    toneOf = { if (it == PoleState.NOT_MEASURED) Tone.WARNING else Tone.ACCENT }
-                )
-                if (pole.state == PoleState.MEASURED) {
-                    PhaseInputs(pole.phases) { phases -> edit { it.copy(phases = phases) } }
-                    NumberField(stringResource(R.string.line_neutral), pole.neutral, { v -> edit { it.copy(neutral = v) } }, decimal = true)
-                    ChangeLine(viewModel, number)
-                } else {
-                    AppTextField(stringResource(R.string.line_reason), pole.reason, { v -> edit { it.copy(reason = v) } })
+        LockGate(!pole.hasPosition, stringResource(R.string.gate_position), onTap = onPickOnMap) {
+            SectionCard(title = stringResource(R.string.line_pole_state), icon = Icons.Filled.ElectricalServices, tone = Tone.ACCENT) {
+                Column {
+                    ChoiceRow(
+                        label = stringResource(R.string.line_pole_state),
+                        options = PoleState.entries.toList(),
+                        selected = pole.state,
+                        optionLabel = {
+                            stringResource(if (it == PoleState.MEASURED) R.string.line_state_measured else R.string.line_state_not_measured)
+                        },
+                        onSelect = { state -> edit { it.copy(state = state) } },
+                        toneOf = { if (it == PoleState.NOT_MEASURED) Tone.WARNING else Tone.ACCENT }
+                    )
+                    if (pole.state == PoleState.MEASURED) {
+                        PhaseInputs(pole.phases) { phases -> edit { it.copy(phases = phases) } }
+                        NumberField(stringResource(R.string.line_neutral), pole.neutral, { v -> edit { it.copy(neutral = v) } }, decimal = true)
+                        ChangeLine(viewModel, number)
+                    } else {
+                        AppTextField(stringResource(R.string.line_reason), pole.reason, { v -> edit { it.copy(reason = v) } })
+                    }
                 }
             }
-        }
-        SectionCard(title = stringResource(R.string.line_branches), icon = Icons.AutoMirrored.Filled.CallSplit, tone = Tone.BRAND) {
-            Column {
-                CountRow(stringResource(R.string.line_branches_single), pole.branches1) { count -> edit { it.copy(branches1 = count) } }
-                CountRow(stringResource(R.string.line_branches_three), pole.branches3) { count -> edit { it.copy(branches3 = count) } }
-                AppTextField(stringResource(R.string.line_pole_note), pole.note, { v -> edit { it.copy(note = v) } }, singleLine = false)
-                PoleCamera(viewModel, pole, stampCode = viewModel.item?.plate.orEmpty())
+            SectionCard(title = stringResource(R.string.line_branches), icon = Icons.AutoMirrored.Filled.CallSplit, tone = Tone.BRAND) {
+                Column {
+                    CountRow(stringResource(R.string.line_branches_single), pole.branches1) { count -> edit { it.copy(branches1 = count) } }
+                    CountRow(stringResource(R.string.line_branches_three), pole.branches3) { count -> edit { it.copy(branches3 = count) } }
+                    AppTextField(stringResource(R.string.line_pole_note), pole.note, { v -> edit { it.copy(note = v) } }, singleLine = false)
+                    PoleCamera(viewModel, pole, stampCode = viewModel.item?.plate.orEmpty())
+                }
             }
+            PoleSubscribers(viewModel, pole, onOpen = onOpenSubscriber, onAdded = onNewSubscriber)
         }
-        PoleSubscribers(viewModel, pole, onOpen = onOpenSubscriber, onAdded = onNewSubscriber)
         SecondaryButton(
             text = stringResource(R.string.line_delete_pole),
             onClick = { deleting = true },

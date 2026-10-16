@@ -19,6 +19,12 @@
     <string name="form_camera">دوربین</string>
     <string name="form_camera_video">عکس یا فیلم</string>
     <string name="form_gallery">از گالری</string>
+    <string name="hub_locked">قفل</string>
+    <string name="hub_lock_ok">متوجه شدم</string>
+    <string name="gate_crew">اول در بخش «اکیپ»، مسئول اکیپ و سیم‌بان را انتخاب کنید.</string>
+    <string name="gate_panel">اول پلاک تابلو را بنویسید و موقعیت آن را روی نقشه ثبت کنید؛ بقیه بخش‌ها بعد از آن باز می‌شوند.</string>
+    <string name="gate_position">اول موقعیت را روی نقشه ثبت کنید؛ بقیه موارد بعد از آن باز می‌شوند.</string>
+    <string name="gate_report">اول در بخش «محل»، موقعیت را روی نقشه ثبت کنید؛ بقیه بخش‌ها بعد از آن باز می‌شوند.</string>
     <string name="import_rejected">پذیرفته نشد: %1$s. فقط عکس و فیلم ۲۴ ساعت اخیر قبول می‌شود.</string>
     <string name="import_partly">%1$s مورد اضافه شد. پذیرفته نشد: %2$s. فقط عکس و فیلم ۲۴ ساعت اخیر قبول می‌شود.</string>
     <string name="import_too_old">%1$s مورد قدیمی‌تر از ۲۴ ساعت</string>

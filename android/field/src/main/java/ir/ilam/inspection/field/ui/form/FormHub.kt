@@ -17,6 +17,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -53,7 +57,9 @@ data class HubSection(
     val summary: String,
     val icon: ImageVector,
     val tone: Tone,
-    val status: SectionStatus
+    val status: SectionStatus,
+    /** Set while the tile must wait for an earlier part (the crew, the position): why it does not open. */
+    val lockReason: String? = null
 )
 
 /**
@@ -80,6 +86,7 @@ fun FormHub(
 ) {
     var confirming by remember { mutableStateOf(false) }
     var leaving by remember { mutableStateOf(false) }
+    var lockedNote by remember { mutableStateOf<String?>(null) }
     // Back, by the arrow or the phone's own button: nothing entered → the empty
     // draft goes quietly; something entered → ask; already sent → just leave.
     val requestExit = {
@@ -104,7 +111,10 @@ fun FormHub(
         ) {
             ProgressCard(sections)
             header?.invoke(this)
-            SectionGrid(sections, onOpen)
+            SectionGrid(sections, onOpen = { key ->
+                val reason = sections.firstOrNull { it.key == key }?.lockReason
+                if (reason != null) lockedNote = reason else onOpen(key)
+            })
             footer?.invoke(this)
             Spacer(Modifier.height(Spacing.lg))
         }
@@ -119,6 +129,14 @@ fun FormHub(
                 modifier = Modifier.weight(1f)
             )
         }
+    }
+    lockedNote?.let { note ->
+        AlertDialog(
+            onDismissRequest = { lockedNote = null },
+            icon = { Icon(Icons.Filled.Lock, contentDescription = null) },
+            text = { Text(note) },
+            confirmButton = { TextButton(onClick = { lockedNote = null }) { Text(stringResource(R.string.hub_lock_ok)) } }
+        )
     }
     if (confirming) DiscardDialog(onDismiss = { confirming = false }, onConfirm = { confirming = false; onDiscard() })
     if (leaving) {

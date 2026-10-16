@@ -29,6 +29,7 @@ import ir.ilam.inspection.field.field
 import ir.ilam.inspection.field.ui.feeder.PhaseInputs
 import ir.ilam.inspection.field.ui.form.EvidenceRow
 import ir.ilam.inspection.field.ui.form.FormPage
+import ir.ilam.inspection.field.ui.form.LockGate
 import ir.ilam.inspection.field.ui.form.ImportNote
 import ir.ilam.inspection.ui.common.AppTextField
 import ir.ilam.inspection.ui.common.ChoiceRow
@@ -88,42 +89,44 @@ fun SubscriberPage(
                 )
             }
         }
-        SectionCard(title = stringResource(R.string.sub_amps), icon = Icons.Filled.ElectricalServices, tone = Tone.ACCENT) {
-            Column {
-                ChoiceRow(
-                    label = stringResource(R.string.sub_phase),
-                    options = listOf(false, true),
-                    selected = subscriber.threePhase,
-                    optionLabel = { stringResource(if (it) R.string.sub_phase_three else R.string.sub_phase_single) },
-                    onSelect = { three -> edit { it.copy(threePhase = three) } }
-                )
-                if (subscriber.threePhase) {
-                    PhaseInputs(subscriber.amps) { amps -> edit { it.copy(amps = amps) } }
-                } else {
-                    NumberField(stringResource(R.string.sub_amp_single), subscriber.amps.r,
-                        { v -> edit { it.copy(amps = it.amps.copy(r = v)) } }, decimal = true)
-                }
-                if (subscriber.ampsComplete) {
-                    val limit = if (subscriber.threePhase) prefs.abnormalThreeA else prefs.abnormalSingleA
-                    val abnormal = subscriber.abnormal(prefs.abnormalSingleA, prefs.abnormalThreeA)
-                    Text(
-                        stringResource(if (abnormal) R.string.sub_above_limit else R.string.sub_below_limit, fa(limit)),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = if (abnormal) Tavan.colors.warning.strong else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = Spacing.sm)
+        LockGate(!subscriber.hasPosition, stringResource(R.string.gate_position), onTap = onOpenMap) {
+            SectionCard(title = stringResource(R.string.sub_amps), icon = Icons.Filled.ElectricalServices, tone = Tone.ACCENT) {
+                Column {
+                    ChoiceRow(
+                        label = stringResource(R.string.sub_phase),
+                        options = listOf(false, true),
+                        selected = subscriber.threePhase,
+                        optionLabel = { stringResource(if (it) R.string.sub_phase_three else R.string.sub_phase_single) },
+                        onSelect = { three -> edit { it.copy(threePhase = three) } }
                     )
+                    if (subscriber.threePhase) {
+                        PhaseInputs(subscriber.amps) { amps -> edit { it.copy(amps = amps) } }
+                    } else {
+                        NumberField(stringResource(R.string.sub_amp_single), subscriber.amps.r,
+                            { v -> edit { it.copy(amps = it.amps.copy(r = v)) } }, decimal = true)
+                    }
+                    if (subscriber.ampsComplete) {
+                        val limit = if (subscriber.threePhase) prefs.abnormalThreeA else prefs.abnormalSingleA
+                        val abnormal = subscriber.abnormal(prefs.abnormalSingleA, prefs.abnormalThreeA)
+                        Text(
+                            stringResource(if (abnormal) R.string.sub_above_limit else R.string.sub_below_limit, fa(limit)),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = if (abnormal) Tavan.colors.warning.strong else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = Spacing.sm)
+                        )
+                    }
                 }
             }
-        }
-        SectionCard(title = stringResource(R.string.sub_identity), icon = Icons.Filled.Badge, tone = Tone.BRAND) {
-            Column {
-                AppTextField(stringResource(R.string.sub_name), subscriber.name, { v -> edit { it.copy(name = v) } })
-                AppTextField(stringResource(R.string.sub_file_number), subscriber.fileNumber, { v -> edit { it.copy(fileNumber = v) } }, ltr = true)
-                AppTextField(stringResource(R.string.sub_subscription), subscriber.subscription, { v -> edit { it.copy(subscription = v) } }, ltr = true)
+            SectionCard(title = stringResource(R.string.sub_identity), icon = Icons.Filled.Badge, tone = Tone.BRAND) {
+                Column {
+                    AppTextField(stringResource(R.string.sub_name), subscriber.name, { v -> edit { it.copy(name = v) } })
+                    AppTextField(stringResource(R.string.sub_file_number), subscriber.fileNumber, { v -> edit { it.copy(fileNumber = v) } }, ltr = true)
+                    AppTextField(stringResource(R.string.sub_subscription), subscriber.subscription, { v -> edit { it.copy(subscription = v) } }, ltr = true)
+                }
             }
+            PostalCodes(subscriber.postalCodes) { codes -> edit { it.copy(postalCodes = codes) } }
+            SubscriberEvidence(viewModel, pole, subscriber) { t -> viewModel.updateSubscriber(pole.id, subscriber.id, t) }
         }
-        PostalCodes(subscriber.postalCodes) { codes -> edit { it.copy(postalCodes = codes) } }
-        SubscriberEvidence(viewModel, pole, subscriber) { t -> viewModel.updateSubscriber(pole.id, subscriber.id, t) }
         SecondaryButton(
             text = stringResource(R.string.sub_delete),
             onClick = { deleting = true },

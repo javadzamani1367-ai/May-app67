@@ -56,8 +56,9 @@ class LocationRefiner(
     val best: Fix? get() = samples.minByOrNull { it.accuracy }
 
     /**
-     * Precise enough to measure from: a satellite fix within [PRECISE_METERS] (50 m).
-     * A network position never is, however sure it claims to be.
+     * Good enough to record from: a satellite fix within [PRECISE_METERS] (400 m).
+     * The user sets the pin on the spot themselves, so a rough satellite fix is
+     * enough to start; a network position never is, however sure it claims to be.
      */
     val precise: Boolean
         get() = best?.let { it.gps && it.accuracy <= PRECISE_METERS } == true
@@ -118,8 +119,8 @@ class LocationRefiner(
 
     companion object {
         const val TARGET_METERS = 5.0
-        /** A satellite fix this good is one to measure a distance from. */
-        const val PRECISE_METERS = 50.0
+        /** A satellite fix this good is enough to record a point from (the field asked: no waiting). */
+        const val PRECISE_METERS = 400.0
         const val MAX_USEFUL_METERS = 500.0
         private const val MIN_AGREEING = 3
         private const val ACCURACY_SLACK = 1.5

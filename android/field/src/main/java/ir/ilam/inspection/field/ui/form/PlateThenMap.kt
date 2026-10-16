@@ -9,7 +9,13 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import ir.ilam.inspection.field.R
@@ -41,11 +47,21 @@ fun PlateThenMap(
     /** A pole may have lost its plate: then the map opens without one. */
     needsPlate: Boolean = true
 ) {
+    // The plate typed, the moment the user leaves the field — «done», a tap elsewhere,
+    // back — the map comes up. Read as of that moment, not of the frame that set the listener.
+    val latestPlate by rememberUpdatedState(plate)
+    val latestHasPosition by rememberUpdatedState(hasPosition)
+    val latestOpenMap by rememberUpdatedState(onOpenMap)
+    var focused by remember { mutableStateOf(false) }
     SectionCard(title = title, icon = Icons.Filled.Badge, tone = if (hasPosition) Tone.BRAND else Tone.DANGER) {
         Column {
-            // The plate typed, «done» on the keyboard brings the map straight up.
-            AppTextField(plateLabel, plate, onPlate, ltr = true, error = plateError, imeAction = ImeAction.Done,
-                onDone = { if (!needsPlate || plate.isNotBlank()) onOpenMap() })
+            AppTextField(
+                plateLabel, plate, onPlate, ltr = true, error = plateError, imeAction = ImeAction.Done,
+                modifier = Modifier.onFocusChanged { state ->
+                    if (focused && !state.isFocused && latestPlate.isNotBlank() && !latestHasPosition) latestOpenMap()
+                    focused = state.isFocused
+                }
+            )
             Text(
                 when {
                     hasPosition && positionAt != null -> stringResource(R.string.plate_map_recorded, PersianDate.formatWithTime(positionAt))

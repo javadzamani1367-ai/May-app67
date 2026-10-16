@@ -15,12 +15,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -62,14 +64,20 @@ fun SectionTile(section: HubSection, onClick: () -> Unit, modifier: Modifier = M
         SectionStatus.ATTENTION -> Tavan.colors.warning.strong
         SectionStatus.OPTIONAL -> MaterialTheme.colorScheme.outlineVariant
     }
+    val locked = section.lockReason != null
     AppCard(modifier = modifier, onClick = onClick) {
-        Column(modifier = Modifier.fillMaxWidth().fillMaxHeight().heightIn(min = 132.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().fillMaxHeight().heightIn(min = 132.dp).alpha(if (locked) 0.45f else 1f)) {
             Box(modifier = Modifier.fillMaxWidth().height(4.dp).background(stripe))
             Column(modifier = Modifier.fillMaxWidth().weight(1f).padding(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     ToneIcon(icon = section.icon, tone = section.tone, size = 42.dp)
                     Spacer(Modifier.weight(1f))
-                    StatusMark(section.status)
+                    if (locked) {
+                        Icon(Icons.Filled.Lock, contentDescription = stringResource(R.string.hub_locked),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
+                    } else {
+                        StatusMark(section.status)
+                    }
                 }
                 Text(
                     section.title,

@@ -45,7 +45,7 @@ object LocationWarmup {
         val samples: Int,
         val receivedAt: Long,
         val live: Boolean,
-        /** A satellite fix within [LocationRefiner.PRECISE_METERS]: good enough to measure from. */
+        /** A satellite fix within [LocationRefiner.PRECISE_METERS]: good enough to record from. */
         val precise: Boolean = false
     ) {
         fun isFresh(now: Long = SystemClock.elapsedRealtime()): Boolean = live && now - receivedAt <= STALE_MILLIS

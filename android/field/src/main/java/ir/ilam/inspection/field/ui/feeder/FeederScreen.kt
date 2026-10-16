@@ -25,7 +25,9 @@ import ir.ilam.inspection.field.ui.form.PlateThenMap
 import ir.ilam.inspection.field.ui.form.FormHub
 import ir.ilam.inspection.field.ui.form.FormPage
 import ir.ilam.inspection.field.ui.form.ItemPositionPage
+import ir.ilam.inspection.field.ui.form.LockGate
 import ir.ilam.inspection.field.ui.form.MediaPage
+import ir.ilam.inspection.field.ui.form.gated
 import ir.ilam.inspection.field.ui.form.PAGE_MEDIA
 import ir.ilam.inspection.field.ui.form.PAGE_POSITION
 import ir.ilam.inspection.field.ui.form.rememberFormPage
@@ -66,10 +68,18 @@ fun FeederScreen(itemId: String?, onClose: () -> Unit) {
     }
     val page = pageState.value
     val step = page?.let(::stepOf)
+    // The order of the work: crew, then the panel's plate and position; the rest waits.
+    val crewDone = payload.crew.complete
+    val located = item.latitude != null && item.longitude != null
+    val gate = when {
+        !crewDone -> stringResource(R.string.gate_crew)
+        item.plate.isNullOrBlank() || !located -> stringResource(R.string.gate_panel)
+        else -> null
+    }
     when {
         page == null -> FormHub(
             title = title,
-            sections = feederSections(viewModel),
+            sections = feederSections(viewModel).gated(gate, if (crewDone) setOf(PAGE_CREW, PAGE_PANEL) else setOf(PAGE_CREW)),
             missing = viewModel.missing().map { missingText(it) }.distinct(),
             busy = viewModel.busy,
             onOpen = { pageState.value = it },
@@ -79,7 +89,13 @@ fun FeederScreen(itemId: String?, onClose: () -> Unit) {
             editor = viewModel,
             scroll = hubScroll,
             header = {
-                PanelDiagram(null, payload.feeders.map { it.state }) { pageState.value = keyOf(it) }
+                PanelDiagram(null, payload.feeders.map { it.state }) {
+                    pageState.value = when {
+                        gate == null -> keyOf(it)
+                        crewDone -> PAGE_PANEL
+                        else -> PAGE_CREW
+                    }
+                }
             }
         )
         page == PAGE_POSITION -> {
@@ -97,7 +113,6 @@ fun FeederScreen(itemId: String?, onClose: () -> Unit) {
         }
         page == PAGE_PANEL -> FormPage(title = stringResource(R.string.place_panel_title), onBack = {
             // Plate typed, no position yet: the page is not left — the map comes up instead.
-            val located = item.latitude != null && item.longitude != null
             if (!located && !item.plate.isNullOrBlank()) pageState.value = PAGE_POSITION else back()
         }) {
             // Plate, then the map at once: the panel's position is recorded standing at it.
@@ -111,9 +126,12 @@ fun FeederScreen(itemId: String?, onClose: () -> Unit) {
                 onOpenMap = { pageState.value = PAGE_POSITION },
                 plateError = if (item.plate.isNullOrBlank()) stringResource(R.string.feeder_plate_required) else null
             )
-            PlaceBlock(viewModel, item, reading, fresh, onOpenMap = { pageState.value = PAGE_POSITION },
-                onAddress = viewModel::setAddress, title = stringResource(R.string.feeder_position_title),
-                showMapButton = false)
+            LockGate(!located, stringResource(R.string.gate_position),
+                onTap = { if (!item.plate.isNullOrBlank()) pageState.value = PAGE_POSITION }) {
+                PlaceBlock(viewModel, item, reading, fresh, onOpenMap = { pageState.value = PAGE_POSITION },
+                    onAddress = viewModel::setAddress, title = stringResource(R.string.feeder_position_title),
+                    showMapButton = false)
+            }
         }
         page == PAGE_CHECK -> FormPage(title = stringResource(R.string.feeder_check_title), onBack = back) {
             CheckStep(viewModel.verdict(), viewModel.tolerance)

@@ -27,7 +27,9 @@ import ir.ilam.inspection.field.ui.form.MvFeederSection
 import ir.ilam.inspection.field.ui.form.PlateThenMap
 import ir.ilam.inspection.field.ui.form.FormHub
 import ir.ilam.inspection.field.ui.form.FormPage
+import ir.ilam.inspection.field.ui.form.LockGate
 import ir.ilam.inspection.field.ui.form.MediaPage
+import ir.ilam.inspection.field.ui.form.gated
 import ir.ilam.inspection.field.ui.form.PAGE_MEDIA
 import ir.ilam.inspection.field.ui.form.rememberFormPage
 import ir.ilam.inspection.ui.common.AppTextField
@@ -64,10 +66,18 @@ fun LineScreen(itemId: String?, onClose: () -> Unit) {
         return
     }
     val page = pageState.value
+    // The order of the work: crew, then the panel's plate and position; the rest waits.
+    val crewDone = payload.crew.complete
+    val located = item.latitude != null && item.longitude != null
+    val gate = when {
+        !crewDone -> stringResource(R.string.gate_crew)
+        item.plate.isNullOrBlank() || !located -> stringResource(R.string.gate_panel)
+        else -> null
+    }
     when {
         page == null -> FormHub(
             title = title,
-            sections = lineSections(viewModel),
+            sections = lineSections(viewModel).gated(gate, if (crewDone) setOf(PAGE_CREW, PAGE_FEEDER) else setOf(PAGE_CREW)),
             missing = viewModel.missing().map { lineMissingText(it) }.distinct(),
             busy = viewModel.busy,
             onOpen = { pageState.value = it },
@@ -90,7 +100,6 @@ fun LineScreen(itemId: String?, onClose: () -> Unit) {
         }
         page == PAGE_FEEDER -> FormPage(title = stringResource(R.string.line_feeder_title), onBack = {
             // Plate typed, no position yet: the page is not left — the map comes up instead.
-            val located = item.latitude != null && item.longitude != null
             if (!located && !item.plate.isNullOrBlank()) pageState.value = PAGE_PANEL_MAP else back()
         }) {
             PlateThenMap(
@@ -103,37 +112,40 @@ fun LineScreen(itemId: String?, onClose: () -> Unit) {
                 onOpenMap = { pageState.value = PAGE_PANEL_MAP },
                 plateError = if (item.plate.isNullOrBlank()) stringResource(R.string.missing_line_plate) else null
             )
-            SectionCard(title = stringResource(R.string.line_feeder_title), icon = Icons.Filled.Badge, tone = Tone.BRAND) {
-                Column {
-                    ChoiceRow(
-                        label = stringResource(R.string.line_feeder),
-                        options = LinePayload.FEEDERS,
-                        selected = payload.feeder,
-                        optionLabel = { if (it == "other") stringResource(R.string.line_feeder_other) else it },
-                        onSelect = viewModel::setFeeder
-                    )
-                    if (payload.feeder == "other") {
-                        AppTextField(stringResource(R.string.line_feeder_name), payload.feederName, viewModel::setFeederName)
+            LockGate(!located, stringResource(R.string.gate_position),
+                onTap = { if (!item.plate.isNullOrBlank()) pageState.value = PAGE_PANEL_MAP }) {
+                SectionCard(title = stringResource(R.string.line_feeder_title), icon = Icons.Filled.Badge, tone = Tone.BRAND) {
+                    Column {
+                        ChoiceRow(
+                            label = stringResource(R.string.line_feeder),
+                            options = LinePayload.FEEDERS,
+                            selected = payload.feeder,
+                            optionLabel = { if (it == "other") stringResource(R.string.line_feeder_other) else it },
+                            onSelect = viewModel::setFeeder
+                        )
+                        if (payload.feeder == "other") {
+                            AppTextField(stringResource(R.string.line_feeder_name), payload.feederName, viewModel::setFeederName)
+                        }
+                        ChoiceRow(
+                            label = stringResource(R.string.line_network),
+                            options = LinePayload.NETWORKS,
+                            selected = payload.network,
+                            optionLabel = { stringResource(networkLabel(it)) },
+                            onSelect = viewModel::setNetwork
+                        )
+                        AddressField(item.address.orEmpty(), item.latitude, item.longitude, viewModel::setAddress)
+                        AppTextField(stringResource(R.string.line_note), payload.note, viewModel::setNote, singleLine = false, minLines = 2)
                     }
-                    ChoiceRow(
-                        label = stringResource(R.string.line_network),
-                        options = LinePayload.NETWORKS,
-                        selected = payload.network,
-                        optionLabel = { stringResource(networkLabel(it)) },
-                        onSelect = viewModel::setNetwork
-                    )
-                    AddressField(item.address.orEmpty(), item.latitude, item.longitude, viewModel::setAddress)
-                    AppTextField(stringResource(R.string.line_note), payload.note, viewModel::setNote, singleLine = false, minLines = 2)
                 }
-            }
-            // The feeder's own reading at the panel: the point the walk starts from.
-            SectionCard(
-                title = stringResource(R.string.line_start_title),
-                subtitle = stringResource(R.string.line_start_hint),
-                icon = Icons.Filled.PowerSettingsNew,
-                tone = Tone.ACCENT
-            ) {
-                PhaseInputs(payload.start, viewModel::setStart)
+                // The feeder's own reading at the panel: the point the walk starts from.
+                SectionCard(
+                    title = stringResource(R.string.line_start_title),
+                    subtitle = stringResource(R.string.line_start_hint),
+                    icon = Icons.Filled.PowerSettingsNew,
+                    tone = Tone.ACCENT
+                ) {
+                    PhaseInputs(payload.start, viewModel::setStart)
+                }
             }
         }
         page == PAGE_POLES -> PolesPage(viewModel, onBack = back, onOpenPole = openPole)

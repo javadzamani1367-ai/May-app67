@@ -18,7 +18,9 @@ import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.data.FieldKind
 import ir.ilam.inspection.field.data.Priority
 import ir.ilam.inspection.field.field
+import ir.ilam.inspection.field.ui.form.LockGate
 import ir.ilam.inspection.field.ui.form.PlaceBlock
+import ir.ilam.inspection.field.ui.form.gated
 import ir.ilam.inspection.field.ui.form.FormHub
 import ir.ilam.inspection.field.ui.form.FormPage
 import ir.ilam.inspection.field.ui.form.ItemPositionPage
@@ -62,10 +64,14 @@ fun ReportScreen(kind: FieldKind, itemId: String?, onClose: () -> Unit) {
         Column(Modifier.fillMaxSize()) { TavanTopBar(title = title, onBack = onClose) }
         return
     }
+    // A report starts with its position: until it is on the map, the rest waits.
+    val located = item.latitude != null && item.longitude != null
+    val gate = if (located) null else stringResource(R.string.gate_report)
+    val toMap = { pageState.value = PAGE_POSITION }
     when (pageState.value) {
         null -> FormHub(
             title = title,
-            sections = reportSections(kind, item, viewModel.details, viewModel.files),
+            sections = reportSections(kind, item, viewModel.details, viewModel.files).gated(gate, setOf(PAGE_PLACE)),
             missing = viewModel.missing().map { missingText(it) },
             busy = viewModel.busy,
             onOpen = { pageState.value = it },
@@ -81,20 +87,23 @@ fun ReportScreen(kind: FieldKind, itemId: String?, onClose: () -> Unit) {
         }
         // A report's position is required: without it, leaving the page opens the map instead.
         PAGE_PLACE -> FormPage(title = stringResource(R.string.place_title), onBack = {
-            if (item.latitude != null && item.longitude != null) back() else pageState.value = PAGE_POSITION
+            if (located) back() else toMap()
         }) {
-            PlaceBlock(viewModel, item, reading, fresh, onOpenMap = { pageState.value = PAGE_POSITION },
-                onAddress = viewModel::setAddress) {
-                AppTextField(stringResource(R.string.report_nearest_plate), item.plate.orEmpty(), viewModel::setPlate, ltr = true)
+            PlaceBlock(viewModel, item, reading, fresh, onOpenMap = toMap, onAddress = viewModel::setAddress) {
+                LockGate(!located, stringResource(R.string.gate_position), onTap = toMap, showNote = false) {
+                    AppTextField(stringResource(R.string.report_nearest_plate), item.plate.orEmpty(), viewModel::setPlate, ltr = true)
+                }
             }
-            SectionCard(
-                title = stringResource(R.string.report_description),
-                subtitle = stringResource(descriptionHint(kind)),
-                icon = Icons.AutoMirrored.Filled.Notes,
-                tone = Tone.BRAND
-            ) {
-                MultilineField(stringResource(R.string.report_description_label), item.description.orEmpty(), viewModel::setDescription,
-                    error = if (item.description.isNullOrBlank()) stringResource(R.string.missing_description) else null)
+            LockGate(!located, stringResource(R.string.gate_position), onTap = toMap) {
+                SectionCard(
+                    title = stringResource(R.string.report_description),
+                    subtitle = stringResource(descriptionHint(kind)),
+                    icon = Icons.AutoMirrored.Filled.Notes,
+                    tone = Tone.BRAND
+                ) {
+                    MultilineField(stringResource(R.string.report_description_label), item.description.orEmpty(), viewModel::setDescription,
+                        error = if (item.description.isNullOrBlank()) stringResource(R.string.missing_description) else null)
+                }
             }
         }
         PAGE_DETAILS -> FormPage(title = stringResource(detailsTitle(kind)), onBack = back) {
