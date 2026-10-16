@@ -67,7 +67,9 @@ fun AppTextField(
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     /** Masked, with an eye to show it — for the sign-in password. */
-    password: Boolean = false
+    password: Boolean = false,
+    /** What the keyboard's «done» does besides closing it: a plate opens its map. */
+    onDone: (() -> Unit)? = null
 ) {
     // The keyboard's action key has to actually do something: without these
     // handlers "next" looks broken, because nothing moves.
@@ -101,7 +103,10 @@ fun AppTextField(
         ),
         keyboardActions = KeyboardActions(
             onNext = { focusManager.moveFocus(FocusDirection.Next) },
-            onDone = { focusManager.clearFocus() }
+            onDone = {
+                focusManager.clearFocus()
+                onDone?.invoke()
+            }
         )
     )
 }

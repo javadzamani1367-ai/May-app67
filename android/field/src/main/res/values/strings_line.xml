@@ -25,7 +25,6 @@
     <string name="line_all_poles">همه تیرها</string>
     <string name="line_next_pole">تیر بعدی</string>
     <string name="line_pole_position">موقعیت تیر</string>
-    <string name="line_pole_unlocated">موقعیت این تیر ثبت نشده</string>
     <string name="line_pole_plate">شماره پلاک تیر (اختیاری)</string>
     <string name="line_pole_state">آمپر ورود به این تیر</string>
     <string name="line_state_measured">اندازه‌گیری شد</string>
@@ -34,9 +33,6 @@
     <string name="line_branches">انشعاب‌های این تیر</string>
     <string name="line_branches_single">انشعاب تکفاز</string>
     <string name="line_branches_three">انشعاب سه فاز</string>
-    <string name="line_leave_unlocated">بدون ثبت موقعیت نمی‌توان تیر بعدی را افزود و فرم ارسال نمی‌شود. به فهرست تیرها برمی‌گردید؟</string>
-    <string name="line_leave_anyway">بازگشت به فهرست</string>
-    <string name="line_stay">ماندن و ثبت موقعیت</string>
     <string name="line_reason">چرا اندازه‌گیری نشد؟</string>
     <string name="line_pole_note">توضیح این تیر (اختیاری)</string>
     <string name="line_pole_photo">عکس این تیر</string>

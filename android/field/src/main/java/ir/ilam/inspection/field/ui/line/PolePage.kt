@@ -54,22 +54,17 @@ fun PolePage(
     onList: () -> Unit,
     onOpenPole: (String) -> Unit,
     onPickOnMap: () -> Unit,
-    onOpenSubscriber: (String) -> Unit
+    onOpenSubscriber: (String) -> Unit,
+    onNewSubscriber: (String) -> Unit
 ) {
     val number = viewModel.number(pole.id)
     val poles = viewModel.payload.poles
     val next = poles.getOrNull(number)
     var deleting by remember { mutableStateOf(false) }
-    var leaving by remember { mutableStateOf(false) }
     fun edit(transform: (PoleReading) -> PoleReading) = viewModel.updatePole(pole.id, transform)
-    // Without a position, leaving first brings the map up; the second time it asks.
-    val back = {
-        when {
-            pole.hasPosition -> onList()
-            viewModel.mapOffered.add(pole.id) -> onPickOnMap()
-            else -> leaving = true
-        }
-    }
+    // The pole's position is required: without it, leaving opens the map instead.
+    // (A pole put in by mistake is deleted with the button at the bottom.)
+    val back = { if (pole.hasPosition) onList() else onPickOnMap() }
 
     FormPage(
         title = stringResource(R.string.line_pole_title, PersianNumbers.toPersian(number)),
@@ -130,7 +125,7 @@ fun PolePage(
                 PoleCamera(viewModel, pole, stampCode = viewModel.item?.plate.orEmpty())
             }
         }
-        PoleSubscribers(viewModel, pole, onOpenSubscriber)
+        PoleSubscribers(viewModel, pole, onOpen = onOpenSubscriber, onAdded = onNewSubscriber)
         SecondaryButton(
             text = stringResource(R.string.line_delete_pole),
             onClick = { deleting = true },
@@ -152,15 +147,6 @@ fun PolePage(
                 }) { Text(stringResource(R.string.form_discard_yes)) }
             },
             dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.action_cancel)) } }
-        )
-    }
-    if (leaving) {
-        AlertDialog(
-            onDismissRequest = { leaving = false },
-            title = { Text(stringResource(R.string.line_pole_unlocated)) },
-            text = { Text(stringResource(R.string.line_leave_unlocated)) },
-            confirmButton = { TextButton(onClick = { leaving = false; onList() }) { Text(stringResource(R.string.line_leave_anyway)) } },
-            dismissButton = { TextButton(onClick = { leaving = false }) { Text(stringResource(R.string.line_stay)) } }
         )
     }
 }

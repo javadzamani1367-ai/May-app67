@@ -54,7 +54,8 @@ fun SubscriberPage(
     pole: PoleReading,
     subscriber: Subscriber,
     onBack: () -> Unit,
-    onOpenMap: () -> Unit
+    onOpenMap: () -> Unit,
+    onDeleted: () -> Unit
 ) {
     val prefs = LocalContext.current.field.prefs
     val number = pole.subscribers.indexOfFirst { it.id == subscriber.id } + 1
@@ -139,7 +140,7 @@ fun SubscriberPage(
                 TextButton(onClick = {
                     deleting = false
                     viewModel.removeSubscriber(pole.id, subscriber.id)
-                    onBack()
+                    onDeleted()
                 }) { Text(stringResource(R.string.form_discard_yes)) }
             },
             dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.action_cancel)) } }

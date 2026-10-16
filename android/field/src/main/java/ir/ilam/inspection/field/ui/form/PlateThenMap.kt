@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import ir.ilam.inspection.field.R
 import ir.ilam.inspection.ui.common.AppTextField
 import ir.ilam.inspection.ui.common.PrimaryButton
@@ -24,7 +25,8 @@ import ir.ilam.inspection.util.PersianDate
  * A panel's or a pole's plate, and straight after it, its position: the
  * plate is typed, «ثبت پلاک و موقعیت» opens the map on the user, and the
  * point is recorded standing at it. Until then the card says, in red, that
- * the position is still missing — and the form does not move on without it.
+ * the position is still missing — and the page cannot be left without it:
+ * leaving opens the map instead.
  */
 @Composable
 fun PlateThenMap(
@@ -41,7 +43,9 @@ fun PlateThenMap(
 ) {
     SectionCard(title = title, icon = Icons.Filled.Badge, tone = if (hasPosition) Tone.BRAND else Tone.DANGER) {
         Column {
-            AppTextField(plateLabel, plate, onPlate, ltr = true, error = plateError)
+            // The plate typed, «done» on the keyboard brings the map straight up.
+            AppTextField(plateLabel, plate, onPlate, ltr = true, error = plateError, imeAction = ImeAction.Done,
+                onDone = { if (!needsPlate || plate.isNotBlank()) onOpenMap() })
             Text(
                 when {
                     hasPosition && positionAt != null -> stringResource(R.string.plate_map_recorded, PersianDate.formatWithTime(positionAt))

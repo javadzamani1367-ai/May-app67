@@ -142,13 +142,6 @@ abstract class ItemEditor(
         }
     }
 
-    /**
-     * Pages whose plate was typed but whose position was not, on which the map
-     * already came up once by itself this visit; the next «back» then leaves.
-     * Cleared each time a page is opened from the form's list.
-     */
-    val mapOffered = mutableSetOf<String>()
-
     /** The last gallery pick: how many came in, and why the others did not. */
     var lastImport by mutableStateOf<ImportOutcome?>(null)
         private set

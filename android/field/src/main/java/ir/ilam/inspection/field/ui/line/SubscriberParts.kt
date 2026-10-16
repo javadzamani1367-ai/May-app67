@@ -38,7 +38,7 @@ import ir.ilam.inspection.util.PersianNumbers
  * branches cannot have four abnormal subscribers.
  */
 @Composable
-fun PoleSubscribers(viewModel: LineViewModel, pole: PoleReading, onOpen: (String) -> Unit) {
+fun PoleSubscribers(viewModel: LineViewModel, pole: PoleReading, onOpen: (String) -> Unit, onAdded: (String) -> Unit) {
     val prefs = LocalContext.current.field.prefs
     SectionCard(
         title = stringResource(R.string.sub_title),
@@ -67,7 +67,7 @@ fun PoleSubscribers(viewModel: LineViewModel, pole: PoleReading, onOpen: (String
             }
             SecondaryButton(
                 text = stringResource(R.string.sub_add),
-                onClick = { viewModel.addSubscriber(pole.id)?.let(onOpen) },
+                onClick = { viewModel.addSubscriber(pole.id)?.let(onAdded) },
                 enabled = pole.subscribers.size < pole.branches,
                 icon = Icons.Filled.PersonAdd,
                 tone = Tone.WARNING,

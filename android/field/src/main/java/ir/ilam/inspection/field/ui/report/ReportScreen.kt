@@ -79,7 +79,10 @@ fun ReportScreen(kind: FieldKind, itemId: String?, onClose: () -> Unit) {
             BackHandler { pageState.value = PAGE_PLACE }
             ItemPositionPage(viewModel, item, onBack = { pageState.value = PAGE_PLACE })
         }
-        PAGE_PLACE -> FormPage(title = stringResource(R.string.place_title), onBack = back) {
+        // A report's position is required: without it, leaving the page opens the map instead.
+        PAGE_PLACE -> FormPage(title = stringResource(R.string.place_title), onBack = {
+            if (item.latitude != null && item.longitude != null) back() else pageState.value = PAGE_POSITION
+        }) {
             PlaceBlock(viewModel, item, reading, fresh, onOpenMap = { pageState.value = PAGE_POSITION },
                 onAddress = viewModel::setAddress) {
                 AppTextField(stringResource(R.string.report_nearest_plate), item.plate.orEmpty(), viewModel::setPlate, ltr = true)

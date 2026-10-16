@@ -28,7 +28,6 @@ import ir.ilam.inspection.field.ui.form.PlateThenMap
 import ir.ilam.inspection.field.ui.form.FormHub
 import ir.ilam.inspection.field.ui.form.FormPage
 import ir.ilam.inspection.field.ui.form.MediaPage
-import ir.ilam.inspection.field.ui.form.MAP_PANEL
 import ir.ilam.inspection.field.ui.form.PAGE_MEDIA
 import ir.ilam.inspection.field.ui.form.rememberFormPage
 import ir.ilam.inspection.ui.common.AppTextField
@@ -58,9 +57,7 @@ fun LineScreen(itemId: String?, onClose: () -> Unit) {
     val title = stringResource(R.string.field_line)
     val back = { pageState.value = null }
     val toPoles = { pageState.value = PAGE_POLES }
-    val openPole = { id: String -> viewModel.mapOffered.remove(id); pageState.value = POLE_PREFIX + id }
-    // Back from a pole's map: the same visit of the pole page, so the map does not come up again.
-    val returnToPole = { id: String -> pageState.value = POLE_PREFIX + id }
+    val openPole = { id: String -> pageState.value = POLE_PREFIX + id }
 
     if (item == null) {
         Column(Modifier.fillMaxSize()) { TavanTopBar(title = title, onBack = onClose) }
@@ -73,7 +70,7 @@ fun LineScreen(itemId: String?, onClose: () -> Unit) {
             sections = lineSections(viewModel),
             missing = viewModel.missing().map { lineMissingText(it) }.distinct(),
             busy = viewModel.busy,
-            onOpen = { viewModel.mapOffered.clear(); pageState.value = it },
+            onOpen = { pageState.value = it },
             onFinish = { viewModel.finish(context, onClose) },
             onDiscard = { viewModel.discard(onClose) },
             onClose = onClose,
@@ -92,10 +89,9 @@ fun LineScreen(itemId: String?, onClose: () -> Unit) {
                 title = stringResource(R.string.line_panel_position), presenceLimit = container.prefs.presenceLimitM.toDouble())
         }
         page == PAGE_FEEDER -> FormPage(title = stringResource(R.string.line_feeder_title), onBack = {
-            // Plate typed, no position yet: leaving brings the map up once, to record it standing there.
+            // Plate typed, no position yet: the page is not left — the map comes up instead.
             val located = item.latitude != null && item.longitude != null
-            if (!located && !item.plate.isNullOrBlank() && viewModel.mapOffered.add(MAP_PANEL)) pageState.value = PAGE_PANEL_MAP
-            else back()
+            if (!located && !item.plate.isNullOrBlank()) pageState.value = PAGE_PANEL_MAP else back()
         }) {
             PlateThenMap(
                 title = stringResource(R.string.line_panel_title),
@@ -152,19 +148,21 @@ fun LineScreen(itemId: String?, onClose: () -> Unit) {
             } else {
                 PolePage(viewModel, pole, onList = toPoles, onOpenPole = openPole,
                     onPickOnMap = { pageState.value = POLE_MAP_PREFIX + pole.id },
-                    onOpenSubscriber = { pageState.value = SUB_PREFIX + pole.id + ":" + it })
+                    onOpenSubscriber = { pageState.value = SUB_PREFIX + pole.id + ":" + it },
+                    // A new subscriber starts on the map: the house's position is the one thing it cannot go without.
+                    onNewSubscriber = { pageState.value = SUB_MAP_PREFIX + pole.id + ":" + it })
             }
         }
         page.orEmpty().startsWith(POLE_MAP_PREFIX) -> {
             val id = page.orEmpty().removePrefix(POLE_MAP_PREFIX)
             val pole = viewModel.pole(id)
-            BackHandler { returnToPole(id) }
+            BackHandler { openPole(id) }
             LivePositionPage(
                 title = stringResource(R.string.line_pole_title, PersianNumbers.toPersian(viewModel.number(id))),
                 recordedLatitude = pole?.latitude,
                 recordedLongitude = pole?.longitude,
                 onRecord = { viewModel.placePole(id, it) },
-                onBack = { returnToPole(id) },
+                onBack = { openPole(id) },
                 // The user stands at the pole to measure it, so the point must be where they are.
                 presenceLimit = container.prefs.presenceLimitM.toDouble()
             )
@@ -187,9 +185,10 @@ fun LineScreen(itemId: String?, onClose: () -> Unit) {
                     onBack = toSubscriber
                 )
             } else {
-                BackHandler { openPole(poleId) }
-                SubscriberPage(viewModel, pole, subscriber, onBack = { openPole(poleId) },
-                    onOpenMap = { pageState.value = SUB_MAP_PREFIX + poleId + ":" + subId })
+                val toMap = { pageState.value = SUB_MAP_PREFIX + poleId + ":" + subId }
+                // The house's position is required: without it, leaving opens the map instead.
+                SubscriberPage(viewModel, pole, subscriber, onBack = { if (subscriber.hasPosition) openPole(poleId) else toMap() },
+                    onOpenMap = toMap, onDeleted = { openPole(poleId) })
             }
         }
     }
