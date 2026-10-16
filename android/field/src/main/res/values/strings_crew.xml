@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- اکیپ و فیدر فشار متوسط (ui/form/CrewParts.kt) -->
+    <string name="crew_title">اکیپ</string>
+    <string name="crew_and_feeder_title">اکیپ و فیدر فشار متوسط</string>
+    <string name="crew_hint">پیش از شروع کار: مسئول اکیپ و سیم‌بان اجباری، راننده و خودرو اختیاری. نام‌ها از فهرست مدیر.</string>
+    <string name="crew_hint_typed">فهرست اکیپ هنوز از سرور نرسیده؛ نام‌ها را بنویسید. پس از همگام‌سازی، از فهرست انتخاب می‌شوند.</string>
+    <string name="crew_lead">مسئول اکیپ</string>
+    <string name="crew_lineman">سیم‌بان</string>
+    <string name="crew_driver">راننده (اختیاری)</string>
+    <string name="crew_vehicle">پلاک خودرو (اختیاری)</string>
+    <string name="crew_required">اجباری است</string>
+    <string name="crew_clear">پاک کردن انتخاب</string>
+    <string name="crew_with_county">%1$s — %2$s</string>
+    <string name="crew_summary">مسئول: %1$s · سیم‌بان: %2$s</string>
+    <string name="crew_missing">مسئول اکیپ و سیم‌بان را انتخاب کنید</string>
+    <string name="mv_feeder_title">فیدر فشار متوسط</string>
+    <string name="mv_feeder_hint">فیدر ۲۰ کیلوولتی که این تابلو یا مسیر از آن تغذیه می‌شود.</string>
+    <string name="mv_feeder_label">نام فیدر فشار متوسط</string>
+    <string name="mv_feeder_other">سایر (نام را بنویسید)</string>
+    <string name="mv_feeder_name">نام فیدر</string>
+    <string name="mv_feeder_optional">اختیاری است.</string>
+    <string name="plate_map_record">ثبت پلاک و موقعیت روی نقشه</string>
+    <string name="plate_map_change">تغییر موقعیت روی نقشه</string>
+    <string name="plate_map_missing">موقعیت هنوز ثبت نشده — بدون آن نمی‌توان ادامه داد. پلاک را بنویسید و دکمه زیر را بزنید.</string>
+    <string name="plate_map_missing_optional">موقعیت هنوز ثبت نشده — بدون آن نمی‌توان ادامه داد. پلاک را (اگر دارد) بنویسید و دکمه زیر را بزنید.</string>
+    <string name="plate_map_recorded">موقعیت در %1$s ثبت شد</string>
+    <string name="plate_map_recorded_plain">موقعیت ثبت شده است</string>
+</resources>

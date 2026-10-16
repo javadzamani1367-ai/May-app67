@@ -25,16 +25,18 @@
     <string name="line_all_poles">همه تیرها</string>
     <string name="line_next_pole">تیر بعدی</string>
     <string name="line_pole_position">موقعیت تیر</string>
-    <string name="line_pole_located">ثبت شد · ±%1$s متر</string>
-    <string name="line_pole_picked">از روی نقشه انتخاب شد</string>
     <string name="line_pole_unlocated">موقعیت این تیر ثبت نشده</string>
-    <string name="line_pole_auto">کنار تیر بایستید و موقعیت آن را روی نقشه ثبت کنید. نقشه روی شما باز می‌شود؛ اگر بیش از حد مجاز از تیر دور باشید، ثبت نمی‌شود.</string>
     <string name="line_pole_plate">شماره پلاک تیر (اختیاری)</string>
     <string name="line_pole_state">آمپر این تیر</string>
     <string name="line_state_measured">اندازه‌گیری شد</string>
     <string name="line_state_not_measured">اندازه‌گیری نشد</string>
     <string name="line_neutral">نول (اختیاری)</string>
-    <string name="line_branches">انشعاب روی این تیر</string>
+    <string name="line_branches">انشعاب‌های این تیر</string>
+    <string name="line_branches_single">انشعاب تکفاز</string>
+    <string name="line_branches_three">انشعاب سه فاز</string>
+    <string name="line_leave_unlocated">بدون ثبت موقعیت نمی‌توان تیر بعدی را افزود و فرم ارسال نمی‌شود. به فهرست تیرها برمی‌گردید؟</string>
+    <string name="line_leave_anyway">بازگشت به فهرست</string>
+    <string name="line_stay">ماندن و ثبت موقعیت</string>
     <string name="line_reason">چرا اندازه‌گیری نشد؟</string>
     <string name="line_pole_note">توضیح این تیر (اختیاری)</string>
     <string name="line_pole_photo">عکس این تیر</string>
@@ -65,4 +67,9 @@
     <string name="missing_pole_values">آمپر سه فاز تیر %1$s</string>
     <string name="missing_pole_range">عدد غیرعادی در تیر %1$s</string>
     <string name="missing_pole_reason">دلیل اندازه‌گیری‌نشدن تیر %1$s</string>
+    <string name="line_panel_title">تابلو یا پست مبدأ</string>
+    <string name="line_panel_position">موقعیت تابلو</string>
+    <string name="missing_panel_position">موقعیت تابلو</string>
+    <string name="missing_pole_subscriber">مشترک نامتعارف تیر %1$s (موقعیت یا آمپر)</string>
+    <string name="missing_pole_postal">کد پستی تیر %1$s (۱۰ رقم)</string>
 </resources>

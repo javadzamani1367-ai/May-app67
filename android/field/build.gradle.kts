@@ -80,6 +80,11 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.work)
+    // Re-encodes gallery videos to 720p before upload: a phone video is often
+    // hundreds of megabytes, sent over the crew's own mobile data. About 1.5 MB.
+    implementation(libs.androidx.media3.transformer)
+    implementation(libs.androidx.media3.effect)
+    implementation(libs.androidx.media3.common)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)

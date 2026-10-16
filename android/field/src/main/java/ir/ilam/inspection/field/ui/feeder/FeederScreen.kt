@@ -18,7 +18,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.field
+import ir.ilam.inspection.field.ui.form.CrewSection
+import ir.ilam.inspection.field.ui.form.MvFeederSection
 import ir.ilam.inspection.field.ui.form.PlaceBlock
+import ir.ilam.inspection.field.ui.form.PlateThenMap
 import ir.ilam.inspection.field.ui.form.FormHub
 import ir.ilam.inspection.field.ui.form.FormPage
 import ir.ilam.inspection.field.ui.form.ItemPositionPage
@@ -88,13 +91,25 @@ fun FeederScreen(itemId: String?, onClose: () -> Unit) {
         }
         page == PAGE_MEDIA -> MediaPage(viewModel, stampCode = item.plate.orEmpty(), onBack = back,
             allowVideo = false, allowAudio = false)
+        page == PAGE_CREW -> FormPage(title = stringResource(R.string.crew_and_feeder_title), onBack = back) {
+            CrewSection(payload.crew, viewModel.roster, viewModel::setCrew)
+            MvFeederSection(payload.mvFeeder, viewModel.roster, viewModel::setMvFeeder)
+        }
         page == PAGE_PANEL -> FormPage(title = stringResource(R.string.place_panel_title), onBack = back) {
-            SectionCard(title = stringResource(R.string.feeder_panel_title), icon = Icons.Filled.Badge, tone = Tone.BRAND) {
-                AppTextField(stringResource(R.string.feeder_plate), item.plate.orEmpty(), viewModel::setPlate, ltr = true,
-                    error = if (item.plate.isNullOrBlank()) stringResource(R.string.feeder_plate_required) else null)
-            }
+            // Plate, then the map at once: the panel's position is recorded standing at it.
+            PlateThenMap(
+                title = stringResource(R.string.feeder_panel_title),
+                plateLabel = stringResource(R.string.feeder_plate),
+                plate = item.plate.orEmpty(),
+                onPlate = viewModel::setPlate,
+                hasPosition = item.latitude != null && item.longitude != null,
+                positionAt = item.positionAt,
+                onOpenMap = { pageState.value = PAGE_POSITION },
+                plateError = if (item.plate.isNullOrBlank()) stringResource(R.string.feeder_plate_required) else null
+            )
             PlaceBlock(viewModel, item, reading, fresh, onOpenMap = { pageState.value = PAGE_POSITION },
-                onAddress = viewModel::setAddress, title = stringResource(R.string.feeder_position_title))
+                onAddress = viewModel::setAddress, title = stringResource(R.string.feeder_position_title),
+                showMapButton = false)
         }
         page == PAGE_CHECK -> FormPage(title = stringResource(R.string.feeder_check_title), onBack = back) {
             CheckStep(viewModel.verdict(), viewModel.tolerance)
@@ -141,6 +156,7 @@ internal fun missingText(key: String): String {
     val feeder = key.substringAfter(':', "")
     return when {
         key == FeederViewModel.KEY_POSITION -> stringResource(R.string.missing_position)
+        key == FeederViewModel.KEY_CREW -> stringResource(R.string.crew_missing)
         key == FeederViewModel.KEY_PLATE -> stringResource(R.string.feeder_plate_required)
         key == FeederViewModel.KEY_MISMATCH -> stringResource(R.string.feeder_check_mismatch_block)
         key == "main" -> stringResource(R.string.feeder_missing_main)
@@ -154,6 +170,7 @@ internal fun missingText(key: String): String {
 }
 
 internal const val PAGE_PANEL = "panel"
+internal const val PAGE_CREW = "crew"
 internal const val PAGE_CHECK = "check"
 
 /** The page key of a step of the reading: "main", "A" … "D". */

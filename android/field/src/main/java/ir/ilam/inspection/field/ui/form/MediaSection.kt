@@ -80,7 +80,7 @@ fun MediaSection(editor: ItemEditor, stampCode: String, allowVideo: Boolean = tr
     DisposableEffect(Unit) { onDispose { recorder.release() } }
 
     val gallery = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(MAX_PICK)) { uris ->
-        if (uris.isNotEmpty()) editor.importPhotos(context, uris)
+        if (uris.isNotEmpty()) editor.importGallery(context, uris)
     }
     val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         refused = it[Manifest.permission.CAMERA] != true
@@ -130,7 +130,7 @@ fun MediaSection(editor: ItemEditor, stampCode: String, allowVideo: Boolean = tr
                 SecondaryButton(
                     text = stringResource(R.string.form_gallery),
                     icon = Icons.Filled.AddPhotoAlternate,
-                    onClick = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                    onClick = { gallery.launch(PickVisualMediaRequest(if (allowVideo) ActivityResultContracts.PickVisualMedia.ImageAndVideo else ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -151,6 +151,7 @@ fun MediaSection(editor: ItemEditor, stampCode: String, allowVideo: Boolean = tr
                     modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm)
                 )
             }
+            ImportNote(editor)
             if (refused) {
                 Text(stringResource(R.string.form_permission_refused), color = Tavan.colors.danger.strong,
                     style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = Spacing.sm))
@@ -179,7 +180,7 @@ private fun MediaGrid(tiles: List<FieldFileEntity>, onRemove: (FieldFileEntity) 
 }
 
 @Composable
-private fun MediaTile(file: FieldFileEntity, onRemove: () -> Unit) {
+internal fun MediaTile(file: FieldFileEntity, onRemove: () -> Unit) {
     val store = LocalContext.current.field.files
     val photo = file.role == FileRole.PHOTO || file.role == FileRole.PHOTO_STAMPED
     val bitmap by produceState<android.graphics.Bitmap?>(null, file.id) {

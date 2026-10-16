@@ -16,6 +16,7 @@ import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.data.LineAnalysis
 import ir.ilam.inspection.field.ui.form.HubSection
 import ir.ilam.inspection.field.ui.form.SectionStatus
+import ir.ilam.inspection.field.ui.form.crewSection
 import ir.ilam.inspection.field.ui.form.mediaSection
 import ir.ilam.inspection.field.ui.form.preview
 import ir.ilam.inspection.ui.common.AppCard
@@ -36,7 +37,9 @@ fun lineSections(viewModel: LineViewModel): List<HubSection> {
         else -> stringResource(R.string.line_feeder) + " " + payload.feeder
     }
     val poleProblems = missing.any { it == "poles" || it.startsWith("pole_") }
+    val hasPanelPosition = item.latitude != null && item.longitude != null
     return listOf(
+        crewSection(PAGE_CREW, payload.crew, payload.mvFeeder),
         HubSection(
             key = PAGE_FEEDER,
             title = stringResource(R.string.line_feeder_title),
@@ -45,21 +48,9 @@ fun lineSections(viewModel: LineViewModel): List<HubSection> {
                 ?: stringResource(R.string.missing_line_plate),
             icon = Icons.Filled.Badge,
             tone = Tone.BRAND,
-            status = if (missing.contains(LineViewModel.KEY_PLATE) || missing.contains("feeder")) SectionStatus.MISSING
+            status = if (missing.contains(LineViewModel.KEY_PLATE) || missing.contains("feeder") || !hasPanelPosition ||
+                missing.contains("start_range")) SectionStatus.MISSING
             else SectionStatus.DONE
-        ),
-        HubSection(
-            key = PAGE_START,
-            title = stringResource(R.string.line_start_title),
-            summary = if (payload.start.complete()) "R ${fa(payload.start.r)} · S ${fa(payload.start.s)} · T ${fa(payload.start.t)}"
-            else stringResource(R.string.line_start_hint),
-            icon = Icons.Filled.PowerSettingsNew,
-            tone = Tone.ACCENT,
-            status = when {
-                missing.contains("start_range") -> SectionStatus.MISSING
-                payload.start.complete() -> SectionStatus.DONE
-                else -> SectionStatus.OPTIONAL
-            }
         ),
         HubSection(
             key = PAGE_POLES,
@@ -106,6 +97,10 @@ fun lineMissingText(key: String): String {
     val pole = PersianNumbers.toPersian(key.substringAfter(':', ""))
     return when {
         key == LineViewModel.KEY_PLATE -> stringResource(R.string.missing_line_plate)
+        key == LineViewModel.KEY_CREW -> stringResource(R.string.crew_missing)
+        key == LineViewModel.KEY_PANEL_POSITION -> stringResource(R.string.missing_panel_position)
+        key.startsWith("pole_subscriber:") -> stringResource(R.string.missing_pole_subscriber, pole)
+        key.startsWith("pole_postal:") -> stringResource(R.string.missing_pole_postal, pole)
         key == "feeder" -> stringResource(R.string.missing_line_feeder)
         key == "start_range" -> stringResource(R.string.missing_line_start_range)
         key == "poles" -> stringResource(R.string.missing_line_poles)

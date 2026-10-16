@@ -39,7 +39,7 @@ fun thermalSections(viewModel: ThermalViewModel, recording: Boolean, livePoints:
                 recording -> stringResource(R.string.thermal_hub_route_live, points)
                 started -> stringResource(R.string.thermal_hub_route_done, points)
                 else -> stringResource(R.string.thermal_hub_route_idle)
-            },
+            } + (payload.mvFeeder?.let { " · " + it.name } ?: ""),
             icon = Icons.Filled.GpsFixed,
             tone = if (recording) Tone.SUCCESS else Tone.INFO,
             status = when {

@@ -9,7 +9,10 @@ import ir.ilam.inspection.field.data.FeederCheck
 import ir.ilam.inspection.field.data.FeederPayload
 import ir.ilam.inspection.field.data.FeederReading
 import ir.ilam.inspection.field.data.FeederVerdict
+import ir.ilam.inspection.field.data.Crew
 import ir.ilam.inspection.field.data.FieldKind
+import ir.ilam.inspection.field.data.Pick
+import ir.ilam.inspection.field.data.Roster
 import ir.ilam.inspection.field.data.PhaseReading
 import ir.ilam.inspection.field.data.db.FieldItemEntity
 import ir.ilam.inspection.field.ui.form.ItemEditor
@@ -42,6 +45,9 @@ class FeederViewModel(container: FieldContainer, existingId: String?, state: Sav
         edit { it.copy(feeders = it.feeders.mapIndexed { i, f -> if (i == index) reading else f }) }
 
     fun setNote(text: String) = edit { it.copy(note = text) }
+    fun setCrew(crew: Crew) = edit { it.copy(crew = crew) }
+    fun setMvFeeder(pick: Pick?) = edit { it.copy(mvFeeder = pick) }
+    val roster: Roster get() = container.prefs.roster
 
     fun verdict(): FeederVerdict = FeederCheck.verdict(payload.main, payload.feeders, tolerancePct, toleranceMinA)
 
@@ -53,6 +59,7 @@ class FeederViewModel(container: FieldContainer, existingId: String?, state: Sav
     fun missing(): List<String> {
         val item = item ?: return emptyList()
         return buildList {
+            if (!payload.crew.complete) add(KEY_CREW)
             if (item.latitude == null || item.longitude == null) add(KEY_POSITION)
             if (item.plate.isNullOrBlank()) add(KEY_PLATE)
             addAll(FeederCheck.missing(payload.main, payload.feeders))
@@ -87,5 +94,6 @@ class FeederViewModel(container: FieldContainer, existingId: String?, state: Sav
         const val KEY_POSITION = "position"
         const val KEY_PLATE = "plate"
         const val KEY_MISMATCH = "mismatch"
+        const val KEY_CREW = "crew"
     }
 }

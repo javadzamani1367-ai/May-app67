@@ -6,6 +6,7 @@ import ir.ilam.inspection.field.data.PhaseReading
 import ir.ilam.inspection.field.data.PoleReading
 import ir.ilam.inspection.field.data.PoleState
 import ir.ilam.inspection.field.data.SegmentKind
+import ir.ilam.inspection.field.data.Subscriber
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -89,7 +90,16 @@ class LineAnalysisTest {
             feeder = "other", feederName = "فیدر روستا", network = "abc",
             start = PhaseReading("120", "110.5", "130"),
             poles = listOf(
-                pole("100", "95", "90").copy(plate = "T-12", branches = 3, neutral = "8", photos = listOf(1700000000000L)),
+                pole("100", "95", "90").copy(
+                    plate = "T-12", branches1 = 2, branches3 = 1, neutral = "8", photos = listOf(1700000000000L),
+                    subscribers = listOf(
+                        Subscriber(
+                            threePhase = true, amps = PhaseReading("30", "45", "12"), latitude = 33.61, longitude = 46.41,
+                            accuracy = 4.5, postalCodes = listOf("6931234567"), fileNumber = "12", subscription = "4401",
+                            name = "ساختمان نور", ampPhotos = listOf(1700000000100L), ampVideos = listOf(1700000000200L)
+                        )
+                    )
+                ),
                 PoleReading(state = PoleState.NOT_MEASURED, reason = "باران")
             ),
             note = "مسیر کوهستانی"
@@ -100,5 +110,36 @@ class LineAnalysisTest {
         val back = LinePayload.fromJson(json.toString())
         assertEquals(payload.copy(poles = payload.poles.map { it.copy(positionAt = null) }),
             back.copy(poles = back.poles.map { it.copy(positionAt = null) }))
+    }
+
+    @Test
+    fun oldPolesKeepTheirBranchCountAsSinglePhase() {
+        val back = LinePayload.fromJson("""{"poles":[{"id":"a","branches":4}]}""")
+        assertEquals(4, back.poles[0].branches1)
+        assertEquals(0, back.poles[0].branches3)
+    }
+
+    @Test
+    fun subscribersNeedAHouseReadingAndValidPostalCodes() {
+        val good = Subscriber(amps = PhaseReading(r = "30"), latitude = 33.6, longitude = 46.4)
+        val p = pole("100", "95", "90").copy(branches1 = 1, subscribers = listOf(good))
+        assertTrue(LineAnalysis.poleMissing(p, 1).isEmpty())
+        val unplaced = p.copy(subscribers = listOf(good.copy(latitude = null)))
+        assertTrue("pole_subscriber:1" in LineAnalysis.poleMissing(unplaced, 1))
+        val threeHalf = p.copy(subscribers = listOf(good.copy(threePhase = true)))
+        assertTrue("pole_subscriber:1" in LineAnalysis.poleMissing(threeHalf, 1))
+        val tooMany = p.copy(subscribers = listOf(good, good.copy(id = "b")))
+        assertTrue("pole_subscriber:1" in LineAnalysis.poleMissing(tooMany, 1))
+        val badCode = p.copy(subscribers = listOf(good.copy(postalCodes = listOf("12345"))))
+        assertTrue("pole_postal:1" in LineAnalysis.poleMissing(badCode, 1))
+        assertTrue(Subscriber.validPostalCode("۶۹۳۱۲۳۴۵۶۷"))
+    }
+
+    @Test
+    fun abnormalUsesThePhaseThreshold() {
+        assertTrue(Subscriber(amps = PhaseReading(r = "26")).abnormal(25, 40))
+        assertFalse(Subscriber(amps = PhaseReading(r = "24")).abnormal(25, 40))
+        assertFalse(Subscriber(threePhase = true, amps = PhaseReading("30", "39", "10")).abnormal(25, 40))
+        assertTrue(Subscriber(threePhase = true, amps = PhaseReading("30", "41", "10")).abnormal(25, 40))
     }
 }

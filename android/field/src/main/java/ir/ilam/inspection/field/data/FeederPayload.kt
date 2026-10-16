@@ -11,9 +11,16 @@ import org.json.JSONObject
 data class FeederPayload(
     val main: PhaseReading = PhaseReading(),
     val feeders: List<FeederReading> = List(FeederCheck.FEEDERS) { FeederReading() },
-    val note: String = ""
+    val note: String = "",
+    val crew: Crew = Crew(),
+    /** The medium-voltage feeder the panel hangs on; optional. */
+    val mvFeeder: Pick? = null
 ) {
     fun toJson(verdict: FeederVerdict, tolerancePct: Int, toleranceMinA: Int): JSONObject = JSONObject().apply {
+        // 2: crew and MV feeder; the server asks for the crew from this version on.
+        put("v", 2)
+        put("crew", crew.toJson())
+        mvFeeder?.let { put("mv_feeder", it.toJson()) }
         put("main", main.toJson())
         put("feeders", JSONObject().apply {
             feeders.forEachIndexed { index, feeder ->
@@ -48,7 +55,9 @@ data class FeederPayload(
                         reason = f.optString("reason")
                     )
                 },
-                note = json.optString("note")
+                note = json.optString("note"),
+                crew = Crew.fromJson(json.optJSONObject("crew")),
+                mvFeeder = Pick.fromJson(json.optJSONObject("mv_feeder"))
             )
         }
 

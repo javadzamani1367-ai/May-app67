@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- مشترکان نامتعارف هر تیر (ui/line/Subscriber*.kt) و شواهد هر بخش (ui/form/EvidenceRow.kt) -->
+    <string name="sub_title">مشترکان نامتعارف این تیر</string>
+    <string name="sub_hint">مشترکی که آمپرش غیرعادی است؛ حد مجاز: تکفاز %1$s آمپر، سه فاز %2$s آمپر هر فاز.</string>
+    <string name="sub_need_branches">اول تعداد انشعاب‌های این تیر را بنویسید.</string>
+    <string name="sub_at_limit">برای هر %1$s انشعاب این تیر مشترک ثبت شده است.</string>
+    <string name="sub_over_limit">تعداد مشترکان از %1$s انشعاب این تیر بیشتر است؛ یکی را حذف یا انشعاب‌ها را اصلاح کنید.</string>
+    <string name="sub_add">افزودن مشترک نامتعارف</string>
+    <string name="sub_row_title">مشترک %1$s · %2$s</string>
+    <string name="sub_single_amps">تکفاز · %1$s آمپر</string>
+    <string name="sub_three_amps">سه فاز · %1$s آمپر</string>
+    <string name="sub_incomplete">ناقص</string>
+    <string name="sub_abnormal">نامتعارف</string>
+    <string name="sub_below">زیر حد</string>
+    <string name="sub_page_title">مشترک نامتعارف %1$s</string>
+    <string name="sub_position">موقعیت منزل یا ساختمان</string>
+    <string name="sub_position_missing">موقعیت منزل هنوز ثبت نشده — اجباری است.</string>
+    <string name="sub_amps">آمپر مشترک</string>
+    <string name="sub_phase">نوع انشعاب</string>
+    <string name="sub_phase_single">تکفاز</string>
+    <string name="sub_phase_three">سه فاز</string>
+    <string name="sub_amp_single">آمپر</string>
+    <string name="sub_above_limit">بالاتر از حد مجاز %1$s آمپر — نامتعارف</string>
+    <string name="sub_below_limit">زیر حد مجاز %1$s آمپر</string>
+    <string name="sub_identity">مشخصات مشترک</string>
+    <string name="sub_name">نام مشترک، ساختمان یا تابلو تجاری</string>
+    <string name="sub_file_number">شماره پرونده</string>
+    <string name="sub_subscription">شماره اشتراک</string>
+    <string name="sub_postal_title">کد پستی</string>
+    <string name="sub_postal_hint">هر کد ۱۰ رقم؛ تا %1$s کد برای یک ساختمان.</string>
+    <string name="sub_postal_n">کد پستی %1$s</string>
+    <string name="sub_postal_invalid">کد پستی باید ۱۰ رقم باشد</string>
+    <string name="sub_postal_add">افزودن کد پستی</string>
+    <string name="sub_evidence">عکس و فیلم</string>
+    <string name="sub_evidence_hint">از دوربین یا گالری؛ از گالری فقط عکس و فیلم ۲۴ ساعت اخیر قبول می‌شود.</string>
+    <string name="sub_amp_photo">عکس آمپراژ</string>
+    <string name="sub_amp_video">فیلم آمپراژ</string>
+    <string name="sub_building_photo">عکس ساختمان</string>
+    <string name="sub_delete">حذف این مشترک</string>
+    <string name="sub_delete_title">حذف مشترک %1$s؟</string>
+    <string name="sub_delete_message">مشخصات، عکس‌ها و فیلم‌های این مشترک پاک می‌شوند.</string>
+    <string name="sub_map_title">منزل مشترک %1$s</string>
+    <string name="evidence_count">%1$s (%2$s)</string>
+    <string name="evidence_camera">دوربین</string>
+</resources>

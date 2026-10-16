@@ -26,12 +26,17 @@ data class PoleReading(
     val state: PoleState = PoleState.MEASURED,
     val phases: PhaseReading = PhaseReading(),
     val neutral: String = "",
-    val branches: Int = 0,
+    /** Branches leaving this pole for subscribers, single and three phase. */
+    val branches1: Int = 0,
+    val branches3: Int = 0,
+    /** Subscribers on this pole whose current was abnormal; at most [branches]. */
+    val subscribers: List<Subscriber> = emptyList(),
     val reason: String = "",
     val note: String = "",
     val photos: List<Long> = emptyList()
 ) {
     val hasPosition: Boolean get() = latitude != null && longitude != null
+    val branches: Int get() = branches1 + branches3
 }
 
 /**
@@ -48,9 +53,16 @@ data class LinePayload(
     /** The feeder's own reading at the panel, if taken: the point the walk starts from. */
     val start: PhaseReading = PhaseReading(),
     val poles: List<PoleReading> = emptyList(),
-    val note: String = ""
+    val note: String = "",
+    val crew: Crew = Crew(),
+    /** The medium-voltage feeder the panel hangs on; optional. */
+    val mvFeeder: Pick? = null
 ) {
     fun toJson(verdict: LineVerdict): JSONObject = JSONObject().apply {
+        // 2: crew, MV feeder, panel position, branches by phase, abnormal subscribers.
+        put("v", 2)
+        put("crew", crew.toJson())
+        mvFeeder?.let { put("mv_feeder", it.toJson()) }
         putOpt("feeder", feeder)
         if (feederName.isNotBlank()) put("feeder_name", feederName.trim())
         putOpt("network", network)
@@ -76,6 +88,9 @@ data class LinePayload(
                         put("reason", pole.reason.trim())
                     }
                     if (pole.branches > 0) put("branches", pole.branches)
+                    if (pole.branches1 > 0) put("b1", pole.branches1)
+                    if (pole.branches3 > 0) put("b3", pole.branches3)
+                    if (pole.subscribers.isNotEmpty()) put("subscribers", JSONArray(pole.subscribers.map { it.toJson() }))
                     if (pole.note.isNotBlank()) put("note", pole.note.trim())
                     if (pole.photos.isNotEmpty()) put("photos", JSONArray(pole.photos))
                 })
@@ -98,7 +113,9 @@ data class LinePayload(
                 network = json.optString("network").ifBlank { null },
                 start = phases(json.optJSONObject("start")),
                 poles = (0 until poles.length()).mapNotNull { poles.optJSONObject(it) }.map { pole(it) },
-                note = json.optString("note")
+                note = json.optString("note"),
+                crew = Crew.fromJson(json.optJSONObject("crew")),
+                mvFeeder = Pick.fromJson(json.optJSONObject("mv_feeder"))
             )
         }
 
@@ -115,7 +132,12 @@ data class LinePayload(
             state = if (p.optString("state") == "not_measured") PoleState.NOT_MEASURED else PoleState.MEASURED,
             phases = phases(p.optJSONObject("phases")),
             neutral = number(p, "neutral"),
-            branches = p.optInt("branches"),
+            // Before 0.8 there was one count: it is kept as single-phase branches.
+            branches1 = if (p.has("b1") || p.has("b3")) p.optInt("b1") else p.optInt("branches"),
+            branches3 = p.optInt("b3"),
+            subscribers = p.optJSONArray("subscribers")?.let { a ->
+                (0 until a.length()).mapNotNull { a.optJSONObject(it)?.let(Subscriber::fromJson) }
+            }.orEmpty(),
             reason = p.optString("reason"),
             note = p.optString("note"),
             photos = p.optJSONArray("photos")?.let { a -> (0 until a.length()).map { a.optLong(it) }.filter { it > 0 } }.orEmpty()

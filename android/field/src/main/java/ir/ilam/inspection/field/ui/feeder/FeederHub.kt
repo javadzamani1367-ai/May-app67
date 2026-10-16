@@ -12,6 +12,7 @@ import ir.ilam.inspection.field.data.FeederState
 import ir.ilam.inspection.field.data.PhaseReading
 import ir.ilam.inspection.field.ui.form.HubSection
 import ir.ilam.inspection.field.ui.form.SectionStatus
+import ir.ilam.inspection.field.ui.form.crewSection
 import ir.ilam.inspection.field.ui.form.mediaSection
 import ir.ilam.inspection.field.ui.form.preview
 import ir.ilam.inspection.ui.theme.Tone
@@ -24,6 +25,7 @@ fun feederSections(viewModel: FeederViewModel): List<HubSection> {
     val payload = viewModel.payload
     val hasFix = item.latitude != null && item.longitude != null
     val tiles = mutableListOf(
+        crewSection(PAGE_CREW, payload.crew, payload.mvFeeder),
         HubSection(
             key = PAGE_PANEL,
             title = stringResource(R.string.place_panel_title),

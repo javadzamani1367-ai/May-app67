@@ -30,6 +30,7 @@ import ir.ilam.inspection.field.field
 import ir.ilam.inspection.field.thermal.Temperatures
 import ir.ilam.inspection.field.thermal.TrackRecorder
 import ir.ilam.inspection.field.ui.form.AddressField
+import ir.ilam.inspection.field.ui.form.MvFeederSection
 import ir.ilam.inspection.field.ui.form.FormHub
 import ir.ilam.inspection.field.ui.form.FormPage
 import ir.ilam.inspection.field.ui.form.rememberFormPage
@@ -92,6 +93,8 @@ fun ThermalScreen(itemId: String?, onClose: () -> Unit) {
             header = { if (otherRecording) Warning(stringResource(R.string.thermal_other_recording)) }
         )
         PAGE_ROUTE -> FormPage(title = stringResource(R.string.thermal_route_title), onBack = back) {
+            // First on the page: which MV feeder this walk inspects (optional).
+            MvFeederSection(payload.mvFeeder, viewModel.roster, viewModel::setMvFeeder)
             if (otherRecording) Warning(stringResource(R.string.thermal_other_recording))
             RouteCard(
                 recording = recording,

@@ -7,6 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.field.FieldContainer
+import ir.ilam.inspection.field.data.Pick
+import ir.ilam.inspection.field.data.Roster
 import ir.ilam.inspection.field.data.FieldDrafts
 import ir.ilam.inspection.field.data.FieldKind
 import ir.ilam.inspection.field.data.FileRole
@@ -174,6 +176,10 @@ class ThermalViewModel(container: FieldContainer, existingId: String?, state: Sa
     }
 
     fun trackPoints() = item?.let { TrackRecorder.read(trackFile(it.id)) }.orEmpty()
+
+    /** The MV feeder inspected; optional, chosen from the manager's list. */
+    fun setMvFeeder(pick: Pick?) = writePayload(payload.copy(mvFeeder = pick))
+    val roster: Roster get() = container.prefs.roster
 
     private fun writePayload(next: ThermalPayload) {
         payload = next

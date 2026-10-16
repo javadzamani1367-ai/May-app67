@@ -52,6 +52,8 @@ fun PlaceBlock(
     onOpenMap: () -> Unit,
     onAddress: (String) -> Unit,
     title: String = stringResource(R.string.hub_position_title),
+    /** False where the plate card above already holds the map button. */
+    showMapButton: Boolean = true,
     extra: @Composable () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -86,7 +88,7 @@ fun PlaceBlock(
             }
             // One way in: the map. It opens on the user, with the pin on them;
             // one tap records, or the map is dragged to put the pin elsewhere.
-            PrimaryButton(
+            if (showMapButton) PrimaryButton(
                 text = stringResource(if (hasFix) R.string.place_change_on_map else R.string.place_record_on_map),
                 onClick = onOpenMap,
                 icon = Icons.Filled.Map,

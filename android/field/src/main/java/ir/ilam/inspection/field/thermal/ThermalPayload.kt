@@ -1,5 +1,6 @@
 package ir.ilam.inspection.field.thermal
 
+import ir.ilam.inspection.field.data.Pick
 import org.json.JSONObject
 
 /** The five temperatures HIKMICRO Viewer prints on a photo: the scene, and the R1 box. */
@@ -54,9 +55,12 @@ data class ThermalPayload(
     val endedAt: Long? = null,
     val points: Int = 0,
     val clockSkewSeconds: Long? = null,
-    val files: Map<String, ThermalFileInfo> = emptyMap()
+    val files: Map<String, ThermalFileInfo> = emptyMap(),
+    /** The medium-voltage feeder inspected; optional. */
+    val mvFeeder: Pick? = null
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
+        mvFeeder?.let { put("mv_feeder", it.toJson()) }
         putOpt("started_at", startedAt)
         putOpt("ended_at", endedAt)
         put("points", points)
@@ -82,7 +86,8 @@ data class ThermalPayload(
                 files = list.keys().asSequence().associateWith { id ->
                     val f = list.optJSONObject(id) ?: JSONObject()
                     ThermalFileInfo(f.optString("name"), Temperatures.fromJson(f.optJSONObject("temperatures")))
-                }
+                },
+                mvFeeder = Pick.fromJson(json.optJSONObject("mv_feeder"))
             )
         }
     }

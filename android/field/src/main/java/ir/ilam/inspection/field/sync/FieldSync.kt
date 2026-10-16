@@ -65,6 +65,10 @@ class FieldSync(
                 prefs.ampToleranceMinA = ampToleranceMinA
                 prefs.purgeAfterSync = purgeAfterSync
                 prefs.presenceLimitM = presenceLimitM
+                // An old server sends no roster: keep the list the phone has.
+                rosterJson?.let { prefs.rosterJson = it }
+                prefs.abnormalSingleA = abnormalSingleA
+                prefs.abnormalThreeA = abnormalThreeA
                 prefs.sessionExpired = false
             }
             is ApiResult.Refused -> {

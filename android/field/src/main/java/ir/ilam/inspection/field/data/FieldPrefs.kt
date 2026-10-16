@@ -41,6 +41,22 @@ class FieldPrefs(context: Context) {
         get() = prefs.getInt(KEY_PRESENCE, 200)
         set(value) = prefs.edit().putInt(KEY_PRESENCE, value).apply()
 
+    /** The manager's crew and MV feeder lists, as the last sync brought them (JSON). */
+    var rosterJson: String?
+        get() = prefs.getString(KEY_ROSTER, null)
+        set(value) = prefs.edit().putString(KEY_ROSTER, value).apply()
+
+    val roster: Roster get() = Roster.fromJson(rosterJson)
+
+    /** Above these, a subscriber's current is shown as abnormal (per phase). */
+    var abnormalSingleA: Int
+        get() = prefs.getInt(KEY_ABNORMAL_1, 25)
+        set(value) = prefs.edit().putInt(KEY_ABNORMAL_1, value).apply()
+
+    var abnormalThreeA: Int
+        get() = prefs.getInt(KEY_ABNORMAL_3, 40)
+        set(value) = prefs.edit().putInt(KEY_ABNORMAL_3, value).apply()
+
     var purgeAfterSync: Boolean
         get() = prefs.getBoolean(KEY_PURGE, false)
         set(value) = prefs.edit().putBoolean(KEY_PURGE, value).apply()
@@ -82,6 +98,9 @@ class FieldPrefs(context: Context) {
         const val KEY_AMP_PCT = "amp_tolerance_pct"
         const val KEY_AMP_MIN = "amp_tolerance_min_a"
         const val KEY_PRESENCE = "presence_limit_m"
+        const val KEY_ROSTER = "roster"
+        const val KEY_ABNORMAL_1 = "abnormal_single_a"
+        const val KEY_ABNORMAL_3 = "abnormal_three_a"
         const val KEY_PURGE = "purge_after_sync"
         const val KEY_EXPIRED = "session_expired"
         // "_v2": the pull now brings the office's result and notes too, so a

@@ -13,7 +13,10 @@ data class FieldProfile(
     val ampTolerancePct: Int,
     val ampToleranceMinA: Int,
     val purgeAfterSync: Boolean,
-    val presenceLimitM: Int = 200
+    val presenceLimitM: Int = 200,
+    val rosterJson: String? = null,
+    val abnormalSingleA: Int = 25,
+    val abnormalThreeA: Int = 40
 )
 
 data class PushResult(val trackingCode: String?, val status: Int, val missingFiles: Set<String>)
@@ -35,7 +38,10 @@ suspend fun ServerApi.fieldMe(token: String): ApiResult<FieldProfile> = get("fie
         ampTolerancePct = settings.optInt("amp_tolerance_pct", 10),
         ampToleranceMinA = settings.optInt("amp_tolerance_min_a", 5),
         purgeAfterSync = settings.optInt("purge_after_sync", 0) == 1,
-        presenceLimitM = settings.optInt("presence_limit_m", 200)
+        presenceLimitM = settings.optInt("presence_limit_m", 200),
+        rosterJson = data.optJSONObject("roster")?.toString(),
+        abnormalSingleA = settings.optInt("abnormal_single_a", 25),
+        abnormalThreeA = settings.optInt("abnormal_three_a", 40)
     )
 }
 

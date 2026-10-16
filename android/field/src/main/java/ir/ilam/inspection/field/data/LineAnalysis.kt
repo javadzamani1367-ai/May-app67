@@ -116,5 +116,10 @@ object LineAnalysis {
             }
             PoleState.NOT_MEASURED -> if (pole.reason.isBlank()) add("pole_reason:$number")
         }
+        // Each abnormal subscriber is a house on the map with its reading; never more than the branches.
+        if (pole.subscribers.size > pole.branches || pole.subscribers.any { !it.hasPosition || !it.ampsComplete }) {
+            add("pole_subscriber:$number")
+        }
+        if (pole.subscribers.any { s -> s.postalCodes.any { !Subscriber.validPostalCode(it) } }) add("pole_postal:$number")
     }
 }

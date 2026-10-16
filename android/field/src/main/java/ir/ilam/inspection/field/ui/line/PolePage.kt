@@ -1,18 +1,16 @@
 package ir.ilam.inspection.field.ui.line
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.CallSplit
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.ElectricalServices
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -31,52 +29,56 @@ import ir.ilam.inspection.field.data.SegmentKind
 import ir.ilam.inspection.field.ui.feeder.PhaseInputs
 import ir.ilam.inspection.field.ui.form.CountRow
 import ir.ilam.inspection.field.ui.form.FormPage
+import ir.ilam.inspection.field.ui.form.PlateThenMap
 import ir.ilam.inspection.ui.common.AppTextField
 import ir.ilam.inspection.ui.common.ChoiceRow
 import ir.ilam.inspection.ui.common.NumberField
 import ir.ilam.inspection.ui.common.PrimaryButton
 import ir.ilam.inspection.ui.common.SecondaryButton
 import ir.ilam.inspection.ui.common.SectionCard
-import ir.ilam.inspection.ui.location.LiveAccuracyPill
-import ir.ilam.inspection.ui.location.formatMetres
 import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tavan
 import ir.ilam.inspection.ui.theme.Tone
-import ir.ilam.inspection.util.LocationWarmup
-import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.PersianNumbers
 import kotlin.math.abs
 
 /**
  * One pole, on its own page, in the order the work is done standing at it:
- * where it is (one tap, from the position already warm), the clamp-meter
- * readings with the change from the pole before, then the plate, branches,
- * a photo. "Next pole" adds the next one and is already located when the
- * user reaches it and taps.
+ * the plate and straight after it the position on the map (the walk does
+ * not go on without it), the clamp-meter readings with the change from the
+ * pole before, the branches, and the subscribers found abnormal on them.
  */
 @Composable
 fun PolePage(
     viewModel: LineViewModel,
     pole: PoleReading,
-    reading: LocationWarmup.Reading?,
-    fresh: Boolean,
     onList: () -> Unit,
     onOpenPole: (String) -> Unit,
-    onPickOnMap: () -> Unit
+    onPickOnMap: () -> Unit,
+    onOpenSubscriber: (String) -> Unit
 ) {
     val number = viewModel.number(pole.id)
     val poles = viewModel.payload.poles
     val next = poles.getOrNull(number)
     var deleting by remember { mutableStateOf(false) }
+    var leaving by remember { mutableStateOf(false) }
     fun edit(transform: (PoleReading) -> PoleReading) = viewModel.updatePole(pole.id, transform)
+    // Back to the list is allowed without a position, but only after saying so.
+    val back = {
+        when {
+            pole.hasPosition -> onList()
+            else -> leaving = true
+        }
+    }
+    BackHandler(onBack = back)
 
     FormPage(
         title = stringResource(R.string.line_pole_title, PersianNumbers.toPersian(number)),
-        onBack = onList,
+        onBack = back,
         bottom = {
             SecondaryButton(
                 text = stringResource(R.string.line_all_poles),
-                onClick = onList,
+                onClick = back,
                 icon = Icons.AutoMirrored.Filled.List,
                 modifier = Modifier.weight(0.8f)
             )
@@ -84,45 +86,22 @@ fun PolePage(
                 text = if (next != null) stringResource(R.string.line_next_pole)
                 else stringResource(R.string.line_add_pole, PersianNumbers.toPersian(number + 1)),
                 onClick = { onOpenPole(next?.id ?: viewModel.addPole()) },
+                enabled = pole.hasPosition,
                 icon = if (next != null) Icons.AutoMirrored.Filled.ArrowForward else Icons.Filled.Add,
                 modifier = Modifier.weight(1.2f)
             )
         }
     ) {
-        SectionCard(title = stringResource(R.string.line_pole_position), icon = Icons.Filled.MyLocation, tone = Tone.INFO,
-            trailing = { LiveAccuracyPill(reading, fresh) }) {
-            Column {
-                Text(
-                    when {
-                        !pole.hasPosition -> stringResource(R.string.line_pole_unlocated)
-                        pole.accuracy != null -> stringResource(R.string.line_pole_located, formatMetres(pole.accuracy))
-                        else -> stringResource(R.string.line_pole_picked)
-                    },
-                    style = MaterialTheme.typography.titleSmall,
-                    color = if (pole.hasPosition) Tavan.colors.success.strong else Tavan.colors.danger.strong
-                )
-                Text(
-                    stringResource(R.string.line_pole_auto),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = Spacing.xs)
-                )
-                pole.positionAt?.let { at ->
-                    Text(
-                        stringResource(R.string.place_recorded_at, PersianDate.formatWithTime(at)),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                PrimaryButton(
-                    text = stringResource(if (pole.hasPosition) R.string.place_change_on_map else R.string.place_record_on_map),
-                    onClick = onPickOnMap,
-                    icon = Icons.Filled.Map,
-                    tone = if (pole.hasPosition) Tone.BRAND else Tone.SUCCESS,
-                    modifier = Modifier.fillMaxWidth().padding(top = Spacing.md)
-                )
-            }
-        }
+        PlateThenMap(
+            title = stringResource(R.string.line_pole_position),
+            plateLabel = stringResource(R.string.line_pole_plate),
+            plate = pole.plate,
+            onPlate = { v -> edit { it.copy(plate = v) } },
+            hasPosition = pole.hasPosition,
+            positionAt = pole.positionAt,
+            onOpenMap = onPickOnMap,
+            needsPlate = false
+        )
         SectionCard(title = stringResource(R.string.line_pole_state), icon = Icons.Filled.ElectricalServices, tone = Tone.ACCENT) {
             Column {
                 ChoiceRow(
@@ -144,14 +123,15 @@ fun PolePage(
                 }
             }
         }
-        SectionCard(title = stringResource(R.string.line_pole_title, PersianNumbers.toPersian(number)), tone = Tone.BRAND) {
+        SectionCard(title = stringResource(R.string.line_branches), icon = Icons.AutoMirrored.Filled.CallSplit, tone = Tone.BRAND) {
             Column {
-                AppTextField(stringResource(R.string.line_pole_plate), pole.plate, { v -> edit { it.copy(plate = v) } }, ltr = true)
-                CountRow(stringResource(R.string.line_branches), pole.branches) { count -> edit { it.copy(branches = count) } }
+                CountRow(stringResource(R.string.line_branches_single), pole.branches1) { count -> edit { it.copy(branches1 = count) } }
+                CountRow(stringResource(R.string.line_branches_three), pole.branches3) { count -> edit { it.copy(branches3 = count) } }
                 AppTextField(stringResource(R.string.line_pole_note), pole.note, { v -> edit { it.copy(note = v) } }, singleLine = false)
                 PoleCamera(viewModel, pole, stampCode = viewModel.item?.plate.orEmpty())
             }
         }
+        PoleSubscribers(viewModel, pole, onOpenSubscriber)
         SecondaryButton(
             text = stringResource(R.string.line_delete_pole),
             onClick = { deleting = true },
@@ -173,6 +153,15 @@ fun PolePage(
                 }) { Text(stringResource(R.string.form_discard_yes)) }
             },
             dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.action_cancel)) } }
+        )
+    }
+    if (leaving) {
+        AlertDialog(
+            onDismissRequest = { leaving = false },
+            title = { Text(stringResource(R.string.line_pole_unlocated)) },
+            text = { Text(stringResource(R.string.line_leave_unlocated)) },
+            confirmButton = { TextButton(onClick = { leaving = false; onList() }) { Text(stringResource(R.string.line_leave_anyway)) } },
+            dismissButton = { TextButton(onClick = { leaving = false }) { Text(stringResource(R.string.line_stay)) } }
         )
     }
 }

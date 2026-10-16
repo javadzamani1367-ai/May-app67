@@ -1,8 +1,6 @@
 package ir.ilam.inspection.field.ui.form
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,6 +14,8 @@ import ir.ilam.inspection.field.data.FileRole
 import ir.ilam.inspection.field.data.SyncState
 import ir.ilam.inspection.field.data.db.FieldFileEntity
 import ir.ilam.inspection.field.data.db.FieldItemEntity
+import ir.ilam.inspection.field.media.GalleryImport
+import ir.ilam.inspection.field.media.ImportOutcome
 import ir.ilam.inspection.field.sync.FieldSyncWorker
 import ir.ilam.inspection.util.Fix
 import ir.ilam.inspection.util.PhotoStamp
@@ -26,7 +26,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
 
 /**
  * What every field form shares: one item, loaded or made as a draft, saved a
@@ -109,9 +108,6 @@ abstract class ItemEditor(
         item?.let { item = container.drafts.save(it) }
     }
 
-    fun setPosition(latitude: Double, longitude: Double, accuracy: Double?) =
-        update { it.copy(latitude = latitude, longitude = longitude, accuracy = accuracy) }
-
     /** A point recorded on the map, with its moment and the user's own position then. */
     fun setPlaced(point: PlacedPoint) = update {
         it.copy(
@@ -145,32 +141,55 @@ abstract class ItemEditor(
         }
     }
 
-    /** Pictures from the gallery: kept as they are, re-encoded only if not JPEG or PNG. */
-    fun importPhotos(context: Context, uris: List<Uri>) = withItem {
-        uris.forEach { uri ->
-            val mime = context.contentResolver.getType(uri) ?: MIME_JPEG
-            val keep = mime == MIME_JPEG || mime == MIME_PNG
-            val target = newFile(if (mime == MIME_PNG) "png" else "jpg")
-            val copied = runCatching { copyPhoto(context, uri, target, keep) }.getOrDefault(false)
-            if (copied) attach(target, FileRole.PHOTO, if (keep) mime else MIME_JPEG, System.currentTimeMillis())
-        }
+    /** The last gallery pick: how many came in, and why the others did not. */
+    var lastImport by mutableStateOf<ImportOutcome?>(null)
+        private set
+
+    fun clearImportNote() {
+        lastImport = null
     }
 
-    private fun copyPhoto(context: Context, uri: Uri, target: File, keep: Boolean): Boolean {
-        val input = context.contentResolver.openInputStream(uri) ?: return false
-        input.use {
-            if (keep) {
-                FileOutputStream(target).use { out -> it.copyTo(out) }
-            } else {
-                val bitmap = BitmapFactory.decodeStream(it) ?: return false
-                FileOutputStream(target).use { out -> bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out) }
-                bitmap.recycle()
+    /**
+     * Photos and videos from the gallery: only from the last 24 hours, photos
+     * re-encoded like the app's camera photos and videos shrunk to 720p and at
+     * most 90 seconds. [onAdded] gets the capture times of those taken in, for
+     * a form that ties them to one part of itself (a subscriber's evidence).
+     */
+    fun importGallery(context: Context, uris: List<Uri>, onAdded: (List<Long>) -> Unit = {}) {
+        val added = mutableListOf<Long>()
+        var old = 0
+        var undated = 0
+        var failed = 0
+        withItem(after = {
+            lastImport = ImportOutcome(added.size, old, undated, failed)
+            onAdded(added)
+        }) {
+            uris.forEach { uri ->
+                val video = context.contentResolver.getType(uri)?.startsWith("video/") == true
+                val target = newFile(if (video) "mp4" else "jpg")
+                val result = if (video) GalleryImport.video(context, uri, target) else GalleryImport.photo(context, uri, target)
+                when (result) {
+                    is GalleryImport.Result.Ok -> {
+                        // Two captures taken in the same second still need two keys.
+                        var at = result.takenAt
+                        while (at in added) at++
+                        attach(target, if (video) FileRole.VIDEO else FileRole.PHOTO, if (video) MIME_MP4 else MIME_JPEG, at)
+                        added += at
+                    }
+                    is GalleryImport.Result.TooOld -> old++
+                    GalleryImport.Result.NoDate -> undated++
+                    GalleryImport.Result.Failed -> failed++
+                }
+                if (result !is GalleryImport.Result.Ok) target.delete()
             }
         }
-        return target.length() > 0
     }
 
-    fun addVideo(file: File) = withItem { attach(file, FileRole.VIDEO, "video/mp4", System.currentTimeMillis()) }
+    /** A clip from the app's camera; [onSaved] gets its capture time, as for a photo. */
+    fun addVideo(file: File, onSaved: (Long) -> Unit = {}) {
+        val now = System.currentTimeMillis()
+        withItem(after = { onSaved(now) }) { attach(file, FileRole.VIDEO, MIME_MP4, now) }
+    }
 
     fun addAudio(file: File) = withItem { attach(file, FileRole.AUDIO, "audio/mp4", System.currentTimeMillis()) }
 
@@ -249,6 +268,7 @@ abstract class ItemEditor(
     companion object {
         const val MIME_JPEG = "image/jpeg"
         const val MIME_PNG = "image/png"
+        const val MIME_MP4 = "video/mp4"
         private const val SAVE_DELAY = 400L
         private const val KEY_DRAFT = "draft_id"
     }
