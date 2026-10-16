@@ -390,7 +390,7 @@ check('تیربه‌تیر با یک تیر رد می‌شود',
 check('تیربه‌تیر بی‌فیدر رد می‌شود',
     Field::problem(['payload' => ['poles' => [$pole(1, 2, 3), $pole(1, 2, 3)]]] + $line, []) !== null);
 check('تیربه‌تیر بی‌پلاک تابلو رد می‌شود', Field::problem(['plate' => ''] + $line, []) !== null);
-foreach (['FieldPresenter', 'FieldLabels', 'FieldLine', 'FieldRoster', 'CrewCalendar'] as $class) {
+foreach (['FieldPresenter', 'FieldLabels', 'FieldLine', 'FieldRoster', 'CrewCalendar', 'GeoPlaces', 'CrewWork', 'CrewDays'] as $class) {
     require_once __DIR__ . '/../api/lib/' . $class . '.php';
 }
 equals('تابلو و دو تیر اندازه‌گیری‌شده', [0, 1, 3], array_column(FieldLine::points($line['payload']), 'pole'));
@@ -481,6 +481,64 @@ equals('تعطیلی نوشته‌شده مدیر', 'تعطیلی آزمون', $
 equals('نوروز تعطیل ثابت است', 'نوروز', $calendar->holiday($tehran('2027-03-22 10:00')));
 equals('۱۳:۰۰ تا ۱۶:۳۰ یکشنبه: دو ساعت اضافه‌کار', 2.0, $calendar->overtimeHours($tehran('2026-10-18 13:00'), $tehran('2026-10-18 16:30')));
 equals('سه ساعت روز جمعه همه اضافه‌کار', 3.0, $calendar->overtimeHours($tehran('2026-10-23 08:00'), $tehran('2026-10-23 11:00')));
+
+// نقشه آبادی‌ها: یک فایل TKGEO کوچک با شهر ایلام و یک شهرستان.
+$e6 = static fn (float $v): string => pack('N', (int) round($v * 1e6) & 0xFFFFFFFF);
+$geoBytes = 'TKGEO' . chr(1) . $e6(33.0) . $e6(46.0) . $e6(34.0) . $e6(47.0)
+    . pack('N', 2) . pack('n', strlen('ایلام')) . 'ایلام' . pack('n', strlen('شهرستان ایلام')) . 'شهرستان ایلام'
+    . pack('N', 1) . pack('N', 0) . chr(0) . $e6(33.6379) . $e6(46.4203)
+    . pack('N', 0)
+    . pack('N', 1) . pack('N', 1) . chr(5) . pack('N', 1) . chr(1) . pack('N', 3)
+    . $e6(33.5) . $e6(46.3) . $e6(33.8) . $e6(46.3) . $e6(33.8) . $e6(46.6);
+$geo = GeoPlaces::parse($geoBytes);
+check('فایل آبادی‌ها خوانده می‌شود', $geo !== null && count($geo->places) === 1 && count($geo->counties) === 1);
+check('مرکز ایلام درون شهر است', $geo->locate(33.64, 46.42)['outside'] === false);
+check('۴۰ کیلومتر دورتر بیرون از شهر است', $geo->locate(33.30, 46.80)['outside'] === true);
+equals('فایل خراب تهی است', null, GeoPlaces::parse('TKGEO' . chr(9)));
+
+// یک روز کار: تابلو، تیربه‌تیر از همان تابلو، ترموویژن تیرها، و یک بازرسی رمزارز بیرون از شهر.
+$crewAB = ['lead' => ['id' => 'm1', 'name' => 'رضا'], 'lineman' => ['name' => 'علی']];
+$t = static fn (string $hm): int => $tehran('2026-10-18 ' . $hm);
+$ph = ['r' => 10, 's' => 11, 't' => 12];
+$items = [
+    ['id' => 'fd', 'kind' => Field::KIND_FEEDER, 'tracking_code' => 'FD-1', 'plate' => 'P-100', 'latitude' => 33.6379,
+     'longitude' => 46.4203, 'position_at' => $t('09:00'), 'created_at' => $t('08:55'), 'payload' => ['v' => 2, 'crew' => $crewAB]],
+    ['id' => 'ft', 'kind' => Field::KIND_LINE, 'tracking_code' => 'FT-1', 'plate' => 'p100', 'latitude' => 33.6380,
+     'longitude' => 46.4204, 'position_at' => $t('09:20'), 'created_at' => $t('09:15'), 'payload' => ['v' => 2, 'crew' => $crewAB,
+        'start' => $ph, 'poles' => [
+            ['lat' => 33.639, 'lon' => 46.421, 'at' => $t('09:30'), 'state' => 'measured', 'phases' => $ph],
+            ['lat' => 33.640, 'lon' => 46.422, 'at' => $t('09:40'), 'state' => 'measured', 'phases' => $ph, 'subscribers' => [[], []]],
+            ['state' => 'not_measured', 'reason' => 'ارتفاع'],
+            ['lat' => 33.641, 'lon' => 46.423, 'at' => $t('09:50'), 'state' => 'not_measured', 'reason' => 'باران'],
+        ]]],
+    ['id' => 'tv', 'kind' => Field::KIND_THERMAL, 'tracking_code' => 'TV-1', 'plate' => null, 'latitude' => null, 'longitude' => null,
+     'position_at' => null, 'created_at' => $t('09:58'), 'payload' => ['v' => 2, 'crew' => $crewAB], 'frames' => [
+        ['captured_at' => $t('10:05'), 'latitude' => 33.639, 'longitude' => 46.421, 'asset_type' => Field::ASSET_POLE, 'plate' => '7781'],
+        ['captured_at' => $t('10:00'), 'latitude' => 33.639, 'longitude' => 46.421, 'asset_type' => Field::ASSET_POLE, 'plate' => '7781'],
+     ]],
+    ['id' => 'rz', 'kind' => Field::KIND_CRYPTO, 'tracking_code' => 'RZ-1', 'plate' => '', 'latitude' => 33.30, 'longitude' => 46.80,
+     'position_at' => $t('16:30'), 'created_at' => $t('16:20'),
+     'payload' => ['v' => 2, 'crew' => ['lead' => $crewAB['lead'], 'lineman' => $crewAB['lineman'], 'crypto' => ['id' => 'm3', 'name' => 'مجری']]]],
+];
+$work = CrewDays::build($items, $calendar, $geo, $t('00:00'), $t('23:59'));
+$byKey = array_column($work, null, 'key');
+$lead = $byKey['id:m1']['total'] ?? [];
+equals('مسئول اکیپ: دو بازدید (تابلو و رمزارز)', 2, $lead['visits'] ?? null);
+equals('مسئول اکیپ: شش بازرسی', 6, $lead['inspections'] ?? null);
+equals('تفکیک بازرسی‌ها', ['panel' => 2, 'pole' => 2, 'thermal' => 1, 'crypto' => 1, 'illegal' => 0], $lead['types'] ?? null);
+equals('مشترکان نامتعارف', 2, $lead['subscribers'] ?? null);
+equals('بازه‌های روز', ['midnight' => 0, 'morning' => 5, 'noon' => 0, 'afternoon' => 1, 'night' => 0], $lead['buckets'] ?? null);
+equals('اضافه‌کار ۹ تا ۱۶:۳۰ یکشنبه', 2.0, $lead['overtime'] ?? null);
+equals('یک بازرسی بیرون از شهر', 1, $lead['outside'] ?? null);
+equals('شروع کار ساعت ۹', 540, $lead['avg_start'] ?? null);
+check('مسافت پیموده‌شده حساب شده', ($lead['km'] ?? 0) > 30);
+equals('سیم‌بان بی‌شناسه با نامش شمرده می‌شود', 6, $byKey['name:علی']['total']['inspections'] ?? null);
+equals('مجری رمزارز فقط کار خودش را دارد', [1, 1], [$byKey['id:m3']['total']['visits'] ?? null, $byKey['id:m3']['total']['inspections'] ?? null]);
+$visit = $byKey['id:m1']['days'][0]['visit_list'][0] ?? [];
+equals('بازدید تابلو با ترموویژن تیرهایش یکی است', [5, 'P-100'], [$visit['inspections'] ?? null, $visit['label'] ?? null]);
+equals('همه کار در یک روز', '1405-07-26', $byKey['id:m1']['days'][0]['day'] ?? null);
+equals('ساعت به رقم فارسی', '۰۹:۰۵', CrewDays::clock(545));
+equals('پلاک یکسان‌شده', 'P100', CrewWork::key('p-۱۰۰'));
 
 // ---------------------------------------------------------------------------
 echo "\n";
