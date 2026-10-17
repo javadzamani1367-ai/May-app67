@@ -19,6 +19,7 @@ namespace CryptoInspection.Archive.ViewModels
             MediaRoot = settings.MediaRoot;
             ExportRoot = settings.ExportRoot;
             DatabasePassword = settings.DatabasePassword;
+            Areas = settings.Areas;
             SaveCommand = new RelayCommand(Save);
         }
 
@@ -32,6 +33,9 @@ namespace CryptoInspection.Archive.ViewModels
 
         public string DatabasePassword { get; set; }
 
+        /// <summary>The area codes this archive keeps, comma-separated; empty keeps every area.</summary>
+        public string Areas { get; set; }
+
         public string Message
         {
             get { return _message; }
@@ -44,6 +48,7 @@ namespace CryptoInspection.Archive.ViewModels
             _settings.MediaRoot = MediaRoot;
             _settings.ExportRoot = ExportRoot;
             _settings.DatabasePassword = DatabasePassword;
+            _settings.Areas = PersianNumbers.ToLatin(Areas ?? string.Empty).Trim();
             _settings.Save();
             Message = Strings.Get("msg_saved");
         }

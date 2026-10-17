@@ -18,6 +18,11 @@ namespace CryptoInspection.Archive.Data
         private const string KeyMedia = "media_root";
         private const string KeyExport = "export_root";
         private const string KeyPassword = "database_password";
+        private const string KeyAreas = "areas";
+        private const string KeyServer = "server_address";
+        private const string KeyServerUser = "server_user";
+        private const string KeyServerToken = "server_token";
+        private const string KeyServerPulledAt = "server_pulled_at";
 
         public string DatabasePath { get; set; }
 
@@ -26,6 +31,48 @@ namespace CryptoInspection.Archive.Data
         public string ExportRoot { get; set; }
 
         public string DatabasePassword { get; set; }
+
+        /// <summary>
+        /// The official area codes this archive keeps ("401,402"); empty for the
+        /// whole province. A case of another area is refused on import, so each
+        /// area's archive holds that area's cases only.
+        /// </summary>
+        public string Areas { get; set; }
+
+        /// <summary>The central server, e.g. https://example.ir/api/ — optional.</summary>
+        public string ServerAddress { get; set; }
+
+        /// <summary>The manager's or the area executor's code on the server.</summary>
+        public string ServerUser { get; set; }
+
+        /// <summary>The server session, kept with DPAPI like the database passphrase.</summary>
+        public string ServerToken { get; set; }
+
+        /// <summary>The newest server change already here, so a pull fetches only what is new.</summary>
+        public long ServerPulledAt { get; set; }
+
+        /// <summary>The area codes, parsed; empty means every area.</summary>
+        public List<string> AreaList()
+        {
+            List<string> list = new List<string>();
+            foreach (string part in (Areas ?? string.Empty).Split(',', ' ', '،'))
+            {
+                string code = Util.PersianNumbers.ToLatin(part.Trim());
+                if (code.Length == 3 && !list.Contains(code))
+                {
+                    list.Add(code);
+                }
+            }
+
+            return list;
+        }
+
+        /// <summary>Whether a case of this area belongs in this archive.</summary>
+        public bool Keeps(string areaCode)
+        {
+            List<string> list = AreaList();
+            return list.Count == 0 || list.Contains((areaCode ?? string.Empty).Trim());
+        }
 
         public static string ProfileDirectory
         {
@@ -83,6 +130,22 @@ namespace CryptoInspection.Archive.Data
                     case KeyPassword:
                         settings.DatabasePassword = Unprotect(value);
                         break;
+                    case KeyAreas:
+                        settings.Areas = value;
+                        break;
+                    case KeyServer:
+                        settings.ServerAddress = value;
+                        break;
+                    case KeyServerUser:
+                        settings.ServerUser = value;
+                        break;
+                    case KeyServerToken:
+                        settings.ServerToken = Unprotect(value);
+                        break;
+                    case KeyServerPulledAt:
+                        long pulled;
+                        settings.ServerPulledAt = long.TryParse(value, out pulled) ? pulled : 0;
+                        break;
                 }
             }
 
@@ -102,7 +165,12 @@ namespace CryptoInspection.Archive.Data
                 KeyDatabase + "=" + DatabasePath,
                 KeyMedia + "=" + MediaRoot,
                 KeyExport + "=" + ExportRoot,
-                KeyPassword + "=" + Protect(DatabasePassword)
+                KeyPassword + "=" + Protect(DatabasePassword),
+                KeyAreas + "=" + (Areas ?? string.Empty),
+                KeyServer + "=" + (ServerAddress ?? string.Empty),
+                KeyServerUser + "=" + (ServerUser ?? string.Empty),
+                KeyServerToken + "=" + Protect(ServerToken),
+                KeyServerPulledAt + "=" + ServerPulledAt
             };
             File.WriteAllLines(Path.Combine(directory, FileName), lines, Encoding.UTF8);
         }

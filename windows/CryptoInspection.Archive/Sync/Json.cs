@@ -31,6 +31,19 @@ namespace CryptoInspection.Archive.Sync
             return new JsonObject(values);
         }
 
+        /// <summary>A nested object as it came off the wire, or null.</summary>
+        public Dictionary<string, object> Raw(string key)
+        {
+            object value;
+            return _values.TryGetValue(key, out value) ? value as Dictionary<string, object> : null;
+        }
+
+        /// <summary>The underlying values, for writing an object back out unchanged.</summary>
+        public Dictionary<string, object> Values
+        {
+            get { return _values; }
+        }
+
         public bool Has(string key)
         {
             return _values.ContainsKey(key) && _values[key] != null;

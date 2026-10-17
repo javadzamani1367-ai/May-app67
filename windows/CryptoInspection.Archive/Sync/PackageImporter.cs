@@ -19,11 +19,13 @@ namespace CryptoInspection.Archive.Sync
 
         private readonly ReportRepository _repository;
         private readonly MediaStore _media;
+        private readonly ArchiveSettings _settings;
 
-        public PackageImporter(ReportRepository repository, MediaStore media)
+        public PackageImporter(ReportRepository repository, MediaStore media, ArchiveSettings settings)
         {
             _repository = repository;
             _media = media;
+            _settings = settings;
         }
 
         public int Import(string packagePath, string password, Action<string> log)
@@ -84,11 +86,18 @@ namespace CryptoInspection.Archive.Sync
 
                 List<ReportDetail> details = new List<ReportDetail>();
                 long highestUpdatedAt = 0;
+                int otherArea = 0;
                 foreach (JsonObject payload in manifest.Array("reports"))
                 {
                     ReportDetail detail = ReportMapper.ToDetail(payload);
                     if (detail.Report == null || string.IsNullOrEmpty(detail.Report.Id))
                     {
+                        continue;
+                    }
+
+                    if (!_settings.Keeps(detail.Report.AreaCode))
+                    {
+                        otherArea++;
                         continue;
                     }
 
@@ -110,6 +119,10 @@ namespace CryptoInspection.Archive.Sync
 
                 log(Strings.Format("msg_media_saved", PersianNumbers.ToPersian(files)));
                 log(Strings.Format("msg_package_imported", PersianNumbers.ToPersian(details.Count)));
+                if (otherArea > 0)
+                {
+                    log(Strings.Format("msg_other_area", PersianNumbers.ToPersian(otherArea)));
+                }
                 return details.Count;
             }
         }

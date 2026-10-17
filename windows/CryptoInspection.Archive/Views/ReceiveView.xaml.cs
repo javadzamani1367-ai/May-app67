@@ -11,6 +11,16 @@ namespace CryptoInspection.Archive.Views
             InitializeComponent();
         }
 
+        /// <summary>A PasswordBox does not bind; the typed password is handed over as it changes.</summary>
+        private void OnServerPassword(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ReceiveViewModel model = DataContext as ReceiveViewModel;
+            if (model != null)
+            {
+                model.ServerPassword = ServerPasswordBox.Password;
+            }
+        }
+
         /// <summary>File picking is view work; the view model only sees the path.</summary>
         private void OnBrowse(object sender, System.Windows.RoutedEventArgs e)
         {

@@ -17,6 +17,8 @@ namespace CryptoInspection.Archive.ViewModels
     {
         private readonly ImportService _import;
         private readonly PackageImporter _packages;
+        private readonly PackageExporter _exporter;
+        private readonly ArchiveSettings _settings;
         private readonly Action _onImported;
 
         private string _address = "http://127.0.0.1:8765";
@@ -24,15 +26,115 @@ namespace CryptoInspection.Archive.ViewModels
         private string _packagePath = string.Empty;
         private string _packagePassword = string.Empty;
         private bool _busy;
+        private string _serverAddress;
+        private string _serverUser;
+        private string _exportArea = string.Empty;
+        private string _exportPassword = string.Empty;
 
-        public ReceiveViewModel(ImportService import, PackageImporter packages, Action onImported)
+        public ReceiveViewModel(ImportService import, PackageImporter packages, PackageExporter exporter,
+                                ArchiveSettings settings, Action onImported)
         {
             _import = import;
             _packages = packages;
+            _exporter = exporter;
+            _settings = settings;
             _onImported = onImported;
+            _serverAddress = settings.ServerAddress ?? string.Empty;
+            _serverUser = settings.ServerUser ?? string.Empty;
             Log = new ObservableCollection<string>();
             PullCommand = new RelayCommand(Pull, () => !Busy);
             ImportPackageCommand = new RelayCommand(ImportPackage, () => !Busy);
+            ServerPullCommand = new RelayCommand(ServerPull, () => !Busy);
+            ExportPackageCommand = new RelayCommand(ExportPackage, () => !Busy);
+        }
+
+        public RelayCommand ServerPullCommand { get; private set; }
+
+        public RelayCommand ExportPackageCommand { get; private set; }
+
+        public string ServerAddress
+        {
+            get { return _serverAddress; }
+            set { Set(ref _serverAddress, value); }
+        }
+
+        public string ServerUser
+        {
+            get { return _serverUser; }
+            set { Set(ref _serverUser, value); }
+        }
+
+        /// <summary>Set from the view's password box; never stored — only the session token is.</summary>
+        public string ServerPassword { get; set; }
+
+        /// <summary>The area whose cases go into the package; empty for every case here.</summary>
+        public string ExportArea
+        {
+            get { return _exportArea; }
+            set { Set(ref _exportArea, value); }
+        }
+
+        public string ExportPassword
+        {
+            get { return _exportPassword; }
+            set { Set(ref _exportPassword, value); }
+        }
+
+        /// <summary>
+        /// Signs in when a password was typed (the token is kept for next time), then
+        /// pulls what changed on the server for this account and this archive's areas.
+        /// </summary>
+        private void ServerPull()
+        {
+            string address = ServerAddress.Trim();
+            string user = PersianNumbers.ToLatin(ServerUser).Trim();
+            string password = ServerPassword ?? string.Empty;
+            RunInBackground(() =>
+            {
+                if (password.Length > 0 || string.IsNullOrEmpty(_settings.ServerToken) || _settings.ServerUser != user
+                    || _settings.ServerAddress != address)
+                {
+                    Append(Strings.Get("msg_server_login"));
+                    _settings.ServerToken = new ServerClient(address, null).Login(user, password);
+                    _settings.ServerAddress = address;
+                    _settings.ServerUser = user;
+                    _settings.ServerPulledAt = 0;
+                    _settings.Save();
+                }
+
+                try
+                {
+                    _import.PullFromServer(new ServerClient(address, _settings.ServerToken), Append);
+                }
+                catch (ServerRefusal)
+                {
+                    // An expired session: the next pull asks for the password again.
+                    _settings.ServerToken = string.Empty;
+                    _settings.Save();
+                    throw;
+                }
+            });
+        }
+
+        private void ExportPackage()
+        {
+            string area = ExportArea;
+            string password = ExportPassword;
+            if (password.Trim().Length < 6)
+            {
+                Append(Strings.Get("msg_package_password_short"));
+                return;
+            }
+
+            if (!System.IO.Directory.Exists(_settings.ExportRoot))
+            {
+                System.IO.Directory.CreateDirectory(_settings.ExportRoot);
+            }
+
+            string name = "package-" + (string.IsNullOrWhiteSpace(area) ? "all" : PersianNumbers.ToLatin(area).Trim())
+                + "-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".cvz";
+            string path = System.IO.Path.Combine(_settings.ExportRoot, name);
+            RunInBackground(() => _exporter.Export(area, password, path, Append));
         }
 
         public ObservableCollection<string> Log { get; private set; }

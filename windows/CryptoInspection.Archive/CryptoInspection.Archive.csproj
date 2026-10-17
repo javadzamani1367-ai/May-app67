@@ -134,10 +134,14 @@
     <Compile Include="Sync\ImportService.cs" />
     <Compile Include="Sync\PackageImporter.cs" />
     <Compile Include="Sync\PackageCrypto.cs" />
+    <Compile Include="Sync\PackageExporter.cs" />
+    <Compile Include="Sync\ReportWriter.cs" />
+    <Compile Include="Sync\ServerClient.cs" />
     <Compile Include="Export\PdfReportBuilder.cs" />
     <Compile Include="Export\WordReportBuilder.cs" />
     <Compile Include="Export\ExcelExporter.cs" />
     <Compile Include="Export\ReportFields.cs" />
+    <Compile Include="Export\ShareBundle.cs" />
     <Compile Include="Util\PersianDate.cs" />
     <Compile Include="Util\PersianNumbers.cs" />
     <Compile Include="Util\Labels.cs" />

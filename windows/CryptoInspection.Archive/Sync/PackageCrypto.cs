@@ -53,6 +53,38 @@ namespace CryptoInspection.Archive.Sync
             File.WriteAllBytes(targetZipPath, plain);
         }
 
+        /// <summary>
+        /// The same format the other way round, so one area's archive can hand cases to
+        /// another's on a memory card: a fresh salt and nonce for every package.
+        /// </summary>
+        public static void Encrypt(string zipPath, string password, string packagePath)
+        {
+            byte[] salt = new byte[SaltSize];
+            byte[] iv = new byte[IvSize];
+            using (RandomNumberGenerator random = RandomNumberGenerator.Create())
+            {
+                random.GetBytes(salt);
+                random.GetBytes(iv);
+            }
+
+            byte[] key = DeriveKey(password, salt);
+            byte[] plain = File.ReadAllBytes(zipPath);
+            GcmBlockCipher cipher = new GcmBlockCipher(new AesEngine());
+            cipher.Init(true, new AeadParameters(new KeyParameter(key), TagBits, iv));
+            byte[] output = new byte[cipher.GetOutputSize(plain.Length)];
+            int written = cipher.ProcessBytes(plain, 0, plain.Length, output, 0);
+            written += cipher.DoFinal(output, written);
+
+            using (FileStream file = File.Create(packagePath))
+            {
+                byte[] magic = Encoding.ASCII.GetBytes(Magic);
+                file.Write(magic, 0, magic.Length);
+                file.Write(salt, 0, salt.Length);
+                file.Write(iv, 0, iv.Length);
+                file.Write(output, 0, written);
+            }
+        }
+
         private static byte[] DeriveKey(string password, byte[] salt)
         {
             using (Rfc2898DeriveBytes derive =

@@ -96,6 +96,18 @@
     <sys:String x:Key="receive_package_password">رمز بسته</sys:String>
     <sys:String x:Key="receive_package_import">وارد کردن بسته</sys:String>
     <sys:String x:Key="receive_log">شرح عملیات</sys:String>
+    <sys:String x:Key="receive_server_title">دریافت از سرور مرکزی</sys:String>
+    <sys:String x:Key="receive_server_address">آدرس سرور (مثلاً https://example.ir/api)</sys:String>
+    <sys:String x:Key="receive_server_user">کد کاربری مدیر یا مجری رمزارز ناحیه</sys:String>
+    <sys:String x:Key="receive_server_password">رمز عبور (فقط بار اول یا پس از پایان نشست)</sys:String>
+    <sys:String x:Key="receive_server_pull">ورود و دریافت از سرور</sys:String>
+    <sys:String x:Key="receive_server_hint">رمز ذخیره نمی‌شود؛ فقط نشست ورود، محافظت‌شده در پروفایل ویندوز. فقط پرونده‌های ناحیه‌های این آرشیو (تنظیمات) نگه داشته می‌شوند.</sys:String>
+    <sys:String x:Key="export_package_title">ساخت بسته آفلاین برای آرشیو دیگر</sys:String>
+    <sys:String x:Key="export_package_area">کد ناحیه (خالی: همه پرونده‌ها)</sys:String>
+    <sys:String x:Key="export_package_build">ساخت بسته .cvz</sys:String>
+    <sys:String x:Key="export_package_hint">بسته در مسیر خروجی‌ها ساخته می‌شود و آرشیو ناحیه مقصد آن را با همین رمز وارد می‌کند.</sys:String>
+    <sys:String x:Key="export_bundle">بسته ارسال (PDF، Word و مدارک)</sys:String>
+    <sys:String x:Key="export_bundle_hint">پوشه‌ای با فرم در هر دو قالب و همه مدارک و فیلم‌های پرونده، برای ارسال در شبکه‌های اجتماعی یا حافظه جانبی</sys:String>
 
     <sys:String x:Key="msg_connecting">در حال اتصال به گوشی…</sys:String>
     <sys:String x:Key="msg_connected">اتصال برقرار شد — دستگاه {0} / کارشناس {1}</sys:String>
@@ -109,6 +121,11 @@
     <sys:String x:Key="msg_package_imported">بسته وارد شد — {0} پرونده</sys:String>
     <sys:String x:Key="msg_wrong_password">رمز بسته نادرست است یا فایل آسیب دیده</sys:String>
     <sys:String x:Key="msg_saved">ذخیره شد</sys:String>
+    <sys:String x:Key="msg_other_area">{0} پرونده از ناحیه‌های دیگر کنار گذاشته شد</sys:String>
+    <sys:String x:Key="msg_server_login">ورود به سرور…</sys:String>
+    <sys:String x:Key="msg_server_connecting">در حال دریافت فهرست تغییرات از سرور…</sys:String>
+    <sys:String x:Key="msg_package_exported">بسته ساخته شد — {0} پرونده در {1}</sys:String>
+    <sys:String x:Key="msg_package_password_short">رمز بسته باید دست‌کم شش نویسه باشد</sys:String>
     <sys:String x:Key="msg_export_done">فایل ساخته شد: {0}</sys:String>
 
     <!-- گزارش‌گیری -->
@@ -137,6 +154,8 @@
     <sys:String x:Key="settings_export_root">مسیر خروجی‌ها</sys:String>
     <sys:String x:Key="settings_password">رمز پایگاه داده</sys:String>
     <sys:String x:Key="settings_password_hint">این رمز برای رمزگشایی SQLCipher استفاده می‌شود و در پروفایل کاربر ویندوز محافظت‌شده ذخیره می‌شود</sys:String>
+    <sys:String x:Key="settings_areas">ناحیه‌های این آرشیو</sys:String>
+    <sys:String x:Key="settings_areas_hint">کدهای ناحیه با ویرگول، مثلاً 401,402 — خالی یعنی همه ناحیه‌ها (آرشیو مرکزی استان)</sys:String>
     <sys:String x:Key="settings_restart_hint">تغییر مسیر یا رمز پس از راه‌اندازی دوباره برنامه اعمال می‌شود</sys:String>
 
     <!-- فرم گزارش -->

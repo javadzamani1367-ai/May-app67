@@ -33,6 +33,8 @@
                     <Button Content="{StaticResource export_excel}" Command="{Binding ExportExcelCommand}" HorizontalAlignment="Stretch" />
                     <Button Content="{StaticResource export_pdf}" Command="{Binding ExportPdfCommand}" HorizontalAlignment="Stretch" />
                     <Button Content="{StaticResource export_word}" Command="{Binding ExportWordCommand}" HorizontalAlignment="Stretch" />
+                    <Button Content="{StaticResource export_bundle}" Command="{Binding ExportBundleCommand}" HorizontalAlignment="Stretch"
+                            ToolTip="{StaticResource export_bundle_hint}" />
                     <Button Content="{StaticResource action_open_folder}" Command="{Binding OpenFolderCommand}" HorizontalAlignment="Stretch" />
                     <TextBlock Text="{Binding Message}" Margin="0,8,0,0" Foreground="{StaticResource PrimaryDarkBrush}" />
                 </StackPanel>

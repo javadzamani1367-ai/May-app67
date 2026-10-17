@@ -17,14 +17,19 @@ namespace CryptoInspection.Archive.ViewModels
 
             Archive = new ArchiveViewModel(queries);
             Receive = new ReceiveViewModel(
-                new ImportService(repository, media),
-                new PackageImporter(repository, media),
+                new ImportService(repository, media, settings),
+                new PackageImporter(repository, media, settings),
+                new PackageExporter(queries, media),
+                settings,
                 OnImported);
+            PdfReportBuilder pdf = new PdfReportBuilder(media);
+            WordReportBuilder word = new WordReportBuilder(media);
             Reports = new ReportsViewModel(
                 queries,
                 new ExcelExporter(queries),
-                new PdfReportBuilder(media),
-                new WordReportBuilder(media),
+                pdf,
+                word,
+                new ShareBundle(pdf, word, media),
                 settings,
                 () => Archive.Selected == null ? null : Archive.Selected.Id);
             Settings = new SettingsViewModel(settings);

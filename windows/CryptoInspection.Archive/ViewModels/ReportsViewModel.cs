@@ -26,6 +26,7 @@ namespace CryptoInspection.Archive.ViewModels
         private readonly ExcelExporter _excel;
         private readonly PdfReportBuilder _pdf;
         private readonly WordReportBuilder _word;
+        private readonly ShareBundle _bundle;
         private readonly ArchiveSettings _settings;
         private readonly Func<string> _selectedReportId;
 
@@ -40,6 +41,7 @@ namespace CryptoInspection.Archive.ViewModels
             ExcelExporter excel,
             PdfReportBuilder pdf,
             WordReportBuilder word,
+            ShareBundle bundle,
             ArchiveSettings settings,
             Func<string> selectedReportId)
         {
@@ -47,6 +49,7 @@ namespace CryptoInspection.Archive.ViewModels
             _excel = excel;
             _pdf = pdf;
             _word = word;
+            _bundle = bundle;
             _settings = settings;
             _selectedReportId = selectedReportId;
 
@@ -63,6 +66,7 @@ namespace CryptoInspection.Archive.ViewModels
             ExportExcelCommand = new RelayCommand(ExportExcel);
             ExportPdfCommand = new RelayCommand(ExportPdf);
             ExportWordCommand = new RelayCommand(ExportWord);
+            ExportBundleCommand = new RelayCommand(ExportBundle);
             ClearFilterCommand = new RelayCommand(ClearFilter);
             OpenFolderCommand = new RelayCommand(OpenExportFolder);
             Refresh();
@@ -77,6 +81,9 @@ namespace CryptoInspection.Archive.ViewModels
         public ObservableCollection<StatRow> CountyStats { get; private set; }
 
         public RelayCommand ExportExcelCommand { get; private set; }
+
+        /// <summary>The form in both formats with its documents, ready for a messenger or a stick.</summary>
+        public RelayCommand ExportBundleCommand { get; private set; }
 
         public RelayCommand ExportPdfCommand { get; private set; }
 
@@ -234,6 +241,19 @@ namespace CryptoInspection.Archive.ViewModels
             string path = NewExportPath(SafeName(detail), ".docx");
             _word.Build(detail, path);
             Message = Strings.Format("msg_export_done", Path.GetFileName(path));
+        }
+
+        private void ExportBundle()
+        {
+            ReportDetail detail = SelectedDetail();
+            if (detail == null)
+            {
+                return;
+            }
+
+            string folder = _bundle.Build(detail, _settings.ExportRoot, SafeName(detail));
+            Message = Strings.Format("msg_export_done", Path.GetFileName(folder));
+            Process.Start("explorer.exe", folder);
         }
 
         private ReportDetail SelectedDetail()
