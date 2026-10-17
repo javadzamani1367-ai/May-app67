@@ -265,6 +265,17 @@ https://دامنه-شما/api/admin/
 | `GET /referrals/file?id=` | اپ کارشناس: عکس گزارش‌دهنده، فقط برای کارشناس همان ارجاع |
 | `POST /referrals/accept` | اپ کارشناس: پرونده‌ای که از ارجاع ساخت (`id`، `report_id`) |
 | `POST /referrals/result` | اپ کارشناس: فرم سبک نتیجه (`outcome`: confirmed، not_found، no_access، other با توضیح) |
+| `POST /cases/intake` | مدیر و مجری: ثبت گزارش روی سرور، با سپردن اختیاری |
+| `POST /cases/executor` · `POST /cases/expert` · `POST /cases/followup` | سپردن به مجری، ارجاع به کارشناس، یادداشت پیگیری |
+| `GET /cases/flow?id=` · `GET /cases/board` · `GET /cases/people?area=` | گردش یک پرونده، میز پیگیری، مجری و کارشناسان یک ناحیه |
+| `GET /cases/assigned` · `GET /cases/mine` | اپ کارشناس: پرونده‌های ارجاع‌شده به او، و وضعیت دیده‌شدن و تأیید ارسال‌هایش |
+| `POST /manage/field/hand` · `POST /manage/field/followup` | سپردن مورد میدانی به مجری و پیگیری آن |
+| `GET /manage/devices` · `GET /manage/devices/history` · `GET /manage/devices/alerts` | بانک دستگاه‌های ماینر؛ هشدار تکراری فقط مدیر |
+| `GET /manage/scores?days=` | امتیازها از ۱۰۰ |
+
+دامنه هر مسیر را `lib/Scope.php` می‌سازد: مدیر همه، مجری رمزارز (۴) ناحیه‌های خودش، مجری برق
+غیرمجاز (۵) فقط گزارش‌های برق غیرمجاز، واحد ناحیه خودش. هر اپ در ورود `app` می‌فرستد و سرور فقط
+نقش همان اپ را می‌پذیرد (expert ← ۰، manager ← ۱ و ۴، illegal ← ۵، windows ← ۱ و ۴).
 
 مسیرهای `field/*` فقط برای نقش میدانی (۳) باز است، و کاربر میدانی به هیچ مسیر
 دیگری جز `auth/*` و `notifications` راه ندارد — مسیرهای قدیمی که بدون نقش نوشته

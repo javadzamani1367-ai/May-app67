@@ -38,6 +38,10 @@ $legal410 = $token('410-legal');
 $expert401 = $token('2001', 'DEV-401');
 $illegal = $token('ill');
 check('همه وارد شدند', $exec401 !== '' && $exec410 !== '' && $legal401 !== '' && $expert401 !== '' && $illegal !== '');
+$asWindows = static fn (string $code) => $probe->json('POST', 'auth/login',
+    ['user_code' => $code, 'password' => 'area-pass-123', 'app' => 'windows'])['body'];
+check('آرشیو ویندوز با حساب مجری وارد می‌شود', ($asWindows('401-exec')['ok'] ?? false) === true);
+equals('آرشیو ویندوز حساب واحد را نمی‌پذیرد', 'wrong_app', $asWindows('401-legal')['error']['code'] ?? null);
 $id = static fn (string $code) => (string) $pdo->query("SELECT id FROM users WHERE user_code = '$code'")->fetchColumn();
 $tick = static function (int $at) use ($config): void {
     exec('INSPECTION_CONFIG=' . escapeshellarg($config) . ' php ' . escapeshellarg(__DIR__ . '/../lib/tick.php') . ' ' . $at, $out);

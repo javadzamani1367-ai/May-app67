@@ -96,7 +96,7 @@ final class AuthController
     private static function wrongApp(string $app, int $role): ?string
     {
         $allowed = ['expert' => [Auth::ROLE_EXPERT], 'manager' => [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR],
-            'illegal' => [Auth::ROLE_ILLEGAL]][$app] ?? null;
+            'illegal' => [Auth::ROLE_ILLEGAL], 'windows' => [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]][$app] ?? null;
         if ($allowed === null || in_array($role, $allowed, true)) {
             return null;
         }
@@ -104,6 +104,7 @@ final class AuthController
         return match ($app) {
             'expert' => 'این حساب «' . $name . '» است، نه کارشناس. با اپ مخصوص همین نقش وارد شوید.',
             'manager' => 'اپ مدیر برای مدیر و مجری رمزارز است؛ این حساب «' . $name . '» است.',
+            'windows' => 'دریافت آرشیو ویندوز از سرور با حساب مدیر یا مجری رمزارز ناحیه است؛ این حساب «' . $name . '» است.',
             default => 'این اپ برای مجری برق غیرمجاز است؛ این حساب «' . $name . '» است.',
         };
     }
