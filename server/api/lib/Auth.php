@@ -15,10 +15,29 @@ final class Auth
     public const ROLE_UNIT = 2;
     /** کاربر اپ بازرسی میدانی. کارهایش را ستون permissions تعیین می‌کند. */
     public const ROLE_FIELD = 3;
+    /** مجری رمزارز: اختیارات مدیر، فقط در ناحیه‌های خودش؛ کاربر نمی‌سازد. */
+    public const ROLE_EXECUTOR = 4;
+    /** مجری برق غیرمجاز: فقط موردهای برق غیرمجاز، با ارجاع به کارشناس و مجری رمزارز. */
+    public const ROLE_ILLEGAL = 5;
 
     /** مجوزهای کاربر میدانی، به صورت بیت: مدیر یکی یا هر دو را می‌دهد. */
     public const PERM_INSPECT = 1;
     public const PERM_REPORT = 2;
+
+    /**
+     * کاربر پشت توکن، اگر نقشش یکی از این‌هاست؛ وگرنه ۴۰۳. مسیرهایی که مدیر و
+     * مجری هر دو دارند از این می‌گذرند و محدوده را Scope تعیین می‌کند.
+     *
+     * @param list<int> $roles
+     */
+    public static function requireAny(Request $request, array $roles): array
+    {
+        $user = self::require($request, null, in_array(self::ROLE_FIELD, $roles, true));
+        if (!in_array((int) $user['role'], $roles, true)) {
+            Response::fail(403, 'forbidden', 'این بخش برای نقش کاربری شما نیست.');
+        }
+        return $user;
+    }
 
     public static function hashToken(string $token): string
     {

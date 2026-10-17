@@ -8,7 +8,7 @@ final class UserController
     {
         Auth::require($request, Auth::ROLE_MANAGER);
         $rows = Db::all(
-            'SELECT id, user_code, full_name, role, unit, county, phone, device_code, active,
+            'SELECT id, user_code, full_name, role, unit, county, areas, phone, device_code, active,
                     permissions, created_at, updated_at, note
              FROM users ORDER BY role, full_name'
         );

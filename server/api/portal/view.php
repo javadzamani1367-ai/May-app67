@@ -7,13 +7,12 @@ $unit = (int) $user['unit'];
 $id = (string) ($_GET['id'] ?? '');
 
 $dispatch = Db::one(
-    'SELECT d.*, r.tracking_code, r.county, r.district, r.address, r.owner_name,
-            r.subscription_number, r.total_watt, r.description, r.actions_taken
-     FROM dispatches d JOIN reports r ON r.id = d.report_id
-     WHERE d.id = ? AND d.unit = ?',
-    [$id, $unit]
+    'SELECT d.*, r.tracking_code, r.temp_code, r.county, r.area_code AS report_area, r.district, r.address, r.owner_name,
+            r.subscription_number, r.subscriber_name, r.total_watt, r.description, r.actions_taken
+     FROM dispatches d JOIN reports r ON r.id = d.report_id WHERE d.id = ?',
+    [$id]
 );
-if ($dispatch === null) {
+if ($dispatch === null || !Scope::unitSees($user, $dispatch)) {
     http_response_code(404);
     portal_header('یافت نشد');
     echo '<div class="card"><p class="error">این ارسال برای واحد شما نیست.</p></div>';
@@ -27,63 +26,21 @@ Db::run(
     [Db::now(), $id]
 );
 
+$stages = UnitStages::of($unit);
 $error = null;
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
-    $body = trim((string) ($_POST['body'] ?? ''));
-    if ($body === '' && empty($_FILES['files']['name'][0])) {
-        $error = 'متن پاسخ یا دست‌کم یک مدرک لازم است.';
+    $stage = is_numeric($_POST['stage'] ?? null) ? (int) $_POST['stage'] : null;
+    $result = UnitResponse::record($dispatch, $user, (string) ($_POST['body'] ?? ''), $stage, UnitResponse::uploaded());
+    if (is_string($result)) {
+        $error = $result;
     } else {
-        $now = Db::now();
-        $responseId = Db::uuid();
-        Db::run(
-            'INSERT INTO dispatch_responses (id, dispatch_id, responder_id, body, created_at)
-             VALUES (?, ?, ?, ?, ?)',
-            [$responseId, $id, $user['id'], $body, $now]
-        );
-
-        // فایل‌های چندتایی در PHP به صورت آرایه‌ای از ستون‌ها می‌آیند، نه
-        // آرایه‌ای از فایل‌ها؛ این حلقه آن را به شکل معمول برمی‌گرداند.
-        $names = $_FILES['files']['name'] ?? [];
-        foreach (array_keys((array) $names) as $index) {
-            $file = [
-                'name' => $_FILES['files']['name'][$index] ?? '',
-                'type' => $_FILES['files']['type'][$index] ?? '',
-                'tmp_name' => $_FILES['files']['tmp_name'][$index] ?? '',
-                'error' => $_FILES['files']['error'][$index] ?? UPLOAD_ERR_NO_FILE,
-                'size' => $_FILES['files']['size'][$index] ?? 0,
-            ];
-            if ((int) $file['error'] !== UPLOAD_ERR_OK) {
-                continue;
-            }
-            $stored = Storage::put($file, 'responses/' . date('Y/m'));
-            Db::run(
-                'INSERT INTO response_files (id, response_id, file_path, file_name, mime_type,
-                                             size_bytes, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [Db::uuid(), $responseId, $stored['path'], (string) $file['name'],
-                 (string) $file['type'], $stored['size'], $now]
-            );
-        }
-
-        Db::run(
-            'UPDATE dispatches SET status = 2, answered_at = COALESCE(answered_at, ?) WHERE id = ?',
-            [$now, $id]
-        );
-        Notifications::toRole(Auth::ROLE_MANAGER, 'response', 'پاسخ واحد ثبت شد',
-            unit_name($unit) . ' برای پرونده ' . ($dispatch['tracking_code'] ?? '') . ' پاسخ ثبت کرد.',
-            (string) $dispatch['report_id']);
-
         header('Location: view.php?id=' . urlencode($id) . '&saved=1');
         exit;
     }
 }
 
-$responses = Db::all(
-    'SELECT r.*, u.full_name AS responder_name FROM dispatch_responses r
-     LEFT JOIN users u ON u.id = r.responder_id
-     WHERE r.dispatch_id = ? ORDER BY r.created_at',
-    [$id]
-);
+$responses = UnitResponse::list($dispatch);
+$current = $dispatch['stage'] === null ? null : (int) $dispatch['stage'];
 $items = json_decode((string) $dispatch['included_items'], true);
 $files = Db::all(
     'SELECT id, file_path, caption AS title, "media" AS kind FROM media WHERE report_id = ?
@@ -93,13 +50,14 @@ $files = Db::all(
 );
 $selected = is_array($items) ? $items : [];
 
-portal_header('پرونده ' . (string) $dispatch['tracking_code']);
+portal_header('پرونده ' . CaseLabels::code($dispatch));
 ?>
 <div class="card">
-  <h2>پرونده <?= fa_digits(e($dispatch['tracking_code'] ?? '—')) ?></h2>
+  <h2>پرونده <?= fa_digits(e(CaseLabels::code($dispatch) ?: '—')) ?></h2>
   <table>
-    <tr><th>شهرستان</th><td><?= e($dispatch['county'] ?? '—') ?></td></tr>
+    <tr><th>شهرستان</th><td><?= e(CaseLabels::countyWithArea($dispatch['county'], $dispatch['report_area'])) ?></td></tr>
     <tr><th>آدرس</th><td><?= e($dispatch['address'] ?? '—') ?></td></tr>
+    <tr><th>مشترک</th><td><?= e($dispatch['subscriber_name'] ?? '—') ?></td></tr>
     <tr><th>مالک یا متصرف</th><td><?= e($dispatch['owner_name'] ?? '—') ?></td></tr>
     <tr><th>شماره اشتراک</th><td><?= fa_digits(e($dispatch['subscription_number'] ?? '—')) ?></td></tr>
     <tr><th>تاریخ ارسال</th><td><?= e(jalali((int) $dispatch['dispatched_at'])) ?></td></tr>
@@ -129,26 +87,39 @@ portal_header('پرونده ' . (string) $dispatch['tracking_code']);
 
 <div class="card">
   <h3>پاسخ و اقدامات</h3>
+  <ol class="stages">
+    <?php foreach ($stages as $i => $name): ?>
+      <li class="<?= $current !== null && $i <= $current ? 'done' : '' ?>"><?= e($name) ?></li>
+    <?php endforeach; ?>
+  </ol>
   <?php if (isset($_GET['saved'])): ?><p class="tag tag-answered">پاسخ شما ثبت شد.</p><?php endif; ?>
   <?php if ($error !== null): ?><p class="error"><?= e($error) ?></p><?php endif; ?>
   <?php foreach ($responses as $response): ?>
     <div style="border-top:1px solid #d8dee9; padding-top:10px; margin-top:10px">
-      <p class="muted"><?= e($response['responder_name'] ?? '') ?> — <?= e(jalali((int) $response['created_at'])) ?></p>
+      <p class="muted"><?= e($response['responder_name'] ?? '') ?> — <?= e(jalali((int) $response['created_at'])) ?>
+        <?php if ($response['stage_name'] !== null): ?> — <span class="tag tag-seen"><?= e($response['stage_name']) ?></span><?php endif; ?></p>
       <p><?= nl2br(e($response['body'] ?? '')) ?></p>
-      <?php foreach (Db::all('SELECT * FROM response_files WHERE response_id = ?', [$response['id']]) as $rf): ?>
+      <?php foreach ($response['files'] as $rf): ?>
         <a href="file.php?id=<?= e((string) $rf['id']) ?>&amp;kind=response"><?= e($rf['file_name']) ?></a><br>
       <?php endforeach; ?>
     </div>
   <?php endforeach; ?>
 
   <form method="post" enctype="multipart/form-data">
+    <label>کار به کدام مرحله رسیده؟
+      <select name="stage" required>
+        <?php foreach ($stages as $i => $name): ?>
+          <option value="<?= $i ?>" <?= $i === min(count($stages) - 1, ($current ?? -1) + 1) ? 'selected' : '' ?>><?= e($name) ?></option>
+        <?php endforeach; ?>
+      </select>
+    </label>
     <label>شرح اقدام انجام‌شده
-      <textarea name="body" rows="5"></textarea>
+      <textarea name="body" rows="5" required></textarea>
     </label>
     <label>مستندات اقدام (تصویر، PDF، ورد — چند فایل قابل انتخاب است)
       <input type="file" name="files[]" multiple>
     </label>
-    <button type="submit">ثبت پاسخ</button>
+    <button type="submit">ثبت اقدام</button>
   </form>
 </div>
 <?php portal_footer();

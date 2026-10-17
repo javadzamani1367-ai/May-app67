@@ -10,9 +10,9 @@ final class CrewController
 {
     public function report(Request $request): void
     {
-        Auth::require($request, Auth::ROLE_MANAGER);
+        $scope = new Scope(Auth::requireAny($request, [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]));
         [$from, $to] = self::range($request);
-        $report = CrewReport::build($from, $to);
+        $report = CrewReport::build($from, $to, $scope->isManager() ? null : $scope->areas);
         $approved = CrewReport::approved(CrewCalendar::day($from), CrewCalendar::day($to));
         $members = array_map(static function (array $m) use ($approved): array {
             $m['approved'] = $approved[$m['key']] ?? null;
@@ -26,7 +26,7 @@ final class CrewController
         }, $report['members']);
         $visits = array_map(static fn (array $v): array => array_intersect_key($v,
             array_flip(['n', 'label', 'first', 'last', 'inspections', 'lat', 'lon', 'place'])), CrewMap::collect($report['members'])['visits']);
-        Response::json(['members' => $members, 'visits' => $visits, 'geo' => $report['geo'], 'from' => $from, 'to' => $to,
+        Response::json(['can_approve' => $scope->isManager(), 'members' => $members, 'visits' => $visits, 'geo' => $report['geo'], 'from' => $from, 'to' => $to,
             'type_names' => CrewWork::TYPE_NAMES,
             'bucket_names' => array_map(static fn (array $b): string => $b[1], CrewCalendar::BUCKETS)]);
     }
@@ -46,9 +46,9 @@ final class CrewController
     /** اکسل (format=xlsx) یا Word (format=docx)؛ با member فقط همان نفر. */
     public function export(Request $request): void
     {
-        Auth::require($request, Auth::ROLE_MANAGER);
+        $scope = new Scope(Auth::requireAny($request, [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]));
         [$from, $to] = self::range($request);
-        $report = CrewReport::build($from, $to);
+        $report = CrewReport::build($from, $to, $scope->isManager() ? null : $scope->areas);
         $member = $request->str('member');
         if ($member !== '') {
             $report['members'] = array_values(array_filter($report['members'], static fn (array $m): bool => $m['key'] === $member));

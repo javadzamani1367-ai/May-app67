@@ -11,12 +11,16 @@ declare(strict_types=1);
  */
 foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSchema', 'Migrations', 'Storage',
           'Notifications', 'Jalali', 'Field', 'FieldSettings', 'Users', 'FieldAdmin', 'FieldLabels', 'Xlsx', 'FieldDuplicates', 'Qr', 'Docx', 'FieldPresenter', 'FieldLine', 'FieldReferrals', 'FieldManage',
-          'CaseLabels', 'CaseReport', 'CaseArchive', 'CaseActions', 'PositionAudit', 'FieldRoster', 'FieldSubscribers', 'CrewCalendar', 'GeoPlaces', 'CrewWork', 'CrewDays', 'CrewReport', 'CrewMap', 'CrewSheets', 'CrewDocx'] as $class) {
+          'CaseLabels', 'CaseReport', 'CaseArchive', 'CaseActions', 'PositionAudit', 'FieldRoster', 'FieldSubscribers', 'CrewCalendar', 'GeoPlaces', 'CrewWork', 'CrewDays', 'CrewReport', 'CrewMap', 'CrewSheets', 'CrewDocx',
+          'Areas', 'Scope', 'UnitStages', 'UnitResponse', 'UserBatch', 'CaseCodes', 'CaseIntake', 'CaseFlow', 'CaseBoard',
+          'FlowClock', 'FieldFlowClock', 'FieldHandOff', 'DeviceRegistry', 'DispatchMerge', 'Scores', 'ScoreBoard', 'ScoreSheets',
+          'FieldCodes'] as $class) {
     require_once dirname(__DIR__) . '/lib/' . $class . '.php';
 }
 require_once dirname(__DIR__) . '/portal/_layout.php';
 
 Migrations::ensure();
+FlowClock::maybeTick();
 
 if (session_status() === PHP_SESSION_NONE) {
     session_name('tavankav_admin');

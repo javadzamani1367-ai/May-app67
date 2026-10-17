@@ -22,20 +22,33 @@ final class SyncController
         'voltage_r', 'voltage_s', 'voltage_t', 'total_watt', 'tariff_type', 'meter_type',
         'seal_external', 'seal_external_serial', 'seal_internal', 'meter_appearance_ok',
         'meter_tampered', 'approval_state', 'approval_comment', 'approval_at',
-        'description', 'actions_taken',
+        'description', 'actions_taken', 'subscriber_name',
     ];
+
+    /**
+     * ستون‌هایی که مقدار خالی گوشی جای مقدار سرور را نمی‌گیرد: ناحیه‌ای که مدیر برای
+     * پرونده قدیمی تعیین کرد، و نام مشترکی که اپ قدیمی هنوز نمی‌فرستد.
+     */
+    private const KEEP_WHEN_EMPTY = ['area_code', 'subscriber_name'];
+
+    /** نقش‌هایی که پرونده بازدید را می‌فرستند یا می‌گیرند. */
+    private const CASE_ROLES = [Auth::ROLE_EXPERT, Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR];
 
     public function manifest(Request $request): void
     {
-        $user = Auth::require($request);
+        $user = Auth::requireAny($request, self::CASE_ROLES);
         $since = $request->int('since', 0) ?? 0;
 
-        // کارشناس فقط پرونده‌های خودش را می‌بیند؛ مدیر همه را.
-        $sql = 'SELECT id, updated_at, tracking_code, status FROM reports WHERE updated_at > ?';
+        // کارشناس فقط پرونده‌های خودش را می‌بیند، مجری ناحیه‌هایش را، مدیر همه را.
+        $sql = 'SELECT id, updated_at, tracking_code, status FROM reports r WHERE updated_at > ?';
         $params = [$since];
         if ((int) $user['role'] === Auth::ROLE_EXPERT) {
             $sql .= ' AND expert_code = ?';
             $params[] = $user['user_code'];
+        } else {
+            [$where, $more] = (new Scope($user))->reportWhere('r');
+            $sql .= " AND $where";
+            $params = array_merge($params, $more);
         }
         $sql .= ' ORDER BY updated_at LIMIT 500';
 
@@ -44,13 +57,14 @@ final class SyncController
 
     public function push(Request $request): void
     {
-        $user = Auth::require($request);
+        $user = Auth::requireAny($request, self::CASE_ROLES);
         $report = $request->arr('report');
         if (!isset($report['id'])) {
             Response::fail(400, 'missing_report', 'پرونده‌ای ارسال نشده است.');
         }
 
-        $existing = Db::one('SELECT updated_at FROM reports WHERE id = ?', [$report['id']]);
+        $existing = Db::one('SELECT updated_at, expert_code, area_code FROM reports WHERE id = ?', [$report['id']]);
+        $this->guardPush($user, $report, $existing);
         if ($existing !== null && (int) $existing['updated_at'] > (int) ($report['updated_at'] ?? 0)) {
             // نسخه سرور تازه‌تر است: نوشتن روی آن یعنی دور ریختن کاری که
             // جای دیگری انجام شده. ولی فهرست فایل‌های نرسیده همراهش می‌رود،
@@ -65,7 +79,9 @@ final class SyncController
         $columns = self::REPORT_COLUMNS;
         $placeholders = implode(', ', array_fill(0, count($columns), '?'));
         $updates = implode(', ', array_map(
-            static fn(string $c): string => Db::col($c) . ' = VALUES(' . Db::col($c) . ')',
+            static fn(string $c): string => in_array($c, self::KEEP_WHEN_EMPTY, true)
+                ? Db::col($c) . ' = COALESCE(NULLIF(VALUES(' . Db::col($c) . "), ''), " . Db::col($c) . ')'
+                : Db::col($c) . ' = VALUES(' . Db::col($c) . ')',
             array_slice($columns, 1)
         ));
         $values = array_map(static fn(string $c) => $report[$c] ?? null, $columns);
@@ -91,9 +107,16 @@ final class SyncController
         $this->replaceChildren('attachments', $report['attachments'] ?? [], (string) $report['id'], [
             'id', 'report_id', 'category', 'title', 'file_path', 'mime_type', 'added_at', 'note',
         ]);
-        $this->mergeDispatches($report['dispatches'] ?? [], (string) $report['id'], $user);
+        // کارشناس دیگر به واحدها و شبکه‌های اجتماعی نمی‌فرستد؛ سطرهای ارسال اپ قدیمی او
+        // نادیده می‌ماند تا واحدی پرونده‌ای را بی‌گذر از مجری و مدیر نگیرد.
+        if ((int) $user['role'] !== Auth::ROLE_EXPERT) {
+            DispatchMerge::merge($report['dispatches'] ?? [], (string) $report['id'], $user);
+        }
         // پرونده‌ای که از ارجاع میدانی ساخته شده، با رسیدن بازدیدش نتیجه ارجاع می‌شود.
         FieldReferrals::onCasePushed($report, $user);
+        $stored = Db::one('SELECT * FROM reports WHERE id = ?', [$report['id']]) ?? $report;
+        CaseFlow::onPushed($stored, $user, $existing === null);
+        DeviceRegistry::onPushed((string) $report['id']);
 
         Db::run(
             'INSERT INTO sync_log (device_code, user_id, last_seen_at, last_updated_at, report_count)
@@ -112,6 +135,28 @@ final class SyncController
             // یک روستا یعنی هیچ‌وقت تمام نمی‌شود.
             'missing_files' => $this->missingFiles((string) $report['id']),
         ]);
+    }
+
+    /**
+     * چه کسی می‌تواند این پرونده را بنویسد: کارشناس فقط پرونده خودش (یا پرونده تازه)،
+     * مجری فقط ناحیه‌اش. پرونده‌ای که به کارشناس دیگری ارجاع شده، از گوشی قبلی رد می‌شود.
+     */
+    private function guardPush(array $user, array $report, ?array $existing): void
+    {
+        $role = (int) $user['role'];
+        if ($role === Auth::ROLE_EXPERT) {
+            $owner = (string) ($existing['expert_code'] ?? '');
+            if ($existing !== null && $owner !== '' && $owner !== (string) $user['user_code']) {
+                Response::fail(403, 'not_yours', 'این پرونده به کارشناس دیگری سپرده شده است.');
+            }
+            return;
+        }
+        if ($role === Auth::ROLE_EXECUTOR) {
+            $area = ($report['area_code'] ?? '') !== '' ? $report['area_code'] : ($existing['area_code'] ?? null);
+            if (!(new Scope($user))->coversArea($area)) {
+                Response::fail(403, 'forbidden', 'این پرونده در ناحیه شما نیست.');
+            }
+        }
     }
 
     /**
@@ -140,13 +185,14 @@ final class SyncController
 
     public function pull(Request $request): void
     {
-        $user = Auth::require($request);
+        $user = Auth::requireAny($request, self::CASE_ROLES);
         $id = $request->str('id');
         $report = Db::one('SELECT * FROM reports WHERE id = ?', [$id]);
         if ($report === null) {
             Response::fail(404, 'not_found', 'پرونده پیدا نشد.');
         }
-        if ((int) $user['role'] === Auth::ROLE_EXPERT && $report['expert_code'] !== $user['user_code']) {
+        $expert = (int) $user['role'] === Auth::ROLE_EXPERT;
+        if (($expert && $report['expert_code'] !== $user['user_code']) || (!$expert && !(new Scope($user))->canSeeReport($report))) {
             Response::fail(403, 'forbidden', 'این پرونده برای شما نیست.');
         }
 
@@ -163,80 +209,6 @@ final class SyncController
         $report['media'] = Db::all('SELECT * FROM media WHERE report_id = ? ORDER BY captured_at', [$id]);
         $report['attachments'] = Db::all('SELECT * FROM attachments WHERE report_id = ? ORDER BY added_at', [$id]);
         Response::json(['report' => $report]);
-    }
-
-    /**
-     * ارسال‌هایی که گوشی به واحدها داشته است.
-     *
-     * تا پیش از این، گوشی این سطرها را همراه پرونده می‌فرستاد و سرور نادیده‌شان
-     * می‌گرفت. نتیجه‌اش دو چیز بود که هیچ‌کدام خطا نمی‌داد: گزارش عملکرد
-     * واحدها برای همیشه صفر بود، و صندوق واحد در پرتال هرگز چیزی دریافت
-     * نمی‌کرد.
-     *
-     * ادغام، نه جایگزینی: وضعیت «دیده‌شده»، زمان پاسخ و متن پاسخ را واحد
-     * مقصد روی همین سرور می‌نویسد و نسخه گوشی از آن‌ها خبر ندارد. جایگزین
-     * کردن یعنی هر بار که کارشناس پرونده را دوباره بفرستد، پاسخ واحد پاک شود.
-     */
-    private function mergeDispatches(array $rows, string $reportId, array $user): void
-    {
-        foreach ($rows as $row) {
-            if (!is_array($row) || empty($row['id']) || !isset($row['unit'])) {
-                continue;
-            }
-            $id = (string) $row['id'];
-            $deadline = isset($row['deadline_at']) ? (int) $row['deadline_at'] : null;
-            $note = isset($row['note']) ? (string) $row['note'] : null;
-
-            $known = Db::one('SELECT report_id FROM dispatches WHERE id = ?', [$id]);
-            if ($known !== null) {
-                // فقط آنچه گوشی مالکش است. سطری که به پرونده دیگری تعلق دارد
-                // دست نمی‌خورد.
-                Db::run(
-                    'UPDATE dispatches SET note = ?, deadline_at = ? WHERE id = ? AND report_id = ?',
-                    [$note, $deadline, $id, $reportId]
-                );
-                continue;
-            }
-
-            $items = $row['included_items'] ?? '[]';
-            $unit = (int) $row['unit'];
-            Db::run(
-                'INSERT INTO dispatches (id, report_id, unit, included_items, note, output_format,
-                                         dispatched_at, sent_by, channel, deadline_at, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                [
-                    $id,
-                    $reportId,
-                    $unit,
-                    is_string($items) ? $items : json_encode($items, JSON_UNESCAPED_UNICODE),
-                    $note,
-                    (int) ($row['output_format'] ?? 0),
-                    (int) ($row['dispatched_at'] ?? Db::now()),
-                    $user['id'],
-                    (int) ($row['channel'] ?? 0),
-                    $deadline,
-                    DispatchController::SENT,
-                ]
-            );
-            Notifications::toUnit(
-                $unit,
-                'dispatch',
-                'مدارک جدید دریافت شد',
-                'پرونده ' . $this->codeOf($reportId) . ' برای واحد شما ارسال شد.',
-                $reportId
-            );
-        }
-    }
-
-    private function codeOf(string $reportId): string
-    {
-        $row = Db::one('SELECT tracking_code, temp_code FROM reports WHERE id = ?', [$reportId]);
-        foreach (['tracking_code', 'temp_code'] as $column) {
-            if (($row[$column] ?? '') !== '') {
-                return (string) $row[$column];
-            }
-        }
-        return $reportId;
     }
 
     /**

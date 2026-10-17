@@ -7,12 +7,27 @@ declare(strict_types=1);
  */
 final class StatsController
 {
+    /** امتیاز ۱۰۰ ناحیه‌ها، مجریان، واحدها و کارشناسان؛ مجری فقط ناحیه‌های خودش. */
+    public function scores(Request $request): void
+    {
+        $scope = new Scope(Auth::requireAny($request, [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]));
+        $to = $request->int('to') ?? Db::now();
+        $from = $request->int('from') ?? $to - 30 * 86_400_000;
+        $board = (new ScoreBoard(min($from, $to), max($from, $to), $scope, Db::now()))->all();
+        if ($request->str('format') === 'xlsx') {
+            Xlsx::sendBook('scores', ScoreSheets::book($board));
+            exit;
+        }
+        Response::json($board + ['from' => $from, 'to' => $to, 'spec' => ScoreSheets::spec()]);
+    }
+
     public function units(Request $request): void
     {
-        Auth::require($request, Auth::ROLE_MANAGER);
+        $scope = new Scope(Auth::requireAny($request, [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]));
         $from = $request->int('from', 0) ?? 0;
         $to = $request->int('to', Db::now()) ?? Db::now();
-        $rows = CaseActions::unitStats($from, $to);
+        $rows = CaseActions::unitStats($from, $to, $scope);
+        [$where, $params] = $scope->reportWhere('r');
 
         Response::json([
             'units' => $rows,
@@ -21,7 +36,8 @@ final class StatsController
             // پرونده‌هایی که هنوز منتظر تأیید مدیر مانده‌اند، چون در گزارش
             // عملکرد همان‌قدر مهم‌اند که کندی یک واحد.
             'pending_approvals' => (int) (Db::one(
-                'SELECT COUNT(*) AS c FROM approvals WHERE decision = 0'
+                "SELECT COUNT(*) AS c FROM approvals a JOIN reports r ON r.id = a.report_id WHERE a.decision = 0 AND $where",
+                $params
             )['c'] ?? 0),
         ]);
     }

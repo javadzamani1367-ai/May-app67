@@ -64,6 +64,14 @@ function portal_header(string $title, bool $signedIn = true, string $subtitle = 
   .tag-seen { background:#fef3c7; color:#6b3108; }
   .tag-answered { background:#dcfce7; color:#124a27; }
   .tag-overdue { background:#fee2e2; color:#6e1717; }
+  .stages { display:flex; flex-wrap:wrap; gap:6px; list-style:none; padding:0; margin:8px 0 14px; counter-reset:st; }
+  .stages li { counter-increment:st; padding:4px 12px; border-radius:999px; background:#e2e8f0; color:var(--muted); font-size:.85em; }
+  .stages li::before { content:counter(st, persian) ". "; }
+  .stages li.done { background:#ccfbf1; color:#134e4a; font-weight:bold; }
+  .score { display:inline-block; min-width:3.2em; text-align:center; padding:2px 10px; border-radius:8px; font-weight:bold; }
+  .score-a { background:#dcfce7; color:#124a27; } .score-b { background:#fef3c7; color:#6b3108; } .score-c { background:#fee2e2; color:#6e1717; }
+  .bar { height:10px; background:#e2e8f0; border-radius:999px; overflow:hidden; min-width:80px; }
+  .bar > span { display:block; height:100%; background:var(--teal); }
   .check { display:flex; align-items:center; gap:8px; margin-top:10px; color:var(--ink); }
   .check input { width:auto; margin:0; }
   .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:0 16px; }

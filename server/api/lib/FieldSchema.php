@@ -43,6 +43,12 @@ final class FieldSchema
            due_at            BIGINT       NULL,
            report_id         CHAR(36)     NULL,
            result            TEXT         NULL,
+           area_code         VARCHAR(8)   NULL,
+           handler_id        CHAR(36)     NULL,   -- مجری رمزارزی که مورد به او سپرده شده
+           handled_at        BIGINT       NULL,
+           handler_action_at BIGINT       NULL,
+           expert_alert_at   BIGINT       NULL,
+           manager_alert_at  BIGINT       NULL,
            UNIQUE KEY uq_field_items_code (tracking_code),
            KEY idx_field_items_kind (kind),
            KEY idx_field_items_status (status),
@@ -52,7 +58,9 @@ final class FieldSchema
            KEY idx_field_items_position (latitude, longitude),
            KEY idx_field_items_plate (plate),
            KEY idx_field_items_assigned (assigned_to),
-           KEY idx_field_items_report (report_id)
+           KEY idx_field_items_report (report_id),
+           KEY idx_field_items_area (area_code),
+           KEY idx_field_items_handler (handler_id)
          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
         "CREATE TABLE IF NOT EXISTS field_files (

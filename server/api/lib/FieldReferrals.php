@@ -169,6 +169,7 @@ final class FieldReferrals
         Field::event((string) $item['id'], $userId, 'result', Field::STATUS_REFERRED, Field::STATUS_RESULT, $note);
         Notifications::toRole(Auth::ROLE_MANAGER, 'field_result', 'نتیجه ارجاع: ' . (string) $item['tracking_code'],
             strtok($note, "\n") ?: '');
+        FieldHandOff::onResult($item, strtok($note, "\n") ?: '');
     }
 
     private static function mine(array $user, string $id): ?array

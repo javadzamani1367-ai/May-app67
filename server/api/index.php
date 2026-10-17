@@ -12,7 +12,10 @@ declare(strict_types=1);
 foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSchema', 'Migrations', 'Storage',
           'Notifications', 'Jalali', 'Field', 'FieldCodes', 'FieldSettings', 'Users', 'FieldLabels',
           'FieldPresenter', 'FieldLine', 'FieldFeedback', 'FieldAdmin', 'FieldReferrals', 'FieldManage',
-          'CaseLabels', 'CaseActions', 'PositionAudit', 'FieldRoster', 'FieldSubscribers', 'CrewCalendar', 'GeoPlaces', 'CrewWork', 'CrewDays', 'CrewReport', 'CrewMap', 'CrewSheets', 'CrewDocx', 'Docx', 'Xlsx'] as $class) {
+          'CaseLabels', 'CaseActions', 'PositionAudit', 'FieldRoster', 'FieldSubscribers', 'CrewCalendar', 'GeoPlaces', 'CrewWork', 'CrewDays', 'CrewReport', 'CrewMap', 'CrewSheets', 'CrewDocx', 'Docx', 'Xlsx',
+          'Areas', 'Scope', 'UnitStages', 'UnitResponse', 'UserBatch', 'CaseCodes', 'CaseIntake', 'CaseFlow', 'CaseBoard',
+          'FlowClock', 'FieldFlowClock', 'FieldHandOff', 'DeviceRegistry', 'DispatchMerge', 'Scores', 'ScoreBoard',
+          'ScoreSheets'] as $class) {
     require_once __DIR__ . '/lib/' . $class . '.php';
 }
 foreach (glob(__DIR__ . '/lib/Controllers/*.php') ?: [] as $controller) {
@@ -30,6 +33,7 @@ $request = new Request();
 
 // پایگاه داده نصب‌شده را، اگر از کد عقب است، پیش از هر کاری به‌روز می‌کند.
 Migrations::ensure();
+FlowClock::maybeTick();
 
 // پیش‌پرواز CORS برای پرتال واحدها روی همان دامنه لازم نیست، ولی کلاینت
 // اندروید ممکن است از دامنه دیگری صدا بزند.
@@ -77,6 +81,22 @@ $routes = [
     'GET /manage/field/item'     => [FieldManageController::class, 'item'],
     'GET /manage/field/file'     => [FieldManageController::class, 'file'],
     'POST /manage/field/status'  => [FieldManageController::class, 'status'],
+    'POST /manage/field/hand'    => [FieldManageController::class, 'hand'],
+    'POST /manage/field/followup' => [FieldManageController::class, 'followUp'],
+    'GET /manage/devices'        => [RegistryController::class, 'search'],
+    'GET /manage/devices/history' => [RegistryController::class, 'history'],
+    'GET /manage/devices/alerts' => [RegistryController::class, 'alerts'],
+    'GET /manage/scores'         => [StatsController::class, 'scores'],
+
+    'POST /cases/intake'         => [CaseFlowController::class, 'intake'],
+    'POST /cases/executor'       => [CaseFlowController::class, 'toExecutor'],
+    'POST /cases/expert'         => [CaseFlowController::class, 'toExpert'],
+    'POST /cases/followup'       => [CaseFlowController::class, 'followUp'],
+    'GET /cases/flow'            => [CaseFlowController::class, 'flow'],
+    'GET /cases/board'           => [CaseFlowController::class, 'board'],
+    'GET /cases/people'          => [CaseFlowController::class, 'people'],
+    'GET /cases/assigned'        => [CaseFlowController::class, 'assigned'],
+    'GET /cases/mine'            => [CaseFlowController::class, 'mine'],
     'GET /manage/crew/report'    => [CrewController::class, 'report'],
     'POST /manage/crew/overtime' => [CrewController::class, 'overtime'],
     'GET /manage/crew/export'    => [CrewController::class, 'export'],

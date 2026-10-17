@@ -22,7 +22,7 @@ $queue = $pending['body']['data']['pending'] ?? [];
 equals('پرونده در صف مدیر است', 1, count($queue));
 equals('با کد رهگیری خودش', 'M-401-050614-482917', $queue[0]['tracking_code'] ?? '');
 
-$notified = (int) $pdo->query("SELECT COUNT(*) FROM notifications WHERE kind = 'approval_pending'")->fetchColumn();
+$notified = (int) $pdo->query("SELECT COUNT(*) FROM notifications WHERE kind = 'approval_pending' AND role = 1")->fetchColumn();
 equals('مدیر اعلان گرفت', 1, $notified);
 
 $expertQueue = $probe->json('GET', 'approvals', [], $expertToken);
@@ -115,3 +115,4 @@ require __DIR__ . '/field_manage.php';
 require __DIR__ . '/crew_work.php';
 require __DIR__ . '/case_archive.php';
 require __DIR__ . '/web_manager.php';
+require __DIR__ . '/regional_flow.php';

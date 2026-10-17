@@ -2,12 +2,15 @@
 declare(strict_types=1);
 
 /** راه‌اندازی مشترک صفحات پرتال: کتابخانه، نشست، و کاربر واردشده. */
-foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSchema', 'Migrations', 'Storage', 'Notifications', 'Jalali'] as $class) {
+foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSchema', 'Migrations', 'Storage', 'Notifications', 'Jalali',
+          'Field', 'FieldSettings', 'CaseLabels', 'Areas', 'Scope', 'UnitStages', 'UnitResponse', 'CrewCalendar', 'CaseIntake',
+          'CaseFlow', 'FlowClock', 'FieldFlowClock'] as $class) {
     require_once dirname(__DIR__) . '/lib/' . $class . '.php';
 }
 require_once __DIR__ . '/_layout.php';
 
 Migrations::ensure();
+FlowClock::maybeTick();
 
 if (session_status() === PHP_SESSION_NONE) {
     session_set_cookie_params([

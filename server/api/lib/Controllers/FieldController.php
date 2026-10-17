@@ -119,6 +119,17 @@ final class FieldController
             )
         );
         Field::event((string) $item['id'], (string) $user['id'], 'registered', null, Field::STATUS_REGISTERED);
+        // ناحیه مورد، ناحیه کاربر میدانی است؛ مجری همان ناحیه آن را می‌بیند.
+        $area = Areas::parse($user['areas'] ?? '')[0] ?? null;
+        if ($area !== null) {
+            Db::run('UPDATE field_items SET area_code = ? WHERE id = ?', [$area, $item['id']]);
+            if ($kind === Field::KIND_ILLEGAL) {
+                Notifications::toRoleIn(Auth::ROLE_ILLEGAL, $area, 'field_new', 'گزارش برق غیرمجاز تازه: ' . $code,
+                    self::text($item['address'] ?? null, 200) ?? '');
+            }
+        } elseif ($kind === Field::KIND_ILLEGAL) {
+            Notifications::toRoleIn(Auth::ROLE_ILLEGAL, null, 'field_new', 'گزارش برق غیرمجاز تازه: ' . $code, '');
+        }
     }
 
     /** @param array<string, mixed> $item */

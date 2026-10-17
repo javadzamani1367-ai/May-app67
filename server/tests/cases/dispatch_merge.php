@@ -36,8 +36,16 @@ $withDispatch['dispatches'] = [[
     'status' => 0,
 ]];
 
-$push = $probe->json('POST', 'sync/report', ['report' => $withDispatch, 'device_code' => 'DEVICE-AAA'], $expertToken);
+// کارشناس دیگر به واحدها نمی‌فرستد: سطر ارسال اپ قدیمی او پذیرفته نمی‌شود.
+$byExpert = $probe->json('POST', 'sync/report', ['report' => $withDispatch, 'device_code' => 'DEVICE-AAA'], $expertToken);
+check('پرونده کارشناس پذیرفته می‌شود', ($byExpert['body']['ok'] ?? false) === true, $byExpert['raw']);
+equals('ارسال کارشناس به واحد نادیده ماند', 0, (int) $pdo->query("SELECT COUNT(*) FROM dispatches WHERE id = '$dispatchId'")->fetchColumn());
+
+// همان ارسال از اپ مدیر می‌رسد.
+$withDispatch['updated_at'] = $serverTime + 1500;
+$push = $probe->json('POST', 'sync/report', ['report' => $withDispatch, 'device_code' => 'DEVICE-MGR'], $managerToken);
 check('پرونده با ارسالش پذیرفته می‌شود', ($push['body']['ok'] ?? false) === true, $push['raw']);
+equals('ارسال ناحیه پرونده را گرفت', '410', (string) $pdo->query("SELECT area_code FROM dispatches WHERE id = '$dispatchId'")->fetchColumn());
 equals('ارسال روی سرور ثبت شد', 1, (int) $pdo->query("SELECT COUNT(*) FROM dispatches WHERE id = '$dispatchId'")->fetchColumn());
 equals('واحد مقصد درست است', 2, (int) $pdo->query("SELECT unit FROM dispatches WHERE id = '$dispatchId'")->fetchColumn());
 equals('آرایه موارد دست‌نخورده رسید', '["' . $mediaId . '"]',
@@ -51,7 +59,7 @@ $pdo->exec("UPDATE dispatches SET status = 2, answered_at = 1758000000000, answe
 
 $withDispatch['updated_at'] = $serverTime + 2000;
 $withDispatch['dispatches'][0]['note'] = 'یادداشت اصلاح‌شده';
-$again = $probe->json('POST', 'sync/report', ['report' => $withDispatch, 'device_code' => 'DEVICE-AAA'], $expertToken);
+$again = $probe->json('POST', 'sync/report', ['report' => $withDispatch, 'device_code' => 'DEVICE-MGR'], $managerToken);
 check('فرستادن دوباره پذیرفته می‌شود', ($again['body']['ok'] ?? false) === true, $again['raw']);
 equals('دوباره فرستادن ارسال را تکرار نمی‌کند', 1,
     (int) $pdo->query("SELECT COUNT(*) FROM dispatches WHERE report_id = '$reportId'")->fetchColumn());

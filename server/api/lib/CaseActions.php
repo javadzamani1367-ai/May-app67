@@ -16,26 +16,28 @@ final class CaseActions
     public const RETURNED = 2;
 
     /** درخواست‌های در انتظار، قدیمی‌ترین اول، با نام کارشناس فرستنده. */
-    public static function pendingApprovals(): array
+    public static function pendingApprovals(?Scope $scope = null): array
     {
+        [$where, $params] = $scope?->reportWhere('r') ?? ['1=1', []];
         return Db::all(
             'SELECT a.id, a.report_id, a.submitted_at, a.comment, r.tracking_code, r.temp_code, r.report_type,
                     r.county, r.area_code, r.address, r.expert_code, u.full_name AS submitted_by_name
              FROM approvals a JOIN reports r ON r.id = a.report_id LEFT JOIN users u ON u.id = a.submitted_by
-             WHERE a.decision = ? ORDER BY a.submitted_at',
-            [self::PENDING]
+             WHERE a.decision = ? AND ' . $where . ' ORDER BY a.submitted_at',
+            array_merge([self::PENDING], $params)
         );
     }
 
     /** آخرین تصمیم‌ها، برای سابقه زیر صف. */
-    public static function recentDecisions(int $limit = 30): array
+    public static function recentDecisions(int $limit = 30, ?Scope $scope = null): array
     {
+        [$where, $params] = $scope?->reportWhere('r') ?? ['1=1', []];
         return Db::all(
             'SELECT a.report_id, a.decision, a.decided_at, a.comment, r.tracking_code, r.temp_code,
                     m.full_name AS decided_by_name
              FROM approvals a JOIN reports r ON r.id = a.report_id LEFT JOIN users m ON m.id = a.decided_by
-             WHERE a.decision <> ? ORDER BY a.decided_at DESC LIMIT ' . max(1, $limit),
-            [self::PENDING]
+             WHERE a.decision <> ? AND ' . $where . ' ORDER BY a.decided_at DESC LIMIT ' . max(1, $limit),
+            array_merge([self::PENDING], $params)
         );
     }
 
@@ -78,6 +80,7 @@ final class CaseActions
         Db::run('UPDATE reports SET approval_state = ?, approval_comment = ?, approval_at = ? WHERE id = ?',
             [$decision === self::APPROVED ? 2 : 3, $comment === '' ? null : $comment, $now, $reportId]);
 
+        CaseFlow::onDecided($reportId, $manager, $decision === self::APPROVED, $comment);
         $report = Db::one('SELECT tracking_code, temp_code, expert_code FROM reports WHERE id = ?', [$reportId]);
         $expert = Db::one('SELECT id FROM users WHERE user_code = ?', [$report['expert_code'] ?? '']);
         if ($expert !== null) {
@@ -96,8 +99,9 @@ final class CaseActions
      * @param list<string> $items
      */
     public static function dispatch(string $reportId, int $unit, array $items, string $note, ?int $deadlineDays,
-                                    int $format, array $manager): ?string
+                                    int $format, array $manager, int $channel = 0): ?string
     {
+        $channel = in_array($channel, [0, 1, 2], true) ? $channel : 0;
         if (!isset(UNIT_NAMES[$unit])) {
             return 'واحد مقصد را انتخاب کنید.';
         }
@@ -107,8 +111,8 @@ final class CaseActions
         if (mb_strlen(trim($note)) > 2000) {
             return 'توضیح بیش از حد بلند است.';
         }
-        $report = Db::one('SELECT id, tracking_code, temp_code FROM reports WHERE id = ?', [$reportId]);
-        if ($report === null) {
+        $report = Db::one('SELECT id, tracking_code, temp_code, area_code FROM reports WHERE id = ?', [$reportId]);
+        if ($report === null || !(new Scope($manager))->canSeeReport($report)) {
             return 'پرونده پیدا نشد.';
         }
         // فقط مدارک همین پرونده؛ شناسه‌ای که مال پرونده دیگری است دور ریخته می‌شود.
@@ -118,13 +122,16 @@ final class CaseActions
         $now = Db::now();
         Db::run(
             'INSERT INTO dispatches (id, report_id, unit, included_items, note, output_format, dispatched_at, sent_by,
-                                     channel, deadline_at, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 0)',
+                                     channel, deadline_at, status, area_code)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)',
             [Db::uuid(), $reportId, $unit, json_encode($items), trim($note), $format === 1 ? 1 : 0, $now, $manager['id'],
-             $deadlineDays === null ? null : $now + $deadlineDays * 86_400_000]
+             $channel, $deadlineDays === null ? null : $now + $deadlineDays * 86_400_000, Areas::code($report['area_code'])]
         );
-        Notifications::toUnit($unit, 'dispatch', 'مدارک جدید دریافت شد',
-            'پرونده ' . CaseLabels::code($report) . ' برای واحد شما ارسال شد.', $reportId);
+        CaseFlow::onDispatched($reportId, $manager, $unit);
+        if ($channel === 0) {
+            Notifications::toUnit($unit, 'dispatch', 'مدارک جدید دریافت شد',
+                'پرونده ' . CaseLabels::code($report) . ' برای واحد شما ارسال شد.', $reportId, $report['area_code']);
+        }
         return null;
     }
 
@@ -132,15 +139,16 @@ final class CaseActions
      * عملکرد هر واحد در یک بازه (زمان ارسال): رسیده، دیده‌شده، پاسخ‌داده، مهلت گذشته،
      * پاسخ به‌موقع و میانگین زمان پاسخ به ساعت. همان که اپ مدیر از /stats/units می‌گیرد.
      */
-    public static function unitStats(int $from, int $to): array
+    public static function unitStats(int $from, int $to, ?Scope $scope = null): array
     {
+        [$where, $params] = self::dispatchWhere($scope);
         $rows = Db::all(
             'SELECT unit, COUNT(*) AS sent, SUM(status >= 1) AS seen, SUM(status = 2) AS answered,
                     SUM(deadline_at IS NOT NULL AND status <> 2 AND deadline_at < ?) AS overdue,
                     SUM(deadline_at IS NOT NULL AND status = 2 AND answered_at <= deadline_at) AS on_time,
                     AVG(CASE WHEN answered_at IS NOT NULL THEN answered_at - dispatched_at END) AS avg_answer_millis
-             FROM dispatches WHERE dispatched_at BETWEEN ? AND ? GROUP BY unit ORDER BY unit',
-            [Db::now(), $from, $to]
+             FROM dispatches d WHERE dispatched_at BETWEEN ? AND ? AND ' . $where . ' GROUP BY unit ORDER BY unit',
+            array_merge([Db::now(), $from, $to], $params)
         );
         foreach ($rows as &$row) {
             $row['answer_rate'] = round(((int) $row['answered'] / max(1, (int) $row['sent'])) * 100, 1);
@@ -152,14 +160,27 @@ final class CaseActions
     }
 
     /** ارسال‌هایی که مهلتشان گذشته و هنوز پاسخ ندارند، قدیمی‌ترین مهلت اول. */
-    public static function overdueDispatches(int $limit = 50): array
+    public static function overdueDispatches(int $limit = 50, ?Scope $scope = null): array
     {
+        [$where, $params] = self::dispatchWhere($scope);
         return Db::all(
-            'SELECT d.id, d.report_id, d.unit, d.dispatched_at, d.deadline_at, d.status, r.tracking_code, r.temp_code
+            'SELECT d.id, d.report_id, d.unit, d.area_code, d.dispatched_at, d.deadline_at, d.status, r.tracking_code, r.temp_code
              FROM dispatches d JOIN reports r ON r.id = d.report_id
-             WHERE d.deadline_at IS NOT NULL AND d.status <> 2 AND d.deadline_at < ?
+             WHERE d.deadline_at IS NOT NULL AND d.status <> 2 AND d.deadline_at < ? AND ' . $where . '
              ORDER BY d.deadline_at LIMIT ' . max(1, $limit),
-            [Db::now()]
+            array_merge([Db::now()], $params)
         );
+    }
+
+    /** ارسال‌های محدوده کاربر: مدیر همه، مجری فقط ناحیه‌هایش. @return array{0:string,1:list<mixed>} */
+    private static function dispatchWhere(?Scope $scope): array
+    {
+        if ($scope === null || $scope->isManager()) {
+            return ['1=1', []];
+        }
+        if (!$scope->isExecutor() || $scope->areas === []) {
+            return ['1=0', []];
+        }
+        return ['d.area_code IN (' . implode(', ', array_fill(0, count($scope->areas), '?')) . ')', $scope->areas];
     }
 }

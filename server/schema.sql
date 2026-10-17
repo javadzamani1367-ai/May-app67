@@ -16,9 +16,10 @@ CREATE TABLE IF NOT EXISTS users (
   id            CHAR(36)     NOT NULL PRIMARY KEY,
   user_code     VARCHAR(64)  NOT NULL,
   full_name     VARCHAR(191) NOT NULL,
-  role          TINYINT      NOT NULL DEFAULT 0,   -- ۰ کارشناس / ۱ مدیر / ۲ واحد / ۳ میدانی
+  role          TINYINT      NOT NULL DEFAULT 0,   -- ۰ کارشناس / ۱ مدیر / ۲ واحد / ۳ میدانی / ۴ مجری رمزارز / ۵ مجری غیرمجاز
   unit          TINYINT      NULL,                 -- برای نقش واحد: ۰ فروش … ۳ برق شهرستان
   county        VARCHAR(100) NULL,
+  areas         VARCHAR(255) NULL,                 -- ناحیه‌های کاربر «401,402»؛ تهی برای واحد یعنی همه استان
   phone         VARCHAR(32)  NULL,
   device_code   VARCHAR(64)  NULL,
   password_hash VARCHAR(255) NULL,
@@ -91,6 +92,7 @@ CREATE TABLE IF NOT EXISTS reports (
   owner_national_id   VARCHAR(20)  NULL,
   owner_phone         VARCHAR(32)  NULL,
   owner_relation      VARCHAR(100) NULL,
+  subscriber_name     VARCHAR(191) NULL,
   meter_amperage      DOUBLE       NULL,
   connection_type     VARCHAR(100) NULL,
   seal_status         VARCHAR(100) NULL,
@@ -121,7 +123,8 @@ CREATE TABLE IF NOT EXISTS reports (
   KEY idx_reports_status (status),
   KEY idx_reports_updated (updated_at),
   KEY idx_reports_county (county),
-  KEY idx_reports_expert (expert_code)
+  KEY idx_reports_expert (expert_code),
+  KEY idx_reports_area (area_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS devices (
@@ -137,7 +140,9 @@ CREATE TABLE IF NOT EXISTS devices (
   power_watt    DOUBLE       NULL,
   entry_method  INT          NOT NULL,
   note          TEXT         NULL,
+  serial_key    VARCHAR(191) NULL,   -- سریال یکسان‌شده، برای بانک دستگاه‌ها؛ فقط سرور
   KEY idx_devices_report (report_id),
+  KEY idx_devices_serial (serial_key),
   CONSTRAINT fk_devices_report FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -189,6 +194,8 @@ CREATE TABLE IF NOT EXISTS approvals (
   decided_at    BIGINT   NULL,
   decision      TINYINT  NOT NULL DEFAULT 0,  -- ۰ در انتظار / ۱ تأیید / ۲ برگشت برای اصلاح
   comment       TEXT     NULL,
+  seen_at       BIGINT   NULL,       -- اولین بار که مجری یا مدیر پرونده را باز کرد
+  seen_by       CHAR(36) NULL,
   KEY idx_approvals_report (report_id),
   KEY idx_approvals_decision (decision),
   CONSTRAINT fk_approvals_report FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE
@@ -210,10 +217,14 @@ CREATE TABLE IF NOT EXISTS dispatches (
   seen_at        BIGINT   NULL,
   answered_at    BIGINT   NULL,
   answer         TEXT     NULL,          -- خلاصه پاسخ واحد، برای نمایش در سابقه پرونده
+  area_code      VARCHAR(8) NULL,        -- ناحیه پرونده هنگام ارسال؛ واحد همان ناحیه می‌بیند
+  stage          TINYINT  NULL,          -- آخرین مرحله اقدامی که واحد ثبت کرده
+  stage_at       BIGINT   NULL,
   KEY idx_dispatches_report (report_id),
   KEY idx_dispatches_unit (unit),
   KEY idx_dispatches_status (status),
   KEY idx_dispatches_deadline (deadline_at),
+  KEY idx_dispatches_area (area_code),
   CONSTRAINT fk_dispatches_report FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -223,6 +234,7 @@ CREATE TABLE IF NOT EXISTS dispatch_responses (
   dispatch_id  CHAR(36) NOT NULL,
   responder_id CHAR(36) NULL,
   body         TEXT     NULL,
+  stage        TINYINT  NULL,
   created_at   BIGINT   NOT NULL,
   KEY idx_responses_dispatch (dispatch_id),
   CONSTRAINT fk_responses_dispatch FOREIGN KEY (dispatch_id) REFERENCES dispatches(id) ON DELETE CASCADE
@@ -254,6 +266,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   report_id  CHAR(36) NULL,
   created_at BIGINT   NOT NULL,
   read_at    BIGINT   NULL,
+  area_code  VARCHAR(8) NULL,        -- برای واحد و مجری: فقط همان ناحیه
   KEY idx_notifications_user (user_id),
   KEY idx_notifications_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -304,6 +317,12 @@ CREATE TABLE IF NOT EXISTS field_items (
   due_at            BIGINT       NULL,
   report_id         CHAR(36)     NULL,
   result            TEXT         NULL,
+  area_code         VARCHAR(8)   NULL,
+  handler_id        CHAR(36)     NULL,   -- مجری رمزارزی که مورد به او سپرده شده
+  handled_at        BIGINT       NULL,
+  handler_action_at BIGINT       NULL,
+  expert_alert_at   BIGINT       NULL,
+  manager_alert_at  BIGINT       NULL,
   UNIQUE KEY uq_field_items_code (tracking_code),
   KEY idx_field_items_kind (kind),
   KEY idx_field_items_status (status),
@@ -313,7 +332,9 @@ CREATE TABLE IF NOT EXISTS field_items (
   KEY idx_field_items_position (latitude, longitude),
   KEY idx_field_items_plate (plate),
   KEY idx_field_items_assigned (assigned_to),
-  KEY idx_field_items_report (report_id)
+  KEY idx_field_items_report (report_id),
+  KEY idx_field_items_area (area_code),
+  KEY idx_field_items_handler (handler_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS field_files (
@@ -404,9 +425,65 @@ CREATE TABLE IF NOT EXISTS crew_overtime (
   PRIMARY KEY (member_key, from_day, to_day)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- گردش پرونده، مراحل اقدام واحدها و بانک دستگاه‌ها (گام ۸) ---------------------
+CREATE TABLE IF NOT EXISTS case_flow (
+  report_id          CHAR(36)   NOT NULL PRIMARY KEY,
+  origin             TINYINT    NOT NULL DEFAULT 0,
+  intake_code        VARCHAR(32) NULL,
+  intake_by          CHAR(36)   NULL,
+  intake_at          BIGINT     NULL,
+  intake_note        TEXT       NULL,
+  refer_due_at       BIGINT     NULL,
+  executor_id        CHAR(36)   NULL,
+  executor_at        BIGINT     NULL,
+  auto_referred      TINYINT    NOT NULL DEFAULT 0,
+  expert_id          CHAR(36)   NULL,
+  assigned_by        CHAR(36)   NULL,
+  assigned_at        BIGINT     NULL,
+  due_at             BIGINT     NULL,
+  visited_at         BIGINT     NULL,
+  approved_at        BIGINT     NULL,
+  dispatched_at      BIGINT     NULL,
+  executor_action_at BIGINT     NULL,
+  expert_alert_at    BIGINT     NULL,
+  manager_alert_at   BIGINT     NULL,
+  updated_at         BIGINT     NOT NULL,
+  KEY idx_case_flow_executor (executor_id),
+  KEY idx_case_flow_expert (expert_id),
+  KEY idx_case_flow_due (refer_due_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS case_events (
+  id        BIGINT      NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  report_id CHAR(36)    NOT NULL,
+  at        BIGINT      NOT NULL,
+  user_id   CHAR(36)    NULL,
+  action    VARCHAR(32) NOT NULL,
+  note      TEXT        NULL,
+  KEY idx_case_events_report (report_id, at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS unit_stages (
+  unit     TINYINT      NOT NULL,
+  position TINYINT      NOT NULL,
+  name     VARCHAR(191) NOT NULL,
+  PRIMARY KEY (unit, position)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS device_alerts (
+  id              CHAR(36)     NOT NULL PRIMARY KEY,
+  serial_key      VARCHAR(191) NOT NULL,
+  report_id       CHAR(36)     NOT NULL,
+  other_report_id CHAR(36)     NOT NULL,
+  created_at      BIGINT       NOT NULL,
+  seen_at         BIGINT       NULL,
+  UNIQUE KEY uq_device_alerts (serial_key, report_id, other_report_id),
+  KEY idx_device_alerts_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- آنجا یکی باشد؛ تست run.php همین را می‌سنجد.
 CREATE TABLE IF NOT EXISTS schema_meta (
   id      TINYINT NOT NULL PRIMARY KEY,
   version INT     NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 7);
+INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 8);

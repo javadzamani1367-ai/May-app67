@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/FieldRoster.php';
 require_once __DIR__ . '/CrewCalendar.php';
+require_once __DIR__ . '/FlowSchema.php';
 
 /**
  * به‌روزرسانی خودکار پایگاه داده.
@@ -70,6 +71,13 @@ final class Migrations
             6 => FieldRoster::TABLES,
             // عملکرد اکیپ: تعطیلات قمری که مدیر می‌نویسد، و اضافه‌کار تأییدشده هر نفر.
             7 => CrewCalendar::TABLES,
+            // ناحیه‌ها و مجریان، گردش پرونده، مراحل اقدام واحدها، بانک دستگاه‌ها.
+            8 => array_merge(
+                FlowSchema::TABLES,
+                array_map(static fn (array $c) => static fn () => self::addColumn(...$c), FlowSchema::COLUMNS),
+                array_map(static fn (array $i) => static fn () => self::addIndex(...$i), FlowSchema::INDEXES),
+                [static fn () => FlowSchema::backfill()]
+            ),
         ];
     }
 

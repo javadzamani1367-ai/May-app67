@@ -4,9 +4,9 @@ declare(strict_types=1);
 /**
  * گردش تأیید.
  *
- * کارشناس پرونده را برای بررسی می‌فرستد؛ تا وقتی مدیر تأیید نکرده، ثبت نهایی
- * انجام نمی‌شود. مدیر می‌تواند پرونده را برای اصلاح یا تکمیل برگرداند و
- * کارشناس دوباره بفرستد. همه رفت‌وبرگشت‌ها می‌ماند، نه فقط آخرین وضعیت.
+ * کارشناس پرونده را برای بررسی می‌فرستد؛ مدیر، یا مجری رمزارز همان ناحیه، تأیید
+ * می‌کند یا برای اصلاح برمی‌گرداند. همه رفت‌وبرگشت‌ها می‌ماند، نه فقط آخرین
+ * وضعیت، و قاعده تصمیم یکی است با پنل وب (CaseActions::decide).
  */
 final class ApprovalController
 {
@@ -16,11 +16,14 @@ final class ApprovalController
 
     public function submit(Request $request): void
     {
-        $user = Auth::require($request);
+        $user = Auth::requireAny($request, [Auth::ROLE_EXPERT, Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]);
         $reportId = $request->str('report_id');
-        $report = Db::one('SELECT id, tracking_code, expert_code FROM reports WHERE id = ?', [$reportId]);
+        $report = Db::one('SELECT id, tracking_code, temp_code, expert_code, area_code FROM reports WHERE id = ?', [$reportId]);
         if ($report === null) {
             Response::fail(404, 'not_found', 'پرونده پیدا نشد.');
+        }
+        if ((int) $user['role'] === Auth::ROLE_EXPERT && (string) $report['expert_code'] !== (string) $user['user_code']) {
+            Response::fail(403, 'forbidden', 'این پرونده برای شما نیست.');
         }
 
         Db::run(
@@ -28,85 +31,82 @@ final class ApprovalController
              VALUES (?, ?, ?, ?, ?, ?)',
             [Db::uuid(), $reportId, $user['id'], Db::now(), self::PENDING, $request->str('comment')]
         );
+        Db::run('UPDATE reports SET approval_state = 1 WHERE id = ? AND approval_state <> 2', [$reportId]);
+        CaseFlow::event($reportId, (string) $user['id'], 'submitted', $request->str('comment') ?: null);
 
-        Notifications::toRole(
-            Auth::ROLE_MANAGER,
-            'approval_pending',
-            'پرونده برای بررسی ارسال شد',
-            'پرونده ' . ($report['tracking_code'] ?? $reportId) . ' در انتظار تأیید شماست.',
-            $reportId
-        );
+        $text = 'پرونده ' . CaseLabels::code($report) . ' در انتظار تأیید است.';
+        Notifications::toRole(Auth::ROLE_MANAGER, 'approval_pending', 'پرونده برای بررسی ارسال شد', $text, $reportId);
+        Notifications::toExecutors($report['area_code'], 'approval_pending', 'پرونده برای بررسی ارسال شد', $text, $reportId);
 
         Response::json(['submitted' => true]);
     }
 
     public function decide(Request $request): void
     {
-        $manager = Auth::require($request, Auth::ROLE_MANAGER);
+        $user = Auth::requireAny($request, [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]);
         $reportId = $request->str('report_id');
+        $report = Db::one('SELECT * FROM reports WHERE id = ?', [$reportId]);
+        if ($report === null || !(new Scope($user))->canSeeReport($report)) {
+            Response::fail(404, 'not_found', 'پرونده پیدا نشد یا در محدوده شما نیست.');
+        }
         $decision = $request->int('decision', self::RETURNED);
-        if (!in_array($decision, [self::APPROVED, self::RETURNED], true)) {
-            Response::fail(400, 'bad_decision', 'تصمیم نامعتبر است.');
+        $error = CaseActions::decide($reportId, (int) $decision, $request->str('comment'), $user);
+        if ($error !== null) {
+            $code = str_contains($error, 'در انتظار نیست') ? 409 : 400;
+            Response::fail($code, $code === 409 ? 'nothing_pending' : 'bad_decision', $error);
         }
-
-        $pending = Db::one(
-            'SELECT * FROM approvals WHERE report_id = ? AND decision = ? ORDER BY submitted_at DESC LIMIT 1',
-            [$reportId, self::PENDING]
-        );
-        if ($pending === null) {
-            Response::fail(409, 'nothing_pending', 'برای این پرونده درخواست تأییدی در انتظار نیست.');
-        }
-
-        Db::run(
-            'UPDATE approvals SET decision = ?, decided_by = ?, decided_at = ?, comment = ? WHERE id = ?',
-            [$decision, $manager['id'], Db::now(), $request->str('comment'), $pending['id']]
-        );
-
-        $report = Db::one('SELECT tracking_code, expert_code FROM reports WHERE id = ?', [$reportId]);
-        $expert = Db::one('SELECT id FROM users WHERE user_code = ?', [$report['expert_code'] ?? '']);
-        if ($expert !== null) {
-            $approved = $decision === self::APPROVED;
-            Notifications::toUser(
-                (string) $expert['id'],
-                $approved ? 'approved' : 'returned',
-                $approved ? 'پرونده تأیید شد' : 'پرونده برای اصلاح برگشت خورد',
-                ($report['tracking_code'] ?? $reportId) . ' — ' . $request->str('comment'),
-                $reportId
-            );
-        }
-
         Response::json(['decision' => $decision]);
     }
 
-    /** وضعیت تأیید پرونده‌ها: در انتظار برای مدیر، سابقه کامل برای یک پرونده. */
+    /**
+     * وضعیت تأیید: سابقه یک پرونده (برای کارشناس خودش یا مدیر و مجری ناحیه)، یا
+     * صف در انتظار برای مدیر و مجری. کارشناس از seen_at می‌فهمد پرونده‌اش دیده شده.
+     */
     public function index(Request $request): void
     {
-        $user = Auth::require($request);
+        $user = Auth::requireAny($request, [Auth::ROLE_EXPERT, Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]);
+        $scope = new Scope($user);
         $reportId = $request->str('report_id');
 
         if ($reportId !== '') {
-            Response::json([
-                'approvals' => Db::all(
-                    'SELECT a.*, u.full_name AS submitted_by_name, m.full_name AS decided_by_name
-                     FROM approvals a
-                     LEFT JOIN users u ON u.id = a.submitted_by
-                     LEFT JOIN users m ON m.id = a.decided_by
-                     WHERE a.report_id = ? ORDER BY a.submitted_at DESC',
-                    [$reportId]
-                ),
-            ]);
+            $report = Db::one('SELECT * FROM reports WHERE id = ?', [$reportId]);
+            $own = $report !== null && (int) $user['role'] === Auth::ROLE_EXPERT
+                && (string) $report['expert_code'] === (string) $user['user_code'];
+            if ($report === null || (!$own && !$scope->canSeeReport($report))) {
+                Response::fail(404, 'not_found', 'پرونده پیدا نشد.');
+            }
+            if ($scope->managesCases()) {
+                CaseFlow::markSeen($reportId, $user);
+            }
+            Response::json(['approvals' => self::history($reportId)]);
         }
 
-        if ((int) $user['role'] !== Auth::ROLE_MANAGER) {
-            Response::fail(403, 'forbidden', 'این فهرست برای مدیر است.');
+        if (!$scope->managesCases()) {
+            Response::fail(403, 'forbidden', 'این فهرست برای مدیر و مجری است.');
         }
+        [$where, $params] = $scope->reportWhere('r');
         Response::json([
             'pending' => Db::all(
-                'SELECT a.*, r.tracking_code, r.county, r.expert_code
+                "SELECT a.*, r.tracking_code, r.temp_code, r.county, r.area_code, r.expert_code
                  FROM approvals a JOIN reports r ON r.id = a.report_id
-                 WHERE a.decision = ? ORDER BY a.submitted_at',
-                [self::PENDING]
+                 WHERE a.decision = ? AND $where ORDER BY a.submitted_at",
+                array_merge([self::PENDING], $params)
             ),
         ]);
+    }
+
+    /** همه رفت‌وبرگشت‌های تأیید یک پرونده، با نقش تصمیم‌گیر و بیننده. */
+    public static function history(string $reportId): array
+    {
+        return Db::all(
+            'SELECT a.*, u.full_name AS submitted_by_name, m.full_name AS decided_by_name, m.role AS decided_by_role,
+                    s.full_name AS seen_by_name, s.role AS seen_by_role
+             FROM approvals a
+             LEFT JOIN users u ON u.id = a.submitted_by
+             LEFT JOIN users m ON m.id = a.decided_by
+             LEFT JOIN users s ON s.id = a.seen_by
+             WHERE a.report_id = ? ORDER BY a.submitted_at DESC',
+            [$reportId]
+        );
     }
 }

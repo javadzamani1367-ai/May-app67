@@ -11,23 +11,27 @@ final class CrewReport
     /** موردی که پیش‌نویسش زودتر ساخته شده، کارش ممکن است در بازه افتاده باشد. */
     private const LOOKBACK_MILLIS = 3 * 86_400_000;
 
-    /** @return array{members: list<array>, from:int, to:int, geo:bool} */
-    public static function build(int $from, int $to): array
+    /**
+     * @param list<string>|null $areas مجری: فقط کار اکیپ در ناحیه‌های خودش؛ تهی یعنی همه
+     * @return array{members: list<array>, from:int, to:int, geo:bool}
+     */
+    public static function build(int $from, int $to, ?array $areas = null): array
     {
         $geo = GeoPlaces::load(null, Storage::root() . '/cache');
-        $members = CrewDays::build(self::items($from, $to), CrewCalendar::fromSettings(), $geo, $from, $to);
+        $members = CrewDays::build(self::items($from, $to, $areas), CrewCalendar::fromSettings(), $geo, $from, $to);
         return ['members' => $members, 'from' => $from, 'to' => $to, 'geo' => $geo !== null];
     }
 
     /** @return list<array> */
-    public static function items(int $from, int $to): array
+    public static function items(int $from, int $to, ?array $areas = null): array
     {
         $kinds = implode(',', array_map('intval', Field::CREW_KINDS));
+        $area = $areas === null ? '' : ' AND area_code IN (' . ($areas === [] ? "''" : implode(',', array_fill(0, count($areas), '?'))) . ')';
         $rows = Db::all(
             "SELECT id, kind, tracking_code, plate, latitude, longitude, position_at, created_at, payload
              FROM field_items WHERE kind IN ($kinds) AND merged_into IS NULL AND status <> ?
-               AND created_at BETWEEN ? AND ?",
-            [Field::STATUS_REJECTED, $from - self::LOOKBACK_MILLIS, $to]
+               AND created_at BETWEEN ? AND ?$area",
+            array_merge([Field::STATUS_REJECTED, $from - self::LOOKBACK_MILLIS, $to], $areas ?? [])
         );
         $thermal = array_column(array_filter($rows, static fn (array $r): bool => (int) $r['kind'] === Field::KIND_THERMAL), 'id');
         $frames = [];

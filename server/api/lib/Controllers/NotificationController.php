@@ -9,13 +9,10 @@ final class NotificationController
         $user = Auth::require($request, null, true);
         $since = $request->int('since', 0) ?? 0;
 
+        [$visible, $params] = Notifications::visibleTo($user);
         $rows = Db::all(
-            'SELECT * FROM notifications
-             WHERE created_at > ?
-               AND (user_id = ?
-                    OR (user_id IS NULL AND role = ? AND (unit IS NULL OR unit = ?)))
-             ORDER BY created_at DESC LIMIT 200',
-            [$since, $user['id'], (int) $user['role'], $user['unit']]
+            "SELECT n.* FROM notifications n WHERE n.created_at > ? AND $visible ORDER BY n.created_at DESC LIMIT 200",
+            array_merge([$since], $params)
         );
 
         Response::json([

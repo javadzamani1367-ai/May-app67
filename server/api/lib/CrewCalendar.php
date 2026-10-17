@@ -129,6 +129,25 @@ final class CrewCalendar
         return round(max(0, $span - $inside) / 60, 1);
     }
 
+    /** روز کاری: شنبه تا چهارشنبه، نه تعطیل. مهلت‌های گردش پرونده با همین شمرده می‌شوند. */
+    public function workday(int $millis): bool
+    {
+        return (int) self::local($millis)->format('w') !== 4 && $this->holiday($millis) === null;
+    }
+
+    /** لحظه‌ای که $days روز کاری از $from گذشته است (همان ساعت روز). */
+    public function addWorkDays(int $from, int $days): int
+    {
+        $t = $from;
+        for ($left = max(0, $days); $left > 0;) {
+            $t += 86_400_000;
+            if ($this->workday($t)) {
+                $left--;
+            }
+        }
+        return $t;
+    }
+
     private static function local(int $millis): DateTimeImmutable
     {
         return (new DateTimeImmutable('@' . intdiv($millis, 1000)))->setTimezone(new DateTimeZone(self::ZONE));

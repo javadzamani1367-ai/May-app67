@@ -116,8 +116,9 @@ final class FieldAdmin
     /** فهرست موردها با نام گزارش‌دهنده و کارشناس ارجاع؛ جدیدترین اول. */
     public static function listSql(string $where): string
     {
-        return "SELECT i.*, u.full_name AS reporter, u.user_code AS reporter_code, a.full_name AS expert
+        return "SELECT i.*, u.full_name AS reporter, u.user_code AS reporter_code, a.full_name AS expert, h.full_name AS handler
                 FROM field_items i JOIN users u ON u.id = i.user_id LEFT JOIN users a ON a.id = i.assigned_to
+                LEFT JOIN users h ON h.id = i.handler_id
                 WHERE $where ORDER BY i.created_at DESC";
     }
 
@@ -138,6 +139,10 @@ final class FieldAdmin
     public static function transition(array $item, int $to, array $manager, string $note,
                                       ?string $assignee = null, ?int $dueAt = null): ?string
     {
+        $scope = new Scope($manager);
+        if (!$scope->canSeeField($item)) {
+            return 'این مورد در محدوده شما نیست.';
+        }
         $from = (int) $item['status'];
         if (!in_array($to, self::NEXT[$from] ?? [], true)) {
             return 'این تغییر وضعیت از وضعیت فعلی ممکن نیست.';
@@ -155,6 +160,11 @@ final class FieldAdmin
                 'SELECT id, full_name FROM users WHERE id = ? AND role = ? AND active = 1',
                 [$assignee, Auth::ROLE_EXPERT]
             );
+            // مجری فقط به کارشناس ناحیه خودش؛ مدیر و مجری غیرمجاز استانی به هر کارشناس.
+            if ($expert !== null && !$scope->wholeProvince()
+                && !in_array($assignee, array_column($scope->experts($item['area_code'] ?? null), 'id'), true)) {
+                $expert = null;
+            }
             if ($expert === null) {
                 return 'برای ارجاع، یک کارشناس فعال انتخاب کنید.';
             }
@@ -172,6 +182,9 @@ final class FieldAdmin
                     [$to, $expert['id'], $dueAt, $now, $item['id']]);
             } else {
                 Db::run('UPDATE field_items SET status = ?, updated_at = ? WHERE id = ?', [$to, $now, $item['id']]);
+            }
+            if ($scope->isExecutor()) {
+                Db::run('UPDATE field_items SET handler_action_at = ? WHERE id = ?', [$now, $item['id']]);
             }
             $text = $note === '' ? null : $note;
             if ($expert !== null) {

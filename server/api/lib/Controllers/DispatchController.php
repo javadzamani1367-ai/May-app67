@@ -4,9 +4,9 @@ declare(strict_types=1);
 /**
  * ارسال مدارک به واحدها و پاسخ آن‌ها.
  *
- * هر ارسال یک مهلت دارد: واحد مقصد از زمان دریافت این‌قدر فرصت دارد که نتیجه
- * اقدامش را ثبت کند. مهلت گذشته با محاسبه روی همین داده معلوم می‌شود، نه با
- * یک وضعیت جداگانه که باید کسی به‌روزش نگه دارد.
+ * فقط مدیر و مجری رمزارز می‌فرستند (کارشناس دیگر نه)، و ارسال به واحد همان ناحیه
+ * پرونده می‌رسد. هر ارسال مهلت دارد و واحد در هر پاسخ مرحله اقدامش را می‌گوید.
+ * مهلت گذشته با محاسبه روی همین داده معلوم می‌شود، نه با وضعیتی جداگانه.
  */
 final class DispatchController
 {
@@ -16,59 +16,53 @@ final class DispatchController
 
     public function create(Request $request): void
     {
-        $user = Auth::require($request);
+        $user = Auth::requireAny($request, [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]);
         $reportId = $request->str('report_id');
-        $report = Db::one('SELECT id, tracking_code FROM reports WHERE id = ?', [$reportId]);
-        if ($report === null) {
+        $report = Db::one('SELECT id, tracking_code, temp_code, area_code FROM reports WHERE id = ?', [$reportId]);
+        if ($report === null || !(new Scope($user))->canSeeReport($report)) {
             Response::fail(404, 'not_found', 'پرونده پیدا نشد.');
         }
 
         $unit = $request->int('unit');
-        if ($unit === null) {
+        if ($unit === null || !isset(UnitStages::NAMES[$unit])) {
             Response::fail(400, 'missing_unit', 'واحد مقصد انتخاب نشده است.');
         }
 
         $id = $request->str('id') ?: Db::uuid();
         $deadlineDays = $request->int('deadline_days');
+        $channel = $request->int('channel', 0) ?? 0;
         $now = Db::now();
+        $known = Db::one('SELECT id FROM dispatches WHERE id = ?', [$id]) !== null;
 
         Db::run(
             'INSERT INTO dispatches (id, report_id, unit, included_items, note, output_format,
-                                     dispatched_at, sent_by, channel, deadline_at, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                     dispatched_at, sent_by, channel, deadline_at, status, area_code)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE note = VALUES(note), deadline_at = VALUES(deadline_at)',
             [
-                $id,
-                $reportId,
-                $unit,
-                json_encode($request->arr('included_items'), JSON_UNESCAPED_UNICODE),
-                $request->str('note'),
-                $request->int('output_format', 0),
-                $request->int('dispatched_at', $now),
-                $user['id'],
-                $request->int('channel', 0),
-                $deadlineDays !== null ? $now + $deadlineDays * 86400000 : null,
-                self::SENT,
+                $id, $reportId, $unit, json_encode($request->arr('included_items'), JSON_UNESCAPED_UNICODE),
+                $request->str('note'), $request->int('output_format', 0), $request->int('dispatched_at', $now), $user['id'],
+                $channel, $deadlineDays !== null ? $now + $deadlineDays * 86400000 : null, self::SENT,
+                Areas::code($report['area_code']),
             ]
         );
-
-        Notifications::toUnit(
-            $unit,
-            'dispatch',
-            'مدارک جدید دریافت شد',
-            'پرونده ' . ($report['tracking_code'] ?? $reportId) . ' برای واحد شما ارسال شد.',
-            $reportId
-        );
-
+        if (!$known) {
+            CaseFlow::onDispatched($reportId, $user, $unit);
+            if ($channel === 0) {
+                Notifications::toUnit($unit, 'dispatch', 'مدارک جدید دریافت شد',
+                    'پرونده ' . CaseLabels::code($report) . ' برای واحد شما ارسال شد.', $reportId, $report['area_code']);
+            }
+        }
         Response::json(['id' => $id]);
     }
 
-    /** سوابق ارسال یک پرونده: چه چیزی، کِی، به کدام واحد، و پاسخش چه بود. */
+    /** سوابق ارسال یک پرونده، برای مدیر و مجری ناحیه: چه چیزی، کِی، به کدام واحد، تا کدام مرحله. */
     public function index(Request $request): void
     {
-        Auth::require($request);
+        $user = Auth::requireAny($request, [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]);
         $reportId = $request->str('report_id');
-        if ($reportId === '') {
+        $report = $reportId === '' ? null : Db::one('SELECT * FROM reports WHERE id = ?', [$reportId]);
+        if ($report === null || !(new Scope($user))->canSeeReport($report)) {
             Response::fail(400, 'missing_report', 'شناسه پرونده ارسال نشده است.');
         }
 
@@ -78,119 +72,66 @@ final class DispatchController
              WHERE d.report_id = ? ORDER BY d.dispatched_at DESC',
             [$reportId]
         );
-        foreach ($rows as &$row) {
-            $row['responses'] = $this->responsesOf((string) $row['id']);
-            $row['overdue'] = $this->isOverdue($row);
-        }
-        Response::json(['dispatches' => $rows]);
+        Response::json(['dispatches' => array_map([self::class, 'present'], $rows)]);
     }
 
-    /** صندوق ورودی یک واحد مقصد. */
+    /** صندوق ورودی یک واحد مقصد: فقط ناحیه خودش، یا همه اگر واحد استانی است. */
     public function inbox(Request $request): void
     {
         $user = Auth::require($request, Auth::ROLE_UNIT);
+        [$where, $params] = Scope::unitWhere($user);
         $rows = Db::all(
-            'SELECT d.*, r.tracking_code, r.county, r.address, r.owner_name
+            "SELECT d.*, r.tracking_code, r.temp_code, r.county, r.address, r.owner_name
              FROM dispatches d JOIN reports r ON r.id = d.report_id
-             WHERE d.unit = ? ORDER BY d.dispatched_at DESC LIMIT 200',
-            [(int) $user['unit']]
+             WHERE $where ORDER BY d.dispatched_at DESC LIMIT 200",
+            $params
         );
-        foreach ($rows as &$row) {
-            $row['responses'] = $this->responsesOf((string) $row['id']);
-            $row['overdue'] = $this->isOverdue($row);
-        }
-        Response::json(['dispatches' => $rows]);
+        Response::json(['dispatches' => array_map([self::class, 'present'], $rows),
+            'stages' => UnitStages::of((int) $user['unit'])]);
     }
 
     public function markSeen(Request $request): void
     {
         $user = Auth::require($request, Auth::ROLE_UNIT);
-        $id = $request->str('id');
-        Db::run(
-            'UPDATE dispatches SET status = GREATEST(status, ?), seen_at = COALESCE(seen_at, ?)
-             WHERE id = ? AND unit = ?',
-            [self::SEEN, Db::now(), $id, (int) $user['unit']]
-        );
+        $dispatch = Db::one('SELECT * FROM dispatches WHERE id = ?', [$request->str('id')]);
+        if ($dispatch !== null && Scope::unitSees($user, $dispatch)) {
+            Db::run('UPDATE dispatches SET status = GREATEST(status, ?), seen_at = COALESCE(seen_at, ?) WHERE id = ?',
+                [self::SEEN, Db::now(), $dispatch['id']]);
+        }
         Response::json(['done' => true]);
     }
 
-    /** پاسخ واحد، با مستندات اقدام. */
+    /** پاسخ واحد، با مرحله اقدام و مستندات. */
     public function respond(Request $request): void
     {
-        $user = Auth::require($request);
-        $dispatchId = $request->str('dispatch_id');
-        $dispatch = Db::one('SELECT * FROM dispatches WHERE id = ?', [$dispatchId]);
-        if ($dispatch === null) {
-            Response::fail(404, 'not_found', 'ارسالی با این شناسه نیست.');
+        $user = Auth::require($request, Auth::ROLE_UNIT);
+        $dispatch = Db::one('SELECT * FROM dispatches WHERE id = ?', [$request->str('dispatch_id')]);
+        if ($dispatch === null || !Scope::unitSees($user, $dispatch)) {
+            Response::fail(404, 'not_found', 'این ارسال برای واحد شما نیست.');
         }
-        if ((int) $user['role'] === Auth::ROLE_UNIT && (int) $user['unit'] !== (int) $dispatch['unit']) {
-            Response::fail(403, 'forbidden', 'این ارسال برای واحد شما نیست.');
+        $result = UnitResponse::record($dispatch, $user, $request->str('body'), $request->int('stage'), array_values(
+            array_filter($_FILES, 'is_array')));
+        if (is_string($result)) {
+            Response::fail(400, 'invalid_response', $result);
         }
-
-        $now = Db::now();
-        $responseId = Db::uuid();
-        Db::run(
-            'INSERT INTO dispatch_responses (id, dispatch_id, responder_id, body, created_at)
-             VALUES (?, ?, ?, ?, ?)',
-            [$responseId, $dispatchId, $user['id'], $request->str('body'), $now]
-        );
-
-        foreach ($_FILES as $file) {
-            if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-                continue;
-            }
-            $stored = Storage::put($file, 'responses/' . date('Y/m'));
-            Db::run(
-                'INSERT INTO response_files (id, response_id, file_path, file_name, mime_type,
-                                             size_bytes, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [
-                    Db::uuid(), $responseId, $stored['path'], (string) ($file['name'] ?? ''),
-                    (string) ($file['type'] ?? ''), $stored['size'], $now,
-                ]
-            );
-        }
-
-        Db::run(
-            'UPDATE dispatches SET status = ?, answered_at = COALESCE(answered_at, ?) WHERE id = ?',
-            [self::ANSWERED, $now, $dispatchId]
-        );
-
-        Notifications::toRole(
-            Auth::ROLE_MANAGER,
-            'response',
-            'پاسخ واحد ثبت شد',
-            'برای یکی از ارسال‌های شما پاسخ ثبت شد.',
-            (string) $dispatch['report_id']
-        );
-
-        Response::json(['id' => $responseId]);
+        Response::json($result);
     }
 
-    private function responsesOf(string $dispatchId): array
+    /** یک ارسال برای API: پاسخ‌ها، مرحله و پیشرفت، و اینکه مهلتش گذشته یا نه. */
+    public static function present(array $row): array
     {
-        $rows = Db::all(
-            'SELECT r.*, u.full_name AS responder_name
-             FROM dispatch_responses r LEFT JOIN users u ON u.id = r.responder_id
-             WHERE r.dispatch_id = ? ORDER BY r.created_at',
-            [$dispatchId]
-        );
-        foreach ($rows as &$row) {
-            $row['files'] = Db::all(
-                'SELECT id, file_path, file_name, mime_type, size_bytes FROM response_files
-                 WHERE response_id = ?',
-                [$row['id']]
-            );
-        }
-        return $rows;
+        $unit = (int) $row['unit'];
+        $stage = $row['stage'] === null ? null : (int) $row['stage'];
+        $row['responses'] = UnitResponse::list($row);
+        $row['stage_name'] = UnitStages::name($unit, $stage);
+        $row['progress'] = UnitStages::progress($unit, $stage);
+        $row['closed'] = UnitStages::isFinal($unit, $stage);
+        $row['overdue'] = self::isOverdue($row);
+        return $row;
     }
 
-    private function isOverdue(array $dispatch): bool
+    public static function isOverdue(array $dispatch): bool
     {
-        $deadline = $dispatch['deadline_at'] ?? null;
-        if ($deadline === null) {
-            return false;
-        }
-        return (int) $dispatch['status'] !== self::ANSWERED && (int) $deadline < Db::now();
+        return UnitStages::overdue($dispatch);
     }
 }

@@ -5,6 +5,7 @@ require __DIR__ . '/_boot.php';
 $user = portal_require_user();
 $id = (string) ($_GET['id'] ?? '');
 $kind = (string) ($_GET['kind'] ?? '');
+[$scope, $scopeParams] = Scope::unitWhere($user, 'd');
 
 // فایل‌ها بیرون از ریشه وب هستند و فقط از همین‌جا بیرون می‌روند، بعد از
 // اینکه ثابت شد این فایل به ارسالی مربوط است که برای واحد همین کاربر رفته.
@@ -12,21 +13,21 @@ $row = match ($kind) {
     'media' => Db::one(
         'SELECT m.file_path, m.caption AS name FROM media m
          JOIN dispatches d ON d.report_id = m.report_id
-         WHERE m.id = ? AND d.unit = ? LIMIT 1',
-        [$id, (int) $user['unit']]
+         WHERE m.id = ? AND ' . $scope . ' LIMIT 1',
+        array_merge([$id], $scopeParams)
     ),
     'attachment' => Db::one(
         'SELECT a.file_path, a.title AS name FROM attachments a
          JOIN dispatches d ON d.report_id = a.report_id
-         WHERE a.id = ? AND d.unit = ? LIMIT 1',
-        [$id, (int) $user['unit']]
+         WHERE a.id = ? AND ' . $scope . ' LIMIT 1',
+        array_merge([$id], $scopeParams)
     ),
     'response' => Db::one(
         'SELECT f.file_path, f.file_name AS name FROM response_files f
          JOIN dispatch_responses r ON r.id = f.response_id
          JOIN dispatches d ON d.id = r.dispatch_id
-         WHERE f.id = ? AND d.unit = ? LIMIT 1',
-        [$id, (int) $user['unit']]
+         WHERE f.id = ? AND ' . $scope . ' LIMIT 1',
+        array_merge([$id], $scopeParams)
     ),
     default => null,
 };

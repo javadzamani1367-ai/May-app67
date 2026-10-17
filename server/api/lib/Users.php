@@ -9,7 +9,11 @@ declare(strict_types=1);
  */
 final class Users
 {
-    public const ROLES = [Auth::ROLE_EXPERT, Auth::ROLE_MANAGER, Auth::ROLE_UNIT, Auth::ROLE_FIELD];
+    public const ROLES = [Auth::ROLE_EXPERT, Auth::ROLE_MANAGER, Auth::ROLE_UNIT, Auth::ROLE_FIELD,
+        Auth::ROLE_EXECUTOR, Auth::ROLE_ILLEGAL];
+    public const ROLE_NAMES = [Auth::ROLE_EXPERT => 'کارشناس', Auth::ROLE_MANAGER => 'مدیر',
+        Auth::ROLE_UNIT => 'واحد مقصد', Auth::ROLE_FIELD => 'کاربر میدانی', Auth::ROLE_EXECUTOR => 'مجری رمزارز',
+        Auth::ROLE_ILLEGAL => 'مجری برق غیرمجاز'];
     public const MIN_PASSWORD = 8;
 
     /**
@@ -24,8 +28,16 @@ final class Users
         if ($userCode === '' || trim((string) ($data['full_name'] ?? '')) === '') {
             return 'نام و کد کاربری الزامی است.';
         }
-        if (!in_array((int) ($data['role'] ?? Auth::ROLE_EXPERT), self::ROLES, true)) {
+        $role = (int) ($data['role'] ?? Auth::ROLE_EXPERT);
+        if (!in_array($role, self::ROLES, true)) {
             return 'نقش کاربر معتبر نیست.';
+        }
+        $areas = Areas::parse($data['areas'] ?? '');
+        if ($role === Auth::ROLE_EXECUTOR && $areas === []) {
+            return 'برای مجری رمزارز دست‌کم یک ناحیه انتخاب کنید.';
+        }
+        if (in_array($role, [Auth::ROLE_EXPERT, Auth::ROLE_UNIT, Auth::ROLE_FIELD], true) && count($areas) > 1) {
+            return 'کارشناس، واحد و کاربر میدانی فقط یک ناحیه دارند.';
         }
         $password = (string) ($data['password'] ?? '');
         if ($password !== '' && strlen($password) < self::MIN_PASSWORD) {
@@ -66,20 +78,26 @@ final class Users
         $permissions = isset($data['permissions']) && is_numeric($data['permissions'])
             ? (int) $data['permissions'] : (int) ($existing['permissions'] ?? 0);
         $unit = isset($data['unit']) && is_numeric($data['unit']) ? (int) $data['unit'] : null;
+        $areas = $role === Auth::ROLE_MANAGER ? null : Areas::store(Areas::parse($data['areas'] ?? ''));
+        $county = trim((string) ($data['county'] ?? ''));
+        if ($county === '' && $areas !== null) {
+            $county = (string) (Areas::NAMES[explode(',', $areas)[0]] ?? '');
+        }
 
         Db::run(
-            'INSERT INTO users (id, user_code, full_name, role, unit, county, phone, device_code,
+            'INSERT INTO users (id, user_code, full_name, role, unit, county, areas, phone, device_code,
                                 password_hash, active, created_at, updated_at, note, permissions)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                 full_name = VALUES(full_name), role = VALUES(role), unit = VALUES(unit),
-                county = VALUES(county), phone = VALUES(phone), device_code = VALUES(device_code),
+                county = VALUES(county), areas = VALUES(areas), phone = VALUES(phone), device_code = VALUES(device_code),
                 password_hash = VALUES(password_hash), active = VALUES(active),
                 updated_at = VALUES(updated_at), note = VALUES(note), permissions = VALUES(permissions)',
             [
                 $id, $userCode, $fullName, $role,
                 $role === Auth::ROLE_UNIT ? $unit : null,
-                trim((string) ($data['county'] ?? '')),
+                $county,
+                $areas,
                 trim((string) ($data['phone'] ?? '')),
                 $device,
                 $password !== '' ? password_hash($password, PASSWORD_DEFAULT) : ($existing['password_hash'] ?? null),

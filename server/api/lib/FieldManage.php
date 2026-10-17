@@ -11,7 +11,9 @@ final class FieldManage
     public const PAGE_SIZE = 50;
 
     public const EVENT_NAMES = ['registered' => 'ثبت از گوشی', 'status' => 'تغییر وضعیت', 'merged' => 'ادغام',
-        'unmerged' => 'جدا شدن از ادغام', 'accepted' => 'پذیرش کارشناس', 'result' => 'نتیجه ارجاع'];
+        'unmerged' => 'جدا شدن از ادغام', 'accepted' => 'پذیرش کارشناس', 'result' => 'نتیجه ارجاع',
+        'handed' => 'سپردن به مجری', 'followup' => 'پیگیری', 'expert_alert' => 'هشدار: کارشناس اقدام نکرده',
+        'manager_alert' => 'هشدار به مدیر'];
 
     /** وضعیت‌هایی که بی‌دلیل ثبت نمی‌شوند؛ اپ همان‌جا توضیح را اجباری نشان می‌دهد. */
     private const NEED_NOTE = [Field::STATUS_REJECTED, Field::STATUS_REVISIT];
@@ -21,9 +23,9 @@ final class FieldManage
      *
      * @param array<string, mixed> $get
      */
-    public static function list(array $get, int $page): array
+    public static function list(array $get, int $page, ?Scope $scope = null): array
     {
-        $filter = FieldAdmin::filters($get);
+        $filter = self::scoped(FieldAdmin::filters($get), $scope);
         $page = max(0, $page);
         $rows = Db::all(FieldAdmin::listSql($filter['where']) . ' LIMIT ' . (self::PAGE_SIZE + 1)
             . ' OFFSET ' . ($page * self::PAGE_SIZE), $filter['params']);
@@ -32,7 +34,7 @@ final class FieldManage
 
         $countGet = $get;
         unset($countGet['status']);
-        $all = FieldAdmin::filters($countGet);
+        $all = self::scoped(FieldAdmin::filters($countGet), $scope);
         $counts = [];
         foreach (Db::all('SELECT i.status AS k, COUNT(*) AS n FROM field_items i WHERE ' . $all['where']
             . ' GROUP BY i.status', $all['params']) as $row) {
@@ -44,8 +46,19 @@ final class FieldManage
             'more' => $more,
             'counts' => (object) $counts,
             'overdue' => (int) (Db::one('SELECT COUNT(*) AS n FROM field_items i WHERE i.merged_into IS NULL AND '
-                . FieldAdmin::OVERDUE_SQL, [$now])['n'] ?? 0),
+                . FieldAdmin::OVERDUE_SQL . ' AND ' . $all['scope'], array_merge([$now], $all['scope_params']))['n'] ?? 0),
         ];
+    }
+
+    /** فیلتر فهرست، تنگ‌شده به محدوده کاربر (مجری: ناحیه‌اش بی رمزارز؛ غیرمجاز: فقط غیرمجاز). */
+    public static function scoped(array $filter, ?Scope $scope): array
+    {
+        [$where, $params] = $scope?->fieldWhere('i') ?? ['1=1', []];
+        $filter['where'] .= ' AND ' . $where;
+        $filter['params'] = array_merge($filter['params'], $params);
+        $filter['scope'] = $where;
+        $filter['scope_params'] = $params;
+        return $filter;
     }
 
     /** یک سطر فهرست. */
@@ -56,6 +69,8 @@ final class FieldManage
             'kind' => (int) $row['kind'],
             'kind_name' => FieldAdmin::KIND_NAMES[(int) $row['kind']] ?? '',
             'tracking_code' => (string) $row['tracking_code'],
+            'area' => Areas::label($row['area_code'] ?? null),
+            'handler' => $row['handler'] ?? null,
             'status' => (int) $row['status'],
             'status_name' => FieldAdmin::STATUS_NAMES[(int) $row['status']] ?? '',
             'priority' => $row['priority'] === null ? null : (int) $row['priority'],
@@ -70,16 +85,18 @@ final class FieldManage
     }
 
     /** یک مورد کامل: جزئیات، عکس‌ها، تاریخچه، و آنچه مدیر می‌تواند با آن بکند. */
-    public static function item(string $id): ?array
+    public static function item(string $id, ?Scope $scope = null): ?array
     {
         $row = Field::isUuid($id) ? Db::one(
-            'SELECT i.*, u.full_name AS reporter, u.user_code AS reporter_code, a.full_name AS expert
-             FROM field_items i JOIN users u ON u.id = i.user_id LEFT JOIN users a ON a.id = i.assigned_to WHERE i.id = ?',
+            'SELECT i.*, u.full_name AS reporter, u.user_code AS reporter_code, a.full_name AS expert, h.full_name AS handler
+             FROM field_items i JOIN users u ON u.id = i.user_id LEFT JOIN users a ON a.id = i.assigned_to
+             LEFT JOIN users h ON h.id = i.handler_id WHERE i.id = ?',
             [$id]
         ) : null;
-        if ($row === null) {
+        if ($row === null || ($scope !== null && !$scope->canSeeField($row))) {
             return null;
         }
+        $scope ??= new Scope(['role' => Auth::ROLE_MANAGER, 'areas' => null, 'id' => '']);
         $payload = json_decode((string) $row['payload'], true);
         $payload = is_array($payload) ? $payload : [];
         $result = json_decode((string) ($row['result'] ?? ''), true);
@@ -139,10 +156,12 @@ final class FieldManage
                 'needs_note' => in_array($to, self::NEED_NOTE, true),
                 'needs_expert' => $to === Field::STATUS_REFERRED,
             ], $next),
-            'experts' => $next === [] ? [] : Db::all(
-                'SELECT id, full_name AS name FROM users WHERE role = ? AND active = 1 ORDER BY full_name',
-                [Auth::ROLE_EXPERT]
-            ),
+            'experts' => $next === [] ? [] : array_map(static fn ($e) => ['id' => $e['id'], 'name' => $e['name']],
+                $scope->experts($scope->wholeProvince() ? null : ($row['area_code'] ?? null))),
+            'executors' => $next === [] || $scope->isExecutor() ? [] : array_map(
+                static fn ($e) => ['id' => $e['id'], 'name' => $e['name'] . ' — ' . implode('، ', array_map([Areas::class, 'label'], $e['areas']))],
+                $scope->executors()),
+            'can_hand' => $next !== [] && !$scope->isExecutor(),
         ];
     }
 
