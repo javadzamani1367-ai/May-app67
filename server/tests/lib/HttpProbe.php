@@ -22,9 +22,12 @@ final class HttpProbe
 
     public function start(): bool
     {
+        // گزارش هر درخواست به فایل می‌رود، نه لوله: لوله‌ای که کسی نمی‌خواندش پس از
+        // ۶۴ کیلوبایت پر می‌شود و سرور آزمایشی وسط کار می‌ایستد.
+        $log = sys_get_temp_dir() . "/http-probe-$this->port.log";
         $this->process = proc_open(
             ['php', '-S', "127.0.0.1:$this->port", '-t', $this->docRoot],
-            [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            [1 => ['file', $log, 'w'], 2 => ['file', $log, 'a']],
             $this->pipes,
             null,
             ['INSPECTION_CONFIG' => $this->configPath] + $_ENV
