@@ -38,6 +38,8 @@ $approvals = count(CaseActions::pendingApprovals());
 $lateDispatches = count(CaseActions::overdueDispatches(1000));
 $deviceRequests = (int) (Db::one('SELECT COUNT(*) AS n FROM device_requests WHERE status = 0')['n'] ?? 0);
 $experts = FieldAdmin::expertStats();
+$board = CaseBoard::counts(CaseBoard::open(admin_scope(), 2000));
+$deviceAlerts = DeviceRegistry::unseenAlerts();
 
 admin_header('داشبورد');
 echo case_styles();
@@ -54,6 +56,18 @@ $tile = static fn (string $href, int $n, string $label, string $tone = '') => '<
     <?= $tile('performance.php', $lateDispatches, 'ارسال به واحد با مهلت گذشته', $lateDispatches > 0 ? 'danger' : '') ?>
     <?= $tile('users.php', $deviceRequests, 'درخواست ثبت دستگاه', $deviceRequests > 0 ? 'warn' : '') ?>
   </div>
+</div>
+<div class="card">
+  <h2>گردش پرونده‌ها در ناحیه‌ها</h2>
+  <div class="kpis">
+    <?= $tile('board.php?stage=late', $board['late'], 'دیرشده یا با هشدار', $board['late'] > 0 ? 'danger' : '') ?>
+    <?= $tile('board.php?stage=awaiting_referral', $board['stages']['awaiting_referral'], 'در انتظار ارجاع شما', $board['stages']['awaiting_referral'] > 0 ? 'warn' : '') ?>
+    <?= $tile('board.php?stage=with_executor', $board['stages']['with_executor'], 'نزد مجری؛ بی کارشناس') ?>
+    <?= $tile('board.php?stage=with_expert', $board['stages']['with_expert'], 'نزد کارشناس؛ بازدید نشده') ?>
+    <?= $tile('board.php?stage=approved', $board['stages']['approved'], 'تأییدشده؛ به واحد نرفته') ?>
+    <?= $tile('devices.php?dup=1', $deviceAlerts, 'سریال تکراری تازه', $deviceAlerts > 0 ? 'danger' : '') ?>
+  </div>
+  <p><a href="scores.php">امتیاز ناحیه‌ها، مجریان، واحدها و کارشناسان</a> — <a href="intake.php">ثبت گزارش تازه</a></p>
 </div>
 <div class="card">
   <h2>موردهای میدانی</h2>

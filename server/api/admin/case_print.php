@@ -2,17 +2,13 @@
 declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 
-admin_require();
+admin_require(CASE_ROLES);
 
 // فرم رسمی گزارش بازدید (CLAUDE.md بخش ۷)، برای چاپ؛ «ذخیره به PDF» مرورگر
 // همان فایل PDF است. سند اداری است و به سازمان‌های دیگر می‌رود: نام نرم‌افزار
 // و سازنده‌اش در آن نیست.
 $id = (string) ($_GET['id'] ?? '');
-$case = Field::isUuid($id) ? CaseReport::load($id) : null;
-if ($case === null) {
-    http_response_code(404);
-    exit('پرونده پیدا نشد.');
-}
+$case = admin_case($id);
 $r = $case['report'];
 $code = CaseLabels::code($r);
 $photos = array_values(array_filter($case['media'], static fn ($m) => (int) $m['type'] === 0));

@@ -82,11 +82,14 @@ function case_filter_form(array $values, string $action): string
         }
         return $html . '</select></label>';
     };
-    $counties = array_column(Db::all('SELECT DISTINCT county FROM reports WHERE LENGTH(county) > 0
-        ORDER BY county'), 'county', 'county');
+    $scope = admin_scope();
+    [$own, $ownParams] = $scope->reportWhere('r');
+    $counties = array_column(Db::all("SELECT DISTINCT r.county FROM reports r WHERE LENGTH(r.county) > 0 AND $own
+        ORDER BY r.county", $ownParams), 'county', 'county');
+    $areas = array_intersect_key(Areas::options(), array_flip($scope->isManager() ? array_keys(Areas::NAMES) : $scope->areas));
     $experts = [];
-    foreach (Db::all('SELECT DISTINCT r.expert_code, u.full_name FROM reports r LEFT JOIN users u ON u.user_code = r.expert_code
-        WHERE LENGTH(r.expert_code) > 0 ORDER BY u.full_name') as $x) {
+    foreach (Db::all("SELECT DISTINCT r.expert_code, u.full_name FROM reports r LEFT JOIN users u ON u.user_code = r.expert_code
+        WHERE LENGTH(r.expert_code) > 0 AND $own ORDER BY u.full_name", $ownParams) as $x) {
         $experts[$x['expert_code']] = CaseReport::expert(trim((string) $x['full_name']), (string) $x['expert_code']);
     }
     $input = static fn (string $name, string $label, string $hint = '') => '<label>' . e($label) . '<input name="' . $name
@@ -96,6 +99,7 @@ function case_filter_form(array $values, string $action): string
         . $select('type', 'نوع گزارش', CaseLabels::REPORT_TYPES)
         . $select('status', 'وضعیت', CaseLabels::STATUSES)
         . $select('approval', 'تأیید مدیر', CaseLabels::APPROVALS)
+        . $select('area', 'ناحیه', $areas)
         . $select('county', 'شهرستان', $counties)
         . $select('expert', 'کارشناس', $experts)
         . $input('from', 'از تاریخ گزارش', '۱۴۰۵/۰۱/۰۱')

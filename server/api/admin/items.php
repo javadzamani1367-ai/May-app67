@@ -2,9 +2,9 @@
 declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 
-admin_require();
+admin_require(ADMIN_ROLES);
 
-$filter = FieldAdmin::filters($_GET);
+$filter = FieldManage::scoped(FieldAdmin::filters($_GET), admin_scope());
 $values = $filter['values'];
 $perPage = 50;
 $page = max(1, (int) ($_GET['page'] ?? 1));

@@ -67,6 +67,7 @@ final class CaseReport
             ['شماره پرونده', Jalali::digits((string) $r['file_number'])],
             ['شماره قبض', Jalali::digits((string) $r['bill_number'])],
             ['شماره اشتراک', Jalali::digits((string) $r['subscription_number'])],
+            ['نام مشترک', $r['subscriber_name'] ?? null],
             ['نوع کاربری', $r['usage_type']],
             ['مختصات', self::coordinates($r)],
         ]);
@@ -165,5 +166,44 @@ final class CaseReport
             CaseLabels::code($report),
         ], static fn ($p) => $p !== '');
         return implode(' | ', $parts);
+    }
+
+    /**
+     * فرم رسمی به شکل بلوک‌های Word (Docx): هفت بخش، جدول‌ها، امضاها و پیوست تصاویر.
+     * پنل و بسته ارسال هر دو از همین می‌سازند؛ نام نرم‌افزار در آن نیست.
+     */
+    public static function wordBlocks(array $case): array
+    {
+        $r = $case['report'];
+        $code = CaseLabels::code($r);
+        $blocks = [
+            ['h', 'فرم گزارش بازدید مراکز استخراج رمزارز'],
+            ['p', 'شرکت توزیع نیروی برق استان ایلام — ' . $code],
+            ['h', '۱ — مشخصات پرونده'], ['table', CaseReport::caseRows($r)],
+            ['h', '۲ — مشخصات مکان'], ['table', CaseReport::locationRows($r)],
+            ['h', '۳ — مشخصات مالک یا متصرف'], ['table', CaseReport::ownerRows($r)],
+            ['h', '۴ — مشخصات فنی'], ['table', CaseReport::technicalRows($r)],
+            ['h', '۵ — فهرست دستگاه‌ها'],
+            ['grid', [['ردیف', 'مدل', 'شماره سریال', 'توان (وات)', 'روش ثبت'], CaseReport::deviceTable($case['devices'])]],
+            ['h', '۶ — حاضرین در محل'],
+            ['grid', [['ردیف', 'نام و نام خانوادگی', 'سمت', 'سازمان'], CaseReport::attendeeTable($case['attendees'])]],
+            ['h', '۷ — شرح بازدید و اقدامات'],
+            ['table', [['شرح بازدید', (string) ($r['description'] ?: '—')], ['اقدامات انجام‌شده', (string) ($r['actions_taken'] ?: '—')]]],
+        ];
+        if ($case['attachments'] !== []) {
+            $blocks[] = ['h', 'مستندات پیوست'];
+            $blocks[] = ['grid', [['دسته', 'عنوان', 'تاریخ'], array_map(static fn ($a) => [
+                (string) CaseLabels::of(CaseLabels::ATTACHMENTS, $a['category']), (string) $a['title'],
+                Jalali::format((int) $a['added_at'], false)], $case['attachments'])]];
+        }
+        $blocks[] = ['table', [['نام و امضای کارشناس', ' '], ['نام و امضای حاضرین', ' '], ['مهر و امضای مدیر', ' ']]];
+        $photos = array_values(array_filter($case['media'], static fn ($m) => (int) $m['type'] === 0));
+        if ($photos !== []) {
+            $blocks[] = ['h', 'پیوست تصاویر'];
+            foreach ($photos as $m) {
+                $blocks[] = ['image', [(string) Storage::resolve((string) $m['file_path']), CaseReport::photoCaption($r, $m)]];
+            }
+        }
+        return $blocks;
     }
 }

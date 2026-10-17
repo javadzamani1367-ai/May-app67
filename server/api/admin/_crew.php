@@ -22,7 +22,8 @@ function crew_period(): array
 
 function crew_report(array $period, string $member): array
 {
-    $report = CrewReport::build($period['from'], $period['to']);
+    $scope = admin_scope();
+    $report = CrewReport::build($period['from'], $period['to'], $scope->isManager() ? null : $scope->areas);
     if ($member !== '') {
         $report['members'] = array_values(array_filter($report['members'], static fn (array $m): bool => $m['key'] === $member));
     }

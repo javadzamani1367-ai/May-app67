@@ -19,21 +19,21 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             LoginGuard::failed($code);
         }
         $error = 'کد کاربری یا رمز عبور درست نیست.';
-    } elseif ((int) $user['role'] !== Auth::ROLE_MANAGER) {
-        $error = 'این پنل فقط برای مدیر است.';
+    } elseif (!in_array((int) $user['role'], ADMIN_ROLES, true)) {
+        $error = 'این پنل برای مدیر و مجریان است.';
     } else {
         LoginGuard::succeeded($code);
         session_regenerate_id(true);
         $_SESSION['admin_id'] = $user['id'];
-        header('Location: index.php');
+        header('Location: ' . admin_home($user));
         exit;
     }
 }
 
-portal_header('ورود مدیر', false, 'پنل مدیر');
+portal_header('ورود', false, 'پنل مدیر و مجریان');
 ?>
 <div class="card">
-  <h2>ورود به پنل مدیر</h2>
+  <h2>ورود به پنل</h2>
   <?php if ($error !== null): ?><p class="error"><?= e($error) ?></p><?php endif; ?>
   <form method="post">
     <label>کد کاربری
@@ -44,6 +44,6 @@ portal_header('ورود مدیر', false, 'پنل مدیر');
     </label>
     <button type="submit">ورود</button>
   </form>
-  <p class="muted">همان کد و رمزی که مدیر با آن در اپ مدیر وارد می‌شود.</p>
+  <p class="muted">همان کد و رمزی که مدیر یا مجری با آن در اپ وارد می‌شود. هر مجری فقط ناحیه‌های خودش را می‌بیند.</p>
 </div>
 <?php portal_footer();

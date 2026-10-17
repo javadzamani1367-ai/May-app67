@@ -164,4 +164,15 @@ final class DeviceRegistry
             'expert_code' => $row['expert_code'], 'seen_in' => (int) $row['seen_in'],
         ];
     }
+
+    public const EXCEL_HEADER = ['سریال', 'مدل', 'توان (وات)', 'تاریخ کشف', 'کد رهگیری', 'ناحیه', 'بخش', 'آدرس', 'شماره اشتراک',
+        'نام مشترک', 'دارنده (مالک یا متصرف)', 'کد ملی دارنده', 'کارشناس', 'دفعات دیده‌شدن'];
+
+    public static function excelRow(array $r): array
+    {
+        $p = self::present($r);
+        return [$p['serial'], $p['model'], $p['power_watt'], $p['found_at'] === null ? '' : Jalali::format($p['found_at'], false),
+            $p['code'], $p['area'], $p['district'], $p['address'], $p['subscription'], $p['subscriber'], $p['owner'],
+            $p['owner_national_id'], $p['expert_code'], $p['seen_in']];
+    }
 }

@@ -2,11 +2,13 @@
 declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 
-admin_require();
+admin_require(ADMIN_ROLES);
 
 // فایل با شناسه خواسته می‌شود، نه با مسیر، و فقط بعد از ورود مدیر داده می‌شود.
 $id = (string) ($_GET['id'] ?? '');
-$file = Field::isUuid($id) ? Db::one('SELECT path, mime, size FROM field_files WHERE id = ? AND complete = 1', [$id]) : null;
+$file = Field::isUuid($id) ? Db::one('SELECT f.path, f.mime, f.size, i.kind, i.area_code FROM field_files f JOIN field_items i ON i.id = f.item_id
+                                     WHERE f.id = ? AND f.complete = 1', [$id]) : null;
+$file = $file !== null && admin_scope()->canSeeField($file) ? $file : null;
 $path = $file === null || $file['path'] === null ? null : Storage::resolve((string) $file['path']);
 if ($path === null || !is_file($path)) {
     http_response_code(404);

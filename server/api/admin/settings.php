@@ -55,6 +55,8 @@ admin_header('تنظیمات میدانی');
   <p class="muted">گوشی‌ها این تنظیمات را در همگام‌سازی بعدی می‌گیرند؛ نسخه تازه اپ لازم نیست.</p>
   <?php if ($saved): ?><p class="notice">ذخیره شد.</p><?php endif; ?>
   <?php if ($error !== null): ?><p class="error"><?= e($error) ?></p><?php endif; ?>
+  <p><a href="flow_settings.php">مهلت‌های گردش پرونده و مراحل اقدام واحدها</a> — <a href="holidays.php">تعطیلات</a> —
+    <a href="areas.php">کاربرهای ناحیه‌ها</a></p>
   <form method="post">
     <?= csrf_field() ?>
     <h3>کنترل مجموع آمپر فیدرها</h3>

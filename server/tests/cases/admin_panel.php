@@ -21,7 +21,7 @@ $anon = $probe->page('admin/users.php', $jar);
 equals('بدون ورود به صفحه ورود فرستاده می‌شود', 'login.php', $anon['location']);
 
 $field = $probe->page('admin/login.php', $jar, ['user_code' => 'f-100', 'password' => 'field-pass-1']);
-check('کاربر میدانی وارد پنل مدیر نمی‌شود', str_contains($field['body'], 'فقط برای مدیر'));
+check('کاربر میدانی وارد پنل مدیر نمی‌شود', str_contains($field['body'], 'برای مدیر و مجریان است') && $field['location'] === '');
 
 $in = $probe->page('admin/login.php', $jar, ['user_code' => 'mgr', 'password' => 'manager-pass-1']);
 equals('مدیر وارد می‌شود و داشبورد باز می‌شود', 'index.php', $in['location']);

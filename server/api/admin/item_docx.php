@@ -3,7 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 require __DIR__ . '/_item_view.php';
 
-admin_require();
+admin_require(ADMIN_ROLES);
 
 // گزارش یک مورد به Word: مشخصات، چک‌لیست، فهرست فایل‌ها و تاریخچه.
 $id = (string) ($_GET['id'] ?? '');
@@ -12,7 +12,7 @@ $item = Field::isUuid($id) ? Db::one(
      FROM field_items i JOIN users u ON u.id = i.user_id LEFT JOIN users a ON a.id = i.assigned_to WHERE i.id = ?',
     [$id]
 ) : null;
-if ($item === null) {
+if ($item === null || !admin_scope()->canSeeField($item)) {
     http_response_code(404);
     exit('مورد پیدا نشد.');
 }

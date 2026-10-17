@@ -3,21 +3,23 @@ declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 require __DIR__ . '/_cases_view.php';
 require __DIR__ . '/_case_actions.php';
+require __DIR__ . '/_case_flow.php';
 
-$manager = admin_require();
+$manager = admin_require(CASE_ROLES);
 
 // یک پرونده بازدید کامل، به ترتیب هفت بخش فرم رسمی، با تصاویر، مدارک و
 // سابقه ارسال به واحدها. چاپ و Word همان بخش‌ها را می‌سازند (CaseReport).
 $id = (string) ($_GET['id'] ?? '');
 $case = Field::isUuid($id) ? CaseReport::load($id) : null;
-if ($case === null) {
+if ($case === null || !admin_scope()->canSeeReport($case['report'])) {
     http_response_code(404);
     admin_header('یافت نشد');
     echo '<div class="card"><p class="error">پرونده پیدا نشد.</p></div>';
     portal_footer();
     exit;
 }
-$errors = case_actions_handle($id, $manager);
+$errors = case_actions_handle($id, $manager) + case_flow_handle($id);
+CaseFlow::markSeen($id, $manager);
 $r = $case['report'];
 $code = CaseLabels::code($r);
 $photos = array_values(array_filter($case['media'], static fn ($m) => (int) $m['type'] === 0));
@@ -83,7 +85,8 @@ echo case_styles();
     <div class="actions-bar">
       <a href="case_print.php?id=<?= e($id) ?>" target="_blank"><button type="button">فرم رسمی (چاپ و PDF)</button></a>
       <a href="case_docx.php?id=<?= e($id) ?>"><button type="button">خروجی Word</button></a>
-      <a href="#approval"><button type="button" style="background:#15803d">تأیید مدیر</button></a>
+      <a href="#flow"><button type="button" style="background:#7c3aed">گردش و پیگیری</button></a>
+      <a href="#approval"><button type="button" style="background:#15803d">تأیید</button></a>
       <a href="#dispatch"><button type="button" style="background:#0e7490">ارسال به واحد</button></a>
       <a href="cases.php"><button type="button" style="background:#64748b">بازگشت به آرشیو</button></a>
     </div>
@@ -96,6 +99,8 @@ echo case_styles();
       <a href="item.php?id=<?= e($referral['id']) ?>"><?= e(ltr((string) $referral['tracking_code'])) ?></a> ساخته شده.</p>
   <?php endif; ?>
 </div>
+
+<?= case_flow_card($id, $r, $errors['flow']) ?>
 
 <div class="section-grid">
   <?= case_section('۱ — مشخصات پرونده', CaseReport::caseRows($r)) ?>
@@ -150,15 +155,18 @@ $audit = PositionAudit::text($r['position_at'] ?? null, $lat, $lon, $r['observer
 <div class="card">
   <h3>ارسال به واحدها (<?= fa_digits((string) count($case['dispatches'])) ?>)</h3>
   <?php if ($case['dispatches'] === []): ?><p class="muted">به واحدی ارسال نشده.</p><?php else: ?>
-  <table><tr><th>واحد</th><th>تاریخ</th><th>قالب و راه</th><th>مهلت</th><th>وضعیت</th><th>پاسخ</th></tr>
-    <?php foreach ($case['dispatches'] as $d): $overdue = $d['deadline_at'] !== null && (int) $d['status'] < 2 && (int) $d['deadline_at'] < Db::now(); ?>
-      <tr><td><?= e(UNIT_NAMES[(int) $d['unit']] ?? '—') ?></td>
+  <table><tr><th>واحد</th><th>تاریخ</th><th>قالب و راه</th><th>مهلت</th><th>وضعیت</th><th>مرحله اقدام</th><th>پاسخ</th></tr>
+    <?php foreach ($case['dispatches'] as $d): $overdue = UnitStages::overdue($d); $stage = $d['stage'] === null ? null : (int) $d['stage']; ?>
+      <tr><td><?= e(UNIT_NAMES[(int) $d['unit']] ?? '—') ?><br><span class="muted"><?= e(Areas::label($d['area_code'])) ?></span></td>
         <td><?= e(Jalali::format((int) $d['dispatched_at'], false)) ?></td>
         <td><?= e(CaseLabels::of(CaseLabels::FORMATS, $d['output_format']) . ' · ' . CaseLabels::of(CaseLabels::CHANNELS, $d['channel'])) ?></td>
         <td><?= $d['deadline_at'] === null ? '—' : '<span class="tag ' . ($overdue ? 'tag-overdue' : 'tag-sent') . '">'
             . e(Jalali::format((int) $d['deadline_at'], false)) . '</span>' ?></td>
         <td><span class="tag <?= CaseLabels::DISPATCH_TAGS[(int) $d['status']] ?? 'tag-sent' ?>"><?= e(CaseLabels::of(CaseLabels::DISPATCH_STATUSES, $d['status'])) ?></span></td>
-        <td><?= nl2br(e(mb_substr((string) $d['answer'], 0, 300))) ?></td></tr>
+        <td><?= e(UnitStages::name((int) $d['unit'], $stage) ?? '—') ?>
+          <div class="bar" title="<?= UnitStages::progress((int) $d['unit'], $stage) ?>٪"><span style="width:<?= UnitStages::progress((int) $d['unit'], $stage) ?>%"></span></div></td>
+        <td><?php foreach (UnitResponse::list($d) as $resp): ?><p style="margin:0 0 6px"><span class="muted"><?= e(Jalali::format((int) $resp['created_at'])) ?>
+          <?= $resp['stage_name'] === null ? '' : '— ' . e($resp['stage_name']) ?></span><br><?= nl2br(e(mb_substr((string) $resp['body'], 0, 400))) ?></p><?php endforeach; ?></td></tr>
     <?php endforeach; ?>
   </table><?php endif; ?>
 </div>

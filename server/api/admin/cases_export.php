@@ -2,11 +2,11 @@
 declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 
-admin_require();
+admin_require(CASE_ROLES);
 
 // اکسل پرونده‌ها با همان فیلترهای آرشیو، و برگه دوم آمار تجمیعی همان پرونده‌ها
 // — مثل خروجی اکسل نرم‌افزار ویندوز.
-$filter = CaseArchive::filters($_GET);
+$filter = CaseArchive::filters($_GET, admin_scope());
 $rows = array_map([CaseArchive::class, 'excelRow'], CaseArchive::rows($filter, 20000));
 $s = CaseArchive::stats($filter);
 $stats = [

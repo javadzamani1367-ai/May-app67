@@ -15,7 +15,7 @@ final class RegistryController
             $get[$key] = $request->str($key);
         }
         if ($request->str('format') === 'xlsx') {
-            Xlsx::send('devices', 'بانک دستگاه‌ها', self::HEADER, array_map([self::class, 'row'], DeviceRegistry::search($get, 20000)));
+            Xlsx::send('devices', 'بانک دستگاه‌ها', DeviceRegistry::EXCEL_HEADER, array_map([DeviceRegistry::class, 'excelRow'], DeviceRegistry::search($get, 20000)));
             exit;
         }
         $page = max(0, $request->int('page', 0) ?? 0);
@@ -43,16 +43,5 @@ final class RegistryController
             'id' => $a['id'], 'serial' => $a['serial_key'], 'report_id' => $a['report_id'], 'other_report_id' => $a['other_report_id'],
             'at' => (int) $a['created_at'], 'seen' => $a['seen_at'] !== null, 'now' => $a['now'], 'before' => $a['before'],
         ], $alerts)]);
-    }
-
-    public const HEADER = ['سریال', 'مدل', 'توان (وات)', 'تاریخ کشف', 'کد رهگیری', 'ناحیه', 'بخش', 'آدرس', 'شماره اشتراک',
-        'نام مشترک', 'دارنده (مالک یا متصرف)', 'کد ملی دارنده', 'کارشناس', 'دفعات دیده‌شدن'];
-
-    public static function row(array $r): array
-    {
-        $p = DeviceRegistry::present($r);
-        return [$p['serial'], $p['model'], $p['power_watt'], $p['found_at'] === null ? '' : Jalali::format($p['found_at'], false),
-            $p['code'], $p['area'], $p['district'], $p['address'], $p['subscription'], $p['subscriber'], $p['owner'],
-            $p['owner_national_id'], $p['expert_code'], $p['seen_in']];
     }
 }

@@ -4,7 +4,8 @@ require __DIR__ . '/_boot.php';
 require __DIR__ . '/_cases_view.php';
 require __DIR__ . '/_crew.php';
 
-admin_require();
+admin_require(CASE_ROLES);
+$canApprove = admin_scope()->isManager();
 
 // عملکرد اکیپ از لحظه‌های ثبت موقعیت تابلوها و تیرها (بدون ردیابی پیوسته):
 // بازدید و بازرسی هر نفر، ساعت شروع و پایان، ساعات روز، اضافه‌کار و بیرون از شهر.
@@ -12,7 +13,7 @@ admin_require();
 $period = crew_period();
 $member = trim((string) ($_GET['member'] ?? ''));
 $error = null;
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+if ($canApprove && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     csrf_check();
     $error = CrewReport::saveApproved((string) ($_POST['member_key'] ?? ''), $period['from_day'], $period['to_day'],
         (string) ($_POST['hours'] ?? ''), (string) ($_POST['note'] ?? ''), admin_user()['id'] ?? null);
@@ -91,13 +92,14 @@ echo case_styles();
         <td><?= e(CrewDays::clock($t['avg_end'])) ?></td>
         <td><?= fa_digits((string) $t['overtime']) ?> ساعت</td>
         <td>
+          <?php if (!$canApprove): ?><?= $ok === null ? '—' : e(fa_digits((string) $ok['hours'])) . ' ساعت' ?><?php else: ?>
           <form method="post" style="display:flex;gap:6px;align-items:center;margin:0;flex-wrap:nowrap">
             <?= csrf_field() ?>
             <input type="hidden" name="member_key" value="<?= e($m['key']) ?>">
             <input name="hours" value="<?= $ok === null ? '' : e(fa_digits((string) $ok['hours'])) ?>" style="width:70px" dir="ltr">
             <input name="note" value="<?= e($ok['note'] ?? '') ?>" placeholder="توضیح" style="width:140px">
             <button type="submit" style="margin:0;padding:6px 12px">ثبت</button>
-          </form>
+          </form><?php endif; ?>
         </td>
         <td><?= $report['geo'] ? fa_digits((string) $t['outside']) : '—' ?></td>
         <td class="nw"><a href="crew_docx.php?<?= e(crew_query($period, $m['key'])) ?>">Word</a></td>

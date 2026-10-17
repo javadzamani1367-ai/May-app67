@@ -24,9 +24,18 @@ function case_actions_handle(string $id, array $manager): array
         $done = $errors['approval'] === null ? 'decided' : null;
     } elseif ($action === 'dispatch') {
         $days = trim((string) ($_POST['deadline_days'] ?? ''));
+        $channel = (int) ($_POST['channel'] ?? 0);
         $errors['dispatch'] = CaseActions::dispatch($id, (int) ($_POST['unit'] ?? -1), (array) ($_POST['items'] ?? []),
-            (string) ($_POST['note'] ?? ''), $days === '' ? null : (int) Jalali::latin($days), (int) ($_POST['format'] ?? 0), $manager);
+            (string) ($_POST['note'] ?? ''), $days === '' ? null : (int) Jalali::latin($days), (int) ($_POST['format'] ?? 0), $manager,
+            $channel);
         $done = $errors['dispatch'] === null ? 'dispatched' : null;
+        if ($done !== null && $channel !== 0) {
+            // شبکه اجتماعی یا بسته آفلاین: بسته فرم رسمی و مدارک همان لحظه دانلود می‌شود تا فرستاده شود.
+            $sent = Db::one('SELECT id FROM dispatches WHERE report_id = ? AND sent_by = ? ORDER BY dispatched_at DESC LIMIT 1',
+                [$id, $manager['id']]);
+            header('Location: case_bundle.php?dispatch=' . urlencode((string) ($sent['id'] ?? '')));
+            exit;
+        }
     } else {
         $done = null;
     }
@@ -43,7 +52,7 @@ function case_approval_card(array $r, array $history, ?string $error): string
     $pending = $history !== [] && (int) $history[0]['decision'] === CaseActions::PENDING;
     // درخواست در انتظار بر ستون پرونده مقدم است: آن ستون با ارسال بعدی گوشی به‌روز می‌شود.
     $state = $pending ? 'در انتظار تأیید' : (string) CaseLabels::of(CaseLabels::APPROVALS, $r['approval_state']);
-    $html = '<div class="card" id="approval"><h3>تأیید مدیر — ' . e($state) . '</h3>';
+    $html = '<div class="card" id="approval"><h3>تأیید — ' . e($state) . '</h3>';
     if (($_GET['done'] ?? '') === 'decided') {
         $html .= '<p class="notice">تصمیم ثبت شد و به کارشناس اعلان رفت.</p>';
     }
@@ -61,7 +70,7 @@ function case_approval_card(array $r, array $history, ?string $error): string
         $html .= '<p class="muted">درخواست تأییدی در انتظار نیست. کارشناس پرونده را از اپ برای تأیید می‌فرستد.</p>';
     }
     if ($history !== []) {
-        $html .= '<table><tr><th>فرستاده</th><th>کارشناس</th><th>تصمیم</th><th>مدیر</th><th>توضیح</th></tr>';
+        $html .= '<table><tr><th>فرستاده</th><th>کارشناس</th><th>تصمیم</th><th>تصمیم‌گیر</th><th>توضیح</th></tr>';
         foreach ($history as $a) {
             $decision = (int) $a['decision'];
             $html .= '<tr><td class="nw">' . e(Jalali::format((int) $a['submitted_at'])) . '</td><td>' . e($a['submitted_by_name'] ?? '—')
@@ -78,7 +87,8 @@ function case_approval_card(array $r, array $history, ?string $error): string
 function case_dispatch_form(array $case, ?string $error): string
 {
     $html = '<div class="card" id="dispatch"><h3>ارسال به واحد</h3>'
-        . '<p class="muted">واحد مقصد پرونده را در پرتال واحدها می‌بیند، مدارک انتخاب‌شده را دریافت می‌کند و پاسخش را همان‌جا ثبت می‌کند.</p>';
+        . '<p class="muted">از راه سامانه، واحد همان ناحیه پرونده را در پرتال می‌بیند، مدارک را دریافت می‌کند و مرحله‌به‌مرحله اقدامش را ثبت می‌کند. '
+        . 'با شبکه اجتماعی یا بسته آفلاین، فرم رسمی (Word) و مدارک انتخاب‌شده در یک فایل zip دانلود می‌شود و سابقه‌اش می‌ماند.</p>';
     if (($_GET['done'] ?? '') === 'dispatched') {
         $html .= '<p class="notice">ارسال شد و به واحد اعلان رفت.</p>';
     }
@@ -92,7 +102,9 @@ function case_dispatch_form(array $case, ?string $error): string
     }
     $html .= '</select></label><label>مهلت اعلام نتیجه (روز، خالی یعنی بدون مهلت)'
         . '<input name="deadline_days" inputmode="numeric" placeholder="۷"></label>'
-        . '<label>قالب گزارش<select name="format"><option value="0">PDF</option><option value="1">Word</option></select></label></div>'
+        . '<label>قالب گزارش<select name="format"><option value="0">PDF</option><option value="1">Word</option></select></label>'
+        . '<label>راه ارسال<select name="channel"><option value="0">سامانه (پرتال واحد ناحیه)</option>'
+        . '<option value="1">شبکه اجتماعی (دانلود بسته برای فرستادن)</option><option value="2">بسته آفلاین</option></select></label></div>'
         . '<label>توضیح برای واحد<textarea name="note" rows="2"></textarea></label>';
     $choices = [];
     foreach ($case['media'] as $m) {

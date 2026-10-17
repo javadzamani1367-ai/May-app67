@@ -3,7 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 require __DIR__ . '/_crew.php';
 
-admin_require();
+admin_require(CASE_ROLES);
 
 // اکسل عملکرد اکیپ با همان بازه و عضو صفحه.
 $period = crew_period();

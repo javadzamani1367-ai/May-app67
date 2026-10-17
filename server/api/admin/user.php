@@ -18,6 +18,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         'permissions' => (isset($_POST['perm_inspect']) ? Auth::PERM_INSPECT : 0)
             | (isset($_POST['perm_report']) ? Auth::PERM_REPORT : 0),
         'county' => (string) ($_POST['county'] ?? ''),
+        'areas' => array_map('strval', (array) ($_POST['areas'] ?? [])),
         'phone' => (string) ($_POST['phone'] ?? ''),
         'device_code' => (string) ($_POST['device_code'] ?? ''),
         'password' => (string) ($_POST['password'] ?? ''),
@@ -99,6 +100,18 @@ admin_header(isset($existing['id']) ? 'ویرایش کاربر' : 'کاربر ج
       <label>شهرستان
         <input name="county" value="<?= $value('county') ?>">
       </label>
+      <div>
+        <strong>ناحیه</strong>
+        <p class="muted" style="margin:0">مجری رمزارز یک یا چند ناحیه؛ کارشناس، واحد و کاربر میدانی یکی. واحد یا مجری
+          غیرمجاز بی‌ناحیه یعنی همه استان.</p>
+        <?php $own = Areas::parse($existing['areas'] ?? ''); ?>
+        <div style="columns:2">
+          <?php foreach (Areas::options() as $code => $label): ?>
+            <label class="check" style="font-weight:normal"><input type="checkbox" name="areas[]" value="<?= e((string) $code) ?>"
+              <?= in_array((string) $code, $own, true) ? 'checked' : '' ?>> <?= e($label) ?></label>
+          <?php endforeach; ?>
+        </div>
+      </div>
       <label>تلفن همراه
         <input name="phone" value="<?= $value('phone') ?>" dir="ltr">
       </label>

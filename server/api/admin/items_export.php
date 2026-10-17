@@ -2,10 +2,10 @@
 declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 
-admin_require();
+admin_require(ADMIN_ROLES);
 
 // همان فیلترهای فهرست، همه سطرها. سقف برای اینکه یک کلیک هاست را از کار نیندازد.
-$filter = FieldAdmin::filters($_GET);
+$filter = FieldManage::scoped(FieldAdmin::filters($_GET), admin_scope());
 $rows = Db::all(FieldAdmin::listSql($filter['where']) . ' LIMIT 20000', $filter['params']);
 
 $header = ['کد رهگیری', 'نوع', 'وضعیت', 'مهلت گذشته', 'اولویت', 'ثبت‌کننده', 'کد ثبت‌کننده', 'تاریخ ثبت', 'تاریخ رسیدن',

@@ -3,7 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 require __DIR__ . '/_cases_view.php';
 
-admin_require();
+admin_require(CASE_ROLES);
 
 // عملکرد واحدها، مثل همان صفحه در اپ مدیر: هر واحد چند ارسال گرفت، چند تا را
 // دید و پاسخ داد، چند تا از مهلت گذشت و پاسخ به طور میانگین چقدر طول کشید.
@@ -12,8 +12,8 @@ $fromText = trim((string) ($_GET['from'] ?? ''));
 $toText = trim((string) ($_GET['to'] ?? ''));
 $from = ($p = Jalali::parse($fromText)) === null ? 0 : Jalali::startOfDay(...$p);
 $to = ($p = Jalali::parse($toText)) === null ? Db::now() : Jalali::startOfDay(...$p) + 86_400_000 - 1;
-$rows = CaseActions::unitStats($from, $to);
-$overdue = CaseActions::overdueDispatches();
+$rows = CaseActions::unitStats($from, $to, admin_scope());
+$overdue = CaseActions::overdueDispatches(50, admin_scope());
 $total = ['sent' => 0, 'seen' => 0, 'answered' => 0, 'overdue' => 0];
 foreach ($rows as $row) {
     foreach ($total as $k => $v) {

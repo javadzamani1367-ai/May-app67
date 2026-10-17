@@ -3,11 +3,11 @@ declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 require __DIR__ . '/_cases_view.php';
 
-admin_require();
+admin_require(CASE_ROLES);
 
 // آمار پرونده‌های بازدید (CLAUDE.md بخش ۱۱)، با همان فیلترهای آرشیو: شمار و
 // توان کشف‌شده به تفکیک وضعیت، نوع، شهرستان، کارشناس و ماه، و یافته‌های فنی.
-$filter = CaseArchive::filters($_GET);
+$filter = CaseArchive::filters($_GET, admin_scope());
 $values = $filter['values'];
 $s = CaseArchive::stats($filter);
 $kw = static fn ($watt) => CaseLabels::number((float) $watt / 1000) . ' کیلووات';

@@ -4,15 +4,17 @@ require __DIR__ . '/_boot.php';
 require __DIR__ . '/_item_view.php';
 require __DIR__ . '/_item_merge.php';
 
-$manager = admin_require();
+$manager = admin_require(ADMIN_ROLES);
+$scope = admin_scope();
 $id = (string) ($_GET['id'] ?? '');
 $load = static fn () => Field::isUuid($id) ? Db::one(
-    'SELECT i.*, u.full_name AS reporter, u.user_code AS reporter_code, a.full_name AS expert
-     FROM field_items i JOIN users u ON u.id = i.user_id LEFT JOIN users a ON a.id = i.assigned_to WHERE i.id = ?',
+    'SELECT i.*, u.full_name AS reporter, u.user_code AS reporter_code, a.full_name AS expert, h.full_name AS handler
+     FROM field_items i JOIN users u ON u.id = i.user_id LEFT JOIN users a ON a.id = i.assigned_to
+     LEFT JOIN users h ON h.id = i.handler_id WHERE i.id = ?',
     [$id]
 ) : null;
 $item = $load();
-if ($item === null) {
+if ($item === null || !$scope->canSeeField($item)) {
     http_response_code(404);
     admin_header('مورد پیدا نشد');
     echo '<div class="card"><p class="error">این مورد پیدا نشد.</p><p><a href="items.php">بازگشت به فهرست</a></p></div>';
@@ -24,28 +26,26 @@ $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $action = (string) ($_POST['action'] ?? 'status');
-    if ($action === 'merge' || $action === 'unmerge') {
-        $error = $action === 'merge'
-            ? FieldDuplicates::merge($item, (string) ($_POST['target'] ?? ''), $manager, (string) ($_POST['note'] ?? ''))
-            : FieldDuplicates::unmerge($item, $manager);
-        if ($error === null) {
-            header('Location: item.php?id=' . urlencode($id) . '&saved=1');
-            exit;
-        }
-    }
-    $to = (int) ($_POST['status'] ?? -1);
-    $due = null;
-    $dueText = trim((string) ($_POST['due'] ?? ''));
-    if ($dueText !== '') {
-        $parsed = Jalali::parse($dueText);
+    $note = (string) ($_POST['note'] ?? '');
+    if ($action === 'hand') {
+        $error = FieldHandOff::hand($item, (string) ($_POST['executor_id'] ?? ''), $note, $scope);
+    } elseif ($action === 'followup') {
+        $error = FieldHandOff::followUp($item, $note, $scope);
+    } elseif ($action === 'merge' || $action === 'unmerge') {
+        // ادغام تکراری‌ها کار مدیر است؛ مجری فقط موردهای خودش را می‌گرداند.
+        $error = !$scope->isManager() ? 'ادغام کار مدیر است.' : ($action === 'merge'
+            ? FieldDuplicates::merge($item, (string) ($_POST['target'] ?? ''), $manager, $note)
+            : FieldDuplicates::unmerge($item, $manager));
+    } else {
+        $dueText = trim((string) ($_POST['due'] ?? ''));
+        $parsed = $dueText === '' ? null : Jalali::parse($dueText);
+        $assignee = (string) ($_POST['assigned_to'] ?? '');
         // مهلت تا پایان همان روز است.
-        $due = $parsed === null ? -1 : Jalali::startOfDay(...$parsed) + 86_400_000 - 1;
+        $error = $dueText !== '' && $parsed === null ? 'تاریخ مهلت را مثل ۱۴۰۵/۰۷/۲۰ بنویسید.'
+            : FieldAdmin::transition($item, (int) ($_POST['status'] ?? -1), $manager, $note,
+                Field::isUuid($assignee) ? $assignee : null, $parsed === null ? null : Jalali::startOfDay(...$parsed) + 86_400_000 - 1);
     }
-    $assignee = (string) ($_POST['assigned_to'] ?? '');
-    $error = $error ?? ($due === -1 ? 'تاریخ مهلت را مثل ۱۴۰۵/۰۷/۲۰ بنویسید.'
-        : FieldAdmin::transition($item, $to, $manager, (string) ($_POST['note'] ?? ''),
-            Field::isUuid($assignee) ? $assignee : null, $due));
-    if ($error === null && $action === 'status') {
+    if ($error === null) {
         header('Location: item.php?id=' . urlencode($id) . '&saved=1');
         exit;
     }
@@ -59,11 +59,13 @@ $events = Db::all(
      WHERE e.item_id = ? ORDER BY e.at, e.id',
     [$id]
 );
-$experts = Db::all('SELECT id, full_name FROM users WHERE role = ? AND active = 1 ORDER BY full_name', [Auth::ROLE_EXPERT]);
+$experts = array_map(static fn ($x) => ['id' => $x['id'], 'full_name' => $x['name']],
+    $scope->experts($scope->wholeProvince() ? null : ($item['area_code'] ?? null)));
+$executors = $scope->isExecutor() ? [] : $scope->executors();
 $target = $item['merged_into'] === null ? null : Db::one('SELECT id, tracking_code FROM field_items WHERE id = ?', [$item['merged_into']]);
 // مورد ادغام‌شده وضعیت جدا ندارد؛ اول باید از ادغام جدا شود.
 $next = $target === null ? (FieldAdmin::NEXT[(int) $item['status']] ?? []) : [];
-$candidates = FieldDuplicates::candidatesFor($item);
+$candidates = $scope->isManager() ? FieldDuplicates::candidatesFor($item) : [];
 $merged = FieldDuplicates::mergedInto($id);
 $lat = $item['latitude'] === null ? null : (float) $item['latitude'];
 $lon = $item['longitude'] === null ? null : (float) $item['longitude'];
@@ -85,6 +87,8 @@ admin_header((string) ($item['tracking_code'] ?? 'مورد'));
   <?php if (isset($_GET['saved'])): ?><p class="notice">ثبت شد.</p><?php endif; ?>
   <table>
     <?= detail_row('ثبت‌کننده', $item['reporter'] . ' (' . ltr((string) $item['reporter_code']) . ')') ?>
+    <?= detail_row('ناحیه', Areas::label($item['area_code'] ?? null)) ?>
+    <?= detail_row('سپرده به مجری', $item['handler']) ?>
     <?= detail_row('اولویت', $item['priority'] === null ? null : (FieldAdmin::PRIORITY_NAMES[(int) $item['priority']] ?? null)) ?>
     <?= detail_row('زمان ثبت در گوشی', Jalali::format((int) $item['created_at'])) ?>
     <?= detail_row('زمان رسیدن به سرور', Jalali::format((int) $item['received_at'])) ?>
@@ -131,7 +135,7 @@ admin_header((string) ($item['tracking_code'] ?? 'مورد'));
   <h3>اقدام</h3>
   <?php if ($error !== null): ?><p class="error"><?= e($error) ?></p><?php endif; ?>
   <form method="post">
-    <?= csrf_field() ?>
+    <?= csrf_field() ?><input type="hidden" name="action" value="status">
     <div class="grid">
       <label>وضعیت تازه
         <select name="status">
@@ -153,6 +157,26 @@ admin_header((string) ($item['tracking_code'] ?? 'مورد'));
     <label>توضیح (برای رد و بازدید دوباره اجباری)<textarea name="note" rows="3"></textarea></label>
     <button type="submit">ثبت</button>
   </form>
+</div>
+<?php endif; ?>
+
+<?php if ($target === null): ?>
+<div class="section-grid">
+  <?php if ($executors !== [] && !in_array((int) $item['status'], [Field::STATUS_CLOSED, Field::STATUS_REJECTED], true)): ?>
+  <div class="card"><h3>سپردن به مجری رمزارز</h3>
+    <p class="muted">مجری مورد را به کارشناس ناحیه‌اش ارجاع می‌دهد؛ هر قدمش در تاریخچه همین مورد می‌آید.</p>
+    <form method="post"><?= csrf_field() ?><input type="hidden" name="action" value="hand">
+      <label>مجری<select name="executor_id" required><option value="">—</option>
+        <?php foreach ($executors as $x): ?><option value="<?= e($x['id']) ?>" <?= $x['id'] === $item['handler_id'] ? 'selected' : '' ?>>
+          <?= e($x['name'] . ' — ' . implode('، ', array_map([Areas::class, 'label'], $x['areas']))) ?></option><?php endforeach; ?>
+      </select></label>
+      <label>توضیح<input name="note"></label>
+      <button type="submit" style="background:#7c3aed">سپردن</button></form></div>
+  <?php endif; ?>
+  <div class="card"><h3>پیگیری</h3>
+    <form method="post"><?= csrf_field() ?><input type="hidden" name="action" value="followup">
+      <label>یادداشت پیگیری<textarea name="note" rows="2" required></textarea></label>
+      <button type="submit" style="background:#64748b">ثبت پیگیری</button></form></div>
 </div>
 <?php endif; ?>
 

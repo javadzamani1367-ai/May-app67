@@ -20,11 +20,17 @@ final class CaseArchive
      *
      * @return array{where:string, params:list<mixed>, values:array<string, string>}
      */
-    public static function filters(array $get): array
+    public static function filters(array $get, ?Scope $scope = null): array
     {
-        $where = ['1 = 1'];
-        $params = [];
+        [$scoped, $params] = $scope?->reportWhere('r') ?? ['1 = 1', []];
+        $where = [$scoped];
         $values = [];
+        $area = Areas::code($get['area'] ?? null);
+        if ($area !== null) {
+            $where[] = 'r.area_code = ?';
+            $params[] = $area;
+            $values['area'] = $area;
+        }
         $text = static fn (string $k): string => trim((string) ($get[$k] ?? ''));
         $coded = ['type' => ['r.report_type', CaseLabels::REPORT_TYPES], 'status' => ['r.status', CaseLabels::STATUSES],
                   'approval' => ['r.approval_state', CaseLabels::APPROVALS]];
@@ -46,8 +52,8 @@ final class CaseArchive
             $q = mb_substr(self::latin($text('q')), 0, 64);
             $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $q) . '%';
             $where[] = '(r.tracking_code LIKE ? OR r.temp_code LIKE ? OR r.address LIKE ? OR r.subscription_number LIKE ?
-                        OR r.owner_name LIKE ? OR r.file_number LIKE ? OR r.bill_number LIKE ?)';
-            array_push($params, $like, $like, $like, $like, $like, $like, $like);
+                        OR r.owner_name LIKE ? OR r.file_number LIKE ? OR r.bill_number LIKE ? OR r.subscriber_name LIKE ?)';
+            array_push($params, $like, $like, $like, $like, $like, $like, $like, $like);
             $values['q'] = $text('q');
         }
         foreach (['from' => ['>=', 0], 'to' => ['<', 86_400_000]] as $key => [$op, $shift]) {
@@ -134,7 +140,7 @@ final class CaseArchive
     /** سرستون‌های اکسل، همان CLAUDE.md بخش ۱۱. */
     public const EXCEL_HEADER = ['کد رهگیری', 'نوع گزارش', 'تاریخ گزارش', 'تاریخ بازدید', 'شهرستان', 'بخش', 'آدرس',
         'شماره اشتراک', 'شماره پرونده', 'شماره قبض', 'نام مالک', 'آمپراژ کنتور', 'آمپراژ مصرفی', 'تعداد دستگاه',
-        'مجموع توان (وات)', 'وضعیت', 'تأیید مدیر', 'کارشناس', 'مختصات'];
+        'مجموع توان (وات)', 'وضعیت', 'تأیید مدیر', 'کارشناس', 'مختصات', 'نام مشترک'];
 
     /** یک سطر اکسل؛ عددها عدد می‌مانند تا در اکسل جمع زده شوند. */
     public static function excelRow(array $r): array
@@ -151,6 +157,7 @@ final class CaseArchive
             CaseLabels::of(CaseLabels::APPROVALS, $r['approval_state']),
             CaseReport::expert(trim((string) $r['expert_name']), (string) $r['expert_code']),
             is_numeric($r['latitude']) ? sprintf('%.6f, %.6f', $r['latitude'], $r['longitude']) : null,
+            $r['subscriber_name'] ?? null,
         ];
     }
 }

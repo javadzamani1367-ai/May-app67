@@ -2,18 +2,18 @@
 declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 
-admin_require();
+admin_require(CASE_ROLES);
 
 // تصویر، فیلم یا مدرک یک پرونده بازدید، با شناسه سطر، فقط برای مدیر واردشده.
 // عکس در صفحه باز می‌شود؛ بقیه، و هر چه با download=1 خواسته شود، دانلود.
 $id = (string) ($_GET['id'] ?? '');
 $kind = (string) ($_GET['kind'] ?? '');
 $row = !Field::isUuid($id) ? null : match ($kind) {
-    'media' => Db::one('SELECT file_path, type, captured_at FROM media WHERE id = ?', [$id]),
-    'attachment' => Db::one('SELECT file_path, mime_type, title FROM attachments WHERE id = ?', [$id]),
+    'media' => Db::one('SELECT m.file_path, m.type, m.captured_at, r.area_code FROM media m JOIN reports r ON r.id = m.report_id WHERE m.id = ?', [$id]),
+    'attachment' => Db::one('SELECT a.file_path, a.mime_type, a.title, r.area_code FROM attachments a JOIN reports r ON r.id = a.report_id WHERE a.id = ?', [$id]),
     default => null,
 };
-$path = $row === null ? null : Storage::resolve((string) $row['file_path']);
+$path = $row === null || !admin_scope()->canSeeReport($row) ? null : Storage::resolve((string) $row['file_path']);
 if ($path === null || !is_file($path)) {
     http_response_code(404);
     exit('فایل روی سرور نیست.');

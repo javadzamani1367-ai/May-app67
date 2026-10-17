@@ -3,12 +3,12 @@ declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 require __DIR__ . '/_cases_view.php';
 
-admin_require();
+admin_require(CASE_ROLES);
 
 // صف تأیید پرونده‌ها، مثل صفحه «تأییدها» در اپ مدیر: قدیمی‌ترین درخواست اول.
 // تصمیم در صفحه خود پرونده گرفته می‌شود، جایی که همه بخش‌ها و تصاویرش پیداست.
-$pending = CaseActions::pendingApprovals();
-$recent = CaseActions::recentDecisions();
+$pending = CaseActions::pendingApprovals(admin_scope());
+$recent = CaseActions::recentDecisions(30, admin_scope());
 $now = Db::now();
 
 admin_header('تأییدها');

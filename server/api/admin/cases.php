@@ -3,10 +3,10 @@ declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 require __DIR__ . '/_cases_view.php';
 
-admin_require();
+admin_require(CASE_ROLES);
 
 // آرشیو پرونده‌های بازدید: همان «بایگانی» نرم‌افزار ویندوز، روی هر مرورگری.
-$filter = CaseArchive::filters($_GET);
+$filter = CaseArchive::filters($_GET, admin_scope());
 $values = $filter['values'];
 $perPage = 50;
 $total = CaseArchive::count($filter);

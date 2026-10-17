@@ -32,24 +32,69 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-/** مدیر واردشده، یا تهی. حساب غیرفعال‌شده همان لحظه بیرون می‌افتد. */
+/** نقش‌هایی که به پنل وارد می‌شوند: مدیر، و دو مجری که هر کدام فقط محدوده خودشان را می‌بینند. */
+const ADMIN_ROLES = [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR, Auth::ROLE_ILLEGAL];
+const CASE_ROLES = [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR];
+
+/** کاربر واردشده، یا تهی. حساب غیرفعال‌شده همان لحظه بیرون می‌افتد. */
 function admin_user(): ?array
 {
+    static $user = false;
+    if ($user !== false) {
+        return $user;
+    }
     $id = $_SESSION['admin_id'] ?? null;
     if (!is_string($id)) {
-        return null;
+        return $user = null;
     }
-    return Db::one('SELECT * FROM users WHERE id = ? AND active = 1 AND role = ?', [$id, Auth::ROLE_MANAGER]);
+    $row = Db::one('SELECT * FROM users WHERE id = ? AND active = 1', [$id]);
+    return $user = ($row !== null && in_array((int) $row['role'], ADMIN_ROLES, true) ? $row : null);
 }
 
-function admin_require(): array
+/**
+ * کاربر واردشده با یکی از این نقش‌ها. صفحه‌ای که مال نقش دیگری است، مجری را به
+ * صفحه اول خودش می‌برد: هیچ صفحه‌ای بیرون از محدوده‌اش برایش باز نمی‌شود.
+ *
+ * @param list<int> $roles
+ */
+function admin_require(array $roles = [Auth::ROLE_MANAGER]): array
 {
     $user = admin_user();
     if ($user === null) {
         header('Location: login.php');
         exit;
     }
+    if (!in_array((int) $user['role'], $roles, true)) {
+        header('Location: ' . admin_home($user));
+        exit;
+    }
     return $user;
+}
+
+/** پرونده‌ای که کاربر واردشده می‌بیند (مدیر همه، مجری ناحیه‌اش)، یا ۴۰۴. */
+function admin_case(string $id): array
+{
+    $case = Field::isUuid($id) ? CaseReport::load($id) : null;
+    if ($case === null || !admin_scope()->canSeeReport($case['report'])) {
+        http_response_code(404);
+        exit('پرونده پیدا نشد.');
+    }
+    return $case;
+}
+
+function admin_home(array $user): string
+{
+    return match ((int) $user['role']) {
+        Auth::ROLE_EXECUTOR => 'board.php',
+        Auth::ROLE_ILLEGAL => 'items.php',
+        default => 'index.php',
+    };
+}
+
+/** محدوده کاربر واردشده؛ همه پرس‌وجوهای فهرست از همین می‌گذرند. */
+function admin_scope(): Scope
+{
+    return new Scope(admin_user() ?? ['role' => -1, 'areas' => null, 'id' => '']);
 }
 
 function csrf_token(): string
@@ -77,27 +122,29 @@ function csrf_check(): void
 
 function admin_header(string $title): void
 {
-    portal_header($title, true, 'پنل مدیر', [
-        ['index.php', 'داشبورد'],
-        ['cases.php', 'آرشیو پرونده‌ها'],
-        ['approvals.php', 'تأییدها'],
-        ['performance.php', 'عملکرد واحدها'],
-        ['crew.php', 'عملکرد اکیپ'],
-        ['items.php', 'موردهای میدانی'],
-        ['map.php', 'نقشه'],
-        ['users.php', 'کاربران'],
-        ['roster.php', 'اکیپ و فیدرها'],
-        ['settings.php', 'تنظیمات میدانی'],
-        ['logout.php', 'خروج'],
-    ]);
+    $user = admin_user();
+    $role = (int) ($user['role'] ?? Auth::ROLE_MANAGER);
+    $nav = match ($role) {
+        Auth::ROLE_EXECUTOR => [['board.php', 'میز پیگیری'], ['intake.php', 'ثبت گزارش'], ['cases.php', 'پرونده‌ها'],
+            ['approvals.php', 'تأییدها'], ['performance.php', 'عملکرد واحدها'], ['scores.php', 'امتیازها'],
+            ['crew.php', 'عملکرد اکیپ'], ['items.php', 'موردهای میدانی']],
+        Auth::ROLE_ILLEGAL => [['items.php', 'گزارش‌های برق غیرمجاز']],
+        default => [['index.php', 'داشبورد'], ['board.php', 'میز پیگیری'], ['intake.php', 'ثبت گزارش'],
+            ['cases.php', 'آرشیو پرونده‌ها'], ['approvals.php', 'تأییدها'], ['performance.php', 'عملکرد واحدها'],
+            ['scores.php', 'امتیازها'], ['devices.php', 'بانک دستگاه‌ها'], ['crew.php', 'عملکرد اکیپ'],
+            ['items.php', 'موردهای میدانی'], ['map.php', 'نقشه'], ['users.php', 'کاربران'], ['roster.php', 'اکیپ و فیدرها'],
+            ['settings.php', 'تنظیمات']],
+    };
+    $nav[] = ['logout.php', 'خروج'];
+    $subtitle = match ($role) {
+        Auth::ROLE_EXECUTOR => 'پنل مجری رمزارز — ' . implode('، ', array_map([Areas::class, 'label'], Areas::parse($user['areas'] ?? ''))),
+        Auth::ROLE_ILLEGAL => 'پنل مجری برق غیرمجاز',
+        default => 'پنل مدیر',
+    };
+    portal_header($title, true, $subtitle, $nav);
 }
 
-const ROLE_NAMES = [
-    Auth::ROLE_EXPERT => 'کارشناس',
-    Auth::ROLE_MANAGER => 'مدیر',
-    Auth::ROLE_UNIT => 'واحد مقصد',
-    Auth::ROLE_FIELD => 'کاربر میدانی',
-];
+const ROLE_NAMES = Users::ROLE_NAMES;
 
 /** مجوزهای کاربر میدانی، به زبان آدم. */
 function permission_label(int $bits): string
