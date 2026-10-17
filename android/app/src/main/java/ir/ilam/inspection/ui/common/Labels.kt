@@ -122,3 +122,11 @@ fun meterTypeLabel(type: MeterType): String = stringResource(
         MeterType.DIGITAL -> R.string.meter_digital
     }
 )
+
+/** The signed-in account's role, as the settings and about cards name it. */
+fun roleLabelRes(): Int = when {
+    UserRole.isIllegal -> R.string.role_illegal
+    UserRole.isExecutor -> R.string.role_executor
+    UserRole.isManager -> R.string.role_manager
+    else -> R.string.role_expert
+}

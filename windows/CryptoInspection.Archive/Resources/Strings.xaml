@@ -158,6 +158,7 @@
     <sys:String x:Key="form_owner_national_id">کد ملی</sys:String>
     <sys:String x:Key="form_owner_phone">تلفن</sys:String>
     <sys:String x:Key="form_owner_relation">نسبت با محل</sys:String>
+    <sys:String x:Key="form_subscriber_name">نام مشترک</sys:String>
     <sys:String x:Key="form_connection_type">نوع انشعاب</sys:String>
     <sys:String x:Key="form_seal_status">وضعیت مهر و موم</sys:String>
     <sys:String x:Key="form_tap_point">محل برداشت برق</sys:String>

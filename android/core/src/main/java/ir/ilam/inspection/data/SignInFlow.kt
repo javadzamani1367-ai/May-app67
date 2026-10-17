@@ -61,6 +61,7 @@ class SignInFlow(
                 vault.setUserCode(userCode)
                 vault.setPin(password)
                 vault.markActivated(result.value.token)
+                vault.setAccount(result.value.role, result.value.areas)
                 return SignInOutcome.Granted(result.value)
             }
             is ApiResult.Refused -> {

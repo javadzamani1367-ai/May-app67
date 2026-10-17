@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AccountTree
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.History
@@ -67,7 +68,8 @@ fun CaseDetailScreen(
     reportId: String,
     onBack: () -> Unit,
     onContinueVisit: (String) -> Unit,
-    onDispatch: (String) -> Unit
+    onDispatch: (String) -> Unit,
+    onFlow: (String) -> Unit = {}
 ) {
     val appContainer = LocalContext.current.container
     val viewModel: CaseDetailViewModel = viewModel(
@@ -115,12 +117,22 @@ fun CaseDetailScreen(
         bottomBar = {
             if (current != null) {
                 BottomActionBar {
-                    PrimaryButton(
-                        text = stringResource(R.string.dispatch_title),
-                        onClick = { onDispatch(reportId) },
-                        icon = Icons.AutoMirrored.Filled.Send,
-                        modifier = Modifier.weight(1f)
-                    )
+                    // Only the manager and the area executor send to units and social networks;
+                    // the expert hands the case on through approval and offline packages.
+                    if (UserRole.isManager) {
+                        PrimaryButton(
+                            text = stringResource(R.string.dispatch_title),
+                            onClick = { onDispatch(reportId) },
+                            icon = Icons.AutoMirrored.Filled.Send,
+                            modifier = Modifier.weight(1f)
+                        )
+                        SecondaryButton(
+                            text = stringResource(R.string.fl_case_title),
+                            onClick = { onFlow(reportId) },
+                            icon = Icons.Filled.AccountTree,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                     if (current.report.status == ReportStatus.VISITED.code) {
                         SecondaryButton(
                             text = stringResource(R.string.action_archive),
@@ -159,6 +171,7 @@ fun CaseDetailScreen(
             if (current == null) return@Column
 
             CaseOverview(current)
+            if (!UserRole.isManager) ExpertFlowCard(reportId)
             ApprovalCard(report = current.report, onSubmit = viewModel::submitForApproval, onDecide = viewModel::decide)
             CaseFileSection(current)
             CasePlaceSection(current, locationFix, onOpenMap = { showMap = true })
@@ -169,7 +182,7 @@ fun CaseDetailScreen(
             CaseMediaSection(current)
             AttachmentSection(detail = current, viewModel = viewModel)
 
-            SectionCard(
+            if (UserRole.isManager) SectionCard(
                 title = stringResource(R.string.dispatch_history),
                 subtitle = stringResource(R.string.dispatch_history_hint),
                 icon = Icons.Filled.History,

@@ -116,7 +116,9 @@ fun SettingsScreen(onBack: () -> Unit, onUsers: () -> Unit) {
                         AppTextField(stringResource(R.string.settings_expert_name), expertName, { expertName = it })
                     }
                     // Three digits: every official area code is 401 to 419.
-                    NumberField(stringResource(R.string.settings_default_area), areaCode, { areaCode = it.take(3) })
+                    if (!UserRole.isIllegal) {
+                        NumberField(stringResource(R.string.settings_default_area), areaCode, { areaCode = it.take(3) })
+                    }
                     AppTextField(
                         label = stringResource(R.string.settings_sync_target),
                         value = syncTarget,
@@ -124,12 +126,14 @@ fun SettingsScreen(onBack: () -> Unit, onUsers: () -> Unit) {
                         keyboardType = KeyboardType.Uri,
                         ltr = true
                     )
-                    NumberField(
-                        label = stringResource(R.string.settings_media_quality),
-                        value = quality,
-                        onValueChange = { quality = it.take(3) },
-                        imeAction = ImeAction.Done
-                    )
+                    if (!UserRole.isIllegal) {
+                        NumberField(
+                            label = stringResource(R.string.settings_media_quality),
+                            value = quality,
+                            onValueChange = { quality = it.take(3) },
+                            imeAction = ImeAction.Done
+                        )
+                    }
                     PrimaryButton(
                         text = stringResource(R.string.action_save),
                         onClick = {
@@ -151,7 +155,8 @@ fun SettingsScreen(onBack: () -> Unit, onUsers: () -> Unit) {
                             modifier = Modifier.padding(top = 8.dp)
                         )
                     }
-                    if (UserRole.isManager) {
+                    // Accounts are the manager's alone; an area executor makes none.
+                    if (UserRole.isFullManager) {
                         SecondaryButton(
                             text = stringResource(R.string.users_title),
                             onClick = onUsers,
@@ -163,7 +168,8 @@ fun SettingsScreen(onBack: () -> Unit, onUsers: () -> Unit) {
                 }
             }
 
-            ServerSyncCard(
+            // The illegal-power app keeps no cases: it reads the server live.
+            if (!UserRole.isIllegal) ServerSyncCard(
                 configured = settings.syncTarget.isNotBlank(),
                 busy = serverBusy,
                 pending = pendingServer,
@@ -174,7 +180,7 @@ fun SettingsScreen(onBack: () -> Unit, onUsers: () -> Unit) {
                 onSync = viewModel::syncWithServer
             )
 
-            SectionCard(
+            if (!UserRole.isIllegal) SectionCard(
                 title = stringResource(R.string.sync_title),
                 subtitle = stringResource(R.string.sync_direct_hint),
                 icon = Icons.Filled.Computer,

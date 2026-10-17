@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.TableView
 import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material.icons.filled.Engineering
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -67,7 +69,14 @@ import java.util.Locale
 
 /** The figures, the breakdowns as charts, and the filtered Excel export the office asks for. */
 @Composable
-fun StatsScreen(onBack: () -> Unit, onPerformance: () -> Unit, onCrew: () -> Unit) {
+fun StatsScreen(
+    onBack: () -> Unit,
+    onPerformance: () -> Unit,
+    onCrew: () -> Unit,
+    onScores: () -> Unit = {},
+    onDevices: () -> Unit = {},
+    onMap: () -> Unit = {}
+) {
     val context = LocalContext.current
     val appContainer = context.container
     val viewModel: StatsViewModel = viewModel(
@@ -107,6 +116,11 @@ fun StatsScreen(onBack: () -> Unit, onPerformance: () -> Unit, onCrew: () -> Uni
             if (UserRole.isManager) {
                 ReportLink(Icons.Filled.Groups, stringResource(R.string.performance_title), stringResource(R.string.stats_performance_hint), onPerformance)
                 ReportLink(Icons.Filled.Engineering, stringResource(R.string.cw_title), stringResource(R.string.stats_crew_hint), onCrew)
+                ReportLink(Icons.Filled.Star, stringResource(R.string.sc_title), stringResource(R.string.sc_subtitle), onScores)
+                if (UserRole.isFullManager) {
+                    ReportLink(Icons.Filled.Memory, stringResource(R.string.dv_title), stringResource(R.string.stats_devices_hint), onDevices)
+                }
+                ReportLink(Icons.Filled.Map, stringResource(R.string.cases_map_title), stringResource(R.string.stats_map_hint), onMap)
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(vertical = 5.dp)) {

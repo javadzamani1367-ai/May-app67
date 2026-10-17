@@ -26,6 +26,9 @@ class SettingsRepository(private val dao: SettingDao) {
 
     suspend fun put(key: String, value: String) = dao.put(SettingEntity(key, value))
 
+    /** A value kept under its own key, for the small caches that are not settings the user edits. */
+    suspend fun raw(key: String): String? = dao.value(key)
+
     suspend fun expertCode(): String = dao.value(KEY_EXPERT_CODE).orEmpty()
 
     suspend fun defaultAreaCode(): String = dao.value(KEY_DEFAULT_AREA) ?: DEFAULT_AREA

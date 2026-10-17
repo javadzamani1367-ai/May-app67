@@ -50,6 +50,7 @@ namespace CryptoInspection.Archive.Sync
                     OwnerNationalId = json.String("owner_national_id"),
                     OwnerPhone = json.String("owner_phone"),
                     OwnerRelation = json.String("owner_relation"),
+                    SubscriberName = json.String("subscriber_name"),
                     MeterAmperage = json.NullableDouble("meter_amperage"),
                     MeasuredAmperage = json.NullableDouble("measured_amperage"),
                     ConnectionType = json.String("connection_type"),

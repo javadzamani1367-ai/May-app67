@@ -5,6 +5,9 @@ import ir.ilam.inspection.data.model.UserRole
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.workDataOf
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -36,14 +39,15 @@ class ServerSyncWorker(
         val settings = container.settingsRepository.current()
         // Checked here as well as at scheduling time: a job already queued
         // when the switch was turned off would otherwise run once more.
-        if (!settings.autoSync || settings.syncTarget.isBlank()) {
+        val forced = inputData.getBoolean(FORCED, false)
+        if ((!settings.autoSync && !forced) || settings.syncTarget.isBlank()) {
             return Result.success()
         }
 
         val outcome = container.serverCaseSync.run()
         // An expert's referral results waiting on the phone go with the cases,
         // and the list is refreshed for the next visit out of signal.
-        if (!UserRole.isManager && outcome.reachedServer) container.referralRepository.refresh()
+        if (UserRole.current == UserRole.EXPERT && outcome.reachedServer) container.referralRepository.refresh()
         return when {
             // Reached and finished: done, whatever the numbers were.
             outcome.reachedServer && outcome.failed == 0 -> Result.success()
@@ -81,6 +85,21 @@ class ServerSyncWorker(
             WorkManager.getInstance(context)
                 .enqueueUniquePeriodicWork(NAME, ExistingPeriodicWorkPolicy.KEEP, request)
         }
+
+        /**
+         * Once, now, on any network: the manager registered a case on the
+         * server and wants it on this phone, which is a small download asked
+         * for on purpose — not the background upload the Wi-Fi rule protects.
+         */
+        fun runNow(context: Context) {
+            val request = OneTimeWorkRequestBuilder<ServerSyncWorker>()
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                .setInputData(workDataOf(FORCED to true))
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork("$NAME-now", ExistingWorkPolicy.REPLACE, request)
+        }
+
+        private const val FORCED = "forced"
 
         fun cancel(context: Context) {
             WorkManager.getInstance(context).cancelUniqueWork(NAME)

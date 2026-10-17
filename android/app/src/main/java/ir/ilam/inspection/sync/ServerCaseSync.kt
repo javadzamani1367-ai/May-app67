@@ -5,6 +5,7 @@ import ir.ilam.inspection.data.db.AppDatabase
 import ir.ilam.inspection.data.db.ServerSyncEntity
 import ir.ilam.inspection.data.model.ReportDetail
 import ir.ilam.inspection.data.model.UserRole
+import ir.ilam.inspection.data.repo.ExpertFlowRepository
 import ir.ilam.inspection.data.repo.ImportRepository
 import ir.ilam.inspection.data.repo.ReportRepository
 import ir.ilam.inspection.data.repo.SettingsRepository
@@ -31,7 +32,8 @@ class ServerCaseSync(
     private val imports: ImportRepository,
     private val settings: SettingsRepository,
     private val vault: KeyStoreVault,
-    private val deviceCode: () -> String
+    private val deviceCode: () -> String,
+    private val expertFlow: ExpertFlowRepository
 ) {
 
     /** What one run did, in the numbers the settings screen shows. */
@@ -56,10 +58,33 @@ class ServerCaseSync(
 
         val files = ServerFiles(target, token)
         val push = push(api, token, files)
-        // A manager also pulls; an expert has nothing to pull that is not
-        // already the case on their own phone. And once a call has failed to
-        // arrive, pulling would only spend another timeout finding that out.
-        return if (UserRole.isManager && !push.offline) pull(api, token, files, push) else push
+        // Once a call has failed to arrive, pulling would only spend another timeout finding that out.
+        if (push.offline) return push
+        // A manager pulls everything of their scope. An expert pulls only the
+        // cases the manager or the area executor referred to them, which are
+        // not on the phone until then — never a newer copy of their own work.
+        if (UserRole.isManager) return pull(api, token, files, push)
+        if (!expertFlow.refresh(api, token)) return push
+        return pullMissing(api, token, files, expertFlow.assignments().map { it.reportId }, push)
+    }
+
+    private suspend fun pullMissing(api: ServerApi, token: String, files: ServerFiles, ids: List<String>, carried: Outcome): Outcome {
+        var outcome = carried
+        ids.filter { database.reportDao().byId(it) == null }.forEach { id ->
+            val detail = when (val result = api.pullReport(token, id)) {
+                is ApiResult.Ok -> result.value
+                is ApiResult.Refused -> null
+                ApiResult.Unreachable -> return outcome.copy(offline = true)
+            } ?: return@forEach
+            if (imports.save(detail)) {
+                markSent(id)
+                val fetched = imports.missingFiles(detail).count { file ->
+                    files.download(file.kind, file.id, imports.target(file.relativePath))
+                }
+                outcome = outcome.copy(pulled = outcome.pulled + 1, filesDown = outcome.filesDown + fetched, reachedServer = true)
+            }
+        }
+        return outcome
     }
 
     /**

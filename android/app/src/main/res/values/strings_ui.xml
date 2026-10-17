@@ -189,7 +189,8 @@
     <string name="perf_exports">خروجی گزارش</string>
 
     <string name="lock_role_expert">نسخه کارشناس</string>
-    <string name="lock_role_manager">نسخه مدیر</string>
+    <string name="lock_role_manager">نسخه مدیر و مجریان رمزارز</string>
+    <string name="lock_role_illegal">نسخه مجری برق غیرمجاز</string>
     <string name="users_subtitle">کارشناسان، کد دستگاه و درخواست‌های ثبت</string>
     <string name="approval_subtitle">%1$s پرونده منتظر تصمیم شما</string>
 

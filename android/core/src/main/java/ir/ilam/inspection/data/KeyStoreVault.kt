@@ -76,6 +76,20 @@ class KeyStoreVault(context: Context) {
 
     fun serverToken(): String? = prefs.getString(KEY_SERVER_TOKEN, null)
 
+    /**
+     * The role and areas the server gave this account at its last online
+     * entry. The manager app serves the manager and the area executors alike,
+     * and decides which screens to offer from these, offline too. The server
+     * still checks every call: hiding a button protects nothing.
+     */
+    fun setAccount(role: Int, areas: List<String>) {
+        prefs.edit().putInt(KEY_ROLE, role).putString(KEY_AREAS, areas.joinToString(",")).apply()
+    }
+
+    fun serverRole(): Int = prefs.getInt(KEY_ROLE, -1)
+
+    fun areas(): List<String> = prefs.getString(KEY_AREAS, null).orEmpty().split(',').filter { it.isNotBlank() }
+
     /** Undone when the server rejects the pairing, so the next entry is online. */
     fun clearActivation() {
         prefs.edit().remove(KEY_ACTIVATED).remove(KEY_SERVER_TOKEN).apply()
@@ -134,5 +148,7 @@ class KeyStoreVault(context: Context) {
         const val KEY_USER_CODE = "user_code"
         const val KEY_ACTIVATED = "activated"
         const val KEY_SERVER_TOKEN = "server_token"
+        const val KEY_ROLE = "server_role"
+        const val KEY_AREAS = "server_areas"
     }
 }

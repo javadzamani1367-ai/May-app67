@@ -26,6 +26,11 @@ final class AuthController
         if (!$fieldApp && $fieldUser) {
             Response::fail(403, 'wrong_app', 'این حساب برای اپ «بازرسی میدانی» است.');
         }
+        // اپ‌های تازه خودشان را معرفی می‌کنند؛ نسخه‌های قدیمی (بی app) مثل قبل پذیرفته می‌شوند.
+        $wrong = self::wrongApp($request->str('app'), (int) $user['role']);
+        if ($wrong !== null) {
+            Response::fail(403, 'wrong_app', $wrong);
+        }
 
         $token = Auth::issueToken((string) $user['id'], $device !== '' ? $device : null, (int) $user['role']);
 
@@ -87,6 +92,22 @@ final class AuthController
         Response::json(['pending' => true]);
     }
 
+    /** پیام «حساب برای این اپ نیست»، یا تهی. */
+    private static function wrongApp(string $app, int $role): ?string
+    {
+        $allowed = ['expert' => [Auth::ROLE_EXPERT], 'manager' => [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR],
+            'illegal' => [Auth::ROLE_ILLEGAL]][$app] ?? null;
+        if ($allowed === null || in_array($role, $allowed, true)) {
+            return null;
+        }
+        $name = Users::ROLE_NAMES[$role] ?? '';
+        return match ($app) {
+            'expert' => 'این حساب «' . $name . '» است، نه کارشناس. با اپ مخصوص همین نقش وارد شوید.',
+            'manager' => 'اپ مدیر برای مدیر و مجری رمزارز است؛ این حساب «' . $name . '» است.',
+            default => 'این اپ برای مجری برق غیرمجاز است؛ این حساب «' . $name . '» است.',
+        };
+    }
+
     public static function publicUser(array $row): array
     {
         return [
@@ -96,6 +117,7 @@ final class AuthController
             'role' => (int) $row['role'],
             'unit' => $row['unit'] === null ? null : (int) $row['unit'],
             'county' => $row['county'],
+            'areas' => Areas::parse($row['areas'] ?? ''),
             'permissions' => (int) ($row['permissions'] ?? 0),
         ];
     }

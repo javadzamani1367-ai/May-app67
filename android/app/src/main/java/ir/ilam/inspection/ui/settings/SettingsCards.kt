@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.ui.common.SectionCard
+import ir.ilam.inspection.ui.common.roleLabelRes
 import ir.ilam.inspection.ui.common.StatusBadge
 import ir.ilam.inspection.ui.common.ToneChip
 import ir.ilam.inspection.ui.common.ValueRow
@@ -37,7 +38,7 @@ fun AccountCard(expertCode: String, deviceCode: String) {
         icon = Icons.Filled.Badge,
         trailing = {
             StatusBadge(
-                text = stringResource(if (UserRole.isManager) R.string.role_manager else R.string.role_expert),
+                text = stringResource(roleLabelRes()),
                 tone = if (UserRole.isManager) Tone.BRAND else Tone.ACCENT
             )
         }

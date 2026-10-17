@@ -16,6 +16,7 @@ import ir.ilam.inspection.export.HtmlReportBuilder
 import ir.ilam.inspection.export.PdfExporter
 import ir.ilam.inspection.export.WordExporter
 import ir.ilam.inspection.sync.ServerCaseSync
+import ir.ilam.inspection.data.repo.ExpertFlowRepository
 import ir.ilam.inspection.sync.SyncService
 import ir.ilam.inspection.util.AppFonts
 import ir.ilam.inspection.sync.ApprovalSync
@@ -84,7 +85,11 @@ class AppContainer(private val context: Context) {
             imports = importRepository,
             settings = settingsRepository,
             vault = vault,
-            deviceCode = { syncService.deviceId() }
+            deviceCode = { syncService.deviceId() },
+            expertFlow = expertFlowRepository
         )
     }
+
+    /** The expert's referred cases and the standing of what they sent; refreshed with each sync. */
+    val expertFlowRepository: ExpertFlowRepository by lazy { ExpertFlowRepository(settingsRepository) }
 }

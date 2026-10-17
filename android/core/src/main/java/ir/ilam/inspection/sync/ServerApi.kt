@@ -51,7 +51,10 @@ class ServerApi(private val baseUrl: String) {
             token = data.optString("token"),
             fullName = data.optJSONObject("user")?.optString("full_name").orEmpty(),
             role = data.optJSONObject("user")?.optInt("role") ?: 0,
-            permissions = data.optJSONObject("user")?.optInt("permissions") ?: 0
+            permissions = data.optJSONObject("user")?.optInt("permissions") ?: 0,
+            areas = data.optJSONObject("user")?.optJSONArray("areas")?.let { list ->
+                (0 until list.length()).map { list.optString(it) }
+            }.orEmpty()
         )
     }
 
@@ -167,7 +170,14 @@ class ServerApi(private val baseUrl: String) {
         return "$base/index.php?route=$path"
     }
 
-    data class LoginResult(val token: String, val fullName: String, val role: Int, val permissions: Int = 0)
+    data class LoginResult(
+        val token: String,
+        val fullName: String,
+        val role: Int,
+        val permissions: Int = 0,
+        /** The official area codes this account works in; empty for the manager. */
+        val areas: List<String> = emptyList()
+    )
 
     data class RemoteUser(
         val id: String = "",

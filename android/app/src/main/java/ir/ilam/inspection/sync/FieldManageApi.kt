@@ -19,6 +19,8 @@ object FieldManage {
     val STATUSES = listOf(STATUS_REGISTERED, STATUS_REVIEWING, STATUS_REFERRED, STATUS_RESULT, STATUS_CLOSED,
         STATUS_REJECTED, STATUS_REVISIT)
 
+    const val KIND_CRYPTO = 1
+
     /** Kinds as the server numbers them: crypto, illegal, thermal, feeder panel, burn, pole by pole. */
     val KINDS = listOf(1, 2, 5, 3, 4, 6)
 
@@ -36,7 +38,11 @@ object FieldManage {
         val address: String?,
         val plate: String?,
         val reporter: String,
-        val expert: String?
+        val expert: String?,
+        /** «Ilam — area 401», as the server names it. */
+        val area: String = "",
+        /** The crypto executor the item was handed to, if any. */
+        val handler: String? = null
     )
 
     data class Page(val items: List<Row>, val more: Boolean, val counts: Map<Int, Int>, val overdue: Int)
@@ -63,7 +69,10 @@ object FieldManage {
         val fileCount: Int,
         val events: List<Event>,
         val next: List<Step>,
-        val experts: List<Expert>
+        val experts: List<Expert>,
+        /** Area executors this user may hand the item to; empty for an executor. */
+        val executors: List<Expert> = emptyList(),
+        val canHand: Boolean = false
     )
 
     data class Filter(val status: Int? = null, val kind: Int? = null, val query: String = "", val overdue: Boolean = false)
@@ -82,7 +91,9 @@ object FieldManage {
         address = o.optStringOrNull("address"),
         plate = o.optStringOrNull("plate"),
         reporter = o.optString("reporter"),
-        expert = o.optStringOrNull("expert")
+        expert = o.optStringOrNull("expert"),
+        area = o.optString("area"),
+        handler = o.optStringOrNull("handler")
     )
 
     internal fun detail(o: JSONObject): Detail {
@@ -109,7 +120,9 @@ object FieldManage {
             next = o.optJSONArray("next").objects().map {
                 Step(it.optInt("status"), it.optString("name"), it.optBoolean("needs_note"), it.optBoolean("needs_expert"))
             },
-            experts = o.optJSONArray("experts").objects().map { Expert(it.optString("id"), it.optString("name")) }
+            experts = o.optJSONArray("experts").objects().map { Expert(it.optString("id"), it.optString("name")) },
+            executors = o.optJSONArray("executors").objects().map { Expert(it.optString("id"), it.optString("name")) },
+            canHand = o.optBoolean("can_hand")
         )
     }
 
@@ -160,3 +173,15 @@ suspend fun ServerApi.moveFieldItem(
     dueAt?.let { body.put("due_at", it) }
     return post("manage/field/status", body, token) { data -> FieldManage.detail(data.optJSONObject("item") ?: JSONObject()) }
 }
+
+/** Hands an item to an area's crypto executor, who refers it on and follows it up. */
+suspend fun ServerApi.handFieldItem(token: String, id: String, executorId: String, note: String): ApiResult<FieldManage.Detail> =
+    post("manage/field/hand", JSONObject().put("id", id).put("executor_id", executorId).put("note", note.trim()), token) { data ->
+        FieldManage.detail(data.optJSONObject("item") ?: JSONObject())
+    }
+
+/** A follow-up note on an item; for an executor it counts as acting on it. */
+suspend fun ServerApi.followUpFieldItem(token: String, id: String, note: String): ApiResult<FieldManage.Detail> =
+    post("manage/field/followup", JSONObject().put("id", id).put("note", note.trim()), token) { data ->
+        FieldManage.detail(data.optJSONObject("item") ?: JSONObject())
+    }

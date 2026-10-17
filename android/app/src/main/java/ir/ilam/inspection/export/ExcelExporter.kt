@@ -55,7 +55,8 @@ class ExcelExporter(private val context: Context, private val files: FileStore) 
                 expertName.ifBlank { null },
                 PersianNumbers.toPersian(r.expertCode).ifBlank { null }
             ).joinToString(" - "),
-            coordinates
+            coordinates,
+            r.subscriberName.orEmpty()
         )
     }
 }

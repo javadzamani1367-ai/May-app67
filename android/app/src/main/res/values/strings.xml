@@ -132,6 +132,7 @@
     <string name="field_owner_national_id">کد ملی</string>
     <string name="field_owner_phone">تلفن</string>
     <string name="field_owner_relation">نسبت با محل</string>
+    <string name="field_subscriber_name">نام مشترک (صاحب قبض)</string>
     <string name="error_national_id">کد ملی معتبر نیست</string>
 
     <!-- فنی -->
@@ -364,6 +365,7 @@
         <item>وضعیت</item>
         <item>کارشناس</item>
         <item>مختصات</item>
+        <item>نام مشترک</item>
     </string-array>
     <string name="performance_title">گزارش عملکرد واحدها</string>
     <string name="performance_period">بازه گزارش: از %1$s تا %2$s</string>
@@ -432,6 +434,8 @@
     <string name="settings_role">نقش کاربر</string>
     <string name="role_expert">کارشناس</string>
     <string name="role_manager">مدیر</string>
+    <string name="role_executor">مجری رمزارز</string>
+    <string name="role_illegal">مجری برق غیرمجاز</string>
     <string name="dispatch_all_categories">همه دسته‌های مدارک (دسترسی مدیر)</string>
     <string name="dispatch_category_empty">مدرکی در این دسته ثبت نشده است</string>
     <string name="dispatch_video_unnamed">فیلم بدون شرح</string>

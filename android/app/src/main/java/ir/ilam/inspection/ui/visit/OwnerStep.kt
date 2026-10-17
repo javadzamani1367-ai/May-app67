@@ -29,13 +29,15 @@ fun OwnerStep(detail: ReportDetail, viewModel: VisitViewModel) {
     var nationalId by remember(report.id) { mutableStateOf(report.ownerNationalId.orEmpty()) }
     var phone by remember(report.id) { mutableStateOf(report.ownerPhone.orEmpty()) }
     var relation by remember(report.id) { mutableStateOf(report.ownerRelation.orEmpty()) }
+    var subscriber by remember(report.id) { mutableStateOf(report.subscriberName.orEmpty()) }
 
-    AutoSave(listOf(name, nationalId, phone, relation)) {
+    AutoSave(listOf(name, nationalId, phone, relation, subscriber)) {
         viewModel.setOwner(
             name = name,
             nationalId = nationalId,
             phone = phone,
-            relation = relation
+            relation = relation,
+            subscriber = subscriber
         )
     }
 
@@ -72,6 +74,8 @@ fun OwnerStep(detail: ReportDetail, viewModel: VisitViewModel) {
                 leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) }
             )
             AppTextField(stringResource(R.string.field_owner_relation), relation, { relation = it })
+            // The account holder's name: the registry ties every miner to it, and to the holder above.
+            AppTextField(stringResource(R.string.field_subscriber_name), subscriber, { subscriber = it })
         }
     }
 }

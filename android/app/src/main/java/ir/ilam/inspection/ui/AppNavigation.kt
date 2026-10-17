@@ -30,6 +30,14 @@ import ir.ilam.inspection.ui.performance.PerformanceScreen
 import ir.ilam.inspection.ui.users.UsersScreen
 import ir.ilam.inspection.ui.stats.StatsScreen
 import ir.ilam.inspection.ui.visit.VisitScreen
+import ir.ilam.inspection.ui.flow.BoardScreen
+import ir.ilam.inspection.ui.flow.CaseFlowScreen
+import ir.ilam.inspection.ui.flow.DevicesScreen
+import ir.ilam.inspection.ui.flow.FlowViewModel
+import ir.ilam.inspection.ui.flow.ManageViewModel
+import ir.ilam.inspection.ui.flow.NotificationsScreen
+import ir.ilam.inspection.ui.flow.RegisterScreen
+import ir.ilam.inspection.ui.flow.ScoresScreen
 
 /** Route names kept in one place so no screen has to guess a string. */
 object Routes {
@@ -49,6 +57,14 @@ object Routes {
     const val FIELD_ITEMS = "field-items"
     const val FIELD_ITEM = "field-item/{id}"
     const val CREW = "crew"
+    const val BOARD = "board"
+    const val CASE_FLOW = "case-flow/{id}"
+    const val REGISTER = "register"
+    const val SCORES = "scores"
+    const val DEVICES = "devices"
+    const val NOTIFICATIONS = "notifications"
+
+    fun caseFlow(id: String) = "case-flow/$id"
 
     fun visit(id: String) = "visit/$id"
     fun detail(id: String) = "case/$id"
@@ -70,8 +86,33 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                 onStats = { navController.navigate(Routes.STATS) },
                 onMap = { navController.navigate(Routes.MAP) },
                 onReferrals = { navController.navigate(Routes.REFERRALS) },
-                onFieldItems = { navController.navigate(Routes.FIELD_ITEMS) }
+                onFieldItems = { navController.navigate(Routes.FIELD_ITEMS) },
+                onBoard = { navController.navigate(Routes.BOARD) },
+                onNotifications = { navController.navigate(Routes.NOTIFICATIONS) }
             )
+        }
+        composable(Routes.BOARD) {
+            BoardScreen(flowViewModel(), onBack = { navController.popBackStack() },
+                onOpen = { navController.navigate(Routes.caseFlow(it)) },
+                onIntake = { navController.navigate(Routes.REGISTER) })
+        }
+        composable(Routes.CASE_FLOW, arguments = listOf(navArgument(ARG_ID) { type = NavType.StringType })) { entry ->
+            CaseFlowScreen(entry.arguments?.getString(ARG_ID).orEmpty(), flowViewModel(), onBack = { navController.popBackStack() },
+                onOpenCase = { navController.navigate(Routes.detail(it)) })
+        }
+        composable(Routes.REGISTER) {
+            RegisterScreen(flowViewModel(), onBack = { navController.popBackStack() }, onCreated = { id ->
+                navController.popBackStack()
+                navController.navigate(Routes.caseFlow(id))
+            })
+        }
+        composable(Routes.SCORES) { ScoresScreen(manageViewModel(), onBack = { navController.popBackStack() }) }
+        composable(Routes.DEVICES) { DevicesScreen(manageViewModel(), onBack = { navController.popBackStack() }) }
+        composable(Routes.NOTIFICATIONS) {
+            NotificationsScreen(manageViewModel(), onBack = { navController.popBackStack() }, onOpenCase = { id ->
+                // The manager and an executor follow a case's journey; an expert opens their own copy.
+                navController.navigate(if (UserRole.isManager) Routes.caseFlow(id) else Routes.detail(id))
+            })
         }
         composable(Routes.FIELD_ITEMS) {
             FieldItemsScreen(
@@ -133,7 +174,8 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                 reportId = entry.arguments?.getString(ARG_ID).orEmpty(),
                 onBack = { navController.popBackStack() },
                 onContinueVisit = { if (!UserRole.isManager) navController.navigate(Routes.visit(it)) },
-                onDispatch = { navController.navigate(Routes.dispatch(it)) }
+                onDispatch = { navController.navigate(Routes.dispatch(it)) },
+                onFlow = { navController.navigate(Routes.caseFlow(it)) }
             )
         }
         composable(Routes.DISPATCH, arguments = listOf(navArgument(ARG_ID) { type = NavType.StringType })) { entry ->
@@ -152,7 +194,10 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             StatsScreen(
                 onBack = { navController.popBackStack() },
                 onPerformance = { navController.navigate(Routes.PERFORMANCE) },
-                onCrew = { navController.navigate(Routes.CREW) }
+                onCrew = { navController.navigate(Routes.CREW) },
+                onScores = { navController.navigate(Routes.SCORES) },
+                onDevices = { navController.navigate(Routes.DEVICES) },
+                onMap = { navController.navigate(Routes.MAP) }
             )
         }
         composable(Routes.USERS) {
@@ -171,6 +216,18 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             )
         }
     }
+}
+
+@Composable
+private fun flowViewModel(): FlowViewModel {
+    val container = LocalContext.current.container
+    return viewModel(factory = remember { ContainerViewModelFactory(container) { FlowViewModel(it) } })
+}
+
+@Composable
+private fun manageViewModel(): ManageViewModel {
+    val container = LocalContext.current.container
+    return viewModel(factory = remember { ContainerViewModelFactory(container) { ManageViewModel(it) } })
 }
 
 @Composable

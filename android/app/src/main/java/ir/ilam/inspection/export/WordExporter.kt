@@ -131,6 +131,7 @@ class WordExporter(private val context: Context, private val files: FileStore) {
             label(R.string.field_file_number) to PersianNumbers.toPersian(r.fileNumber),
             label(R.string.field_bill_number) to PersianNumbers.toPersian(r.billNumber),
             label(R.string.field_subscription_number) to PersianNumbers.toPersian(r.subscriptionNumber),
+            label(R.string.field_subscriber_name) to r.subscriberName,
             label(R.string.field_usage_type) to r.usageType,
             label(R.string.field_coordinates) to coordinates
         )

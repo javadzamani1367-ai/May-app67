@@ -18,6 +18,7 @@ import ir.ilam.inspection.R
 import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.ui.common.BrandMark
 import ir.ilam.inspection.ui.common.SectionCard
+import ir.ilam.inspection.ui.common.roleLabelRes
 import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tavan
 import ir.ilam.inspection.ui.theme.Tone
@@ -61,9 +62,7 @@ fun AboutCard() {
             Text(
                 text = stringResource(
                     R.string.about_role,
-                    stringResource(
-                        if (UserRole.isManager) R.string.role_manager else R.string.role_expert
-                    )
+                    stringResource(roleLabelRes())
                 ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

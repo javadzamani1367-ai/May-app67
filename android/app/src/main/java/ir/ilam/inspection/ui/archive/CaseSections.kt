@@ -122,6 +122,7 @@ fun CasePlaceSection(detail: ReportDetail, meta: LocationFixEntity?, onOpenMap: 
         ValueRow(stringResource(R.string.field_file_number), PersianNumbers.toPersian(r.fileNumber))
         ValueRow(stringResource(R.string.field_bill_number), PersianNumbers.toPersian(r.billNumber))
         ValueRow(stringResource(R.string.field_subscription_number), PersianNumbers.toPersian(r.subscriptionNumber))
+        ValueRow(stringResource(R.string.field_subscriber_name), r.subscriberName)
         ValueRow(stringResource(R.string.field_usage_type), r.usageType)
         if (r.latitude != null && r.longitude != null) {
             Box(

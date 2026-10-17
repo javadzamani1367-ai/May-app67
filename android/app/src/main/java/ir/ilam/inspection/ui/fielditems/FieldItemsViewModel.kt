@@ -9,6 +9,8 @@ import ir.ilam.inspection.sync.ServerApi
 import ir.ilam.inspection.sync.ServerFiles
 import ir.ilam.inspection.sync.fieldItem
 import ir.ilam.inspection.sync.fieldItems
+import ir.ilam.inspection.sync.followUpFieldItem
+import ir.ilam.inspection.sync.handFieldItem
 import ir.ilam.inspection.sync.moveFieldItem
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -124,11 +126,20 @@ class FieldItemsViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     /** One step of the item's cycle; the list reloads by itself when it is shown again. */
-    fun move(id: String, status: Int, note: String, expertId: String?, dueAt: Long?, onDone: () -> Unit) {
+    fun move(id: String, status: Int, note: String, expertId: String?, dueAt: Long?, onDone: () -> Unit) =
+        act(onDone) { api, token -> api.moveFieldItem(token, id, status, note, expertId, dueAt) }
+
+    fun hand(id: String, executorId: String, note: String, onDone: () -> Unit) =
+        act(onDone) { api, token -> api.handFieldItem(token, id, executorId, note) }
+
+    fun followUp(id: String, note: String, onDone: () -> Unit) =
+        act(onDone) { api, token -> api.followUpFieldItem(token, id, note) }
+
+    private fun act(onDone: () -> Unit, call: suspend (ServerApi, String) -> ApiResult<FieldManage.Detail>) {
         viewModelScope.launch {
             val (api, token) = client() ?: return@launch _detail.update { it.copy(problem = FieldProblem.Offline) }
             _detail.update { it.copy(busy = true, saved = false) }
-            when (val result = api.moveFieldItem(token, id, status, note, expertId, dueAt)) {
+            when (val result = call(api, token)) {
                 is ApiResult.Ok -> {
                     _detail.update { it.copy(detail = result.value, busy = false, problem = null, saved = true) }
                     onDone()

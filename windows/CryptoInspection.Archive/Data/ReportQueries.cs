@@ -34,7 +34,7 @@ namespace CryptoInspection.Archive.Data
             // ReadReport takes its values by position, so inserting one beside
             // the column it belongs with silently shifts every field after it
             // — addresses arriving as districts, with nothing failing.
-            "area_code, position_at, observer_latitude, observer_longitude, observer_accuracy";
+            "area_code, position_at, observer_latitude, observer_longitude, observer_accuracy, subscriber_name";
 
         private readonly Database _database;
 
@@ -332,7 +332,8 @@ namespace CryptoInspection.Archive.Data
                 PositionAt = Database.GetNullableLong(record, 52),
                 ObserverLatitude = Database.GetNullableDouble(record, 53),
                 ObserverLongitude = Database.GetNullableDouble(record, 54),
-                ObserverAccuracy = Database.GetNullableDouble(record, 55)
+                ObserverAccuracy = Database.GetNullableDouble(record, 55),
+                SubscriberName = Database.GetString(record, 56)
             };
         }
     }

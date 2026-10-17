@@ -1,6 +1,9 @@
 # اسکیمای مشترک — مرجع سمت ویندوز
 
-نسخه اسکیما: **۵** (`SCHEMA_VERSION = 5`)
+نسخه اسکیما: **۶** (`SCHEMA_VERSION = 6`)
+
+> نسخه ۶: ستون `subscriber_name` در `reports` — نام مشترک (صاحب قبض)، که بانک دستگاه‌های ماینر سرور هر دستگاه را
+> به آن و به دارنده (`owner_name`) می‌بندد. آرشیو قدیمی‌تر آن را با `ALTER TABLE` می‌افزاید.
 
 > نسخه ۵: چهار ستون ثبت موقعیت روی نقشه در `reports` — `position_at` (زمان ثبت)، و `observer_latitude`،
 > `observer_longitude`، `observer_accuracy` (موقعیت ماهواره‌ای کارشناس در همان لحظه). آرشیو قدیمی‌تر آن‌ها را
@@ -44,7 +47,7 @@ CREATE TABLE reports (
   latitude REAL, longitude REAL, gps_accuracy REAL,
   position_at INTEGER, observer_latitude REAL, observer_longitude REAL, observer_accuracy REAL,
   file_number TEXT, bill_number TEXT, subscription_number TEXT, usage_type TEXT,
-  owner_name TEXT, owner_national_id TEXT, owner_phone TEXT, owner_relation TEXT,
+  owner_name TEXT, owner_national_id TEXT, owner_phone TEXT, owner_relation TEXT, subscriber_name TEXT,
   -- ستون‌های نسخه ۱؛ دیگر نوشته نمی‌شوند ولی برای سازگاری باقی مانده‌اند
   meter_amperage REAL, connection_type TEXT, seal_status TEXT,
   -- اندازه‌گیری فاز به فاز (نسخه ۲)

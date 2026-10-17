@@ -132,13 +132,15 @@ class VisitViewModel(private val container: AppContainer, private val reportId: 
         name: String? = null,
         nationalId: String? = null,
         phone: String? = null,
-        relation: String? = null
+        relation: String? = null,
+        subscriber: String? = null
     ) = edit { current ->
         current.copy(
             ownerName = name ?: current.ownerName,
             ownerNationalId = nationalId ?: current.ownerNationalId,
             ownerPhone = phone ?: current.ownerPhone,
-            ownerRelation = relation ?: current.ownerRelation
+            ownerRelation = relation ?: current.ownerRelation,
+            subscriberName = subscriber ?: current.subscriberName
         )
     }
 

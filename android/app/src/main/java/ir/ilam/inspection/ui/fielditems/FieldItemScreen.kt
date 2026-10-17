@@ -67,6 +67,7 @@ import kotlinx.coroutines.withContext
 fun FieldItemScreen(id: String, viewModel: FieldItemsViewModel, onBack: () -> Unit) {
     val state by viewModel.detail.collectAsStateWithLifecycle()
     var acting by remember { mutableStateOf(false) }
+    var handing by remember { mutableStateOf(false) }
     LaunchedEffect(id) { viewModel.open(id) }
     val item = state.detail?.takeIf { it.row.id == id }
 
@@ -107,8 +108,16 @@ fun FieldItemScreen(id: String, viewModel: FieldItemsViewModel, onBack: () -> Un
             } else {
                 PrimaryButton(stringResource(R.string.fi_action_title), onClick = { acting = true }, enabled = !state.busy,
                     icon = Icons.AutoMirrored.Filled.Send, modifier = Modifier.weight(1f))
+                SecondaryButton(stringResource(R.string.fh_button), onClick = { handing = true }, enabled = !state.busy,
+                    modifier = Modifier.weight(1f))
             }
         }
+    }
+
+    if (handing && item != null) {
+        FieldHandDialog(item, onDismiss = { handing = false },
+            onHand = { executor, note -> viewModel.hand(item.row.id, executor, note, onDone = { handing = false }) },
+            onFollowUp = { note -> viewModel.followUp(item.row.id, note, onDone = { handing = false }) })
     }
 
     if (acting && item != null) {
@@ -135,6 +144,8 @@ private fun Overview(item: FieldManage.Detail) {
             ValueRow(stringResource(R.string.fi_created), PersianDate.formatWithTime(row.createdAt))
             ValueRow(stringResource(R.string.fi_reporter_label),
                 row.reporter + item.reporterCode.takeIf { it.isNotBlank() }?.let { " (" + PersianNumbers.toPersian(it) + ")" }.orEmpty())
+            if (row.area.isNotBlank()) ValueRow(stringResource(R.string.fh_area), row.area)
+            row.handler?.let { ValueRow(stringResource(R.string.fh_handler), it) }
             row.expert?.let { ValueRow(stringResource(R.string.fi_expert_label), it) }
             row.dueAt?.let { ValueRow(stringResource(R.string.fi_due_label), PersianDate.format(it)) }
             ValueRow(stringResource(R.string.fi_address), row.address)

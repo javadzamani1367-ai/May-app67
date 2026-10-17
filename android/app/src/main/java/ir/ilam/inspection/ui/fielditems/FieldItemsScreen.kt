@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -41,6 +42,7 @@ import ir.ilam.inspection.ui.common.ToneIcon
 import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tavan
 import ir.ilam.inspection.ui.theme.Tone
+import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.PersianNumbers
 
@@ -50,14 +52,26 @@ import ir.ilam.inspection.util.PersianNumbers
  * address. Read live from the server — these are not this phone's cases.
  */
 @Composable
-fun FieldItemsScreen(viewModel: FieldItemsViewModel, onBack: () -> Unit, onOpen: (String) -> Unit) {
+fun FieldItemsScreen(
+    viewModel: FieldItemsViewModel,
+    onBack: (() -> Unit)?,
+    onOpen: (String) -> Unit,
+    /** The illegal-power app starts here, with settings in the header instead of "back". */
+    onSettings: (() -> Unit)? = null
+) {
     val state by viewModel.list.collectAsStateWithLifecycle()
     val filter = state.filter
     // Each time the list is shown, so an item moved on its own page is in its new tab.
     LaunchedEffect(Unit) { viewModel.reload() }
     Column(modifier = Modifier.fillMaxSize()) {
-        TavanTopBar(title = stringResource(R.string.fi_title), subtitle = stringResource(R.string.fi_subtitle), onBack = onBack) {
+        TavanTopBar(
+            title = stringResource(if (UserRole.isIllegal) R.string.ill_title else R.string.fi_title),
+            subtitle = stringResource(R.string.fi_subtitle),
+            onBack = onBack,
+            showBrand = onBack == null
+        ) {
             HeaderAction(Icons.Filled.Refresh, stringResource(R.string.fi_refresh), onClick = viewModel::reload)
+            onSettings?.let { HeaderAction(Icons.Filled.Settings, stringResource(R.string.ill_settings), onClick = it) }
         }
         if (state.busy) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         ProblemLine(state.problem)
@@ -77,9 +91,15 @@ fun FieldItemsScreen(viewModel: FieldItemsViewModel, onBack: () -> Unit, onOpen:
                     fieldStatusTone(status), onClick = { viewModel.setStatus(status) })
             }
         }
-        ChipRow {
+        // The server narrows the list by role; the chips only offer what can come back.
+        val kinds = when {
+            UserRole.isIllegal -> emptyList()
+            UserRole.isExecutor -> FieldManage.KINDS - FieldManage.KIND_CRYPTO
+            else -> FieldManage.KINDS
+        }
+        if (kinds.isNotEmpty()) ChipRow {
             ToneChip(stringResource(R.string.fi_all_kinds), filter.kind == null, Tone.BRAND, onClick = { viewModel.setKind(null) })
-            FieldManage.KINDS.forEach { kind ->
+            kinds.forEach { kind ->
                 ToneChip(stringResource(fieldKindLabel(kind)), filter.kind == kind, fieldKindTone(kind),
                     onClick = { viewModel.setKind(kind) })
             }

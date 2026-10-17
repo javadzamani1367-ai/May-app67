@@ -64,6 +64,8 @@ data class ReportEntity(
     @ColumnInfo(name = "owner_national_id") val ownerNationalId: String? = null,
     @ColumnInfo(name = "owner_phone") val ownerPhone: String? = null,
     @ColumnInfo(name = "owner_relation") val ownerRelation: String? = null,
+    /** The name on the electricity account, which is often not the person holding the miners. Schema 6. */
+    @ColumnInfo(name = "subscriber_name") val subscriberName: String? = null,
 
     // technical
     // meter_amperage and the two free-text columns below are schema version 1

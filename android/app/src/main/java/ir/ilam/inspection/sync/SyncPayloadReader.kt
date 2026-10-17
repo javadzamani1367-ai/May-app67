@@ -56,6 +56,7 @@ object SyncPayloadReader {
             ownerNationalId = json.text("owner_national_id"),
             ownerPhone = json.text("owner_phone"),
             ownerRelation = json.text("owner_relation"),
+            subscriberName = json.text("subscriber_name"),
             meterAmperage = json.number("meter_amperage"),
             connectionType = json.text("connection_type"),
             sealStatus = json.text("seal_status"),

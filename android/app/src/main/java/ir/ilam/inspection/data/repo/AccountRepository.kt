@@ -3,6 +3,7 @@ package ir.ilam.inspection.data.repo
 import ir.ilam.inspection.data.KeyStoreVault
 import ir.ilam.inspection.data.SignInFlow
 import ir.ilam.inspection.data.SignInOutcome
+import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.sync.ApiResult
 import ir.ilam.inspection.sync.ServerApi
 
@@ -23,7 +24,9 @@ class AccountRepository(
     private val flow = SignInFlow(
         vault = vault,
         serverAddress = { settings.current().syncTarget },
-        allowLocalOnly = true
+        // The illegal-power app has nothing to do without the server.
+        allowLocalOnly = !UserRole.isIllegal,
+        app = UserRole.appName
     )
 
     suspend fun signIn(userCode: String, password: String): SignInOutcome = flow.signIn(userCode, password)

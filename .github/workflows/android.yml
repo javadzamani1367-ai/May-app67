@@ -215,6 +215,13 @@ jobs:
           path: android/app/build/outputs/apk/manager/release/*.apk
           if-no-files-found: error
 
+      - name: Upload illegal-power executor APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tavankav-illegal-${{ steps.signing.outputs.ephemeral == 'true' && 'testkey' || 'signed' }}-apk
+          path: android/app/build/outputs/apk/illegal/release/*.apk
+          if-no-files-found: error
+
       - name: Upload field APK
         uses: actions/upload-artifact@v4
         with:
@@ -250,8 +257,9 @@ jobs:
           target_commitish: ${{ github.sha }}
           name: ${{ inputs.release_tag || github.ref_name }}
           body: |
-            `app-expert-release.apk` برای کارشناس، `app-manager-release.apk` برای مدیر، و
-            `field-release.apk` اپ «بازرسی میدانی» برای کاربران عملیاتی. هر سه روی یک گوشی هم نصب می‌شوند.
+            `app-expert-release.apk` برای کارشناس، `app-manager-release.apk` برای مدیر و مجریان رمزارز هر ناحیه،
+            `app-illegal-release.apk` برای مجری برق غیرمجاز، و `field-release.apk` اپ «بازرسی میدانی» برای کاربران عملیاتی.
+            همه روی یک گوشی هم نصب می‌شوند.
 
             برای نصب، «نصب از منابع ناشناس» را برای مرورگر یا مدیر فایل فعال کنید.
 

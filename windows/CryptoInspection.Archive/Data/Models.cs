@@ -45,6 +45,8 @@ namespace CryptoInspection.Archive.Data
         public string OwnerNationalId { get; set; }
         public string OwnerPhone { get; set; }
         public string OwnerRelation { get; set; }
+        /// <summary>The name on the electricity account (schema 6).</summary>
+        public string SubscriberName { get; set; }
 
         public double? MeterAmperage { get; set; }
         public double? MeasuredAmperage { get; set; }

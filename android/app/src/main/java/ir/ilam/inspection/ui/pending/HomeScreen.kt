@@ -7,6 +7,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FactCheck
+import androidx.compose.material.icons.filled.AccountTree
+import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Settings
@@ -57,7 +59,9 @@ fun HomeScreen(
     onApprovals: () -> Unit,
     onMap: () -> Unit,
     onReferrals: () -> Unit,
-    onFieldItems: () -> Unit
+    onFieldItems: () -> Unit,
+    onBoard: () -> Unit = {},
+    onNotifications: () -> Unit = {}
 ) {
     val container = LocalContext.current.container
     val lists: CaseListViewModel = viewModel(
@@ -106,6 +110,7 @@ fun HomeScreen(
                         onClick = onApprovals,
                         badge = summary.counts.awaitingApproval.toInt()
                     )
+                    HeaderAction(Icons.Filled.AccountTree, stringResource(R.string.fl_board_title), onBoard)
                     HeaderAction(
                         icon = Icons.AutoMirrored.Filled.Assignment,
                         contentDescription = stringResource(R.string.fi_title),
@@ -120,7 +125,9 @@ fun HomeScreen(
                         badge = openReferrals
                     )
                 }
-                HeaderAction(Icons.Filled.Map, stringResource(R.string.cases_map_title), onMap)
+                HeaderAction(Icons.Filled.Campaign, stringResource(R.string.nt_title), onNotifications)
+                // The manager app keeps the map behind the statistics, to leave room for the follow-up board.
+                if (!UserRole.isManager) HeaderAction(Icons.Filled.Map, stringResource(R.string.cases_map_title), onMap)
                 HeaderAction(Icons.Filled.QueryStats, stringResource(R.string.nav_stats), onStats)
                 HeaderAction(Icons.Filled.Settings, stringResource(R.string.nav_settings), onSettings)
             }

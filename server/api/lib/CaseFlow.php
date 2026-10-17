@@ -235,7 +235,16 @@ final class CaseFlow
             [$reportId]
         ) ?? [];
         $num = static fn ($k) => isset($flow[$k]) && $flow[$k] !== null ? (int) $flow[$k] : null;
+        $report = Db::one('SELECT tracking_code, temp_code, area_code, status, approval_state, address, report_type FROM reports WHERE id = ?',
+            [$reportId]) ?? [];
         return [
+            'code' => CaseLabels::code($report) ?: ($flow['intake_code'] ?? ''),
+            'area_code' => $report['area_code'] ?? null,
+            'area' => Areas::label($report['area_code'] ?? null),
+            'status' => (int) ($report['status'] ?? 0),
+            'approval_state' => (int) ($report['approval_state'] ?? 0),
+            'address' => $report['address'] ?? null,
+            'type' => CaseLabels::REPORT_TYPES[(int) ($report['report_type'] ?? 0)] ?? '',
             'origin' => (int) ($flow['origin'] ?? 0),
             'origin_name' => CaseIntake::ORIGIN_NAMES[(int) ($flow['origin'] ?? 0)] ?? '',
             'intake_code' => $flow['intake_code'] ?? null,

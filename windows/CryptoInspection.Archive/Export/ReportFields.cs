@@ -49,6 +49,7 @@ namespace CryptoInspection.Archive.Export
                 new Field(Strings.Get("column_file_number"), PersianNumbers.ToPersian(r.FileNumber)),
                 new Field(Strings.Get("column_bill_number"), PersianNumbers.ToPersian(r.BillNumber)),
                 new Field(Strings.Get("column_subscription"), PersianNumbers.ToPersian(r.SubscriptionNumber)),
+                new Field(Strings.Get("form_subscriber_name"), r.SubscriberName),
                 new Field(Strings.Get("form_usage_type"), r.UsageType),
                 new Field(Strings.Get("column_coordinates"), Coordinates(r))
             };

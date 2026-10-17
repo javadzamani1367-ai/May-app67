@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- گردش ناحیه‌ای: مجری رمزارز، مجری برق غیرمجاز، ثبت و ارجاع، امتیازها و بانک دستگاه‌ها -->
+<resources>
+    <!-- سپردن مورد میدانی و پیگیری -->
+    <string name="fh_button">سپردن یا پیگیری</string>
+    <string name="fh_title">سپردن به مجری یا پیگیری</string>
+    <string name="fh_hand">سپردن به مجری رمزارز یک ناحیه</string>
+    <string name="fh_follow_up">نوشتن یادداشت پیگیری</string>
+    <string name="fh_pick_executor">مجری</string>
+    <string name="fh_note">توضیح برای مجری</string>
+    <string name="fh_follow_note">یادداشت پیگیری</string>
+    <string name="fh_area">ناحیه</string>
+    <string name="fh_handler">سپرده به مجری</string>
+
+    <!-- اپ مجری برق غیرمجاز -->
+    <string name="ill_title">گزارش‌های برق غیرمجاز</string>
+    <string name="ill_settings">تنظیمات</string>
+
+    <!-- میز پیگیری و گردش پرونده -->
+    <string name="fl_board_title">میز پیگیری</string>
+    <string name="fl_board_subtitle">پرونده‌های باز همه ناحیه‌ها</string>
+    <string name="fl_board_subtitle_executor">پرونده‌های باز ناحیه شما</string>
+    <string name="fl_board_empty">پرونده بازی در این دسته نیست.</string>
+    <string name="fl_late">دیرشده</string>
+    <string name="fl_stage_awaiting_referral">در انتظار ارجاع مدیر</string>
+    <string name="fl_stage_with_executor">نزد مجری؛ هنوز به کارشناس نرسیده</string>
+    <string name="fl_stage_with_expert">نزد کارشناس؛ بازدید نشده</string>
+    <string name="fl_stage_in_progress">در دست کارشناس</string>
+    <string name="fl_stage_awaiting_approval">در انتظار تأیید</string>
+    <string name="fl_stage_returned">برگشت برای اصلاح</string>
+    <string name="fl_stage_approved">تأییدشده؛ هنوز به واحدی نرفته</string>
+    <string name="fl_executor_is">مجری: %1$s</string>
+    <string name="fl_expert_is">کارشناس: %1$s</string>
+    <string name="fl_due_is">مهلت: %1$s</string>
+    <string name="fl_auto_referred">ارجاع خودکار پس از مهلت مدیر</string>
+    <string name="fl_case_title">گردش پرونده</string>
+    <string name="fl_intake_code">شماره ثبت</string>
+    <string name="fl_intake_by">ثبت‌کننده</string>
+    <string name="fl_intake_note">شرح گزارش</string>
+    <string name="fl_address">آدرس</string>
+    <string name="fl_refer_due">مهلت ارجاع مدیر</string>
+    <string name="fl_executor">مجری ناحیه</string>
+    <string name="fl_expert">کارشناس</string>
+    <string name="fl_visit_due">مهلت بازدید</string>
+    <string name="fl_visited">بازدید</string>
+    <string name="fl_approved">تأیید</string>
+    <string name="fl_dispatched">ارسال به واحد</string>
+    <string name="fl_to_expert">ارجاع به کارشناس</string>
+    <string name="fl_to_executor">سپردن به مجری</string>
+    <string name="fl_follow_up">پیگیری</string>
+    <string name="fl_follow_note">یادداشت پیگیری</string>
+    <string name="fl_note">توضیح</string>
+    <string name="fl_due_days">مهلت بازدید به روز کاری (خالی: تنظیمات مدیر)</string>
+    <string name="fl_no_people">کسی در ناحیه این پرونده تعریف نشده است.</string>
+    <string name="fl_area_executor">مجری ناحیه پرونده</string>
+    <string name="fl_open_case">پرونده کامل</string>
+
+    <!-- ثبت گزارش روی سرور -->
+    <string name="fl_intake_title">ثبت گزارش</string>
+    <string name="fl_intake_subtitle">پرونده روی سرور ساخته می‌شود؛ بازدید با کارشناس است</string>
+    <string name="fl_intake_report">گزارش</string>
+    <string name="fl_area">ناحیه</string>
+    <string name="fl_soragh_code">کد رهگیری سامانه سراغ</string>
+    <string name="fl_district">بخش</string>
+    <string name="fl_subscription">شماره اشتراک (اگر معلوم است)</string>
+    <string name="fl_subscriber">نام مشترک</string>
+    <string name="fl_owner">نام مالک یا متصرف</string>
+    <string name="fl_phone">تلفن</string>
+    <string name="fl_intake_target">سپردن</string>
+    <string name="fl_target_later">فعلاً نه</string>
+    <string name="fl_target_self">فعلاً نزد خودم</string>
+    <string name="fl_target_later_hint">اگر به کسی نسپارید، پس از مهلت تنظیمات خودکار به مجری ناحیه می‌رسد.</string>
+    <string name="fl_intake_save">ثبت گزارش</string>
+
+    <!-- امتیازها -->
+    <string name="sc_title">امتیازها</string>
+    <string name="sc_subtitle">ناحیه‌ها، مجریان، واحدها و کارشناسان — از ۱۰۰</string>
+    <string name="sc_excel">اکسل</string>
+    <string name="sc_week">هفت روز</string>
+    <string name="sc_month">سی روز</string>
+    <string name="sc_quarter">سه ماه</string>
+    <string name="sc_year">یک سال</string>
+    <string name="sc_empty">کسی در این دسته نیست.</string>
+    <string name="sc_explain">هر امتیاز میانگین وزنی چند جزء است، هر جزء از ۰ تا ۱۰۰. جزئی که در این بازه داده ندارد کنار می‌رود؛ «—» یعنی کاری نرسیده که بشود سنجید، نه کار بد. سبز ۸۰ به بالا، کهربایی ۶۰ تا ۷۹، قرمز کمتر.</string>
+
+    <!-- بانک دستگاه‌ها -->
+    <string name="dv_title">بانک دستگاه‌ها</string>
+    <string name="stats_devices_hint">سریال همه ماینرهای کشف‌شده و هشدار سریال تکراری</string>
+    <string name="stats_map_hint">همه پرونده‌های دارای موقعیت، رنگ‌شده بر اساس وضعیت</string>
+    <string name="dv_subtitle">سریال ماینرهای همه ناحیه‌ها</string>
+    <string name="dv_search">سریال، مدل، مشترک، دارنده، اشتراک یا کد</string>
+    <string name="dv_all">همه</string>
+    <string name="dv_duplicates">سریال‌های تکراری</string>
+    <string name="dv_alerts">هشدار سریال تکراری</string>
+    <string name="dv_before">پیش‌تر: %1$s</string>
+    <string name="dv_now">اکنون: %1$s</string>
+    <string name="dv_new">تازه</string>
+    <string name="dv_seen_in">در %1$s پرونده</string>
+    <string name="dv_history">سابقه دستگاه %1$s</string>
+    <string name="dv_subscriber">مشترک: %1$s</string>
+    <string name="dv_owner">دارنده: %1$s</string>
+
+    <!-- کارت ارجاع و وضعیت در اپ کارشناس -->
+    <string name="ef_title">ارجاع و وضعیت پرونده</string>
+    <string name="ef_as_of_sync">تا آخرین همگام‌سازی</string>
+    <string name="ef_referred_by">ارجاع از</string>
+    <string name="ef_due">مهلت بازدید</string>
+    <string name="ef_note">توضیح ارجاع</string>
+    <string name="ef_sent">فرستاده برای تأیید</string>
+    <string name="ef_seen">دیده شد</string>
+    <string name="ef_not_seen">هنوز دیده نشده</string>
+    <string name="ef_decided">تصمیم</string>
+    <string name="ef_comment">نظر</string>
+    <string name="ef_approved">تأیید شد</string>
+    <string name="ef_returned">برگشت برای اصلاح</string>
+    <string name="ef_under_review">دیده شد؛ در حال بررسی</string>
+    <string name="ef_waiting">در انتظار دیده‌شدن</string>
+
+    <!-- اعلان‌ها -->
+    <string name="nt_title">اعلان‌ها</string>
+    <string name="nt_empty">اعلانی نیست.</string>
+    <string name="nt_new">تازه</string>
+</resources>

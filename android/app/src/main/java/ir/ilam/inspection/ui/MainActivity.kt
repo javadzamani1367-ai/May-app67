@@ -72,6 +72,8 @@ class MainActivity : ComponentActivity() {
                             // is brought in line the moment they are through
                             // the door — not whenever they next open settings.
                             val appContainer = container
+                            UserRole.serverRole = vault.serverRole()
+                            UserRole.areas = vault.areas()
                             LaunchedEffect(Unit) {
                                 vault.userCode()?.takeIf { it.isNotBlank() }?.let { code ->
                                     appContainer.settingsRepository
@@ -80,8 +82,8 @@ class MainActivity : ComponentActivity() {
                             }
                             // The expert's satellites are locked by the time a map opens;
                             // the manager app records no positions and leaves the GPS off.
-                            if (!UserRole.isManager) KeepLocationWarm()
-                            AppNavigation()
+                            if (UserRole.current == UserRole.EXPERT) KeepLocationWarm()
+                            if (UserRole.isIllegal) IllegalNavigation() else AppNavigation()
                         }
                         else -> LockScreen(vault = vault, onUnlocked = { unlocked = true })
                     }

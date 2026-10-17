@@ -59,6 +59,7 @@ android {
             versionNameSuffix = "-expert"
             resValue("string", "app_name", "توان‌کاو")
             buildConfigField("boolean", "MANAGER", "false")
+            buildConfigField("boolean", "ILLEGAL", "false")
         }
         create("manager") {
             dimension = "role"
@@ -66,6 +67,17 @@ android {
             versionNameSuffix = "-manager"
             resValue("string", "app_name", "توان‌کاو مدیر")
             buildConfigField("boolean", "MANAGER", "true")
+            buildConfigField("boolean", "ILLEGAL", "false")
+        }
+        // The illegal-power executor's app: the manager app's live screens for
+        // field items only, narrowed by the server to illegal-power reports.
+        create("illegal") {
+            dimension = "role"
+            applicationIdSuffix = ".illegal"
+            versionNameSuffix = "-illegal"
+            resValue("string", "app_name", "توان‌کاو غیرمجاز")
+            buildConfigField("boolean", "MANAGER", "false")
+            buildConfigField("boolean", "ILLEGAL", "true")
         }
     }
 

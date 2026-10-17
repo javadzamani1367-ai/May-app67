@@ -72,7 +72,13 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
         ?: state.noticeRes?.let { LockMessage(stringResource(it), error = false) }
 
     LockFrame(
-        roleLabel = stringResource(if (UserRole.isManager) R.string.lock_role_manager else R.string.lock_role_expert),
+        roleLabel = stringResource(
+            when (UserRole.current) {
+                UserRole.MANAGER -> R.string.lock_role_manager
+                UserRole.ILLEGAL -> R.string.lock_role_illegal
+                UserRole.EXPERT -> R.string.lock_role_expert
+            }
+        ),
         initialUserCode = vault.userCode().orEmpty(),
         busy = state.busy,
         message = message,
