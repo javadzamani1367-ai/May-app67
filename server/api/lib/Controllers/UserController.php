@@ -9,7 +9,7 @@ final class UserController
         Auth::require($request, Auth::ROLE_MANAGER);
         $rows = Db::all(
             'SELECT id, user_code, full_name, role, unit, county, areas, phone, device_code, active,
-                    permissions, created_at, updated_at, note
+                    permissions, crew_role, person_id, created_at, updated_at, note
              FROM users ORDER BY role, full_name'
         );
         Response::json(['users' => $rows]);

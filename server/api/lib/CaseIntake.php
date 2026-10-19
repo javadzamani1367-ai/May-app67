@@ -15,7 +15,8 @@ final class CaseIntake
     public const ORIGIN_MANAGER = 1;
     public const ORIGIN_EXECUTOR = 2;
 
-    public const ORIGIN_NAMES = [0 => 'ثبت کارشناس', 1 => 'ثبت مدیر', 2 => 'ثبت مجری'];
+    public const ORIGIN_NAMES = [0 => 'ثبت کارشناس', 1 => 'ثبت مدیر', 2 => 'ثبت مجری', 3 => 'گزارش اپ میدانی',
+        4 => 'ثبت ستاد غیرمجاز'];
 
     /**
      * ایراد فرم ثبت، یا تهی.
@@ -25,9 +26,10 @@ final class CaseIntake
     public static function problem(array $data, Scope $scope): ?string
     {
         if (!$scope->managesCases()) {
-            return 'ثبت گزارش برای مدیر و مجری رمزارز است.';
+            return 'ثبت گزارش برای مدیر و مجریان است.';
         }
-        $type = (int) ($data['report_type'] ?? 0);
+        // پرونده برق غیرمجاز همیشه «گزارش همکار» است و کدش از سری GH- سرور.
+        $type = $scope->kind() === CaseKind::ILLEGAL ? 4 : (int) ($data['report_type'] ?? 0);
         if (!isset(CaseLabels::REPORT_TYPES[$type])) {
             return 'نوع گزارش را انتخاب کنید.';
         }
@@ -70,13 +72,17 @@ final class CaseIntake
         }
         $user = $scope->user;
         $now = Db::now();
-        $type = (int) $data['report_type'];
+        $kind = $scope->kind() ?? CaseKind::CRYPTO;
+        $type = $kind === CaseKind::ILLEGAL ? 4 : (int) $data['report_type'];
         $area = (string) Areas::code($data['area_code']);
         $reportDate = self::date((string) ($data['report_date'] ?? '')) ?? $now;
         $subscription = Jalali::latin(trim((string) ($data['subscription_number'] ?? '')));
         [$intakeCode, $sequence] = CaseCodes::nextIntake($now);
-        $tracking = $type === 1 ? Jalali::latin(trim((string) $data['tracking_code']))
-            : CaseCodes::final($type, $area, $reportDate, $subscription);
+        $tracking = match (true) {
+            $kind === CaseKind::ILLEGAL => FieldCodes::next(Field::KIND_ILLEGAL, $now),
+            $type === 1 => Jalali::latin(trim((string) $data['tracking_code'])),
+            default => CaseCodes::final($type, $area, $reportDate, $subscription),
+        };
         if ($tracking !== null && Db::one('SELECT id FROM reports WHERE tracking_code = ?', [$tracking]) !== null) {
             $tracking = null;
         }
@@ -87,15 +93,19 @@ final class CaseIntake
         Db::run(
             'INSERT INTO reports (id, tracking_code, temp_code, report_type, status, expert_code, report_date,
                                   created_at, updated_at, county, area_code, district, address, postal_code,
-                                  subscription_number, owner_name, owner_phone, subscriber_name, approval_state)
-             VALUES (?, ?, ?, ?, 0, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)',
+                                  subscription_number, owner_name, owner_phone, subscriber_name, approval_state, case_kind)
+             VALUES (?, ?, ?, ?, 0, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)',
             [$id, $tracking, $temp, $type, $reportDate, $now, $now, Areas::NAMES[$area] ?? null, $area,
              $text('district'), $text('address'), $text('postal_code'), $subscription === '' ? null : $subscription,
-             $text('owner_name'), $text('owner_phone'), $text('subscriber_name')]
+             $text('owner_name'), $text('owner_phone'), $text('subscriber_name'), $kind]
         );
-        $byManager = $scope->isManager();
+        // بالادست (مدیر یا ستاد) ثبت کرد: تا مهلت ارجاع، بعد خودکار به گرداننده شهرستان.
+        $byManager = $scope->isManager() || $scope->isIllegalHq();
+        $countyDue = $kind === CaseKind::ILLEGAL && !$byManager
+            ? CrewCalendar::fromSettings()->addWorkDays($now, (int) FieldSettings::all()['illegal_county_days']) : null;
         CaseFlow::touch($id, [
-            'origin' => $byManager ? self::ORIGIN_MANAGER : self::ORIGIN_EXECUTOR,
+            'origin' => $scope->isIllegalHq() ? IllegalFlow::ORIGIN_HQ : ($byManager ? self::ORIGIN_MANAGER : self::ORIGIN_EXECUTOR),
+            'county_due_at' => $countyDue,
             'intake_code' => $intakeCode,
             'intake_by' => $user['id'],
             'intake_at' => $now,

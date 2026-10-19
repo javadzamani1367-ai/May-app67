@@ -117,3 +117,5 @@ require __DIR__ . '/case_archive.php';
 require __DIR__ . '/web_manager.php';
 require __DIR__ . '/regional_flow.php';
 require __DIR__ . '/regional_web.php';
+require __DIR__ . '/persons.php';
+require __DIR__ . '/illegal_flow.php';

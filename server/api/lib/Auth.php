@@ -17,8 +17,13 @@ final class Auth
     public const ROLE_FIELD = 3;
     /** مجری رمزارز: اختیارات مدیر، فقط در ناحیه‌های خودش؛ کاربر نمی‌سازد. */
     public const ROLE_EXECUTOR = 4;
-    /** مجری برق غیرمجاز: فقط موردهای برق غیرمجاز، با ارجاع به کارشناس و مجری رمزارز. */
+    /** مجری برق غیرمجاز ستاد: همه پرونده‌های برق غیرمجاز استان؛ پشتیبان مجری‌های شهرستان. */
     public const ROLE_ILLEGAL = 5;
+    /** مجری برق غیرمجاز یک شهرستان: پرونده‌های غیرمجاز ناحیه خودش را می‌گرداند. */
+    public const ROLE_ILLEGAL_AREA = 6;
+
+    /** نقش‌هایی که پرونده را می‌گردانند: ارجاع، تأیید، ارسال به واحد (هر کدام در حوزه خودش). */
+    public const CASE_MANAGERS = [self::ROLE_MANAGER, self::ROLE_EXECUTOR, self::ROLE_ILLEGAL, self::ROLE_ILLEGAL_AREA];
 
     /** مجوزهای کاربر میدانی، به صورت بیت: مدیر یکی یا هر دو را می‌دهد. */
     public const PERM_INSPECT = 1;
@@ -113,36 +118,63 @@ final class Auth
         return strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', $code));
     }
 
-    public static function login(string $userCode, string $password, ?string $deviceCode): array
+    /**
+     * کد و رمز؛ قفل دستگاه جداست (PersonDevices) و بعد از بررسی اپ می‌آید، تا حسابی
+     * که برای اپ دیگری است پیام «دستگاه» نگیرد.
+     */
+    public static function login(string $userCode, string $password): array
     {
+        $userCode = self::latin(trim($userCode));
         // قفل پیش از هر چیز: حساب قفل‌شده حتی با رمز درست هم باز نمی‌شود، وگرنه
         // قفل فقط حدس‌زدن را کند می‌کرد و جلویش را نمی‌گرفت.
         LoginGuard::check($userCode);
-        $user = Db::one('SELECT * FROM users WHERE user_code = ? AND active = 1', [$userCode]);
+        $user = self::userByCode($userCode);
 
         // پیام یکسان برای «کاربر نیست» و «رمز غلط»: وگرنه می‌شود فهرست
         // کدهای کاربری معتبر را از همین تفاوت پیام بیرون کشید.
-        $invalid = 'کد کاربری یا رمز عبور درست نیست.';
-        if ($user === null || empty($user['password_hash'])
-            || !password_verify($password, (string) $user['password_hash'])) {
+        if ($user === null || !self::passwordMatches($user, $password)) {
             LoginGuard::failed($userCode);
-            Response::fail(401, 'bad_credentials', $invalid);
+            Response::fail(401, 'bad_credentials', 'کد کاربری یا رمز عبور درست نیست.');
         }
         LoginGuard::succeeded($userCode);
-
-        // قفل دستگاه: حساب کارشناس به همان نصبی بسته است که مدیر ثبت کرده.
-        if ((int) $user['role'] === self::ROLE_EXPERT) {
-            $registered = self::normaliseDevice($user['device_code'] ?? '');
-            if ($registered === '') {
-                Response::fail(403, 'device_unregistered',
-                    'کد دستگاه شما هنوز توسط مدیر ثبت نشده است.');
-            }
-            if ($deviceCode === null || $registered !== self::normaliseDevice($deviceCode)) {
-                Response::fail(403, 'device_mismatch',
-                    'این حساب روی دستگاه دیگری ثبت شده است. برای ثبت دستگاه جدید با مدیر تماس بگیرید.');
-            }
-        }
-
         return $user;
+    }
+
+    /**
+     * کاربر فعال با این کد. کد با ارقام لاتین جستجو می‌شود، و برای کدهای قدیمی که با
+     * صفحه‌کلید فارسی ثبت شده‌اند، به همان شکلی هم که تایپ شده.
+     */
+    public static function userByCode(string $typed): ?array
+    {
+        $typed = trim($typed);
+        $latin = self::latin($typed);
+        return Db::one('SELECT * FROM users WHERE user_code IN (?, ?) AND active = 1 ORDER BY user_code = ? DESC LIMIT 1',
+            [$latin, $typed, $latin]);
+    }
+
+    /**
+     * رمز، همان‌طور که تایپ شده یا با ارقام لاتین: یک صفحه‌کلید «۱۲۳» می‌دهد و دیگری
+     * «123»، و آدم هر دو را یک رمز می‌داند. رمزهای تازه با ارقام لاتین ذخیره می‌شوند.
+     */
+    public static function passwordMatches(array $user, string $password): bool
+    {
+        $hash = (string) ($user['password_hash'] ?? '');
+        if ($hash === '') {
+            return false;
+        }
+        return password_verify($password, $hash) || password_verify(self::latin($password), $hash);
+    }
+
+    public static function hashPassword(string $password): string
+    {
+        return password_hash(self::latin($password), PASSWORD_DEFAULT);
+    }
+
+    /** ارقام فارسی و عربی به لاتین؛ بقیه دست نمی‌خورد. */
+    public static function latin(string $text): string
+    {
+        return strtr($text, ['۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4', '۵' => '5', '۶' => '6',
+            '۷' => '7', '۸' => '8', '۹' => '9', '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9']);
     }
 }

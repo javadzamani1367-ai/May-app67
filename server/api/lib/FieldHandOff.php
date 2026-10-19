@@ -2,7 +2,8 @@
 declare(strict_types=1);
 
 /**
- * سپردن یک مورد میدانی به مجری رمزارز یک ناحیه — کار مدیر و مجری برق غیرمجاز.
+ * سپردن یک مورد میدانی به مجری رمزارز یک ناحیه — کار مدیر. گزارش برق غیرمجاز اینجا
+ * نیست: همان لحظه رسیدن، پرونده غیرمجاز می‌شود (IllegalFlow).
  *
  * مجری مورد را مثل پرونده خودش می‌گرداند: به کارشناس ناحیه ارجاع می‌دهد و نتیجه را
  * دنبال می‌کند. سپارنده هر قدم را در تاریخچه همان مورد می‌بیند. ناحیه مورد همان
@@ -12,11 +13,14 @@ final class FieldHandOff
 {
     public static function hand(array $item, string $executorId, string $note, Scope $scope): ?string
     {
-        if (!$scope->isManager() && !$scope->isIllegal()) {
-            return 'سپردن مورد به مجری کار مدیر و مجری برق غیرمجاز است.';
+        if (!$scope->isManager()) {
+            return 'سپردن مورد میدانی به مجری رمزارز کار مدیر است.';
         }
         if (!$scope->canSeeField($item)) {
             return 'این مورد در محدوده شما نیست.';
+        }
+        if ((int) $item['kind'] === Field::KIND_ILLEGAL) {
+            return 'گزارش برق غیرمجاز در گردش پرونده غیرمجاز است و مجریان غیرمجاز آن را می‌گردانند.';
         }
         if ($item['merged_into'] !== null || in_array((int) $item['status'], [Field::STATUS_CLOSED, Field::STATUS_REJECTED], true)) {
             return 'این مورد بسته یا ادغام شده است.';

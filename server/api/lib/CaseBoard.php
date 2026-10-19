@@ -11,6 +11,7 @@ final class CaseBoard
     public const STAGES = [
         'awaiting_referral' => 'در انتظار ارجاع مدیر',
         'with_executor' => 'نزد مجری؛ هنوز به کارشناس نرسیده',
+        'with_hq' => 'نزد ستاد؛ مجری شهرستان ارجاع نداد',
         'with_expert' => 'نزد کارشناس؛ بازدید نشده',
         'in_progress' => 'در دست کارشناس',
         'awaiting_approval' => 'در انتظار تأیید',
@@ -37,10 +38,14 @@ final class CaseBoard
         if ($row['expert_id'] !== null) {
             return 'with_expert';
         }
+        if (($row['hq_alert_at'] ?? null) !== null) {
+            return 'with_hq';
+        }
         if ($row['executor_id'] !== null) {
             return 'with_executor';
         }
-        return (int) ($row['origin'] ?? 0) === CaseIntake::ORIGIN_MANAGER ? 'awaiting_referral' : 'in_progress';
+        return in_array((int) ($row['origin'] ?? 0), [CaseIntake::ORIGIN_MANAGER, IllegalFlow::ORIGIN_HQ, IllegalFlow::ORIGIN_FIELD], true)
+            ? 'awaiting_referral' : 'in_progress';
     }
 
     /** پرونده‌های باز محدوده، دیرشده‌ها و قدیمی‌ترها اول. */
@@ -49,8 +54,9 @@ final class CaseBoard
         [$where, $params] = $scope->reportWhere('r');
         $rows = Db::all(
             "SELECT r.id, r.tracking_code, r.temp_code, r.report_type, r.status, r.approval_state, r.area_code, r.county,
-                    r.address, r.created_at, r.expert_code, f.origin, f.intake_code, f.executor_id, f.expert_id, f.due_at,
-                    f.refer_due_at, f.dispatched_at, f.expert_alert_at, f.manager_alert_at, f.auto_referred,
+                    r.address, r.created_at, r.expert_code, r.case_kind, f.origin, f.intake_code, f.executor_id, f.expert_id, f.due_at,
+                    f.refer_due_at, f.dispatched_at, f.expert_alert_at, f.manager_alert_at, f.auto_referred, f.hq_alert_at,
+                    f.county_due_at, f.hq_due_at,
                     x.full_name AS executor_name, p.full_name AS expert_name
              FROM reports r LEFT JOIN case_flow f ON f.report_id = r.id
              LEFT JOIN users x ON x.id = f.executor_id LEFT JOIN users p ON p.id = f.expert_id
@@ -65,7 +71,7 @@ final class CaseBoard
             if ($stage === null) {
                 continue;
             }
-            $late = $row['manager_alert_at'] !== null || $row['expert_alert_at'] !== null
+            $late = $row['manager_alert_at'] !== null || $row['expert_alert_at'] !== null || $row['hq_alert_at'] !== null
                 || ($stage === 'with_expert' && $row['due_at'] !== null && (int) $row['due_at'] < $now);
             $out[] = [
                 'id' => $row['id'],
@@ -80,6 +86,10 @@ final class CaseBoard
                 'expert' => $row['expert_name'],
                 'due_at' => $row['due_at'] === null ? null : (int) $row['due_at'],
                 'refer_due_at' => $row['refer_due_at'] === null ? null : (int) $row['refer_due_at'],
+                'county_due_at' => $row['county_due_at'] === null ? null : (int) $row['county_due_at'],
+                'hq_due_at' => $row['hq_due_at'] === null ? null : (int) $row['hq_due_at'],
+                'case_kind' => (int) $row['case_kind'],
+                'kind_name' => CaseKind::NAMES[(int) $row['case_kind']] ?? '',
                 'auto_referred' => (int) ($row['auto_referred'] ?? 0) === 1,
                 'late' => $late,
             ];

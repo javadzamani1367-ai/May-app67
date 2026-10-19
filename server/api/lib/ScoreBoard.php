@@ -5,6 +5,9 @@ declare(strict_types=1);
  * امتیاز ۱۰۰ ناحیه‌ها، مجریان، واحدهای مقصد و کارشناسان در یک بازه — از همان
  * ستون‌های گردش پرونده، تأییدها و ارسال‌ها که خط زمانی را می‌سازند. فرمول هر
  * جزء در Scores است. مدیر همه را می‌بیند، مجری فقط ناحیه‌های خودش را.
+ *
+ * هر حوزه (رمزارز، برق غیرمجاز) امتیاز جدای خودش را دارد: کارشناسی که در هر دو کار
+ * می‌کند، در هر جدول با کار همان حوزه سنجیده می‌شود.
  */
 final class ScoreBoard
 {
@@ -13,34 +16,41 @@ final class ScoreBoard
     private array $dispatches;
     private CrewCalendar $calendar;
     private int $executorDays;
+    public readonly int $kind;
 
     public function __construct(private readonly int $from, private readonly int $to, private readonly Scope $scope,
-                                private readonly int $now)
+                                private readonly int $now, ?int $kind = null)
     {
+        $this->kind = $scope->kind() ?? ($kind === CaseKind::ILLEGAL ? CaseKind::ILLEGAL : CaseKind::CRYPTO);
         $this->calendar = CrewCalendar::fromSettings();
-        $this->executorDays = (int) FieldSettings::all()['executor_days'];
+        $settings = FieldSettings::all();
+        $this->executorDays = (int) ($this->kind === CaseKind::ILLEGAL ? $settings['illegal_county_days'] : $settings['executor_days']);
         $p = [$from, $to];
         $this->flows = Db::all(
             'SELECT f.*, r.area_code, r.expert_code, r.created_at AS report_created FROM case_flow f JOIN reports r ON r.id = f.report_id
-             WHERE f.executor_at BETWEEN ? AND ? OR f.assigned_at BETWEEN ? AND ? OR f.visited_at BETWEEN ? AND ?
-                OR f.approved_at BETWEEN ? AND ? OR f.dispatched_at BETWEEN ? AND ?',
-            array_merge($p, $p, $p, $p, $p)
+             WHERE r.case_kind = ? AND (f.executor_at BETWEEN ? AND ? OR f.assigned_at BETWEEN ? AND ? OR f.visited_at BETWEEN ? AND ?
+                OR f.approved_at BETWEEN ? AND ? OR f.dispatched_at BETWEEN ? AND ?)',
+            array_merge([$this->kind], $p, $p, $p, $p, $p)
         );
         $this->decisions = Db::all(
             'SELECT a.decision, a.submitted_at, a.decided_at, r.area_code, r.expert_code FROM approvals a
-             JOIN reports r ON r.id = a.report_id WHERE a.decision <> 0 AND a.decided_at BETWEEN ? AND ?', $p);
-        $this->dispatches = Db::all('SELECT * FROM dispatches WHERE channel = 0 AND dispatched_at BETWEEN ? AND ?', $p);
+             JOIN reports r ON r.id = a.report_id WHERE r.case_kind = ? AND a.decision <> 0 AND a.decided_at BETWEEN ? AND ?',
+            array_merge([$this->kind], $p));
+        $this->dispatches = Db::all('SELECT d.* FROM dispatches d JOIN reports r ON r.id = d.report_id
+                                     WHERE r.case_kind = ? AND d.channel = 0 AND d.dispatched_at BETWEEN ? AND ?',
+            array_merge([$this->kind], $p));
     }
 
     /** همه جدول‌ها، هر کدام رتبه‌بندی‌شده. */
     public function all(): array
     {
+        $executorRole = CaseKind::executorRole($this->kind);
         $users = Db::all('SELECT id, user_code, full_name, role, unit, areas FROM users WHERE active = 1 AND role IN (?, ?, ?)',
-            [Auth::ROLE_EXPERT, Auth::ROLE_UNIT, Auth::ROLE_EXECUTOR]);
+            [Auth::ROLE_EXPERT, Auth::ROLE_UNIT, $executorRole]);
         $experts = $executors = $units = [];
         foreach ($users as $u) {
             $areas = Areas::parse($u['areas'] ?? '');
-            $visible = $this->scope->isManager() || array_intersect($areas, $this->scope->areas) !== [];
+            $visible = $this->scope->wholeProvince() || array_intersect($areas, $this->scope->areas) !== [];
             if (!$visible) {
                 continue;
             }
@@ -48,7 +58,7 @@ final class ScoreBoard
             $base = ['id' => $u['id'], 'name' => $u['full_name'], 'areas' => $areas, 'area' => $label];
             match ((int) $u['role']) {
                 Auth::ROLE_EXPERT => $experts[] = $base + $this->expert($u),
-                Auth::ROLE_EXECUTOR => $executors[] = $base + $this->executor($areas, (string) $u['id']),
+                $executorRole => $executors[] = $base + $this->executor($areas, (string) $u['id']),
                 default => $units[] = $base + ['unit' => UnitStages::NAMES[(int) $u['unit']] ?? '']
                     + $this->unit($this->dispatchesFor((int) $u['unit'], $areas)),
             };
@@ -60,12 +70,12 @@ final class ScoreBoard
         }
         unset($e);
         $areas = [];
-        foreach ($this->scope->isManager() ? array_keys(Areas::NAMES) : $this->scope->areas as $code) {
+        foreach ($this->scope->wholeProvince() ? array_keys(Areas::NAMES) : $this->scope->areas as $code) {
             $code = (string) $code;
             $areas[] = $this->area($code, $executors, $experts);
         }
         return ['areas' => Scores::rank($areas), 'executors' => Scores::rank($executors), 'units' => Scores::rank($units),
-            'experts' => Scores::rank($experts)];
+            'experts' => Scores::rank($experts), 'case_kind' => $this->kind, 'kind_name' => CaseKind::NAMES[$this->kind]];
     }
 
     private function expert(array $u): array

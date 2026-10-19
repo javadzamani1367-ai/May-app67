@@ -18,6 +18,9 @@ final class CaseFlow
         'submitted' => 'ارسال برای تأیید', 'seen' => 'دیده شد', 'approved' => 'تأیید', 'returned' => 'برگشت برای اصلاح',
         'dispatched' => 'ارسال به واحد', 'expert_alert' => 'هشدار: کارشناس اقدام نکرده',
         'manager_alert' => 'هشدار به مدیر', 'unit_stage' => 'اقدام واحد',
+        'field_intake' => 'گزارش میدانی رسید', 'hq_alert' => 'هشدار به ستاد: مجری شهرستان ارجاع نداد',
+        'auto_expert' => 'ارجاع خودکار به کارشناس', 'decide_alert' => 'هشدار به ستاد: تأیید یا ارسال معطل مانده',
+        'hq_late' => 'هشدار به ستاد',
     ];
 
     public static function row(string $reportId): ?array
@@ -50,20 +53,24 @@ final class CaseFlow
         if ($report === null || !$scope->canSeeReport($report)) {
             return 'پرونده پیدا نشد یا در محدوده شما نیست.';
         }
+        if (!$scope->canActOn($report)) {
+            return 'پرونده‌های برق غیرمجاز را مجریان غیرمجاز می‌گردانند؛ مدیر ناظر است.';
+        }
         return $report;
     }
 
-    /** مدیر پرونده را به مجری ناحیه (یا مجری انتخابی همان ناحیه) می‌سپارد. */
+    /** بالادست حوزه (مدیر یا ستاد) پرونده را به گرداننده شهرستان (یا یکی از گردانندگان همان ناحیه) می‌سپارد. */
     public static function toExecutor(string $reportId, ?string $executorId, string $note, Scope $scope): ?string
     {
-        if (!$scope->isManager()) {
-            return 'سپردن به مجری کار مدیر است.';
-        }
         $report = self::owned($reportId, $scope);
         if (is_string($report)) {
             return $report;
         }
-        $executor = $executorId === null || $executorId === '' ? Scope::executorOf($report['area_code'])
+        $kind = CaseKind::of($report);
+        if ($scope->role !== CaseKind::topRole($kind)) {
+            return $kind === CaseKind::ILLEGAL ? 'سپردن به مجری شهرستان کار ستاد است.' : 'سپردن به مجری کار مدیر است.';
+        }
+        $executor = $executorId === null || $executorId === '' ? Scope::executorOf($report['area_code'], $kind)
             : (array_values(array_filter($scope->executors($report['area_code']), static fn ($e) => $e['id'] === $executorId))[0] ?? null);
         if ($executor === null) {
             return 'برای ناحیه این پرونده مجری فعالی تعریف نشده است.';
@@ -102,15 +109,16 @@ final class CaseFlow
         $days = $dueDays ?? (int) FieldSettings::all()['expert_days'];
         $columns = ['expert_id' => $expert['id'], 'assigned_by' => $scope->user['id'], 'assigned_at' => $now,
             'due_at' => CrewCalendar::fromSettings()->addWorkDays($now, $days), 'refer_due_at' => null,
-            'expert_alert_at' => null, 'manager_alert_at' => null];
-        if ($scope->isExecutor()) {
+            'county_due_at' => null, 'hq_due_at' => null, 'expert_alert_at' => null, 'manager_alert_at' => null];
+        $kind = CaseKind::of($report);
+        if ($scope->isAreaExecutor()) {
             $columns['executor_action_at'] = $now;
             if (($flow['executor_id'] ?? null) === null) {
                 $columns += ['executor_id' => $scope->user['id'], 'executor_at' => $now];
             }
         } elseif (($flow['executor_id'] ?? null) === null) {
-            // مدیر مستقیم به کارشناس داد: پیگیری از این لحظه با مجری همان ناحیه است.
-            $executor = Scope::executorOf($report['area_code']);
+            // بالادست مستقیم به کارشناس داد: پیگیری از این لحظه با گرداننده همان ناحیه است.
+            $executor = Scope::executorOf($report['area_code'], $kind);
             if ($executor !== null) {
                 $columns += ['executor_id' => $executor['id'], 'executor_at' => $now];
                 Notifications::toUser((string) $executor['id'], 'case_referred', 'پرونده ناحیه شما به کارشناس ارجاع شد',
@@ -137,7 +145,7 @@ final class CaseFlow
         if ($note === '' || mb_strlen($note) > 2000) {
             return 'متن پیگیری را بنویسید (حداکثر ۲۰۰۰ نویسه).';
         }
-        if ($scope->isExecutor()) {
+        if ($scope->isAreaExecutor()) {
             self::touch($reportId, ['executor_action_at' => Db::now()]);
         }
         self::event($reportId, (string) $scope->user['id'], 'followup', $note);
@@ -164,8 +172,7 @@ final class CaseFlow
         if ((int) ($report['status'] ?? 0) >= 1 && ($flow['visited_at'] ?? null) === null) {
             self::touch($id, ['visited_at' => Db::now()]);
             self::event($id, (string) $user['id'], 'visited');
-            Notifications::toExecutors($report['area_code'] ?? null, 'case_visited', 'بازدید پرونده ثبت شد',
-                CaseLabels::code($report), $id);
+            Notifications::toCaseLeads($report, 'case_visited', 'بازدید پرونده ثبت شد', CaseLabels::code($report), $id);
         }
     }
 
@@ -174,7 +181,7 @@ final class CaseFlow
     {
         $flow = self::row($reportId);
         $columns = ($flow['dispatched_at'] ?? null) === null ? ['dispatched_at' => Db::now()] : [];
-        if ((int) $user['role'] === Auth::ROLE_EXECUTOR) {
+        if (in_array((int) $user['role'], [Auth::ROLE_EXECUTOR, Auth::ROLE_ILLEGAL_AREA], true)) {
             $columns['executor_action_at'] = Db::now();
         }
         if ($columns !== [] || $flow === null) {
@@ -187,7 +194,7 @@ final class CaseFlow
     public static function onDecided(string $reportId, array $user, bool $approved, string $comment): void
     {
         $columns = $approved ? ['approved_at' => Db::now()] : [];
-        if ((int) $user['role'] === Auth::ROLE_EXECUTOR) {
+        if (in_array((int) $user['role'], [Auth::ROLE_EXECUTOR, Auth::ROLE_ILLEGAL_AREA], true)) {
             $columns['executor_action_at'] = Db::now();
         }
         self::touch($reportId, $columns);
@@ -235,8 +242,8 @@ final class CaseFlow
             [$reportId]
         ) ?? [];
         $num = static fn ($k) => isset($flow[$k]) && $flow[$k] !== null ? (int) $flow[$k] : null;
-        $report = Db::one('SELECT tracking_code, temp_code, area_code, status, approval_state, address, report_type FROM reports WHERE id = ?',
-            [$reportId]) ?? [];
+        $report = Db::one('SELECT tracking_code, temp_code, area_code, status, approval_state, address, report_type, case_kind
+                           FROM reports WHERE id = ?', [$reportId]) ?? [];
         return [
             'code' => CaseLabels::code($report) ?: ($flow['intake_code'] ?? ''),
             'area_code' => $report['area_code'] ?? null,
@@ -245,6 +252,11 @@ final class CaseFlow
             'approval_state' => (int) ($report['approval_state'] ?? 0),
             'address' => $report['address'] ?? null,
             'type' => CaseLabels::REPORT_TYPES[(int) ($report['report_type'] ?? 0)] ?? '',
+            'case_kind' => CaseKind::of($report),
+            'kind_name' => CaseKind::label($report),
+            'county_due_at' => $num('county_due_at'),
+            'hq_alert_at' => $num('hq_alert_at'),
+            'hq_due_at' => $num('hq_due_at'),
             'origin' => (int) ($flow['origin'] ?? 0),
             'origin_name' => CaseIntake::ORIGIN_NAMES[(int) ($flow['origin'] ?? 0)] ?? '',
             'intake_code' => $flow['intake_code'] ?? null,

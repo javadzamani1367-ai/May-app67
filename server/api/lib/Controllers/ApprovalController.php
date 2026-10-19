@@ -16,9 +16,9 @@ final class ApprovalController
 
     public function submit(Request $request): void
     {
-        $user = Auth::requireAny($request, [Auth::ROLE_EXPERT, Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]);
+        $user = Auth::requireAny($request, array_merge([Auth::ROLE_EXPERT], Auth::CASE_MANAGERS));
         $reportId = $request->str('report_id');
-        $report = Db::one('SELECT id, tracking_code, temp_code, expert_code, area_code FROM reports WHERE id = ?', [$reportId]);
+        $report = Db::one('SELECT id, tracking_code, temp_code, expert_code, area_code, case_kind FROM reports WHERE id = ?', [$reportId]);
         if ($report === null) {
             Response::fail(404, 'not_found', 'پرونده پیدا نشد.');
         }
@@ -35,19 +35,26 @@ final class ApprovalController
         CaseFlow::event($reportId, (string) $user['id'], 'submitted', $request->str('comment') ?: null);
 
         $text = 'پرونده ' . CaseLabels::code($report) . ' در انتظار تأیید است.';
-        Notifications::toRole(Auth::ROLE_MANAGER, 'approval_pending', 'پرونده برای بررسی ارسال شد', $text, $reportId);
-        Notifications::toExecutors($report['area_code'], 'approval_pending', 'پرونده برای بررسی ارسال شد', $text, $reportId);
+        // رمزارز: مدیر و مجری ناحیه. برق غیرمجاز: مجری شهرستان و ستاد (مدیر فقط ناظر است).
+        if (CaseKind::of($report) === CaseKind::CRYPTO) {
+            Notifications::toRole(Auth::ROLE_MANAGER, 'approval_pending', 'پرونده برای بررسی ارسال شد', $text, $reportId);
+        }
+        Notifications::toCaseLeads($report, 'approval_pending', 'پرونده برای بررسی ارسال شد', $text, $reportId);
 
         Response::json(['submitted' => true]);
     }
 
     public function decide(Request $request): void
     {
-        $user = Auth::requireAny($request, [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]);
+        $user = Auth::requireAny($request, Auth::CASE_MANAGERS);
         $reportId = $request->str('report_id');
         $report = Db::one('SELECT * FROM reports WHERE id = ?', [$reportId]);
         if ($report === null || !(new Scope($user))->canSeeReport($report)) {
             Response::fail(404, 'not_found', 'پرونده پیدا نشد یا در محدوده شما نیست.');
+        }
+        $refusal = CaseActions::refusal($report, $user);
+        if ($refusal !== null) {
+            Response::fail(403, 'not_your_turn', $refusal);
         }
         $decision = $request->int('decision', self::RETURNED);
         $error = CaseActions::decide($reportId, (int) $decision, $request->str('comment'), $user);
@@ -64,7 +71,7 @@ final class ApprovalController
      */
     public function index(Request $request): void
     {
-        $user = Auth::requireAny($request, [Auth::ROLE_EXPERT, Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]);
+        $user = Auth::requireAny($request, array_merge([Auth::ROLE_EXPERT], Auth::CASE_MANAGERS));
         $scope = new Scope($user);
         $reportId = $request->str('report_id');
 
@@ -75,7 +82,7 @@ final class ApprovalController
             if ($report === null || (!$own && !$scope->canSeeReport($report))) {
                 Response::fail(404, 'not_found', 'پرونده پیدا نشد.');
             }
-            if ($scope->managesCases()) {
+            if ($scope->managesCases() && $scope->canActOn($report)) {
                 CaseFlow::markSeen($reportId, $user);
             }
             Response::json(['approvals' => self::history($reportId)]);

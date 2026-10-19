@@ -158,10 +158,9 @@ check('مجری غیرمجاز گزارش غیرمجاز را می‌بیند', 
 check('مجری غیرمجاز رمزارز را نمی‌بیند', !in_array('RZ-1405-000900', $codes($illegal), true));
 check('مجری رمزارز گزارش رمزارز اپ میدانی را نمی‌بیند', !in_array('RZ-1405-000900', $codes($exec401), true));
 check('مجری ۴۰۱ غیرمجاز ۴۱۰ را نمی‌بیند', !in_array('GH-1405-000900', $codes($exec401), true));
+// گزارش غیرمجاز دیگر به مجری رمزارز سپرده نمی‌شود: پرونده غیرمجاز می‌شود (illegal_flow.php).
 $hand = $probe->json('POST', 'manage/field/hand', ['id' => '99999999-0000-0000-0000-000000000001', 'executor_id' => $id('401-exec'), 'note' => 'پیگیری شود'], $illegal);
-check('مجری غیرمجاز به مجری ایلام سپرد', ($hand['body']['ok'] ?? false) === true, $hand['raw']);
-check('حالا مجری ایلام می‌بیند', in_array('GH-1405-000900', $codes($exec401), true));
-$item = $probe->json('GET', 'manage/field/item&id=99999999-0000-0000-0000-000000000001', [], $illegal)['body']['data']['item'] ?? [];
-check('سپارنده سپردن را در تاریخچه می‌بیند', str_contains(json_encode($item['events'] ?? [], JSON_UNESCAPED_UNICODE), 'سپردن به مجری'));
-equals('مجری رمزارز نمی‌تواند به مجری دیگر بسپارد', 409, $probe->json('POST', 'manage/field/hand',
-    ['id' => '99999999-0000-0000-0000-000000000001', 'executor_id' => $id('410-exec')], $exec401)['status']);
+equals('مجری غیرمجاز مورد را به مجری رمزارز نمی‌سپارد', 409, $hand['status']);
+equals('مدیر هم گزارش غیرمجاز را به مجری رمزارز نمی‌سپارد', 409, $probe->json('POST', 'manage/field/hand',
+    ['id' => '99999999-0000-0000-0000-000000000001', 'executor_id' => $id('401-exec')], $managerToken)['status']);
+check('مجری رمزارز گزارش غیرمجاز را نمی‌بیند', !in_array('GH-1405-000900', $codes($exec401), true));

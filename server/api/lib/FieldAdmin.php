@@ -143,6 +143,9 @@ final class FieldAdmin
         if (!$scope->canSeeField($item)) {
             return 'این مورد در محدوده شما نیست.';
         }
+        if ((int) $item['kind'] === Field::KIND_ILLEGAL && ($item['report_id'] ?? null) !== null) {
+            return 'این گزارش پرونده بازرسی برق غیرمجاز شده است؛ از صفحه همان پرونده پیگیری می‌شود.';
+        }
         $from = (int) $item['status'];
         if (!in_array($to, self::NEXT[$from] ?? [], true)) {
             return 'این تغییر وضعیت از وضعیت فعلی ممکن نیست.';
@@ -183,7 +186,7 @@ final class FieldAdmin
             } else {
                 Db::run('UPDATE field_items SET status = ?, updated_at = ? WHERE id = ?', [$to, $now, $item['id']]);
             }
-            if ($scope->isExecutor()) {
+            if ($scope->isAreaExecutor()) {
                 Db::run('UPDATE field_items SET handler_action_at = ? WHERE id = ?', [$now, $item['id']]);
             }
             $text = $note === '' ? null : $note;

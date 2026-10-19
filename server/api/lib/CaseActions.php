@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/IllegalFlow.php';
+
 /**
  * کارهای مدیر روی پرونده‌های بازدید از پنل وب — همان سه کار اپ مدیر: تأیید یا
  * برگشت، ارسال به واحدها، و گزارش عملکرد واحدها.
@@ -15,13 +17,25 @@ final class CaseActions
     public const APPROVED = 1;
     public const RETURNED = 2;
 
+    /**
+     * چرا این کاربر نمی‌تواند روی این پرونده تصمیم بگیرد یا آن را به واحد بفرستد؛ تهی یعنی
+     * می‌تواند. مدیر در برق غیرمجاز ناظر است و ستاد فقط پس از مهلت مجری شهرستان.
+     */
+    public static function refusal(array $report, array $user): ?string
+    {
+        if (!(new Scope($user))->canActOn($report)) {
+            return 'پرونده‌های برق غیرمجاز را مجریان غیرمجاز می‌گردانند؛ مدیر ناظر است.';
+        }
+        return IllegalFlow::guardDecision($report, $user);
+    }
+
     /** درخواست‌های در انتظار، قدیمی‌ترین اول، با نام کارشناس فرستنده. */
     public static function pendingApprovals(?Scope $scope = null): array
     {
         [$where, $params] = $scope?->reportWhere('r') ?? ['1=1', []];
         return Db::all(
             'SELECT a.id, a.report_id, a.submitted_at, a.comment, r.tracking_code, r.temp_code, r.report_type,
-                    r.county, r.area_code, r.address, r.expert_code, u.full_name AS submitted_by_name
+                    r.county, r.area_code, r.address, r.expert_code, r.case_kind, u.full_name AS submitted_by_name
              FROM approvals a JOIN reports r ON r.id = a.report_id LEFT JOIN users u ON u.id = a.submitted_by
              WHERE a.decision = ? AND ' . $where . ' ORDER BY a.submitted_at',
             array_merge([self::PENDING], $params)
@@ -111,9 +125,13 @@ final class CaseActions
         if (mb_strlen(trim($note)) > 2000) {
             return 'توضیح بیش از حد بلند است.';
         }
-        $report = Db::one('SELECT id, tracking_code, temp_code, area_code FROM reports WHERE id = ?', [$reportId]);
+        $report = Db::one('SELECT id, tracking_code, temp_code, area_code, case_kind FROM reports WHERE id = ?', [$reportId]);
         if ($report === null || !(new Scope($manager))->canSeeReport($report)) {
             return 'پرونده پیدا نشد.';
+        }
+        $refusal = self::refusal($report, $manager);
+        if ($refusal !== null) {
+            return $refusal;
         }
         // فقط مدارک همین پرونده؛ شناسه‌ای که مال پرونده دیگری است دور ریخته می‌شود.
         $own = array_column(Db::all('SELECT id FROM media WHERE report_id = ? UNION ALL SELECT id FROM attachments WHERE report_id = ?',
@@ -139,15 +157,16 @@ final class CaseActions
      * عملکرد هر واحد در یک بازه (زمان ارسال): رسیده، دیده‌شده، پاسخ‌داده، مهلت گذشته،
      * پاسخ به‌موقع و میانگین زمان پاسخ به ساعت. همان که اپ مدیر از /stats/units می‌گیرد.
      */
-    public static function unitStats(int $from, int $to, ?Scope $scope = null): array
+    public static function unitStats(int $from, int $to, ?Scope $scope = null, ?int $kind = null): array
     {
-        [$where, $params] = self::dispatchWhere($scope);
+        [$where, $params] = self::dispatchWhere($scope, $kind);
         $rows = Db::all(
-            'SELECT unit, COUNT(*) AS sent, SUM(status >= 1) AS seen, SUM(status = 2) AS answered,
-                    SUM(deadline_at IS NOT NULL AND status <> 2 AND deadline_at < ?) AS overdue,
-                    SUM(deadline_at IS NOT NULL AND status = 2 AND answered_at <= deadline_at) AS on_time,
-                    AVG(CASE WHEN answered_at IS NOT NULL THEN answered_at - dispatched_at END) AS avg_answer_millis
-             FROM dispatches d WHERE dispatched_at BETWEEN ? AND ? AND ' . $where . ' GROUP BY unit ORDER BY unit',
+            'SELECT d.unit, COUNT(*) AS sent, SUM(d.status >= 1) AS seen, SUM(d.status = 2) AS answered,
+                    SUM(d.deadline_at IS NOT NULL AND d.status <> 2 AND d.deadline_at < ?) AS overdue,
+                    SUM(d.deadline_at IS NOT NULL AND d.status = 2 AND d.answered_at <= d.deadline_at) AS on_time,
+                    AVG(CASE WHEN d.answered_at IS NOT NULL THEN d.answered_at - d.dispatched_at END) AS avg_answer_millis
+             FROM dispatches d JOIN reports r ON r.id = d.report_id
+             WHERE d.dispatched_at BETWEEN ? AND ? AND ' . $where . ' GROUP BY d.unit ORDER BY d.unit',
             array_merge([Db::now(), $from, $to], $params)
         );
         foreach ($rows as &$row) {
@@ -160,9 +179,9 @@ final class CaseActions
     }
 
     /** ارسال‌هایی که مهلتشان گذشته و هنوز پاسخ ندارند، قدیمی‌ترین مهلت اول. */
-    public static function overdueDispatches(int $limit = 50, ?Scope $scope = null): array
+    public static function overdueDispatches(int $limit = 50, ?Scope $scope = null, ?int $kind = null): array
     {
-        [$where, $params] = self::dispatchWhere($scope);
+        [$where, $params] = self::dispatchWhere($scope, $kind);
         return Db::all(
             'SELECT d.id, d.report_id, d.unit, d.area_code, d.dispatched_at, d.deadline_at, d.status, r.tracking_code, r.temp_code
              FROM dispatches d JOIN reports r ON r.id = d.report_id
@@ -172,15 +191,17 @@ final class CaseActions
         );
     }
 
-    /** ارسال‌های محدوده کاربر: مدیر همه، مجری فقط ناحیه‌هایش. @return array{0:string,1:list<mixed>} */
-    private static function dispatchWhere(?Scope $scope): array
+    /**
+     * ارسال‌های محدوده کاربر، با همان قاعده پرونده‌ها (حوزه و ناحیه)؛ $kind حوزه را برای
+     * مدیر تنگ می‌کند. پرسش باید reports را با نام r داشته باشد. @return array{0:string,1:list<mixed>}
+     */
+    public static function dispatchWhere(?Scope $scope, ?int $kind = null): array
     {
-        if ($scope === null || $scope->isManager()) {
-            return ['1=1', []];
+        [$where, $params] = $scope === null ? ['1=1', []] : $scope->reportWhere('r');
+        if ($kind !== null) {
+            $where .= ' AND r.case_kind = ?';
+            $params[] = $kind;
         }
-        if (!$scope->isExecutor() || $scope->areas === []) {
-            return ['1=0', []];
-        }
-        return ['d.area_code IN (' . implode(', ', array_fill(0, count($scope->areas), '?')) . ')', $scope->areas];
+        return [$where, $params];
     }
 }

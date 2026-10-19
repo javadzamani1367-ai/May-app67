@@ -22,8 +22,16 @@ foreach ([['f-100', 2], ['f-200', 3]] as [$code, $permissions]) {
 $fieldLogin = static fn (string $code) => $probe->json('POST', 'auth/login', [
     'user_code' => $code, 'password' => 'field-pass-1', 'device_code' => 'PHONE-' . $code, 'app' => 'field',
 ]);
+$unbound = $fieldLogin('f-100');
+equals('کاربر میدانی بی ثبت نصب وارد نمی‌شود', 'device_unregistered', $unbound['body']['error']['code'] ?? null);
+foreach (['f-100', 'f-200'] as $code) {
+    bindDevice($probe, $pdo, $managerToken, $code, 'field', 'PHONE-' . $code);
+}
 $login = $fieldLogin('f-100');
-check('کاربر میدانی بدون ثبت دستگاه وارد می‌شود', ($login['body']['ok'] ?? false) === true, $login['raw']);
+check('با نصب ثبت‌شده وارد می‌شود', ($login['body']['ok'] ?? false) === true, $login['raw']);
+$elsewhere = $probe->json('POST', 'auth/login', ['user_code' => 'f-100', 'password' => 'field-pass-1',
+    'device_code' => 'PHONE-OTHER', 'app' => 'field']);
+equals('از نصب دیگر وارد نمی‌شود', 'device_mismatch', $elsewhere['body']['error']['code'] ?? null);
 equals('مجوزها در پاسخ ورود هست', 2, $login['body']['data']['user']['permissions'] ?? null);
 $reporter = (string) ($login['body']['data']['token'] ?? '');
 

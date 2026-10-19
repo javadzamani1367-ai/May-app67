@@ -10,10 +10,11 @@ final class StatsController
     /** امتیاز ۱۰۰ ناحیه‌ها، مجریان، واحدها و کارشناسان؛ مجری فقط ناحیه‌های خودش. */
     public function scores(Request $request): void
     {
-        $scope = new Scope(Auth::requireAny($request, [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]));
+        $scope = new Scope(Auth::requireAny($request, Auth::CASE_MANAGERS));
         $to = $request->int('to') ?? Db::now();
         $from = $request->int('from') ?? $to - 30 * 86_400_000;
-        $board = (new ScoreBoard(min($from, $to), max($from, $to), $scope, Db::now()))->all();
+        // مدیر هر دو حوزه را می‌بیند (kind=1 برای برق غیرمجاز)؛ مجریان حوزه خودشان را.
+        $board = (new ScoreBoard(min($from, $to), max($from, $to), $scope, Db::now(), $request->int('kind')))->all();
         if ($request->str('format') === 'xlsx') {
             Xlsx::sendBook('scores', ScoreSheets::book($board));
             exit;
@@ -23,11 +24,12 @@ final class StatsController
 
     public function units(Request $request): void
     {
-        $scope = new Scope(Auth::requireAny($request, [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]));
+        $scope = new Scope(Auth::requireAny($request, Auth::CASE_MANAGERS));
         $from = $request->int('from', 0) ?? 0;
         $to = $request->int('to', Db::now()) ?? Db::now();
-        $rows = CaseActions::unitStats($from, $to, $scope);
-        [$where, $params] = $scope->reportWhere('r');
+        $kind = $scope->kind() ?? $request->int('kind');
+        $rows = CaseActions::unitStats($from, $to, $scope, $kind);
+        [$where, $params] = CaseActions::dispatchWhere($scope, $kind);
 
         Response::json([
             'units' => $rows,

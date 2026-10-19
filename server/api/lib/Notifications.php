@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/CaseKind.php';
+
 /**
  * اعلان‌ها.
  *
@@ -48,6 +50,22 @@ final class Notifications
     public static function toRoleIn(int $role, ?string $area, string $kind, string $title, string $body, ?string $reportId = null): void
     {
         self::insert(null, $role, null, $kind, $title, $body, $reportId, Areas::code($area));
+    }
+
+    /**
+     * گرداننده شهرستان پرونده (مجری رمزارز یا مجری غیرمجاز همان ناحیه)، و برای برق غیرمجاز
+     * ستاد هم: ستاد هر گزارش و نتیجه غیرمجاز را همان لحظه می‌بیند.
+     */
+    public static function toCaseLeads(array $report, string $kind, string $title, string $body, ?string $reportId = null): void
+    {
+        $caseKind = CaseKind::of($report);
+        $area = Areas::code($report['area_code'] ?? null);
+        if ($area !== null) {
+            self::insert(null, CaseKind::executorRole($caseKind), null, $kind, $title, $body, $reportId, $area);
+        }
+        if ($caseKind === CaseKind::ILLEGAL) {
+            self::insert(null, Auth::ROLE_ILLEGAL, null, $kind, $title, $body, $reportId);
+        }
     }
 
     /** برای مجری (یا مجریان) رمزارز یک ناحیه. */

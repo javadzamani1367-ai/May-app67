@@ -9,7 +9,7 @@ declare(strict_types=1);
  */
 final class FieldManageController
 {
-    private const ROLES = [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR, Auth::ROLE_ILLEGAL];
+    private const ROLES = Auth::CASE_MANAGERS;
 
     public function index(Request $request): void
     {

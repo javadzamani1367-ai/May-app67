@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
   id            CHAR(36)     NOT NULL PRIMARY KEY,
   user_code     VARCHAR(64)  NOT NULL,
   full_name     VARCHAR(191) NOT NULL,
-  role          TINYINT      NOT NULL DEFAULT 0,   -- ۰ کارشناس / ۱ مدیر / ۲ واحد / ۳ میدانی / ۴ مجری رمزارز / ۵ مجری غیرمجاز
+  role          TINYINT      NOT NULL DEFAULT 0,   -- ۰ کارشناس / ۱ مدیر / ۲ واحد / ۳ میدانی / ۴ مجری رمزارز / ۵ مجری غیرمجاز ستاد / ۶ مجری غیرمجاز شهرستان
   unit          TINYINT      NULL,                 -- برای نقش واحد: ۰ فروش … ۳ برق شهرستان
   county        VARCHAR(100) NULL,
   areas         VARCHAR(255) NULL,                 -- ناحیه‌های کاربر «401,402»؛ تهی برای واحد یعنی همه استان
@@ -28,9 +28,12 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at    BIGINT       NOT NULL,
   note          TEXT         NULL,
   permissions   TINYINT      NOT NULL DEFAULT 0,   -- کاربر میدانی: ۱ بازرسی، ۲ گزارش، ۳ هر دو
+  person_id     CHAR(36)     NULL,                 -- شخص صاحب این کاربری (persons)
+  crew_role     TINYINT      NULL,                 -- کاربری اکیپ: نقش در فهرست اکیپ (FieldRoster)
   UNIQUE KEY uq_users_code (user_code),
   KEY idx_users_device (device_code),
-  KEY idx_users_role (role)
+  KEY idx_users_role (role),
+  KEY idx_users_person (person_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- درخواست ثبت دستگاه: کارشناس می‌فرستد، مدیر تأیید می‌کند ------------------
@@ -44,6 +47,10 @@ CREATE TABLE IF NOT EXISTS device_requests (
   created_at  BIGINT       NOT NULL,
   decided_at  BIGINT       NULL,
   decided_by  CHAR(36)     NULL,
+  national_id VARCHAR(10)  NULL,
+  app         VARCHAR(16)  NULL,
+  note        TEXT         NULL,
+  person_id   CHAR(36)     NULL,
   UNIQUE KEY uq_device_requests_code (device_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -119,12 +126,15 @@ CREATE TABLE IF NOT EXISTS reports (
   approval_at         BIGINT       NULL,
   description         TEXT         NULL,
   actions_taken       TEXT         NULL,
+  -- حوزه پرونده: ۰ رمزارز / ۱ برق غیرمجاز. مال سرور است و گوشی عوضش نمی‌کند.
+  case_kind           TINYINT      NOT NULL DEFAULT 0,
   UNIQUE KEY uq_reports_tracking (tracking_code),
   KEY idx_reports_status (status),
   KEY idx_reports_updated (updated_at),
   KEY idx_reports_county (county),
   KEY idx_reports_expert (expert_code),
-  KEY idx_reports_area (area_code)
+  KEY idx_reports_area (area_code),
+  KEY idx_reports_kind (case_kind)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS devices (
@@ -396,7 +406,9 @@ CREATE TABLE IF NOT EXISTS crew_members (
   county     VARCHAR(100) NULL,
   active     TINYINT      NOT NULL DEFAULT 1,
   created_at BIGINT       NOT NULL,
-  KEY idx_crew_role (role, active)
+  user_id    CHAR(36)     NULL,
+  KEY idx_crew_role (role, active),
+  KEY idx_crew_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS mv_feeders (
@@ -448,6 +460,10 @@ CREATE TABLE IF NOT EXISTS case_flow (
   expert_alert_at    BIGINT     NULL,
   manager_alert_at   BIGINT     NULL,
   updated_at         BIGINT     NOT NULL,
+  county_due_at      BIGINT     NULL,
+  hq_alert_at        BIGINT     NULL,
+  hq_due_at          BIGINT     NULL,
+  decide_alert_at    BIGINT     NULL,
   KEY idx_case_flow_executor (executor_id),
   KEY idx_case_flow_expert (expert_id),
   KEY idx_case_flow_due (refer_due_at)
@@ -481,9 +497,36 @@ CREATE TABLE IF NOT EXISTS device_alerts (
   KEY idx_device_alerts_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- شخص جدا از کاربری، و کد نصب هر اپ هر شخص (گام ۹) ---------------------------
+CREATE TABLE IF NOT EXISTS persons (
+  id          CHAR(36)     NOT NULL PRIMARY KEY,
+  number      INT          NOT NULL,
+  national_id VARCHAR(10)  NULL,
+  full_name   VARCHAR(191) NOT NULL,
+  phone       VARCHAR(32)  NULL,
+  home_area   VARCHAR(8)   NULL,
+  note        TEXT         NULL,
+  auto_bind   TINYINT      NOT NULL DEFAULT 0,
+  active      TINYINT      NOT NULL DEFAULT 1,
+  created_at  BIGINT       NOT NULL,
+  updated_at  BIGINT       NOT NULL,
+  UNIQUE KEY uq_persons_number (number),
+  UNIQUE KEY uq_persons_national (national_id),
+  KEY idx_persons_home (home_area)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS person_devices (
+  person_id     CHAR(36)    NOT NULL,
+  app           VARCHAR(16) NOT NULL,
+  device_code   VARCHAR(64) NOT NULL,
+  registered_at BIGINT      NOT NULL,
+  PRIMARY KEY (person_id, app),
+  KEY idx_person_devices_code (device_code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- آنجا یکی باشد؛ تست run.php همین را می‌سنجد.
 CREATE TABLE IF NOT EXISTS schema_meta (
   id      TINYINT NOT NULL PRIMARY KEY,
   version INT     NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 8);
+INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 9);

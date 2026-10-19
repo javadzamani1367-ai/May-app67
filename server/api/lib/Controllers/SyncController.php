@@ -22,7 +22,7 @@ final class SyncController
         'voltage_r', 'voltage_s', 'voltage_t', 'total_watt', 'tariff_type', 'meter_type',
         'seal_external', 'seal_external_serial', 'seal_internal', 'meter_appearance_ok',
         'meter_tampered', 'approval_state', 'approval_comment', 'approval_at',
-        'description', 'actions_taken', 'subscriber_name',
+        'description', 'actions_taken', 'subscriber_name', 'case_kind',
     ];
 
     /**
@@ -32,7 +32,8 @@ final class SyncController
     private const KEEP_WHEN_EMPTY = ['area_code', 'subscriber_name'];
 
     /** نقش‌هایی که پرونده بازدید را می‌فرستند یا می‌گیرند. */
-    private const CASE_ROLES = [Auth::ROLE_EXPERT, Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR];
+    private const CASE_ROLES = [Auth::ROLE_EXPERT, Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR, Auth::ROLE_ILLEGAL,
+        Auth::ROLE_ILLEGAL_AREA];
 
     public function manifest(Request $request): void
     {
@@ -63,7 +64,7 @@ final class SyncController
             Response::fail(400, 'missing_report', 'پرونده‌ای ارسال نشده است.');
         }
 
-        $existing = Db::one('SELECT updated_at, expert_code, area_code FROM reports WHERE id = ?', [$report['id']]);
+        $existing = Db::one('SELECT updated_at, expert_code, area_code, case_kind FROM reports WHERE id = ?', [$report['id']]);
         $this->guardPush($user, $report, $existing);
         if ($existing !== null && (int) $existing['updated_at'] > (int) ($report['updated_at'] ?? 0)) {
             // نسخه سرور تازه‌تر است: نوشتن روی آن یعنی دور ریختن کاری که
@@ -82,8 +83,10 @@ final class SyncController
             static fn(string $c): string => in_array($c, self::KEEP_WHEN_EMPTY, true)
                 ? Db::col($c) . ' = COALESCE(NULLIF(VALUES(' . Db::col($c) . "), ''), " . Db::col($c) . ')'
                 : Db::col($c) . ' = VALUES(' . Db::col($c) . ')',
-            array_slice($columns, 1)
+            array_values(array_diff(array_slice($columns, 1), ['case_kind']))
         ));
+        // حوزه پرونده مال سرور است: گوشی (حتی اپ قدیمی که این ستون را نمی‌شناسد) آن را عوض نمی‌کند.
+        $report['case_kind'] = $existing !== null ? (int) $existing['case_kind'] : 0;
         $values = array_map(static fn(string $c) => $report[$c] ?? null, $columns);
 
         Db::run(
@@ -116,6 +119,7 @@ final class SyncController
         FieldReferrals::onCasePushed($report, $user);
         $stored = Db::one('SELECT * FROM reports WHERE id = ?', [$report['id']]) ?? $report;
         CaseFlow::onPushed($stored, $user, $existing === null);
+        IllegalFlow::onCasePushed($stored, $user);
         DeviceRegistry::onPushed((string) $report['id']);
 
         Db::run(
@@ -151,10 +155,11 @@ final class SyncController
             }
             return;
         }
-        if ($role === Auth::ROLE_EXECUTOR) {
+        if ($role !== Auth::ROLE_MANAGER) {
             $area = ($report['area_code'] ?? '') !== '' ? $report['area_code'] : ($existing['area_code'] ?? null);
-            if (!(new Scope($user))->coversArea($area)) {
-                Response::fail(403, 'forbidden', 'این پرونده در ناحیه شما نیست.');
+            $probe = ['area_code' => $area, 'case_kind' => $existing['case_kind'] ?? 0];
+            if (!(new Scope($user))->canSeeReport($probe)) {
+                Response::fail(403, 'forbidden', 'این پرونده در محدوده شما نیست.');
             }
         }
     }

@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/PersonSchema.php';
+require_once __DIR__ . '/Persons.php';
+require_once __DIR__ . '/PersonDevices.php';
+require_once __DIR__ . '/CrewAccounts.php';
+require_once __DIR__ . '/CaseKind.php';
+require_once __DIR__ . '/IllegalFlow.php';
 require_once __DIR__ . '/FieldRoster.php';
 require_once __DIR__ . '/CrewCalendar.php';
 require_once __DIR__ . '/FlowSchema.php';
@@ -77,6 +83,13 @@ final class Migrations
                 array_map(static fn (array $c) => static fn () => self::addColumn(...$c), FlowSchema::COLUMNS),
                 array_map(static fn (array $i) => static fn () => self::addIndex(...$i), FlowSchema::INDEXES),
                 [static fn () => FlowSchema::backfill()]
+            ),
+            // شخص جدا از کاربری، کد دستگاه هر اپ هر شخص، و پرونده برق غیرمجاز.
+            9 => array_merge(
+                PersonSchema::TABLES,
+                array_map(static fn (array $c) => static fn () => self::addColumn(...$c), PersonSchema::COLUMNS),
+                array_map(static fn (array $i) => static fn () => self::addIndex(...$i), PersonSchema::INDEXES),
+                [static fn () => PersonSchema::backfill()]
             ),
         ];
     }

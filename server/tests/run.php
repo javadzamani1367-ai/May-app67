@@ -223,7 +223,7 @@ check('هر ستون گوشی روی سرور هست', $missingOnServer === [], 
 check('سرور ستون اضافه ندارد', $extraOnServer === [], implode(', ', $extraOnServer));
 
 $tableCount = preg_match_all('/CREATE TABLE IF NOT EXISTS/', $sql);
-check('هر ۲۹ جدول در schema.sql هست', $tableCount === 29, "$tableCount جدول");
+check('هر ۳۱ جدول در schema.sql هست', $tableCount === 31, "$tableCount جدول");
 
 // نسخه اسکیما در سه زبان نوشته شده و هیچ کامپایلری آن سه را با هم مقایسه
 // نمی‌کند. اگر یکی جا بماند، سرور در /ping عددی را اعلام می‌کند که اسکیمای

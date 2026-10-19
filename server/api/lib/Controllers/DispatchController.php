@@ -4,8 +4,8 @@ declare(strict_types=1);
 /**
  * ارسال مدارک به واحدها و پاسخ آن‌ها.
  *
- * فقط مدیر و مجری رمزارز می‌فرستند (کارشناس دیگر نه)، و ارسال به واحد همان ناحیه
- * پرونده می‌رسد. هر ارسال مهلت دارد و واحد در هر پاسخ مرحله اقدامش را می‌گوید.
+ * فقط گرداننده پرونده می‌فرستد — رمزارز: مدیر و مجری رمزارز؛ برق غیرمجاز: مجری
+ * شهرستان، و ستاد پس از مهلت او — نه کارشناس. ارسال به واحد همان ناحیه پرونده می‌رسد. هر ارسال مهلت دارد و واحد در هر پاسخ مرحله اقدامش را می‌گوید.
  * مهلت گذشته با محاسبه روی همین داده معلوم می‌شود، نه با وضعیتی جداگانه.
  */
 final class DispatchController
@@ -16,11 +16,15 @@ final class DispatchController
 
     public function create(Request $request): void
     {
-        $user = Auth::requireAny($request, [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]);
+        $user = Auth::requireAny($request, Auth::CASE_MANAGERS);
         $reportId = $request->str('report_id');
-        $report = Db::one('SELECT id, tracking_code, temp_code, area_code FROM reports WHERE id = ?', [$reportId]);
+        $report = Db::one('SELECT id, tracking_code, temp_code, area_code, case_kind FROM reports WHERE id = ?', [$reportId]);
         if ($report === null || !(new Scope($user))->canSeeReport($report)) {
             Response::fail(404, 'not_found', 'پرونده پیدا نشد.');
+        }
+        $refusal = CaseActions::refusal($report, $user);
+        if ($refusal !== null) {
+            Response::fail(403, 'not_your_turn', $refusal);
         }
 
         $unit = $request->int('unit');
@@ -59,7 +63,7 @@ final class DispatchController
     /** سوابق ارسال یک پرونده، برای مدیر و مجری ناحیه: چه چیزی، کِی، به کدام واحد، تا کدام مرحله. */
     public function index(Request $request): void
     {
-        $user = Auth::requireAny($request, [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR]);
+        $user = Auth::requireAny($request, Auth::CASE_MANAGERS);
         $reportId = $request->str('report_id');
         $report = $reportId === '' ? null : Db::one('SELECT * FROM reports WHERE id = ?', [$reportId]);
         if ($report === null || !(new Scope($user))->canSeeReport($report)) {
@@ -81,7 +85,7 @@ final class DispatchController
         $user = Auth::require($request, Auth::ROLE_UNIT);
         [$where, $params] = Scope::unitWhere($user);
         $rows = Db::all(
-            "SELECT d.*, r.tracking_code, r.temp_code, r.county, r.address, r.owner_name
+            "SELECT d.*, r.tracking_code, r.temp_code, r.county, r.address, r.owner_name, r.case_kind
              FROM dispatches d JOIN reports r ON r.id = d.report_id
              WHERE $where ORDER BY d.dispatched_at DESC LIMIT 200",
             $params
@@ -127,6 +131,10 @@ final class DispatchController
         $row['progress'] = UnitStages::progress($unit, $stage);
         $row['closed'] = UnitStages::isFinal($unit, $stage);
         $row['overdue'] = self::isOverdue($row);
+        if (array_key_exists('case_kind', $row)) {
+            $row['case_kind'] = (int) $row['case_kind'];
+            $row['kind_name'] = CaseKind::NAMES[$row['case_kind']] ?? '';
+        }
         return $row;
     }
 

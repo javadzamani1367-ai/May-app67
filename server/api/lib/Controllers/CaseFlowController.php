@@ -8,7 +8,7 @@ declare(strict_types=1);
  */
 final class CaseFlowController
 {
-    private const STAFF = [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR];
+    private const STAFF = Auth::CASE_MANAGERS;
 
     public function intake(Request $request): void
     {
@@ -53,8 +53,12 @@ final class CaseFlowController
         if ($report === null || !(new Scope($user))->canSeeReport($report)) {
             Response::fail(404, 'not_found', 'پرونده پیدا نشد.');
         }
-        CaseFlow::markSeen($id, $user);
-        Response::json(['flow' => CaseFlow::summary($id)]);
+        $scope = new Scope($user);
+        if ($scope->canActOn($report)) {
+            CaseFlow::markSeen($id, $user);
+        }
+        Response::json(['flow' => CaseFlow::summary($id) + ['can_act' => $scope->canActOn($report),
+            'refusal' => CaseActions::refusal($report, $user)]]);
     }
 
     /** میز پیگیری: پرونده‌های باز محدوده و شمار هر مرحله. */
@@ -68,14 +72,15 @@ final class CaseFlowController
     /** آنچه فهرست‌های انتخاب لازم دارند: ناحیه‌ها، کارشناسان و مجریان محدوده، و انواع گزارش. */
     public function people(Request $request): void
     {
-        $scope = new Scope(Auth::requireAny($request, [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR, Auth::ROLE_ILLEGAL]));
+        $scope = new Scope(Auth::requireAny($request, self::STAFF));
         $area = $request->str('area') ?: null;
         $areas = $scope->wholeProvince() ? array_keys(Areas::NAMES) : $scope->areas;
         Response::json([
             'role' => $scope->role,
             'areas' => array_map(static fn ($c) => ['code' => (string) $c, 'name' => Areas::label((string) $c)], $areas),
             'experts' => $scope->experts($area),
-            'executors' => $scope->isExecutor() ? [] : $scope->executors($area),
+            'case_kind' => $scope->kind() ?? CaseKind::CRYPTO,
+            'executors' => $scope->isAreaExecutor() ? [] : $scope->executors($area),
             'report_types' => array_map(static fn ($k, $v) => ['code' => $k, 'name' => $v],
                 array_keys(CaseLabels::REPORT_TYPES), CaseLabels::REPORT_TYPES),
         ]);
@@ -86,7 +91,7 @@ final class CaseFlowController
     {
         $user = Auth::require($request, Auth::ROLE_EXPERT);
         $rows = Db::all(
-            'SELECT r.id, r.tracking_code, r.temp_code, f.intake_code, f.intake_note, f.assigned_at, f.due_at, f.origin,
+            'SELECT r.id, r.tracking_code, r.temp_code, r.case_kind, f.intake_code, f.intake_note, f.assigned_at, f.due_at, f.origin,
                     b.full_name AS by_name, b.role AS by_role
              FROM case_flow f JOIN reports r ON r.id = f.report_id LEFT JOIN users b ON b.id = f.assigned_by
              WHERE f.expert_id = ? AND r.status = 0 ORDER BY f.due_at',
@@ -97,6 +102,7 @@ final class CaseFlowController
             'by' => $r['by_name'], 'by_role' => $r['by_role'] === null ? null : (int) $r['by_role'],
             'at' => $r['assigned_at'] === null ? null : (int) $r['assigned_at'],
             'due_at' => $r['due_at'] === null ? null : (int) $r['due_at'], 'note' => $r['intake_note'],
+            'case_kind' => (int) $r['case_kind'],
         ], $rows), 'server_time' => Db::now()]);
     }
 
@@ -133,7 +139,7 @@ final class CaseFlowController
         if ($expert !== '') {
             return CaseFlow::toExpert($id, $expert, $request->int('due_days'), '', $scope);
         }
-        if ($scope->isManager() && $request->str('to_executor') === '1') {
+        if (($scope->isManager() || $scope->isIllegalHq()) && $request->str('to_executor') === '1') {
             return CaseFlow::toExecutor($id, $request->str('executor_id') ?: null, '', $scope);
         }
         return null;

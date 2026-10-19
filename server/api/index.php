@@ -15,7 +15,8 @@ foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSch
           'CaseLabels', 'CaseActions', 'PositionAudit', 'FieldRoster', 'FieldSubscribers', 'CrewCalendar', 'GeoPlaces', 'CrewWork', 'CrewDays', 'CrewReport', 'CrewMap', 'CrewSheets', 'CrewDocx', 'Docx', 'Xlsx',
           'Areas', 'Scope', 'UnitStages', 'UnitResponse', 'UserBatch', 'CaseCodes', 'CaseIntake', 'CaseFlow', 'CaseBoard',
           'FlowClock', 'FieldFlowClock', 'FieldHandOff', 'DeviceRegistry', 'DispatchMerge', 'Scores', 'ScoreBoard',
-          'ScoreSheets'] as $class) {
+          'ScoreSheets', 'CaseKind', 'IllegalFlow', 'Persons', 'PersonAccounts', 'PersonDevices', 'PersonDirectory',
+          'PersonWork', 'DeviceRequests', 'CrewAccounts'] as $class) {
     require_once __DIR__ . '/lib/' . $class . '.php';
 }
 foreach (glob(__DIR__ . '/lib/Controllers/*.php') ?: [] as $controller) {
@@ -57,6 +58,15 @@ $routes = [
     'GET /users'                 => [UserController::class, 'index'],
     'POST /users/save'           => [UserController::class, 'save'],
     'POST /users/delete'         => [UserController::class, 'delete'],
+    'GET /persons'               => [PersonController::class, 'index'],
+    'GET /persons/one'           => [PersonController::class, 'one'],
+    'POST /persons/save'         => [PersonController::class, 'save'],
+    'POST /persons/accounts'     => [PersonController::class, 'accounts'],
+    'POST /persons/password'     => [PersonController::class, 'password'],
+    'POST /persons/device'       => [PersonController::class, 'device'],
+    'POST /persons/attach'       => [PersonController::class, 'attach'],
+    'GET /persons/requests'      => [PersonController::class, 'requests'],
+    'POST /persons/requests/decide' => [PersonController::class, 'decide'],
     'GET /users/requests'        => [UserController::class, 'requests'],
     'POST /users/requests/decide' => [UserController::class, 'decideRequest'],
 

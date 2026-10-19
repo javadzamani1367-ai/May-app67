@@ -57,6 +57,20 @@ function removeTree(string $path): void
     @rmdir($path);
 }
 
+/**
+ * کد نصب یک اپ را برای شخصِ این کاربری ثبت می‌کند، همان کاری که مدیر در صفحه شخص
+ * می‌کند. از نسخه ۱.۸ هر کاربری اپ فقط روی نصب ثبت‌شده باز می‌شود.
+ */
+function bindDevice(HttpProbe $probe, PDO $pdo, string $managerToken, string $userCode, string $app, string $device): void
+{
+    $person = $pdo->query('SELECT person_id FROM users WHERE user_code = ' . $pdo->quote($userCode))->fetchColumn();
+    $done = $probe->json('POST', 'persons/device', ['person_id' => (string) $person, 'app' => $app, 'device_code' => $device],
+        $managerToken);
+    if (($done['body']['ok'] ?? false) !== true) {
+        echo "FAIL ثبت دستگاه $userCode — {$done['raw']}\n";
+    }
+}
+
 function env(string $key, string $fallback): string
 {
     $value = getenv($key);
@@ -105,7 +119,7 @@ try {
 }
 
 $tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
-equals('هر ۲۹ جدول ساخته شد', 29, count($tables));
+equals('هر ۳۱ جدول ساخته شد', 31, count($tables));
 
 // پوشه فایل مخصوص همین اجرا. اگر تست روی پوشه واقعی می‌نوشت، اجرای بعدی
 // فایل‌های اجرای قبلی را آنجا پیدا می‌کرد و «سرور این فایل را دارد» را درست
