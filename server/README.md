@@ -245,9 +245,13 @@ https://دامنه-شما/api/admin/
 | مسیر | شرح |
 |---|---|
 | `GET /ping` | سلامت سرویس و نسخه اسکیما |
-| `POST /auth/login` | ورود با کد کاربری، رمز و کد دستگاه |
-| `POST /auth/request-device` | ثبت درخواست دستگاه جدید (در صف مدیر) |
-| `GET /users` · `POST /users/save` | مدیریت کاربران — فقط مدیر |
+| `POST /auth/login` | ورود با کد کاربری، رمز، نام اپ (`app`) و کد نصب همان اپ |
+| `POST /auth/request-device` | درخواست کاربری: نام، کد ملی، تلفن، توضیح و کد نصب (در صف مدیر) |
+| `GET /users` · `POST /users/save` | مدیریت کاربران — فقط مدیر؛ فیلدی که فرستاده نشود دست نمی‌خورد |
+| `GET /persons?q=&area=` · `GET /persons/one?id=` | اشخاص به تفکیک ناحیه و نقش، و صفحه یک شخص — فقط مدیر |
+| `POST /persons/save` · `POST /persons/accounts` | ذخیره شخص، و تیک‌های ناحیه × نقش (کاربری‌های تازه با رمز یک‌بارمصرف) |
+| `POST /persons/password` · `POST /persons/device` · `POST /persons/attach` | رمز تازه، کد نصب هر اپ، چسباندن کاربری موجود به شخص |
+| `GET /persons/requests` · `POST /persons/requests/decide` | صف درخواست‌های کاربری، ثبت یا رد |
 | `GET /sync/manifest?since=` | شناسه پرونده‌های تغییرکرده |
 | `POST /sync/report` · `GET /sync/report?id=` | ارسال و دریافت یک پرونده |
 | `POST /sync/file` · `GET /sync/file?path=` | بارگذاری و دریافت فایل |
