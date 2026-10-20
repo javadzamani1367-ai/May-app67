@@ -26,7 +26,7 @@ namespace CryptoInspection.Archive.Sync
                 { "file_number", r.FileNumber }, { "bill_number", r.BillNumber },
                 { "subscription_number", r.SubscriptionNumber }, { "usage_type", r.UsageType },
                 { "owner_name", r.OwnerName }, { "owner_national_id", r.OwnerNationalId }, { "owner_phone", r.OwnerPhone },
-                { "owner_relation", r.OwnerRelation }, { "subscriber_name", r.SubscriberName },
+                { "owner_relation", r.OwnerRelation }, { "subscriber_name", r.SubscriberName }, { "case_kind", r.CaseKind },
                 { "meter_amperage", r.MeterAmperage }, { "measured_amperage", r.MeasuredAmperage },
                 { "connection_type", r.ConnectionType }, { "seal_status", r.SealStatus },
                 { "tap_point", r.TapPoint }, { "phase_type", r.PhaseType },

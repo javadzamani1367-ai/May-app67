@@ -45,6 +45,7 @@ object SyncPayload {
         json.put("owner_phone", r.ownerPhone)
         json.put("owner_relation", r.ownerRelation)
         json.put("subscriber_name", r.subscriberName)
+        json.put("case_kind", r.caseKind)
         json.put("meter_amperage", r.meterAmperage)
         json.put("measured_amperage", r.measuredAmperage)
         json.put("connection_type", r.connectionType)

@@ -32,7 +32,9 @@ object Flow {
         val address: String?, val type: String,
         val originName: String, val intakeCode: String?, val intakeBy: String?, val intakeNote: String?, val referDueAt: Long?,
         val executor: String?, val autoReferred: Boolean, val expert: String?, val assignedAt: Long?, val dueAt: Long?,
-        val visitedAt: Long?, val approvedAt: Long?, val dispatchedAt: Long?, val expertLate: Boolean, val timeline: List<Event>
+        val visitedAt: Long?, val approvedAt: Long?, val dispatchedAt: Long?, val expertLate: Boolean, val timeline: List<Event>,
+        /** 0 crypto, 1 illegal power; [canAct] false where this account only supervises (the manager in illegal power). */
+        val caseKind: Int = 0, val canAct: Boolean = true, val hqAlertAt: Long? = null
     )
 
     /** A case referred to this expert and not yet visited. */
@@ -54,7 +56,8 @@ object Flow {
         autoReferred = o.optBoolean("auto_referred"), expert = o.str("expert"), assignedAt = o.long("assigned_at"),
         dueAt = o.long("due_at"), visitedAt = o.long("visited_at"), approvedAt = o.long("approved_at"),
         dispatchedAt = o.long("dispatched_at"), expertLate = o.optBoolean("expert_late"),
-        timeline = o.optJSONArray("timeline").objects().map { Event(it.optLong("at"), it.str("who"), it.optString("what"), it.str("note")) }
+        timeline = o.optJSONArray("timeline").objects().map { Event(it.optLong("at"), it.str("who"), it.optString("what"), it.str("note")) },
+        caseKind = o.optInt("case_kind", 0), canAct = o.optBoolean("can_act", true), hqAlertAt = o.long("hq_alert_at")
     )
 
     internal fun encode(value: String): String = URLEncoder.encode(value, "UTF-8")

@@ -209,7 +209,7 @@ $entity = file_get_contents(
     __DIR__ . '/../../android/app/src/main/java/ir/ilam/inspection/data/db/ReportEntity.kt'
 );
 
-preg_match_all('/@ColumnInfo\(name = "([a-z_]+)"\)/', $entity, $matches);
+preg_match_all('/@ColumnInfo\(name = "([a-z_]+)"[^)]*\)/', $entity, $matches);
 $phoneColumns = $matches[1];
 
 preg_match('/CREATE TABLE IF NOT EXISTS reports \((.*?)\n\) ENGINE/s', $sql, $block);

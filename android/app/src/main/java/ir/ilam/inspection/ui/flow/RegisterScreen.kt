@@ -55,7 +55,10 @@ fun RegisterScreen(viewModel: FlowViewModel, onBack: () -> Unit, onCreated: (Str
     LaunchedEffect(Unit) { viewModel.openIntake() }
     LaunchedEffect(state.created) { state.created?.let { viewModel.intakeShown(); onCreated(it) } }
     val people = state.people
-    var type by rememberSaveable { mutableStateOf<Int?>(null) }
+    // Illegal-power cases are always «گزارش همکار» with a GH- code from the server.
+    var type by rememberSaveable { mutableStateOf(if (UserRole.isIllegal) ILLEGAL_TYPE else null) }
+    // The top of the domain may leave a case for the area executor: the manager, or headquarters.
+    val top = UserRole.isFullManager || UserRole.isIllegalHq
     var area by rememberSaveable { mutableStateOf<String?>(null) }
     var address by rememberSaveable { mutableStateOf("") }
     var district by rememberSaveable { mutableStateOf("") }
@@ -78,7 +81,8 @@ fun RegisterScreen(viewModel: FlowViewModel, onBack: () -> Unit, onCreated: (Str
         ) {
             SectionCard(title = stringResource(R.string.fl_intake_report), icon = Icons.Filled.NoteAdd) {
                 Column {
-                    DropdownField(stringResource(R.string.intake_report_type), people?.reportTypes.orEmpty().map { it.first }, type,
+                    if (!UserRole.isIllegal) DropdownField(stringResource(R.string.intake_report_type),
+                        people?.reportTypes.orEmpty().map { it.first }, type,
                         optionLabel = { code -> people?.reportTypes?.firstOrNull { it.first == code }?.second.orEmpty() },
                         onSelect = { type = it })
                     DropdownField(stringResource(R.string.fl_area), people?.areas.orEmpty().map { it.code }, area,
@@ -100,17 +104,17 @@ fun RegisterScreen(viewModel: FlowViewModel, onBack: () -> Unit, onCreated: (Str
                 Column {
                     val targets = buildList {
                         add(NOBODY)
-                        if (UserRole.isFullManager) add(AREA_EXECUTOR)
+                        if (top) add(AREA_EXECUTOR)
                         people?.experts.orEmpty().filter { area == null || area in it.areas }.forEach { add(it.id) }
                     }
                     DropdownField(stringResource(R.string.fl_intake_target), targets, target, optionLabel = { id ->
                         when (id) {
-                            NOBODY -> stringResource(if (UserRole.isFullManager) R.string.fl_target_later else R.string.fl_target_self)
+                            NOBODY -> stringResource(if (top) R.string.fl_target_later else R.string.fl_target_self)
                             AREA_EXECUTOR -> stringResource(R.string.fl_area_executor)
                             else -> stringResource(R.string.fl_expert_is, people?.experts?.firstOrNull { it.id == id }?.name.orEmpty())
                         }
                     }, onSelect = { target = it })
-                    if (UserRole.isFullManager && target == NOBODY) {
+                    if (top && target == NOBODY) {
                         Text(stringResource(R.string.fl_target_later_hint), style = MaterialTheme.typography.bodySmall)
                     }
                 }
@@ -143,3 +147,4 @@ fun RegisterScreen(viewModel: FlowViewModel, onBack: () -> Unit, onCreated: (Str
 
 /** The Soragh system issues its own tracking code; the others are built from the subscription. */
 private const val SORAGH = 1
+private const val ILLEGAL_TYPE = 4

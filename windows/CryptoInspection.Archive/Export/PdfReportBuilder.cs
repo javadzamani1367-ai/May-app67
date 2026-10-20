@@ -60,7 +60,7 @@ namespace CryptoInspection.Archive.Export
             container.PaddingBottom(6).Column(column =>
             {
                 column.Item().AlignCenter().Text(Strings.Get("form_org")).FontSize(11);
-                column.Item().AlignCenter().Text(Strings.Get("form_title")).FontSize(14).Bold();
+                column.Item().AlignCenter().Text(Strings.Get(ReportFields.TitleKey(detail))).FontSize(14).Bold();
                 column.Item().AlignCenter().Text(PersianNumbers.ToPersian(detail.Report.DisplayCode))
                     .FontSize(13).Bold();
                 column.Item().PaddingTop(4).LineHorizontal(1).LineColor(Colors.Teal.Darken2);
@@ -76,15 +76,19 @@ namespace CryptoInspection.Archive.Export
                 Section(column, "form_section_3", ReportFields.OwnerFields(detail));
                 Section(column, "form_section_4", ReportFields.TechnicalFields(detail));
 
-                Heading(column, "form_section_5");
-                column.Item().Element(element =>
-                    Grid(element, ReportFields.DeviceHeader(), ReportFields.DeviceRows(detail)));
+                bool illegal = detail.Report.IsIllegalPower;
+                if (!illegal)
+                {
+                    Heading(column, "form_section_5");
+                    column.Item().Element(element =>
+                        Grid(element, ReportFields.DeviceHeader(), ReportFields.DeviceRows(detail)));
+                }
 
-                Heading(column, "form_section_6");
+                Heading(column, illegal ? "form_section_illegal_5" : "form_section_6");
                 column.Item().Element(element =>
                     Grid(element, ReportFields.AttendeeHeader(), ReportFields.AttendeeRows(detail)));
 
-                Heading(column, "form_section_7");
+                Heading(column, illegal ? "form_section_illegal_6" : "form_section_7");
                 column.Item().Text(detail.Report.Description ?? string.Empty);
                 Heading(column, "form_actions_taken");
                 column.Item().Text(detail.Report.ActionsTaken ?? string.Empty);

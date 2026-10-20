@@ -41,7 +41,7 @@ import ir.ilam.inspection.util.PersianDate
 import ir.ilam.inspection.util.PersianNumbers
 
 /** The stages of a case still waiting on someone, in the order a case goes through them. */
-val BOARD_STAGES = listOf("awaiting_referral", "with_executor", "with_expert", "in_progress", "awaiting_approval", "returned", "approved")
+val BOARD_STAGES = listOf("awaiting_referral", "with_executor", "with_hq", "with_expert", "in_progress", "awaiting_approval", "returned", "approved")
 
 /**
  * The follow-up board: every open case of the account's areas, each in the
@@ -56,7 +56,11 @@ fun BoardScreen(viewModel: FlowViewModel, onBack: () -> Unit, onOpen: (String) -
     Column(modifier = Modifier.fillMaxSize()) {
         TavanTopBar(
             title = stringResource(R.string.fl_board_title),
-            subtitle = stringResource(if (UserRole.isExecutor) R.string.fl_board_subtitle_executor else R.string.fl_board_subtitle),
+            subtitle = stringResource(when {
+                UserRole.isIllegal -> if (UserRole.isIllegalHq) R.string.fl_board_subtitle_hq else R.string.fl_board_subtitle_illegal
+                UserRole.isExecutor -> R.string.fl_board_subtitle_executor
+                else -> R.string.fl_board_subtitle
+            }),
             onBack = onBack
         ) {
             HeaderAction(Icons.Filled.Add, stringResource(R.string.fl_intake_title), onIntake)
@@ -118,6 +122,7 @@ fun stageLabel(stage: String): String = stringResource(
     when (stage) {
         "awaiting_referral" -> R.string.fl_stage_awaiting_referral
         "with_executor" -> R.string.fl_stage_with_executor
+        "with_hq" -> R.string.fl_stage_with_hq
         "with_expert" -> R.string.fl_stage_with_expert
         "awaiting_approval" -> R.string.fl_stage_awaiting_approval
         "returned" -> R.string.fl_stage_returned
@@ -127,7 +132,7 @@ fun stageLabel(stage: String): String = stringResource(
 )
 
 fun stageTone(stage: String): Tone = when (stage) {
-    "awaiting_referral", "with_executor" -> Tone.WARNING
+    "awaiting_referral", "with_executor", "with_hq" -> Tone.WARNING
     "returned" -> Tone.DANGER
     "approved" -> Tone.SUCCESS
     else -> Tone.INFO

@@ -176,6 +176,9 @@ interface SettingDao {
     @Query("SELECT * FROM settings")
     fun observeAll(): Flow<List<SettingEntity>>
 
+    @Query("SELECT * FROM settings")
+    suspend fun all(): List<SettingEntity>
+
     @Query("DELETE FROM settings WHERE key = :key")
     suspend fun remove(key: String)
 }

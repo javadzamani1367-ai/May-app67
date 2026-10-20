@@ -28,7 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
 /** Single place where every long lived object is built, in dependency order. */
-class AppContainer(private val context: Context) {
+class AppContainer(val context: Context) {
 
     /**
      * Work that must outlive the screen that started it, such as sending a

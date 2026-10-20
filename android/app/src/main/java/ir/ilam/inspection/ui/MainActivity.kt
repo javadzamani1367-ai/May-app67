@@ -54,7 +54,9 @@ class MainActivity : ComponentActivity() {
                     // when it comes back from a permission dialog or another
                     // app's screen, and a plain remember would drop the expert
                     // back at the PIN screen as if the app had closed.
-                    var unlocked by rememberSaveable { mutableStateOf(false) }
+                    // A sign-in that switched accounts restarts the app on that account's
+                    // database; the restarted app opens without asking again.
+                    var unlocked by rememberSaveable { mutableStateOf(vault.consumeFreshUnlock()) }
                     var crashToShow by rememberSaveable { mutableStateOf(lastCrash) }
 
                     val report = crashToShow
@@ -83,7 +85,7 @@ class MainActivity : ComponentActivity() {
                             // The expert's satellites are locked by the time a map opens;
                             // the manager app records no positions and leaves the GPS off.
                             if (UserRole.current == UserRole.EXPERT) KeepLocationWarm()
-                            if (UserRole.isIllegal) IllegalNavigation() else AppNavigation()
+                            AppNavigation()
                         }
                         else -> LockScreen(vault = vault, onUnlocked = { unlocked = true })
                     }

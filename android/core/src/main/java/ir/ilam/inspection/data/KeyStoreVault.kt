@@ -28,6 +28,68 @@ class KeyStoreVault(context: Context) {
         )
     }
 
+    /**
+     * The file name of the signed-in account's database. One person may hold an
+     * account in several areas, signing in to one at a time on the same phone; each
+     * account's cases live in their own file, so switching hides the others' work
+     * without deleting it. The account that used this install before multi-account
+     * support keeps the original file.
+     */
+    fun databaseName(base: String): String {
+        val code = userCode()?.takeIf { it.isNotBlank() } ?: return "$base.db"
+        val owner = prefs.getString(KEY_DB_OWNER, null) ?: code.also { prefs.edit().putString(KEY_DB_OWNER, it).apply() }
+        if (owner == code) return "$base.db"
+        return "$base-" + code.filter { it.isLetterOrDigit() || it == '-' }.lowercase() + ".db"
+    }
+
+    /**
+     * Makes [code] the signed-in account, keeping the previous account's password
+     * hash, activation and session aside so switching back later still works
+     * offline. Returns the previous code when an account was replaced, or null.
+     */
+    fun switchAccount(code: String): String? {
+        val previous = userCode()?.trim().orEmpty()
+        val next = code.trim()
+        if (previous == next || next.isEmpty()) return null
+        val edit = prefs.edit()
+        if (previous.isNotEmpty()) {
+            for (key in PER_ACCOUNT) {
+                // Booleans and ints too, stored as text: the stash is read back by key type.
+                val value = prefs.all[key]?.toString()
+                if (value != null) edit.putString(stash(previous, key), value) else edit.remove(stash(previous, key))
+            }
+        }
+        for (key in PER_ACCOUNT) {
+            edit.remove(key)
+            val saved = prefs.getString(stash(next, key), null) ?: continue
+            when (key) {
+                KEY_ACTIVATED -> edit.putBoolean(key, saved.toBoolean())
+                KEY_ROLE -> edit.putInt(key, saved.toIntOrNull() ?: -1)
+                else -> edit.putString(key, saved)
+            }
+        }
+        edit.putString(KEY_USER_CODE, next).apply()
+        // A first sign-in on this install opens the same database file it already had.
+        return previous.ifEmpty { null }
+    }
+
+    /**
+     * Set when a sign-in switched accounts: the app restarts to open that account's
+     * database, and the restarted app opens straight away instead of asking again
+     * for the password typed a moment ago.
+     */
+    fun markFreshUnlock() {
+        prefs.edit().putLong(KEY_FRESH_UNLOCK, System.currentTimeMillis() + FRESH_UNLOCK_MILLIS).apply()
+    }
+
+    fun consumeFreshUnlock(): Boolean {
+        val until = prefs.getLong(KEY_FRESH_UNLOCK, 0)
+        prefs.edit().remove(KEY_FRESH_UNLOCK).apply()
+        return until > System.currentTimeMillis()
+    }
+
+    private fun stash(code: String, key: String) = "acct:$code:$key"
+
     /** Created once on first launch and reused for the life of the install. */
     fun databasePassphrase(): ByteArray {
         val stored = prefs.getString(KEY_DB_PASSPHRASE, null)
@@ -150,5 +212,10 @@ class KeyStoreVault(context: Context) {
         const val KEY_SERVER_TOKEN = "server_token"
         const val KEY_ROLE = "server_role"
         const val KEY_AREAS = "server_areas"
+        const val KEY_DB_OWNER = "db_owner"
+        const val KEY_FRESH_UNLOCK = "fresh_unlock_until"
+        const val FRESH_UNLOCK_MILLIS = 60_000L
+        /** What belongs to one account and travels with it on a switch. */
+        val PER_ACCOUNT = listOf(KEY_PIN_HASH, KEY_PIN_SALT, KEY_ACTIVATED, KEY_SERVER_TOKEN, KEY_ROLE, KEY_AREAS)
     }
 }

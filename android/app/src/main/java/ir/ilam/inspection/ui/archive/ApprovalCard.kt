@@ -81,7 +81,8 @@ fun ApprovalCard(
             }
 
             if (UserRole.isManager) {
-                ManagerDecision(
+                // The manager only supervises illegal-power cases; the server refuses as well.
+                if (UserRole.actsOn(report.caseKind)) ManagerDecision(
                     comment = comment,
                     onCommentChange = { comment = it },
                     onDecide = { decision -> onDecide(decision, comment) }

@@ -42,7 +42,7 @@ internal class ReportFrameHtml(private val labels: ReportLabels) {
         val r = detail.report
         return buildString {
             append("<div class=\"letterhead\"><h2>${text(R.string.form_org)}</h2>")
-            append("<h1>${text(R.string.form_title)}</h1></div>")
+            append("<h1>${text(if (r.isIllegalPower) R.string.form_title_illegal else R.string.form_title)}</h1></div>")
             append("<table class=\"strip\"><tr>")
             cell("code", text(R.string.form_tracking_code), TrackingCode.forDisplay(r.displayCode))
             cell("", text(R.string.form_report_type), labels.reportType(r.reportType))

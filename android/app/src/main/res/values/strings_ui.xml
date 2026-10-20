@@ -104,6 +104,8 @@
     <string name="step_short_location">موقعیت</string>
     <string name="step_short_technical">بررسی فنی</string>
     <string name="step_short_devices">تجهیزات</string>
+    <string name="step_attendees">حاضرین در محل</string>
+    <string name="step_short_attendees">حاضرین</string>
     <string name="step_short_media">مستندات</string>
     <string name="step_short_owner">تکمیل</string>
     <string name="step_short_review">بررسی</string>
@@ -189,9 +191,9 @@
     <string name="perf_exports">خروجی گزارش</string>
 
     <string name="lock_role_expert">نسخه کارشناس</string>
-    <string name="lock_role_manager">نسخه مدیر و مجریان رمزارز</string>
-    <string name="lock_role_illegal">نسخه مجری برق غیرمجاز</string>
-    <string name="users_subtitle">کارشناسان، کد دستگاه و درخواست‌های ثبت</string>
+    <string name="lock_role_manager">نسخه مدیر</string>
+    <string name="lock_role_executor">نسخه مجری رمزارز</string>
+    <string name="lock_role_illegal">نسخه مجری برق غیرمجاز (ستاد و شهرستان)</string>
     <string name="approval_subtitle">%1$s پرونده منتظر تصمیم شما</string>
 
     <!-- نقشه پرونده‌ها -->

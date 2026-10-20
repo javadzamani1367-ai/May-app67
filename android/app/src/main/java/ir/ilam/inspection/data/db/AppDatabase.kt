@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import ir.ilam.inspection.data.KeyStoreVault
 import ir.ilam.inspection.data.SecureDatabase
 
 /**
@@ -13,14 +14,14 @@ import ir.ilam.inspection.data.SecureDatabase
  * with `windows/SCHEMA.md`; the sync handshake refuses to talk to an archive
  * built against a different version.
  */
-const val SCHEMA_VERSION = 6
+const val SCHEMA_VERSION = 7
 
 /**
  * Room's own version. It moves ahead of [SCHEMA_VERSION] whenever the phone
  * gains a table the archive has no business knowing about — a local typing
  * convenience must not make an up-to-date archive look incompatible.
  */
-const val DATABASE_VERSION = 11
+const val DATABASE_VERSION = 12
 
 @Database(
     entities = [
@@ -56,13 +57,30 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun referralDao(): ReferralDao
 
     companion object {
-        private const val DB_NAME = "inspection.db"
+        private const val DB_BASE = "inspection"
 
         @Volatile
         private var instance: AppDatabase? = null
 
+        /** The signed-in account's database (one file per account, KeyStoreVault.databaseName). */
         fun get(context: Context): AppDatabase = instance ?: synchronized(this) {
-            instance ?: build(context.applicationContext).also { instance = it }
+            instance ?: build(context.applicationContext, KeyStoreVault(context).databaseName(DB_BASE)).also { instance = it }
+        }
+
+        /**
+         * After a sign-in switched to another account: that account's database gets
+         * this phone's settings (server address and the rest) if it has none yet, so
+         * the restarted app reaches the same server.
+         */
+        suspend fun carrySettings(context: Context, from: AppDatabase) {
+            val target = build(context.applicationContext, KeyStoreVault(context).databaseName(DB_BASE))
+            try {
+                if (target.settingDao().all().isEmpty()) {
+                    from.settingDao().all().forEach { target.settingDao().put(it) }
+                }
+            } finally {
+                target.close()
+            }
         }
 
         /**
@@ -242,6 +260,13 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** Schema 7: crypto-mining visit or illegal-power inspection. */
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE reports ADD COLUMN case_kind INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         /** Schema 6: the account holder's name, for the miner device registry. */
         val MIGRATION_10_11 = object : Migration(10, 11) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -249,8 +274,8 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        private fun build(context: Context): AppDatabase {
-            return Room.databaseBuilder(context, AppDatabase::class.java, DB_NAME)
+        private fun build(context: Context, name: String): AppDatabase {
+            return Room.databaseBuilder(context, AppDatabase::class.java, name)
                 .openHelperFactory(SecureDatabase.factory(context))
                 .addMigrations(
                     MIGRATION_1_2,
@@ -262,7 +287,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_7_8,
                     MIGRATION_8_9,
                     MIGRATION_9_10,
-                    MIGRATION_10_11
+                    MIGRATION_10_11,
+                    MIGRATION_11_12
                 )
                 .build()
         }

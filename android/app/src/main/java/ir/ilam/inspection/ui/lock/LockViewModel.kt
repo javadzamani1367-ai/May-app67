@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.AppContainer
 import ir.ilam.inspection.data.SignInOutcome
+import ir.ilam.inspection.data.db.AppDatabase
 import ir.ilam.inspection.sync.ApiResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,9 @@ data class LockState(
     val askingRegistration: Boolean = false,
     val editingServer: Boolean = false,
     val serverAddress: String = "",
-    val unlocked: Boolean = false
+    val unlocked: Boolean = false,
+    /** Signed in as another account: restart on that account's database. */
+    val restart: Boolean = false
 )
 
 /** The entry screen's brain: sign in, or ask the manager to register this phone. */
@@ -85,9 +88,13 @@ class LockViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             _state.update { it.copy(busy = true, serverMessage = null, errorRes = null) }
             val outcome = account.signIn(userCode.trim(), password)
+            if (outcome is SignInOutcome.Granted && outcome.switched) {
+                AppDatabase.carrySettings(container.context, container.database)
+            }
             _state.update { current ->
                 when (outcome) {
-                    is SignInOutcome.Granted -> current.copy(busy = false, unlocked = true)
+                    is SignInOutcome.Granted -> if (outcome.switched) current.copy(busy = true, restart = true)
+                        else current.copy(busy = false, unlocked = true)
                     SignInOutcome.WrongPassword ->
                         current.copy(busy = false, errorRes = R.string.lock_wrong_password)
                     SignInOutcome.NeedsActivation ->
@@ -101,10 +108,10 @@ class LockViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    fun requestRegistration(fullName: String, phone: String, county: String) {
+    fun requestRegistration(fullName: String, nationalId: String, phone: String, note: String) {
         viewModelScope.launch {
             _state.update { it.copy(busy = true, serverMessage = null, errorRes = null) }
-            val result = account.requestRegistration(fullName.trim(), phone.trim(), county.trim())
+            val result = account.requestRegistration(fullName, nationalId, phone, note)
             _state.update { current ->
                 when (result) {
                     is ApiResult.Ok -> current.copy(
@@ -115,7 +122,7 @@ class LockViewModel(private val container: AppContainer) : ViewModel() {
                     is ApiResult.Refused -> current.copy(busy = false, serverMessage = result.message)
                     ApiResult.Unreachable -> current.copy(
                         busy = false,
-                        errorRes = R.string.lock_server_unreachable
+                        errorRes = R.string.reg_unreachable
                     )
                 }
             }

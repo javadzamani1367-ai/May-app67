@@ -83,7 +83,7 @@ fun VisitScreen(reportId: String, onBack: () -> Unit, onFinished: (String) -> Un
     Scaffold(
         topBar = {
             TavanTopBar(
-                title = stringResource(visitStep.title),
+                title = stringResource(visitStep.titleFor(current)),
                 subtitle = listOfNotNull(
                     current?.report?.displayCode?.let { TrackingCode.forDisplay(it) },
                     stringResource(

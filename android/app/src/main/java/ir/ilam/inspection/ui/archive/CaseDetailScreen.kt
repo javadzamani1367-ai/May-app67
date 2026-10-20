@@ -117,10 +117,10 @@ fun CaseDetailScreen(
         bottomBar = {
             if (current != null) {
                 BottomActionBar {
-                    // Only the manager and the area executor send to units and social networks;
-                    // the expert hands the case on through approval and offline packages.
+                    // Only whoever runs the case sends to units and social networks; the expert
+                    // hands it on through approval, and the manager only supervises illegal power.
                     if (UserRole.isManager) {
-                        PrimaryButton(
+                        if (UserRole.actsOn(current.report.caseKind)) PrimaryButton(
                             text = stringResource(R.string.dispatch_title),
                             onClick = { onDispatch(reportId) },
                             icon = Icons.AutoMirrored.Filled.Send,
@@ -177,7 +177,7 @@ fun CaseDetailScreen(
             CasePlaceSection(current, locationFix, onOpenMap = { showMap = true })
             CaseOwnerSection(current)
             CaseTechnicalSection(current)
-            CaseDevicesSection(current)
+            if (!current.report.isIllegalPower) CaseDevicesSection(current)
             CaseNarrativeSection(current)
             CaseMediaSection(current)
             AttachmentSection(detail = current, viewModel = viewModel)

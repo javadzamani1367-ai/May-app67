@@ -40,7 +40,7 @@ namespace CryptoInspection.Archive.Export
                 Body body = main.Document.AppendChild(new Body());
 
                 body.AppendChild(Paragraph(Strings.Get("form_org"), BodySize, false, true));
-                body.AppendChild(Paragraph(Strings.Get("form_title"), TitleSize, true, true));
+                body.AppendChild(Paragraph(Strings.Get(ReportFields.TitleKey(detail)), TitleSize, true, true));
                 body.AppendChild(Paragraph(
                     PersianNumbers.ToPersian(detail.Report.DisplayCode), HeadingSize, true, true));
 
@@ -49,12 +49,16 @@ namespace CryptoInspection.Archive.Export
                 Section(body, "form_section_3", ReportFields.OwnerFields(detail));
                 Section(body, "form_section_4", ReportFields.TechnicalFields(detail));
 
-                body.AppendChild(Heading("form_section_5"));
-                body.AppendChild(Grid(ReportFields.DeviceHeader(), ReportFields.DeviceRows(detail)));
-                body.AppendChild(Heading("form_section_6"));
+                bool illegal = detail.Report.IsIllegalPower;
+                if (!illegal)
+                {
+                    body.AppendChild(Heading("form_section_5"));
+                    body.AppendChild(Grid(ReportFields.DeviceHeader(), ReportFields.DeviceRows(detail)));
+                }
+                body.AppendChild(Heading(illegal ? "form_section_illegal_5" : "form_section_6"));
                 body.AppendChild(Grid(ReportFields.AttendeeHeader(), ReportFields.AttendeeRows(detail)));
 
-                body.AppendChild(Heading("form_section_7"));
+                body.AppendChild(Heading(illegal ? "form_section_illegal_6" : "form_section_7"));
                 body.AppendChild(Paragraph(detail.Report.Description ?? string.Empty));
                 body.AppendChild(Heading("form_actions_taken"));
                 body.AppendChild(Paragraph(detail.Report.ActionsTaken ?? string.Empty));

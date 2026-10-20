@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- اشخاص و کاربری‌ها در اپ مدیر: هر شخص یک بار با کد ملی، هر تیک ناحیه × نقش یک کاربری. -->
+<resources>
+    <string name="ps_title">اشخاص و کاربری‌ها</string>
+    <string name="ps_subtitle">به تفکیک ناحیه و نقش</string>
+    <string name="ps_requests">درخواست‌های کاربری</string>
+    <string name="ps_requests_hint">کد نصب هر درخواست را برای شخصش ثبت کنید</string>
+    <string name="ps_requests_waiting">%1$s درخواست کاربری در انتظار بررسی</string>
+    <string name="ps_new">شخص جدید</string>
+    <string name="ps_search">جستجوی نام، کد ملی یا کد کاربری</string>
+    <string name="ps_all_areas">همه ناحیه‌ها</string>
+    <string name="ps_province">استانی</string>
+    <string name="ps_idle">بدون کاربری فعال</string>
+    <string name="ps_inactive">غیرفعال</string>
+    <string name="ps_request_line">کد ملی %1$s · کد نصب %2$s</string>
+    <string name="ps_request_known">شخص ثبت‌شده: %1$s</string>
+    <string name="ps_request_new">شخص تازه — با ثبت، از روی همین درخواست ساخته می‌شود</string>
+    <string name="ps_request_register">ثبت کد نصب</string>
+    <string name="ps_request_reject">رد</string>
+    <string name="ps_number">شخص شماره %1$s</string>
+    <string name="ps_details">مشخصات شخص</string>
+    <string name="ps_home_area">ناحیه اصلی</string>
+    <string name="ps_note">توضیح</string>
+    <string name="ps_roles">ناحیه‌ها و نقش‌ها</string>
+    <string name="ps_illegal_hq">مجری ستاد برق غیرمجاز (استانی)</string>
+    <string name="ps_perm_inspect">بازرسی</string>
+    <string name="ps_perm_report">گزارش</string>
+    <string name="ps_ticks_hint">هر تیک یک کاربری جدا با کد و رمز خودش است. برداشتن تیک، کاربری را غیرفعال می‌کند و داده‌اش می‌ماند.</string>
+    <string name="ps_save_roles">ذخیره نقش‌ها</string>
+    <string name="ps_accounts">کاربری‌ها</string>
+    <string name="ps_new_password">رمز تازه</string>
+    <string name="ps_devices">کد نصب هر اپ</string>
+    <string name="ps_devices_hint">با هر نصب عوض می‌شود؛ کدی را که روی صفحه ورود اپ آمده وارد کنید</string>
+    <string name="ps_work">کار در هر ناحیه</string>
+    <string name="ps_score">امتیاز %1$s: %2$s</string>
+    <string name="ps_passwords_title">رمزهای یک‌بارمصرف</string>
+    <string name="ps_passwords_hint">این رمزها فقط همین یک بار نشان داده می‌شوند. به شخص بدهید.</string>
+</resources>

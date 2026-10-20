@@ -24,6 +24,9 @@
     <string name="fl_late">دیرشده</string>
     <string name="fl_stage_awaiting_referral">در انتظار ارجاع مدیر</string>
     <string name="fl_stage_with_executor">نزد مجری؛ هنوز به کارشناس نرسیده</string>
+    <string name="fl_stage_with_hq">نزد ستاد؛ مجری شهرستان ارجاع نداد</string>
+    <string name="fl_board_subtitle_hq">پرونده‌های برق غیرمجاز همه شهرستان‌ها</string>
+    <string name="fl_board_subtitle_illegal">پرونده‌های برق غیرمجاز شهرستان شما</string>
     <string name="fl_stage_with_expert">نزد کارشناس؛ بازدید نشده</string>
     <string name="fl_stage_in_progress">در دست کارشناس</string>
     <string name="fl_stage_awaiting_approval">در انتظار تأیید</string>

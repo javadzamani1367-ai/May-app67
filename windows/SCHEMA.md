@@ -1,6 +1,10 @@
 # اسکیمای مشترک — مرجع سمت ویندوز
 
-نسخه اسکیما: **۶** (`SCHEMA_VERSION = 6`)
+نسخه اسکیما: **۷** (`SCHEMA_VERSION = 7`)
+
+> نسخه ۷: ستون `case_kind` در `reports` — حوزه پرونده: ۰ رمزارز، ۱ برق غیرمجاز. مالکش سرور است و
+> ارسال گوشی آن را عوض نمی‌کند. فرم برق غیرمجاز همان فرم رمزارز است بی بخش دستگاه‌ها. آرشیو قدیمی‌تر
+> آن را با `ALTER TABLE ... DEFAULT 0` می‌افزاید.
 
 > نسخه ۶: ستون `subscriber_name` در `reports` — نام مشترک (صاحب قبض)، که بانک دستگاه‌های ماینر سرور هر دستگاه را
 > به آن و به دارنده (`owner_name`) می‌بندد. آرشیو قدیمی‌تر آن را با `ALTER TABLE` می‌افزاید.
@@ -48,6 +52,7 @@ CREATE TABLE reports (
   position_at INTEGER, observer_latitude REAL, observer_longitude REAL, observer_accuracy REAL,
   file_number TEXT, bill_number TEXT, subscription_number TEXT, usage_type TEXT,
   owner_name TEXT, owner_national_id TEXT, owner_phone TEXT, owner_relation TEXT, subscriber_name TEXT,
+  case_kind INTEGER NOT NULL DEFAULT 0,
   -- ستون‌های نسخه ۱؛ دیگر نوشته نمی‌شوند ولی برای سازگاری باقی مانده‌اند
   meter_amperage REAL, connection_type TEXT, seal_status TEXT,
   -- اندازه‌گیری فاز به فاز (نسخه ۲)
@@ -134,6 +139,7 @@ CREATE TABLE settings (
 |---|---|---|
 | `reports.report_type` | ۱ / ۲ / ۳ / ۴ / ۵ / ۶ | سراغ / ۱۲۱ / مردمی / همکار / توانیر / میدانی |
 | `reports.status` | ۰ / ۱ / ۲ | در دست اقدام / بازدید شده / بایگانی |
+| `reports.case_kind` | ۰ / ۱ | رمزارز / برق غیرمجاز |
 | `devices.entry_method` | ۰ / ۱ | بارکد / دستی |
 | `attendees.organization` | ۰ / ۱ / ۲ | شرکت برق / پلیس امنیت / سایر |
 | `media.type` | ۰ / ۱ | تصویر / ویدیو |

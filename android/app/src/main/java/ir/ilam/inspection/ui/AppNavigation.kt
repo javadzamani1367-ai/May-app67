@@ -27,7 +27,10 @@ import ir.ilam.inspection.ui.pending.HomeScreen
 import ir.ilam.inspection.ui.settings.SettingsScreen
 import ir.ilam.inspection.ui.approvals.ApprovalsScreen
 import ir.ilam.inspection.ui.performance.PerformanceScreen
-import ir.ilam.inspection.ui.users.UsersScreen
+import ir.ilam.inspection.ui.persons.PersonScreen
+import ir.ilam.inspection.ui.persons.PersonsScreen
+import ir.ilam.inspection.ui.persons.PersonsViewModel
+import ir.ilam.inspection.ui.persons.RequestsScreen
 import ir.ilam.inspection.ui.stats.StatsScreen
 import ir.ilam.inspection.ui.visit.VisitScreen
 import ir.ilam.inspection.ui.flow.BoardScreen
@@ -49,6 +52,9 @@ object Routes {
     const val SETTINGS = "settings"
     const val STATS = "stats"
     const val USERS = "users"
+    const val PERSON = "person/{id}"
+    const val PERSON_NEW = "person-new"
+    const val PERSON_REQUESTS = "person-requests"
     const val APPROVALS = "approvals"
     const val PERFORMANCE = "performance"
     const val MAP = "map"
@@ -65,6 +71,7 @@ object Routes {
     const val NOTIFICATIONS = "notifications"
 
     fun caseFlow(id: String) = "case-flow/$id"
+    fun person(id: String) = "person/$id"
 
     fun visit(id: String) = "visit/$id"
     fun detail(id: String) = "case/$id"
@@ -201,7 +208,21 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             )
         }
         composable(Routes.USERS) {
-            UsersScreen(onBack = { navController.popBackStack() })
+            PersonsScreen(personsViewModel(), onBack = { navController.popBackStack() },
+                onOpen = { navController.navigate(Routes.person(it)) }, onNew = { navController.navigate(Routes.PERSON_NEW) },
+                onRequests = { navController.navigate(Routes.PERSON_REQUESTS) })
+        }
+        composable(Routes.PERSON, arguments = listOf(navArgument(ARG_ID) { type = NavType.StringType })) { entry ->
+            PersonScreen(personsViewModel(), entry.arguments?.getString(ARG_ID), onBack = { navController.popBackStack() }, onCreated = {})
+        }
+        composable(Routes.PERSON_NEW) {
+            PersonScreen(personsViewModel(), null, onBack = { navController.popBackStack() }, onCreated = {
+                navController.navigate(Routes.person(it)) { popUpTo(Routes.PERSON_NEW) { inclusive = true } }
+            })
+        }
+        composable(Routes.PERSON_REQUESTS) {
+            RequestsScreen(personsViewModel(), onBack = { navController.popBackStack() },
+                onPerson = { navController.navigate(Routes.person(it)) })
         }
         composable(Routes.CREW) {
             CrewScreen(onBack = { navController.popBackStack() })
@@ -234,4 +255,10 @@ private fun manageViewModel(): ManageViewModel {
 private fun fieldItemsViewModel(): FieldItemsViewModel {
     val container = LocalContext.current.container
     return viewModel(factory = remember { ContainerViewModelFactory(container) { FieldItemsViewModel(it) } })
+}
+
+@Composable
+private fun personsViewModel(): PersonsViewModel {
+    val container = LocalContext.current.container
+    return viewModel(factory = remember { ContainerViewModelFactory(container) { PersonsViewModel(it) } })
 }

@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import ir.ilam.inspection.data.KeyStoreVault
 import ir.ilam.inspection.data.SecureDatabase
 
 /**
@@ -23,7 +24,7 @@ abstract class FieldDatabase : RoomDatabase() {
 
     companion object {
         const val VERSION = 3
-        private const val NAME = "field.db"
+        private const val BASE = "field"
 
         @Volatile private var instance: FieldDatabase? = null
 
@@ -45,7 +46,9 @@ abstract class FieldDatabase : RoomDatabase() {
         }
 
         fun get(context: Context): FieldDatabase = instance ?: synchronized(this) {
-            instance ?: Room.databaseBuilder(context.applicationContext, FieldDatabase::class.java, NAME)
+            // One file per account: a person with an account in two areas sees each area's items apart.
+            instance ?: Room.databaseBuilder(context.applicationContext, FieldDatabase::class.java,
+                KeyStoreVault(context).databaseName(BASE))
                 .openHelperFactory(SecureDatabase.factory(context))
                 .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()

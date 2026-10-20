@@ -85,4 +85,17 @@
     <string name="leave_message">اطلاعاتی که در این صفحه وارد کرده‌اید پاک می‌شود. از خروج مطمئن هستید؟</string>
     <string name="leave_yes">بله، خارج شو</string>
     <string name="leave_no">خیر، ادامه می‌دهم</string>
+    <!-- درخواست کاربری از صفحه ورود همه اپ‌ها -->
+    <string name="lock_device_code">کد این نصب</string>
+    <string name="lock_device_code_hint">این کد مخصوص همین نصب همین اپ است. با «درخواست کاربری» آن را برای مدیر بفرستید، یا اگر اینترنت ندارید کد را به مدیر بگویید. با حذف و نصب دوباره اپ، کد عوض می‌شود و مدیر کد تازه را برای شما ثبت می‌کند؛ کاربری و رمزتان همان می‌ماند.</string>
+    <string name="lock_registration_sent">درخواست شما برای مدیر ارسال شد. پس از ثبت مدیر، با کد کاربری و رمز هر شهرستان وارد شوید.</string>
+    <string name="lock_request_registration">درخواست کاربری</string>
+    <string name="lock_registration_title">درخواست کاربری</string>
+    <string name="lock_registration_hint">کد ملی معیار ثبت شماست: اگر از قبل ثبت شده‌اید، فقط همین نصب برایتان ثبت می‌شود. کد این نصب خودکار همراه درخواست می‌رود.</string>
+    <string name="reg_full_name">نام و نام خانوادگی</string>
+    <string name="reg_national_id">کد ملی</string>
+    <string name="reg_phone">شماره همراه</string>
+    <string name="reg_note">توضیح (مثلاً نقش و شهرستان‌ها)</string>
+    <string name="reg_bad_national_id">کد ملی درست نیست.</string>
+    <string name="reg_unreachable">سرور در دسترس نیست. اتصال اینترنت و آدرس سرور را بررسی کنید.</string>
 </resources>

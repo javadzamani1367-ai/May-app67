@@ -20,8 +20,8 @@ android {
         applicationId = "ir.ilam.inspection"
         minSdk = 26
         targetSdk = 34
-        versionCode = 11
-        versionName = "1.6.0"
+        versionCode = 12
+        versionName = "1.7.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += listOf("fa")
 
@@ -48,7 +48,7 @@ android {
         }
     }
 
-    // Two apps from one codebase. The role is decided by which APK was
+    // Four apps from one codebase. The role is decided by which APK was
     // installed, not by a setting a user could change: an expert must not be
     // able to give themselves the manager's screens by tapping a dropdown.
     flavorDimensions += "role"
@@ -59,6 +59,7 @@ android {
             versionNameSuffix = "-expert"
             resValue("string", "app_name", "توان‌کاو")
             buildConfigField("boolean", "MANAGER", "false")
+            buildConfigField("boolean", "EXECUTOR", "false")
             buildConfigField("boolean", "ILLEGAL", "false")
         }
         create("manager") {
@@ -67,16 +68,29 @@ android {
             versionNameSuffix = "-manager"
             resValue("string", "app_name", "توان‌کاو مدیر")
             buildConfigField("boolean", "MANAGER", "true")
+            buildConfigField("boolean", "EXECUTOR", "false")
             buildConfigField("boolean", "ILLEGAL", "false")
         }
-        // The illegal-power executor's app: the manager app's live screens for
-        // field items only, narrowed by the server to illegal-power reports.
+        // A crypto executor's app, one account per area: the manager's screens,
+        // narrowed by the server to that area's crypto cases.
+        create("executor") {
+            dimension = "role"
+            applicationIdSuffix = ".executor"
+            versionNameSuffix = "-executor"
+            resValue("string", "app_name", "توان‌کاو مجری")
+            buildConfigField("boolean", "MANAGER", "false")
+            buildConfigField("boolean", "EXECUTOR", "true")
+            buildConfigField("boolean", "ILLEGAL", "false")
+        }
+        // The illegal-power executors' app — headquarters and each county: the same
+        // screens, narrowed by the server to illegal-power cases.
         create("illegal") {
             dimension = "role"
             applicationIdSuffix = ".illegal"
             versionNameSuffix = "-illegal"
             resValue("string", "app_name", "توان‌کاو غیرمجاز")
             buildConfigField("boolean", "MANAGER", "false")
+            buildConfigField("boolean", "EXECUTOR", "false")
             buildConfigField("boolean", "ILLEGAL", "true")
         }
     }

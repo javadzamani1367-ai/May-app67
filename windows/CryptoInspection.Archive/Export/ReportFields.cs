@@ -23,6 +23,12 @@ namespace CryptoInspection.Archive.Export
     /// </summary>
     public static class ReportFields
     {
+        /// <summary>An illegal power case (schema 7) has its own title and no devices section.</summary>
+        public static string TitleKey(ReportDetail detail)
+        {
+            return detail.Report.IsIllegalPower ? "form_title_illegal" : "form_title";
+        }
+
         public static List<Field> CaseFields(ReportDetail detail)
         {
             Report r = detail.Report;

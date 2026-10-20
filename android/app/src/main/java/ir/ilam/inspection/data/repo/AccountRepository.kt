@@ -24,17 +24,17 @@ class AccountRepository(
     private val flow = SignInFlow(
         vault = vault,
         serverAddress = { settings.current().syncTarget },
-        // The illegal-power app has nothing to do without the server.
-        allowLocalOnly = !UserRole.isIllegal,
+        // The executor and illegal-power apps have nothing to do without the server.
+        allowLocalOnly = !UserRole.isExecutor,
         app = UserRole.appName
     )
 
     suspend fun signIn(userCode: String, password: String): SignInOutcome = flow.signIn(userCode, password)
 
-    /** Puts this installation in the manager's queue to be registered. */
-    suspend fun requestRegistration(fullName: String, phone: String, county: String): ApiResult<Boolean> =
+    /** «درخواست کاربری»: puts this installation in the manager's queue, tied to a person by national ID. */
+    suspend fun requestRegistration(fullName: String, nationalId: String, phone: String, note: String): ApiResult<Boolean> =
         ServerApi(settings.current().syncTarget)
-            .requestDevice(vault.deviceCode(), fullName, phone, county)
+            .requestDevice(vault.deviceCode(), fullName, phone, "", nationalId, note, UserRole.appName)
 
     val deviceCode: String get() = vault.deviceCodeForDisplay()
 

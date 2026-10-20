@@ -7,7 +7,7 @@ namespace CryptoInspection.Archive.Data
     /// </summary>
     public static class Schema
     {
-        public const int Version = 6;
+        public const int Version = 7;
 
         public static readonly string[] Statements =
         {
@@ -28,6 +28,7 @@ namespace CryptoInspection.Archive.Data
                 position_at INTEGER, observer_latitude REAL, observer_longitude REAL, observer_accuracy REAL,
                 file_number TEXT, bill_number TEXT, subscription_number TEXT, usage_type TEXT,
                 owner_name TEXT, owner_national_id TEXT, owner_phone TEXT, owner_relation TEXT, subscriber_name TEXT,
+                case_kind INTEGER NOT NULL DEFAULT 0,
                 meter_amperage REAL, measured_amperage REAL, connection_type TEXT, seal_status TEXT,
                 tap_point INTEGER, phase_type INTEGER,
                 amperage_r REAL, amperage_s REAL, amperage_t REAL,
@@ -142,6 +143,7 @@ namespace CryptoInspection.Archive.Data
             "ALTER TABLE reports ADD COLUMN observer_longitude REAL",
             "ALTER TABLE reports ADD COLUMN observer_accuracy REAL",
             "ALTER TABLE reports ADD COLUMN subscriber_name TEXT",
+            "ALTER TABLE reports ADD COLUMN case_kind INTEGER NOT NULL DEFAULT 0",
             "ALTER TABLE dispatches ADD COLUMN channel INTEGER NOT NULL DEFAULT 0",
             "ALTER TABLE dispatches ADD COLUMN deadline_at INTEGER",
             "ALTER TABLE dispatches ADD COLUMN status INTEGER NOT NULL DEFAULT 0",

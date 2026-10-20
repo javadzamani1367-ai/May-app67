@@ -51,6 +51,7 @@ namespace CryptoInspection.Archive.Sync
                     OwnerPhone = json.String("owner_phone"),
                     OwnerRelation = json.String("owner_relation"),
                     SubscriberName = json.String("subscriber_name"),
+                    CaseKind = json.NullableInt("case_kind") ?? 0,
                     MeterAmperage = json.NullableDouble("meter_amperage"),
                     MeasuredAmperage = json.NullableDouble("measured_amperage"),
                     ConnectionType = json.String("connection_type"),

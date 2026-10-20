@@ -13,9 +13,13 @@ import ir.ilam.inspection.data.SignInOutcome
 import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.field
 import ir.ilam.inspection.field.sync.FieldSyncWorker
+import ir.ilam.inspection.sync.ApiResult
+import ir.ilam.inspection.ui.lock.DeviceCodeCard
 import ir.ilam.inspection.ui.lock.LockFrame
+import ir.ilam.inspection.ui.lock.RegistrationDialog
 import ir.ilam.inspection.ui.lock.LockMessage
 import ir.ilam.inspection.ui.lock.ServerAddressDialog
+import ir.ilam.inspection.util.AppRestart
 import ir.ilam.inspection.util.BiometricGate
 import ir.ilam.inspection.util.findActivity
 import kotlinx.coroutines.launch
@@ -34,6 +38,9 @@ fun FieldLockScreen(onUnlocked: () -> Unit) {
     var busy by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<LockMessage?>(null) }
     var editingServer by remember { mutableStateOf(false) }
+    var asking by remember { mutableStateOf(false) }
+    val sent = stringResource(R.string.lock_registration_sent)
+    val unreachable = stringResource(R.string.reg_unreachable)
 
     val needsServer = stringResource(R.string.field_lock_needs_server)
     val wrongPassword = stringResource(R.string.field_lock_wrong_password)
@@ -66,6 +73,8 @@ fun FieldLockScreen(onUnlocked: () -> Unit) {
                     busy = false
                     message = when (outcome) {
                         is SignInOutcome.Granted -> {
+                            // Another account: restart on its own database (opens without asking again).
+                            if (outcome.switched) AppRestart.restart(context)
                             if (outcome.login != null) FieldSyncWorker.runSoon(context)
                             onUnlocked()
                             null
@@ -79,7 +88,24 @@ fun FieldLockScreen(onUnlocked: () -> Unit) {
         },
         onEdited = { message = null },
         onServerAddress = { editingServer = true }
-    )
+    ) {
+        DeviceCodeCard(code = container.account.deviceCodeForDisplay, busy = busy, onRequest = { asking = true })
+    }
+
+    if (asking) {
+        RegistrationDialog(busy = busy, onDismiss = { asking = false }, onSend = { name, nationalId, phone, note ->
+            scope.launch {
+                busy = true
+                val result = container.account.requestRegistration(name, nationalId, phone, note)
+                busy = false
+                message = when (result) {
+                    is ApiResult.Ok -> LockMessage(sent, error = false).also { asking = false }
+                    is ApiResult.Refused -> LockMessage(result.message, error = true)
+                    ApiResult.Unreachable -> LockMessage(unreachable, error = true)
+                }
+            }
+        })
+    }
 
     if (editingServer) {
         ServerAddressDialog(

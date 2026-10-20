@@ -105,7 +105,7 @@ namespace CryptoInspection.Archive.Data
                     meter_appearance_ok, meter_tampered,
                     approval_state, approval_comment, approval_at,
                     description, actions_taken,
-                    position_at, observer_latitude, observer_longitude, observer_accuracy, subscriber_name)
+                    position_at, observer_latitude, observer_longitude, observer_accuracy, subscriber_name, case_kind)
                   VALUES (
                     $id, $tracking_code, $temp_code, $report_type, $status, $expert_code,
                     $report_date, $visit_date, $created_at, $updated_at, $synced_at,
@@ -119,7 +119,7 @@ namespace CryptoInspection.Archive.Data
                     $meter_appearance_ok, $meter_tampered,
                     $approval_state, $approval_comment, $approval_at,
                     $description, $actions_taken,
-                    $position_at, $observer_latitude, $observer_longitude, $observer_accuracy, $subscriber_name)",
+                    $position_at, $observer_latitude, $observer_longitude, $observer_accuracy, $subscriber_name, $case_kind)",
                 transaction,
                 command =>
                 {
@@ -155,6 +155,7 @@ namespace CryptoInspection.Archive.Data
                     Database.Bind(command, "$owner_phone", report.OwnerPhone);
                     Database.Bind(command, "$owner_relation", report.OwnerRelation);
                     Database.Bind(command, "$subscriber_name", report.SubscriberName);
+                    Database.Bind(command, "$case_kind", report.CaseKind);
                     Database.Bind(command, "$meter_amperage", report.MeterAmperage);
                     Database.Bind(command, "$measured_amperage", report.MeasuredAmperage);
                     Database.Bind(command, "$connection_type", report.ConnectionType);

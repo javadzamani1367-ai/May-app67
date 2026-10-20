@@ -41,6 +41,13 @@ import ir.ilam.inspection.util.PersianNumbers
  * position, inspect the supply and the meter, record what was found, document
  * it, complete who owns the place, and check everything before closing.
  */
+/** The step's label; an illegal-power inspection has no devices, only people present. */
+fun VisitStep.titleFor(detail: ReportDetail?): Int =
+    if (this == VisitStep.DEVICES && detail?.report?.isIllegalPower == true) R.string.step_attendees else title
+
+fun VisitStep.shortFor(detail: ReportDetail?): Int =
+    if (this == VisitStep.DEVICES && detail?.report?.isIllegalPower == true) R.string.step_short_attendees else short
+
 enum class VisitStep(val title: Int, val short: Int) {
     LOCATION(R.string.step_location, R.string.step_short_location),
     TECHNICAL(R.string.step_technical, R.string.step_short_technical),
@@ -67,7 +74,7 @@ fun stepMark(step: VisitStep, detail: ReportDetail): StepMark {
         VisitStep.TECHNICAL ->
             if (TechnicalInput.from(report).power().hasReading) StepMark.DONE else StepMark.NEEDS_WORK
         VisitStep.DEVICES ->
-            if (detail.devices.isNotEmpty() || detail.attendees.isNotEmpty()) StepMark.DONE else StepMark.UPCOMING
+            if ((detail.devices.isNotEmpty() && !report.isIllegalPower) || detail.attendees.isNotEmpty()) StepMark.DONE else StepMark.UPCOMING
         VisitStep.MEDIA ->
             if (detail.photos.isNotEmpty() && !report.description.isNullOrBlank()) StepMark.DONE else StepMark.NEEDS_WORK
         VisitStep.OWNER ->
@@ -106,7 +113,7 @@ fun WorkflowStepper(current: Int, detail: ReportDetail, onStep: (Int) -> Unit) {
                     Connector(visible = index < VisitStep.entries.size - 1, lit = index < current, modifier = Modifier.weight(1f))
                 }
                 Text(
-                    text = stringResource(step.short),
+                    text = stringResource(step.shortFor(detail)),
                     style = MaterialTheme.typography.labelSmall,
                     color = if (index == current) colors.onHeader else colors.onHeaderMuted,
                     textAlign = TextAlign.Center,

@@ -63,11 +63,19 @@ class ServerApi(private val baseUrl: String) {
      * the request lands in the manager's queue, so the expert no longer has to
      * read a sixteen character code down a phone line.
      */
+    /**
+     * «درخواست کاربری»: the manager's queue gets this install's code, the person's
+     * name and national ID, and which app asked; the national ID ties it to a person
+     * already registered.
+     */
     suspend fun requestDevice(
         deviceCode: String,
         fullName: String,
         phone: String,
-        county: String
+        county: String,
+        nationalId: String = "",
+        note: String = "",
+        app: String? = null
     ): ApiResult<Boolean> = post(
         path = "auth/request-device",
         body = JSONObject()
@@ -75,6 +83,9 @@ class ServerApi(private val baseUrl: String) {
             .put("full_name", fullName)
             .put("phone", phone)
             .put("county", county)
+            .put("national_id", nationalId)
+            .put("note", note)
+            .putOpt("app", app)
     ) { true }
 
     suspend fun ping(): ApiResult<Int> = get("ping", token = null) { data ->
@@ -177,26 +188,6 @@ class ServerApi(private val baseUrl: String) {
         val permissions: Int = 0,
         /** The official area codes this account works in; empty for the manager. */
         val areas: List<String> = emptyList()
-    )
-
-    data class RemoteUser(
-        val id: String = "",
-        val userCode: String = "",
-        val fullName: String = "",
-        val role: Int = 0,
-        val county: String = "",
-        val phone: String = "",
-        val deviceCode: String = "",
-        val active: Boolean = true,
-        val note: String = ""
-    )
-
-    data class DeviceRequest(
-        val deviceCode: String,
-        val fullName: String,
-        val phone: String,
-        val county: String,
-        val createdAt: Long
     )
 
     data class PendingApproval(

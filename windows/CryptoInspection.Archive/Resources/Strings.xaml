@@ -168,6 +168,9 @@
     <sys:String x:Key="form_section_5">۵ — فهرست دستگاه‌ها</sys:String>
     <sys:String x:Key="form_section_6">۶ — حاضرین در محل</sys:String>
     <sys:String x:Key="form_section_7">۷ — شرح بازدید و اقدامات</sys:String>
+    <sys:String x:Key="form_title_illegal">فرم گزارش بازرسی برق غیرمجاز</sys:String>
+    <sys:String x:Key="form_section_illegal_5">۵ — حاضرین در محل</sys:String>
+    <sys:String x:Key="form_section_illegal_6">۶ — شرح بازرسی و اقدامات</sys:String>
     <sys:String x:Key="form_media_appendix">پیوست تصاویر</sys:String>
     <sys:String x:Key="form_attachments">مستندات پیوست</sys:String>
     <sys:String x:Key="form_actions_taken">اقدامات انجام‌شده</sys:String>

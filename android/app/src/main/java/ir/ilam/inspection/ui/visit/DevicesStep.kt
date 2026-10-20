@@ -49,7 +49,8 @@ import ir.ilam.inspection.ui.theme.Tone
 /** Step 4 — the miners found on site and the people present during the visit. */
 @Composable
 fun DevicesStep(detail: ReportDetail, viewModel: VisitViewModel) {
-    DeviceSection(detail, viewModel)
+    // An illegal-power inspection is the same form without the miners.
+    if (!detail.report.isIllegalPower) DeviceSection(detail, viewModel)
     AttendeeSection(detail, viewModel)
 }
 

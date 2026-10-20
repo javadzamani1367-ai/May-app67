@@ -42,9 +42,15 @@ class HtmlReportBuilder(private val context: Context, private val files: FileSto
             append(section(R.string.form_section_2, rows(locationRows(detail))))
             append(section(R.string.form_section_3, rows(ownerRows(detail))))
             append(section(R.string.form_section_4, rows(technicalRows(detail))))
-            append(section(R.string.form_section_5, deviceTable(detail)))
-            append(section(R.string.form_section_6, attendeeTable(detail)))
-            append(section(R.string.form_section_7, narrative(detail, attachments, dispatchNote)))
+            // An illegal-power inspection has no device list; the sections after it move up.
+            if (detail.report.isIllegalPower) {
+                append(section(R.string.form_section_illegal_5, attendeeTable(detail)))
+                append(section(R.string.form_section_illegal_6, narrative(detail, attachments, dispatchNote)))
+            } else {
+                append(section(R.string.form_section_5, deviceTable(detail)))
+                append(section(R.string.form_section_6, attendeeTable(detail)))
+                append(section(R.string.form_section_7, narrative(detail, attachments, dispatchNote)))
+            }
             append(frame.signatures())
             if (photos.isNotEmpty()) append(photoAppendix(detail, photos))
             append("</body></html>")

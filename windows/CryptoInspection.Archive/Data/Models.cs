@@ -47,6 +47,9 @@ namespace CryptoInspection.Archive.Data
         public string OwnerRelation { get; set; }
         /// <summary>The name on the electricity account (schema 6).</summary>
         public string SubscriberName { get; set; }
+        /// <summary>0 crypto mining, 1 illegal power (schema 7). The illegal form has no devices section.</summary>
+        public int CaseKind { get; set; }
+        public bool IsIllegalPower { get { return CaseKind == 1; } }
 
         public double? MeterAmperage { get; set; }
         public double? MeasuredAmperage { get; set; }

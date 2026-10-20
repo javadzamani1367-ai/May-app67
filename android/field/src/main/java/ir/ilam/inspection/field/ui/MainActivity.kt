@@ -1,5 +1,7 @@
 package ir.ilam.inspection.field.ui
 
+import ir.ilam.inspection.field.field
+
 import ir.ilam.inspection.util.KeepLocationWarm
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -51,7 +53,8 @@ class MainActivity : ComponentActivity() {
                     Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))) {
                         // Saveable: coming back from a permission dialog or the
                         // camera app recreates the activity, and must not lock it.
-                        var unlocked by rememberSaveable { mutableStateOf(false) }
+                        // A sign-in that switched accounts restarts the app; it opens straight in.
+                        var unlocked by rememberSaveable { mutableStateOf(applicationContext.field.vault.consumeFreshUnlock()) }
                         var crashToShow by rememberSaveable { mutableStateOf(lastCrash) }
                         val report = crashToShow
                         when {

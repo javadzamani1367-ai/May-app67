@@ -38,7 +38,8 @@ class WordExporter(private val context: Context, private val files: FileStore) {
         val body = StringBuilder()
 
         body.append(WordDocumentXml.paragraph(label(R.string.form_org), centered = true))
-        body.append(WordDocumentXml.title(label(R.string.form_title)))
+        val illegal = detail.report.isIllegalPower
+        body.append(WordDocumentXml.title(label(if (illegal) R.string.form_title_illegal else R.string.form_title)))
         body.append(
             WordDocumentXml.paragraph(
                 TrackingCode.forDisplay(detail.report.displayCode),
@@ -50,11 +51,13 @@ class WordExporter(private val context: Context, private val files: FileStore) {
         body.append(section(R.string.form_section_2, locationRows(detail)))
         body.append(section(R.string.form_section_3, ownerRows(detail)))
         body.append(section(R.string.form_section_4, technicalRows(detail)))
-        body.append(WordDocumentXml.heading(label(R.string.form_section_5)))
-        body.append(WordDocumentXml.table(deviceRows(detail)))
-        body.append(WordDocumentXml.heading(label(R.string.form_section_6)))
+        if (!illegal) {
+            body.append(WordDocumentXml.heading(label(R.string.form_section_5)))
+            body.append(WordDocumentXml.table(deviceRows(detail)))
+        }
+        body.append(WordDocumentXml.heading(label(if (illegal) R.string.form_section_illegal_5 else R.string.form_section_6)))
         body.append(WordDocumentXml.table(attendeeRows(detail)))
-        body.append(WordDocumentXml.heading(label(R.string.form_section_7)))
+        body.append(WordDocumentXml.heading(label(if (illegal) R.string.form_section_illegal_6 else R.string.form_section_7)))
         body.append(WordDocumentXml.paragraph(escape(detail.report.description)))
         body.append(WordDocumentXml.heading(label(R.string.field_actions_taken)))
         body.append(WordDocumentXml.paragraph(escape(detail.report.actionsTaken)))

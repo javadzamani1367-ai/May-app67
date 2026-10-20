@@ -94,7 +94,7 @@ fun FieldItemsScreen(
         // The server narrows the list by role; the chips only offer what can come back.
         val kinds = when {
             UserRole.isIllegal -> emptyList()
-            UserRole.isExecutor -> FieldManage.KINDS - FieldManage.KIND_CRYPTO
+            UserRole.isExecutor -> FieldManage.KINDS - FieldManage.KIND_CRYPTO - FieldManage.KIND_ILLEGAL
             else -> FieldManage.KINDS
         }
         if (kinds.isNotEmpty()) ChipRow {

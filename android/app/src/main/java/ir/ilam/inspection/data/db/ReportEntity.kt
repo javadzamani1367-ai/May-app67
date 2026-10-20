@@ -66,6 +66,11 @@ data class ReportEntity(
     @ColumnInfo(name = "owner_relation") val ownerRelation: String? = null,
     /** The name on the electricity account, which is often not the person holding the miners. Schema 6. */
     @ColumnInfo(name = "subscriber_name") val subscriberName: String? = null,
+    /**
+     * Schema 7: 0 crypto-mining visit, 1 illegal-power inspection. Set by the server
+     * when it makes the case; the phone only reads it (the form leaves out devices).
+     */
+    @ColumnInfo(name = "case_kind", defaultValue = "0") val caseKind: Int = 0,
 
     // technical
     // meter_amperage and the two free-text columns below are schema version 1
@@ -105,4 +110,7 @@ data class ReportEntity(
 ) {
     /** What the user sees on a card: the final code, else the temporary one. */
     val displayCode: String? get() = trackingCode ?: tempCode
+
+    /** An illegal-power inspection (schema 7): the same form without the device list. */
+    val isIllegalPower: Boolean get() = caseKind == 1
 }

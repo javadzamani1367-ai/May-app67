@@ -3,6 +3,8 @@ package ir.ilam.inspection.field.data
 import ir.ilam.inspection.data.KeyStoreVault
 import ir.ilam.inspection.data.SignInFlow
 import ir.ilam.inspection.data.SignInOutcome
+import ir.ilam.inspection.sync.ApiResult
+import ir.ilam.inspection.sync.ServerApi
 
 /**
  * Signing in to the field app: the rule every TavanKav app shares (prove it
@@ -26,9 +28,17 @@ class FieldAccount(
                 prefs.permissions = login.permissions
                 prefs.sessionExpired = false
             }
+            // Another account's items are in their own database; this one is pulled afresh.
+            if (outcome.switched) prefs.lastPull = 0
         }
         return outcome
     }
+
+    /** «درخواست کاربری»: this install's code to the manager's queue, tied to a person by national ID. */
+    suspend fun requestRegistration(fullName: String, nationalId: String, phone: String, note: String): ApiResult<Boolean> =
+        ServerApi(prefs.serverAddress).requestDevice(vault.deviceCode(), fullName, phone, "", nationalId, note, APP)
+
+    val deviceCodeForDisplay: String get() = vault.deviceCodeForDisplay()
 
     val userCode: String get() = vault.userCode().orEmpty()
 

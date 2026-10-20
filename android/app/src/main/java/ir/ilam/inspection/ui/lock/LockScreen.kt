@@ -1,25 +1,11 @@
 package ir.ilam.inspection.ui.lock
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AppRegistration
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDirection
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.ilam.inspection.R
@@ -27,7 +13,7 @@ import ir.ilam.inspection.container
 import ir.ilam.inspection.data.KeyStoreVault
 import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
-import ir.ilam.inspection.ui.theme.Tavan
+import ir.ilam.inspection.util.AppRestart
 import ir.ilam.inspection.util.BiometricGate
 import ir.ilam.inspection.util.findActivity
 
@@ -63,6 +49,9 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
     LaunchedEffect(state.unlocked) {
         if (state.unlocked) onUnlocked()
     }
+    LaunchedEffect(state.restart) {
+        if (state.restart) AppRestart.restart(context)
+    }
     LaunchedEffect(Unit) {
         if (canUseFingerprint) fingerprint()
     }
@@ -75,6 +64,7 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
         roleLabel = stringResource(
             when (UserRole.current) {
                 UserRole.MANAGER -> R.string.lock_role_manager
+                UserRole.EXECUTOR -> R.string.lock_role_executor
                 UserRole.ILLEGAL -> R.string.lock_role_illegal
                 UserRole.EXPERT -> R.string.lock_role_expert
             }
@@ -88,17 +78,7 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
         onEdited = viewModel::dismissMessages,
         onServerAddress = viewModel::openServerAddress
     ) {
-        DeviceCodeCard(code = viewModel.deviceCode, showHint = !vault.isActivated())
-        if (!vault.isActivated()) {
-            TextButton(onClick = viewModel::openRegistration, enabled = !state.busy) {
-                Icon(Icons.Filled.AppRegistration, contentDescription = null, tint = Tavan.colors.onHeader)
-                Text(
-                    stringResource(R.string.lock_request_registration),
-                    color = Tavan.colors.onHeader,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-        }
+        DeviceCodeCard(code = viewModel.deviceCode, busy = state.busy, onRequest = viewModel::openRegistration)
     }
 
     if (state.editingServer) {
@@ -116,30 +96,5 @@ fun LockScreen(vault: KeyStoreVault, onUnlocked: () -> Unit) {
             onDismiss = viewModel::closeRegistration,
             onSend = viewModel::requestRegistration
         )
-    }
-}
-
-/** The installation's code, with the instruction that goes with it. */
-@Composable
-private fun DeviceCodeCard(code: String, showHint: Boolean) {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(stringResource(R.string.lock_device_code), style = MaterialTheme.typography.labelMedium, color = Tavan.colors.onHeaderMuted)
-        Text(
-            text = code,
-            style = MaterialTheme.typography.titleLarge.copy(textDirection = TextDirection.Ltr),
-            color = Tavan.colors.onHeader,
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
-        if (showHint) {
-            Text(
-                text = stringResource(R.string.lock_device_code_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = Tavan.colors.onHeaderMuted,
-                textAlign = TextAlign.Center
-            )
-        }
     }
 }

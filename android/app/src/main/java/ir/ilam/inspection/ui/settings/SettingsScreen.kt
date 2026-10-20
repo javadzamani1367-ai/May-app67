@@ -168,8 +168,7 @@ fun SettingsScreen(onBack: () -> Unit, onUsers: () -> Unit) {
                 }
             }
 
-            // The illegal-power app keeps no cases: it reads the server live.
-            if (!UserRole.isIllegal) ServerSyncCard(
+            ServerSyncCard(
                 configured = settings.syncTarget.isNotBlank(),
                 busy = serverBusy,
                 pending = pendingServer,
@@ -180,7 +179,7 @@ fun SettingsScreen(onBack: () -> Unit, onUsers: () -> Unit) {
                 onSync = viewModel::syncWithServer
             )
 
-            if (!UserRole.isIllegal) SectionCard(
+            SectionCard(
                 title = stringResource(R.string.sync_title),
                 subtitle = stringResource(R.string.sync_direct_hint),
                 icon = Icons.Filled.Computer,

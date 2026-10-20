@@ -92,6 +92,7 @@ fun userRoleLabel(role: UserRole): String = stringResource(
     when (role) {
         UserRole.EXPERT -> R.string.role_expert
         UserRole.MANAGER -> R.string.role_manager
+        UserRole.EXECUTOR -> R.string.role_executor
         UserRole.ILLEGAL -> R.string.role_illegal
     }
 )

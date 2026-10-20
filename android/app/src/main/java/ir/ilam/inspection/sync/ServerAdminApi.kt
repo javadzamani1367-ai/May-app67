@@ -3,60 +3,15 @@ package ir.ilam.inspection.sync
 import ir.ilam.inspection.data.model.ApprovalState
 import ir.ilam.inspection.data.model.DispatchUnit
 import ir.ilam.inspection.data.model.UnitPerformance
-import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * The calls only a manager makes: the user register, the installations waiting
- * to be registered, the approval cycle, and the unit performance figures.
+ * The calls only a manager makes: the approval cycle and the unit performance
+ * figures. People and their accounts are in PersonsApi.
  *
  * Extensions on [ServerApi] rather than members of it, so the client an expert
  * app uses stays the short one — and so neither file grows past reading size.
  */
-
-/** Everyone the manager has registered, as the server holds them. */
-suspend fun ServerApi.users(token: String): ApiResult<List<ServerApi.RemoteUser>> =
-    get("users", token) { data -> data.optJSONArray("users").toUsers() }
-
-/** Installations waiting to be registered, oldest first. */
-suspend fun ServerApi.deviceRequests(token: String): ApiResult<List<ServerApi.DeviceRequest>> =
-    get("users/requests", token) { data ->
-        val array = data.optJSONArray("requests")
-        (0 until (array?.length() ?: 0)).mapNotNull { index ->
-            array?.optJSONObject(index)?.let { row ->
-                ServerApi.DeviceRequest(
-                    deviceCode = row.optString("device_code"),
-                    fullName = row.optString("full_name"),
-                    phone = row.optString("phone"),
-                    county = row.optString("county"),
-                    createdAt = row.optLong("created_at")
-                )
-            }
-        }
-    }
-
-/**
- * Registers or updates one expert. An empty password leaves the existing
- * one alone, so editing a county does not sign the expert out.
- */
-suspend fun ServerApi.saveUser(token: String, user: ServerApi.RemoteUser, password: String): ApiResult<Boolean> =
-    post(
-        path = "users/save",
-        token = token,
-        body = JSONObject()
-            .put("user_code", user.userCode)
-            .put("full_name", user.fullName)
-            .put("role", user.role)
-            .put("county", user.county)
-            .put("phone", user.phone)
-            .put("device_code", user.deviceCode)
-            .put("password", password)
-            .put("active", if (user.active) 1 else 0)
-            .put("note", user.note)
-    ) { true }
-
-suspend fun ServerApi.deactivateUser(token: String, id: String): ApiResult<Boolean> =
-    post("users/delete", JSONObject().put("id", id), token) { true }
 
 /** Unit performance over a date range, as only the server can see it. */
 suspend fun ServerApi.unitStats(
@@ -120,21 +75,3 @@ suspend fun ServerApi.decideApproval(
         .put("decision", if (state == ApprovalState.APPROVED) 1 else 2)
         .put("comment", comment)
 ) { true }
-
-private fun JSONArray?.toUsers(): List<ServerApi.RemoteUser> =
-    (0 until (this?.length() ?: 0)).mapNotNull { index ->
-        this?.optJSONObject(index)?.let { row ->
-            ServerApi.RemoteUser(
-                id = row.optString("id"),
-                userCode = row.optString("user_code"),
-                fullName = row.optString("full_name"),
-                role = row.optInt("role"),
-                county = row.optString("county"),
-                phone = row.optString("phone"),
-                deviceCode = row.optString("device_code"),
-                active = row.optInt("active", 1) == 1,
-                note = row.optString("note")
-            )
-        }
-    }
-

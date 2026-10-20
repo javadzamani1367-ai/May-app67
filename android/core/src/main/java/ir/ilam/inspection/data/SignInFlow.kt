@@ -2,11 +2,16 @@ package ir.ilam.inspection.data
 
 import ir.ilam.inspection.sync.ApiResult
 import ir.ilam.inspection.sync.ServerApi
+import ir.ilam.inspection.util.PersianNumbers
 
 /** What the entry screen should do about an attempt to get in. */
 sealed class SignInOutcome {
-    /** In. [login] is the server's answer when this attempt reached it. */
-    data class Granted(val login: ServerApi.LoginResult? = null) : SignInOutcome()
+    /**
+     * In. [login] is the server's answer when this attempt reached it. [switched]
+     * means another account was signed in before: the app restarts to open this
+     * account's own database.
+     */
+    data class Granted(val login: ServerApi.LoginResult? = null, val switched: Boolean = false) : SignInOutcome()
 
     /** The server said no, and said why; [message] is its own text. */
     data class Refused(val message: String) : SignInOutcome()
@@ -50,7 +55,24 @@ class SignInFlow(
     private val app: String? = null
 ) {
 
-    suspend fun signIn(userCode: String, password: String): SignInOutcome {
+    /**
+     * Signing in as another account on this phone switches the vault to it first;
+     * if the attempt fails, the previous account is put back as it was.
+     */
+    suspend fun signIn(typedCode: String, password: String): SignInOutcome {
+        val userCode = PersianNumbers.toLatin(typedCode).trim()
+        val previous = vault.switchAccount(userCode)
+        val outcome = attempt(userCode, password)
+        if (previous == null) return outcome
+        if (outcome is SignInOutcome.Granted) {
+            vault.markFreshUnlock()
+            return outcome.copy(switched = true)
+        }
+        vault.switchAccount(previous)
+        return outcome
+    }
+
+    private suspend fun attempt(userCode: String, password: String): SignInOutcome {
         val api = ServerApi(serverAddress())
         if (!api.configured) {
             return if (allowLocalOnly) localOnly(userCode, password) else offline(userCode, password)

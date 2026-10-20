@@ -57,7 +57,7 @@ fun CaseFlowScreen(reportId: String, viewModel: FlowViewModel, onBack: () -> Uni
     var action by remember { mutableStateOf<FlowAction?>(null) }
     LaunchedEffect(reportId) { viewModel.openCase(reportId) }
     val flow = state.summary
-    val open = flow != null && flow.status == 0
+    val open = flow != null && flow.status == 0 && flow.canAct
 
     Column(modifier = Modifier.fillMaxSize()) {
         TavanTopBar(
@@ -83,7 +83,9 @@ fun CaseFlowScreen(reportId: String, viewModel: FlowViewModel, onBack: () -> Uni
             if (open) {
                 PrimaryButton(stringResource(R.string.fl_to_expert), onClick = { action = FlowAction.EXPERT }, enabled = !state.busy,
                     icon = Icons.Filled.PersonSearch, modifier = Modifier.weight(1f))
-                if (UserRole.isFullManager) {
+                // Handing to the area executor belongs to the top of the domain: the manager for
+                // crypto, headquarters for illegal power.
+                if (if (flow?.caseKind == 1) UserRole.isIllegalHq else UserRole.isFullManager) {
                     SecondaryButton(stringResource(R.string.fl_to_executor), onClick = { action = FlowAction.EXECUTOR },
                         enabled = !state.busy, icon = Icons.Filled.SupervisorAccount, modifier = Modifier.weight(1f))
                 }
