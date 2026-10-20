@@ -37,7 +37,9 @@ admin_header('کاربران');
       <h2>کاربران</h2>
       <p class="muted"><?= fa_digits((string) $total) ?> کاربر</p>
     </div>
-    <div><a href="user.php"><button type="button">کاربر جدید</button></a>
+    <div><a href="persons.php"><button type="button">اشخاص و کاربری‌ها</button></a>
+      <a href="person.php"><button type="button">شخص تازه</button></a>
+      <a href="requests.php"><button type="button" style="background:#b45309">درخواست‌های کاربری</button></a>
       <a href="areas.php"><button type="button" style="background:#7c3aed">کاربرهای ناحیه‌ها (یک‌جا)</button></a></div>
   </div>
   <form method="get" class="row" style="justify-content:flex-start">

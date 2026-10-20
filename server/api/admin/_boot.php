@@ -14,7 +14,8 @@ foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSch
           'CaseLabels', 'CaseReport', 'CaseArchive', 'CaseActions', 'PositionAudit', 'FieldRoster', 'FieldSubscribers', 'CrewCalendar', 'GeoPlaces', 'CrewWork', 'CrewDays', 'CrewReport', 'CrewMap', 'CrewSheets', 'CrewDocx',
           'Areas', 'Scope', 'UnitStages', 'UnitResponse', 'UserBatch', 'CaseCodes', 'CaseIntake', 'CaseFlow', 'CaseBoard',
           'FlowClock', 'FieldFlowClock', 'FieldHandOff', 'DeviceRegistry', 'DispatchMerge', 'Scores', 'ScoreBoard', 'ScoreSheets',
-          'FieldCodes'] as $class) {
+          'FieldCodes', 'CaseKind', 'IllegalFlow', 'Persons', 'PersonAccounts', 'PersonDevices', 'PersonDirectory', 'PersonWork',
+          'DeviceRequests', 'CrewAccounts'] as $class) {
     require_once dirname(__DIR__) . '/lib/' . $class . '.php';
 }
 require_once dirname(__DIR__) . '/portal/_layout.php';
@@ -32,9 +33,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-/** نقش‌هایی که به پنل وارد می‌شوند: مدیر، و دو مجری که هر کدام فقط محدوده خودشان را می‌بینند. */
-const ADMIN_ROLES = [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR, Auth::ROLE_ILLEGAL];
-const CASE_ROLES = [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR];
+/** نقش‌هایی که به پنل وارد می‌شوند: مدیر، و مجریان که هر کدام فقط محدوده و حوزه خودشان را می‌بینند. */
+const ADMIN_ROLES = Auth::CASE_MANAGERS;
+const CASE_ROLES = Auth::CASE_MANAGERS;
+/** عملکرد اکیپ: مدیر و مجری رمزارز ناحیه. */
+const CREW_ROLES = [Auth::ROLE_MANAGER, Auth::ROLE_EXECUTOR];
 
 /** کاربر واردشده، یا تهی. حساب غیرفعال‌شده همان لحظه بیرون می‌افتد. */
 function admin_user(): ?array
@@ -85,8 +88,7 @@ function admin_case(string $id): array
 function admin_home(array $user): string
 {
     return match ((int) $user['role']) {
-        Auth::ROLE_EXECUTOR => 'board.php',
-        Auth::ROLE_ILLEGAL => 'items.php',
+        Auth::ROLE_EXECUTOR, Auth::ROLE_ILLEGAL, Auth::ROLE_ILLEGAL_AREA => 'board.php',
         default => 'index.php',
     };
 }
@@ -128,23 +130,46 @@ function admin_header(string $title): void
         Auth::ROLE_EXECUTOR => [['board.php', 'میز پیگیری'], ['intake.php', 'ثبت گزارش'], ['cases.php', 'پرونده‌ها'],
             ['approvals.php', 'تأییدها'], ['performance.php', 'عملکرد واحدها'], ['scores.php', 'امتیازها'],
             ['crew.php', 'عملکرد اکیپ'], ['items.php', 'موردهای میدانی']],
-        Auth::ROLE_ILLEGAL => [['items.php', 'گزارش‌های برق غیرمجاز']],
+        Auth::ROLE_ILLEGAL, Auth::ROLE_ILLEGAL_AREA => [['board.php', 'میز پیگیری'], ['intake.php', 'ثبت گزارش'],
+            ['cases.php', 'پرونده‌ها'], ['approvals.php', 'تأییدها'], ['performance.php', 'عملکرد واحدها'],
+            ['scores.php', 'امتیازها'], ['items.php', 'گزارش‌های میدانی']],
         default => [['index.php', 'داشبورد'], ['board.php', 'میز پیگیری'], ['intake.php', 'ثبت گزارش'],
             ['cases.php', 'آرشیو پرونده‌ها'], ['approvals.php', 'تأییدها'], ['performance.php', 'عملکرد واحدها'],
             ['scores.php', 'امتیازها'], ['devices.php', 'بانک دستگاه‌ها'], ['crew.php', 'عملکرد اکیپ'],
-            ['items.php', 'موردهای میدانی'], ['map.php', 'نقشه'], ['users.php', 'کاربران'], ['roster.php', 'اکیپ و فیدرها'],
+            ['items.php', 'موردهای میدانی'], ['map.php', 'نقشه'], ['persons.php', 'اشخاص و کاربری‌ها'], ['roster.php', 'اکیپ و فیدرها'],
             ['settings.php', 'تنظیمات']],
     };
     $nav[] = ['logout.php', 'خروج'];
     $subtitle = match ($role) {
         Auth::ROLE_EXECUTOR => 'پنل مجری رمزارز — ' . implode('، ', array_map([Areas::class, 'label'], Areas::parse($user['areas'] ?? ''))),
-        Auth::ROLE_ILLEGAL => 'پنل مجری برق غیرمجاز',
+        Auth::ROLE_ILLEGAL => 'پنل مجری برق غیرمجاز ستاد',
+        Auth::ROLE_ILLEGAL_AREA => 'پنل مجری برق غیرمجاز — ' . implode('، ', array_map([Areas::class, 'label'], Areas::parse($user['areas'] ?? ''))),
         default => 'پنل مدیر',
     };
     portal_header($title, true, $subtitle, $nav);
 }
 
 const ROLE_NAMES = Users::ROLE_NAMES;
+
+/** حوزه‌ای که صفحه نشان می‌دهد: مجریان حوزه خودشان، مدیر با ?kind=1 برق غیرمجاز. */
+function admin_kind(): int
+{
+    return admin_scope()->kind() ?? (((int) ($_GET['kind'] ?? 0)) === CaseKind::ILLEGAL ? CaseKind::ILLEGAL : CaseKind::CRYPTO);
+}
+
+/** دو زبانه رمزارز و برق غیرمجاز، فقط برای مدیر که هر دو را می‌بیند. */
+function kind_tabs(): string
+{
+    if (!admin_scope()->isManager()) {
+        return '';
+    }
+    $html = '<p class="row" style="justify-content:flex-start;gap:8px">';
+    foreach (CaseKind::NAMES as $kind => $name) {
+        $html .= '<a href="' . e(query_with($_GET, ['kind' => $kind === CaseKind::CRYPTO ? null : $kind])) . '"><button type="button"'
+            . (admin_kind() === $kind ? '' : ' style="background:#64748b"') . '>' . e($name) . '</button></a>';
+    }
+    return $html . '</p>';
+}
 
 /** مجوزهای کاربر میدانی، به زبان آدم. */
 function permission_label(int $bits): string

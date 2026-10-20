@@ -11,14 +11,23 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     csrf_check();
     if (($_POST['action'] ?? '') === 'days') {
         $days = [];
-        foreach (['refer_days', 'expert_days', 'executor_days'] as $key) {
-            $days[$key] = (int) Jalali::latin((string) ($_POST[$key] ?? ''));
+        $current = FieldSettings::all();
+        foreach (['refer_days', 'expert_days', 'executor_days', 'illegal_county_days', 'illegal_hq_days'] as $key) {
+            $days[$key] = isset($_POST[$key]) ? (int) Jalali::latin((string) $_POST[$key]) : (int) $current[$key];
         }
         if (min($days) < 1 || max($days) > 30) {
             $error = 'هر مهلت را بین ۱ تا ۳۰ روز کاری بنویسید.';
         } else {
             foreach ($days as $key => $value) {
                 FieldSettings::set($key, $value);
+            }
+        }
+    } elseif (($_POST['action'] ?? '') === 'illegal_experts') {
+        foreach (Areas::options() as $code => $label) {
+            $chosen = (string) ($_POST['expert'][(string) $code] ?? '');
+            $valid = $chosen === '' || in_array($chosen, array_column(Scope::usersIn(Auth::ROLE_EXPERT, [(string) $code]), 'id'), true);
+            if ($valid) {
+                IllegalFlow::setDefaultExpert((string) $code, $chosen === '' ? null : $chosen);
             }
         }
     } else {
@@ -48,11 +57,33 @@ admin_header('گردش پرونده و واحدها');
         <input name="expert_days" type="number" min="1" max="30" value="<?= (int) $s['expert_days'] ?>" dir="ltr"></label>
       <label>مهلت مجری — اگر پس از هشدار (یا پس از سپرده شدن پرونده) اقدامی نکند، به مدیر هشدار می‌رود
         <input name="executor_days" type="number" min="1" max="30" value="<?= (int) $s['executor_days'] ?>" dir="ltr"></label>
+      <label>برق غیرمجاز: مهلت مجری شهرستان — برای ارجاع، تأیید و ارسال؛ پس از آن به ستاد هشدار می‌رود و ستاد جای او اقدام می‌کند
+        <input name="illegal_county_days" type="number" min="1" max="30" value="<?= (int) $s['illegal_county_days'] ?>" dir="ltr"></label>
+      <label>برق غیرمجاز: مهلت ستاد — اگر ستاد هم ارجاع ندهد، پس از این مدت خودکار به کارشناس همان شهرستان می‌رود
+        <input name="illegal_hq_days" type="number" min="1" max="30" value="<?= (int) $s['illegal_hq_days'] ?>" dir="ltr"></label>
     </div>
     <button type="submit">ذخیره مهلت‌ها</button>
   </form>
   <p class="muted">اگر هاست شما «Cron Jobs» دارد، این دستور را هر ۱۵ دقیقه اجرا کنید تا ارجاع خودکار و هشدارها دقیق سر وقت انجام شوند:
     <code dir="ltr">php <?= e(dirname(__DIR__)) ?>/cron.php</code> — بی آن هم با هر باز شدن پنل و اپ‌ها انجام می‌شوند.</p>
+</div>
+
+<div class="card">
+  <h2>کارشناس پیش‌فرض برق غیرمجاز هر شهرستان</h2>
+  <p class="muted">ارجاع خودکار پرونده غیرمجاز (وقتی نه مجری شهرستان و نه ستاد ارجاع داد) به این کارشناس می‌رود؛ اگر تعیین نشده،
+    به کارشناسی از همان شهرستان که کار باز کمتری دارد.</p>
+  <form method="post">
+    <?= csrf_field() ?><input type="hidden" name="action" value="illegal_experts">
+    <div class="grid">
+      <?php foreach (Areas::options() as $code => $label): $experts = Scope::usersIn(Auth::ROLE_EXPERT, [(string) $code]);
+          $chosen = Db::one('SELECT v FROM field_settings WHERE k = ?', ['illegal_expert:' . $code])['v'] ?? ''; ?>
+        <label><?= e($label) ?><select name="expert[<?= e((string) $code) ?>]"><option value="">کمترین کار باز</option>
+          <?php foreach ($experts as $x): ?><option value="<?= e($x['id']) ?>" <?= $chosen === $x['id'] ? 'selected' : '' ?>><?= e($x['name']) ?></option><?php endforeach; ?>
+        </select></label>
+      <?php endforeach; ?>
+    </div>
+    <button type="submit">ذخیره</button>
+  </form>
 </div>
 
 <div class="card">

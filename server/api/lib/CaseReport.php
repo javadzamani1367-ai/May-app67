@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/CaseKind.php';
+
 /**
  * یک پرونده بازدید کامل، و هفت بخش فرم رسمی‌اش (CLAUDE.md بخش ۷) به صورت
  * ردیف‌های [عنوان، مقدار]. صفحه پرونده، برگه چاپی (PDF) و خروجی Word هر سه از
@@ -172,24 +174,56 @@ final class CaseReport
      * فرم رسمی به شکل بلوک‌های Word (Docx): هفت بخش، جدول‌ها، امضاها و پیوست تصاویر.
      * پنل و بسته ارسال هر دو از همین می‌سازند؛ نام نرم‌افزار در آن نیست.
      */
+    /** عنوان فرم رسمی: بازدید رمزارز، یا بازرسی برق غیرمجاز. */
+    public static function title(array $r): string
+    {
+        return CaseKind::of($r) === CaseKind::ILLEGAL ? 'فرم گزارش بازرسی برق غیرمجاز' : 'فرم گزارش بازدید مراکز استخراج رمزارز';
+    }
+
+    /**
+     * عنوان بخش‌های فرم به ترتیب؛ پرونده برق غیرمجاز فهرست دستگاه ندارد و شماره بخش‌های
+     * بعدش یکی جلو می‌آید.
+     *
+     * @return array<string, string>
+     */
+    public static function headings(array $r): array
+    {
+        $illegal = CaseKind::of($r) === CaseKind::ILLEGAL;
+        $names = ['case' => 'مشخصات پرونده', 'place' => 'مشخصات مکان', 'owner' => 'مشخصات مالک یا متصرف', 'tech' => 'مشخصات فنی',
+            'devices' => 'فهرست دستگاه‌ها', 'people' => 'حاضرین در محل', 'text' => $illegal ? 'شرح بازرسی و اقدامات' : 'شرح بازدید و اقدامات'];
+        if ($illegal) {
+            unset($names['devices']);
+        }
+        $out = [];
+        $n = 0;
+        foreach ($names as $key => $name) {
+            $out[$key] = Jalali::digits((string) ++$n) . ' — ' . $name;
+        }
+        return $out;
+    }
+
     public static function wordBlocks(array $case): array
     {
         $r = $case['report'];
         $code = CaseLabels::code($r);
+        $h = self::headings($r);
         $blocks = [
-            ['h', 'فرم گزارش بازدید مراکز استخراج رمزارز'],
+            ['h', self::title($r)],
             ['p', 'شرکت توزیع نیروی برق استان ایلام — ' . $code],
-            ['h', '۱ — مشخصات پرونده'], ['table', CaseReport::caseRows($r)],
-            ['h', '۲ — مشخصات مکان'], ['table', CaseReport::locationRows($r)],
-            ['h', '۳ — مشخصات مالک یا متصرف'], ['table', CaseReport::ownerRows($r)],
-            ['h', '۴ — مشخصات فنی'], ['table', CaseReport::technicalRows($r)],
-            ['h', '۵ — فهرست دستگاه‌ها'],
-            ['grid', [['ردیف', 'مدل', 'شماره سریال', 'توان (وات)', 'روش ثبت'], CaseReport::deviceTable($case['devices'])]],
-            ['h', '۶ — حاضرین در محل'],
-            ['grid', [['ردیف', 'نام و نام خانوادگی', 'سمت', 'سازمان'], CaseReport::attendeeTable($case['attendees'])]],
-            ['h', '۷ — شرح بازدید و اقدامات'],
-            ['table', [['شرح بازدید', (string) ($r['description'] ?: '—')], ['اقدامات انجام‌شده', (string) ($r['actions_taken'] ?: '—')]]],
+            ['h', $h['case']], ['table', CaseReport::caseRows($r)],
+            ['h', $h['place']], ['table', CaseReport::locationRows($r)],
+            ['h', $h['owner']], ['table', CaseReport::ownerRows($r)],
+            ['h', $h['tech']], ['table', CaseReport::technicalRows($r)],
         ];
+        if (isset($h['devices'])) {
+            $blocks[] = ['h', $h['devices']];
+            $blocks[] = ['grid', [['ردیف', 'مدل', 'شماره سریال', 'توان (وات)', 'روش ثبت'], CaseReport::deviceTable($case['devices'])]];
+        }
+        array_push($blocks,
+            ['h', $h['people']],
+            ['grid', [['ردیف', 'نام و نام خانوادگی', 'سمت', 'سازمان'], CaseReport::attendeeTable($case['attendees'])]],
+            ['h', $h['text']],
+            ['table', [['شرح', (string) ($r['description'] ?: '—')], ['اقدامات انجام‌شده', (string) ($r['actions_taken'] ?: '—')]]]);
         if ($case['attachments'] !== []) {
             $blocks[] = ['h', 'مستندات پیوست'];
             $blocks[] = ['grid', [['دسته', 'عنوان', 'تاریخ'], array_map(static fn ($a) => [

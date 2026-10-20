@@ -4,18 +4,16 @@ require __DIR__ . '/_boot.php';
 
 $error = null;
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
-    $code = trim((string) ($_POST['user_code'] ?? ''));
+    $code = Auth::latin(trim((string) ($_POST['user_code'] ?? '')));
     $password = (string) ($_POST['password'] ?? '');
     $locked = $code === '' ? null : LoginGuard::lockedMessage($code);
-    $user = $code === '' || $locked !== null
-        ? null : Db::one('SELECT * FROM users WHERE user_code = ? AND active = 1', [$code]);
+    $user = $code === '' || $locked !== null ? null : Auth::userByCode($code);
 
     // پیام یکسان برای هر دو حالت، تا نشود از تفاوت پیام فهمید کدام کد
     // کاربری روی سامانه وجود دارد.
     if ($locked !== null) {
         $error = $locked;
-    } elseif ($user === null || empty($user['password_hash'])
-        || !password_verify($password, (string) $user['password_hash'])) {
+    } elseif ($user === null || !Auth::passwordMatches($user, $password)) {
         if ($code !== '') {
             LoginGuard::failed($code);
         }

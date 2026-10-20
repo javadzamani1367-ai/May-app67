@@ -8,7 +8,7 @@ admin_require(CASE_ROLES);
 // امتیاز ۱۰۰ ناحیه‌ها، مجریان، واحدهای مقصد و کارشناسان در یک بازه، با فرمول هر
 // جدول زیر همان جدول. مجری فقط ناحیه‌های خودش و آدم‌های همان‌جا را می‌بیند.
 $period = crew_period();
-$board = (new ScoreBoard($period['from'], $period['to'], admin_scope(), Db::now()))->all();
+$board = (new ScoreBoard($period['from'], $period['to'], admin_scope(), Db::now(), admin_kind()))->all();
 if (($_GET['format'] ?? '') === 'xlsx') {
     Xlsx::sendBook('scores-' . str_replace('-', '', $period['from_day']) . '-' . str_replace('-', '', $period['to_day']),
         ScoreSheets::book($board));
@@ -47,10 +47,12 @@ admin_header('امتیازها');
 ?>
 <div class="card">
   <div class="row">
-    <h2>امتیاز عملکرد — از ۱۰۰</h2>
-    <a href="scores.php?<?= e(crew_query($period)) ?>&amp;format=xlsx"><button type="button">اکسل</button></a>
+    <h2>امتیاز عملکرد — از ۱۰۰ — <?= e(CaseKind::NAMES[admin_kind()]) ?></h2>
+    <a href="scores.php?<?= e(crew_query($period)) ?>&amp;kind=<?= admin_kind() ?>&amp;format=xlsx"><button type="button">اکسل</button></a>
   </div>
+  <?= kind_tabs() ?>
   <form method="get" class="row" style="justify-content:flex-start;gap:12px">
+    <?php if (admin_kind() === CaseKind::ILLEGAL): ?><input type="hidden" name="kind" value="1"><?php endif; ?>
     <label style="margin:0">از<input name="from" value="<?= e($period['from_text']) ?>" style="width:120px"></label>
     <label style="margin:0">تا<input name="to" value="<?= e($period['to_text']) ?>" style="width:120px"></label>
     <button type="submit" style="margin:0">نمایش</button>

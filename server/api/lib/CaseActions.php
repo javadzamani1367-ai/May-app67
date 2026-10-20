@@ -82,6 +82,14 @@ final class CaseActions
         if (mb_strlen($comment) > 2000) {
             return 'توضیح بیش از حد بلند است.';
         }
+        $target = Db::one('SELECT * FROM reports WHERE id = ?', [$reportId]);
+        if ($target === null || !(new Scope($manager))->canSeeReport($target)) {
+            return 'پرونده پیدا نشد.';
+        }
+        $refusal = self::refusal($target, $manager);
+        if ($refusal !== null) {
+            return $refusal;
+        }
         $pending = Db::one('SELECT id FROM approvals WHERE report_id = ? AND decision = ? ORDER BY submitted_at DESC LIMIT 1',
             [$reportId, self::PENDING]);
         if ($pending === null) {

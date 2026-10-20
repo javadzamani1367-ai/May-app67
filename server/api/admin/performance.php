@@ -12,8 +12,8 @@ $fromText = trim((string) ($_GET['from'] ?? ''));
 $toText = trim((string) ($_GET['to'] ?? ''));
 $from = ($p = Jalali::parse($fromText)) === null ? 0 : Jalali::startOfDay(...$p);
 $to = ($p = Jalali::parse($toText)) === null ? Db::now() : Jalali::startOfDay(...$p) + 86_400_000 - 1;
-$rows = CaseActions::unitStats($from, $to, admin_scope());
-$overdue = CaseActions::overdueDispatches(50, admin_scope());
+$rows = CaseActions::unitStats($from, $to, admin_scope(), admin_kind());
+$overdue = CaseActions::overdueDispatches(50, admin_scope(), admin_kind());
 $total = ['sent' => 0, 'seen' => 0, 'answered' => 0, 'overdue' => 0];
 foreach ($rows as $row) {
     foreach ($total as $k => $v) {
@@ -26,8 +26,10 @@ admin_header('عملکرد واحدها');
 echo case_styles();
 ?>
 <div class="card">
-  <h2>عملکرد واحدها</h2>
+  <h2>عملکرد واحدها — <?= e(CaseKind::NAMES[admin_kind()]) ?></h2>
+  <?= kind_tabs() ?>
   <form method="get" class="row" style="justify-content:flex-start;gap:12px">
+    <?php if (admin_kind() === CaseKind::ILLEGAL): ?><input type="hidden" name="kind" value="1"><?php endif; ?>
     <label style="margin:0">از تاریخ <input name="from" value="<?= e($fromText) ?>" placeholder="۱۴۰۵/۰۱/۰۱" style="width:130px"></label>
     <label style="margin:0">تا تاریخ <input name="to" value="<?= e($toText) ?>" placeholder="۱۴۰۵/۱۲/۲۹" style="width:130px"></label>
     <button type="submit">نمایش</button>

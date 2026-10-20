@@ -10,6 +10,7 @@ admin_require(CASE_ROLES);
 $id = (string) ($_GET['id'] ?? '');
 $case = admin_case($id);
 $r = $case['report'];
+$h = CaseReport::headings($r);
 $code = CaseLabels::code($r);
 $photos = array_values(array_filter($case['media'], static fn ($m) => (int) $m['type'] === 0));
 
@@ -95,22 +96,24 @@ function print_grid(array $header, array $rows): string
 <div class="actions"><button onclick="window.print()">چاپ یا ذخیره PDF</button>
   <a href="case.php?id=<?= e($id) ?>">بازگشت به پرونده</a></div>
 <div class="head">
-  <div><div class="org">شرکت توزیع نیروی برق استان ایلام</div><h1>فرم گزارش بازدید مراکز استخراج رمزارز</h1></div>
+  <div><div class="org">شرکت توزیع نیروی برق استان ایلام</div><h1><?= e(CaseReport::title($r)) ?></h1></div>
   <div class="meta"><div class="ltr"><strong><?= e($code) ?></strong></div>
     <div>تاریخ تهیه: <?= e(Jalali::format(Db::now(), false)) ?></div></div>
 </div>
 
 <div class="two">
-  <div><h2>۱ — مشخصات پرونده</h2><?= print_rows(CaseReport::caseRows($r)) ?></div>
-  <div><h2>۳ — مشخصات مالک یا متصرف</h2><?= print_rows(CaseReport::ownerRows($r)) ?></div>
+  <div><h2><?= e($h['case']) ?></h2><?= print_rows(CaseReport::caseRows($r)) ?></div>
+  <div><h2><?= e($h['owner']) ?></h2><?= print_rows(CaseReport::ownerRows($r)) ?></div>
 </div>
-<h2>۲ — مشخصات مکان</h2><?= print_rows(CaseReport::locationRows($r)) ?>
-<h2>۴ — مشخصات فنی</h2><?= print_rows2(CaseReport::technicalRows($r)) ?>
-<h2>۵ — فهرست دستگاه‌ها</h2>
+<h2><?= e($h['place']) ?></h2><?= print_rows(CaseReport::locationRows($r)) ?>
+<h2><?= e($h['tech']) ?></h2><?= print_rows2(CaseReport::technicalRows($r)) ?>
+<?php if (isset($h['devices'])): ?>
+<h2><?= e($h['devices']) ?></h2>
 <?= print_grid(['ردیف', 'مدل', 'شماره سریال', 'توان (وات)', 'روش ثبت'], CaseReport::deviceTable($case['devices'])) ?>
-<h2>۶ — حاضرین در محل</h2>
+<?php endif; ?>
+<h2><?= e($h['people']) ?></h2>
 <?= print_grid(['ردیف', 'نام و نام خانوادگی', 'سمت', 'سازمان'], CaseReport::attendeeTable($case['attendees'])) ?>
-<h2>۷ — شرح بازدید و اقدامات</h2>
+<h2><?= e($h['text']) ?></h2>
 <div class="box"><?= e((string) ($r['description'] ?: '—')) ?></div>
 <p style="margin:6px 0 2px"><strong>اقدامات انجام‌شده</strong></p>
 <div class="box"><?= e((string) ($r['actions_taken'] ?: '—')) ?></div>

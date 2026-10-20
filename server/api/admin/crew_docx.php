@@ -3,7 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 require __DIR__ . '/_crew.php';
 
-admin_require(CASE_ROLES);
+admin_require(CREW_ROLES);
 
 // گزارش Word عملکرد اکیپ برای مدیر و مدیرعامل، با نقشه کوچک بازدیدها.
 $period = crew_period();

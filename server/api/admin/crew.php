@@ -4,7 +4,7 @@ require __DIR__ . '/_boot.php';
 require __DIR__ . '/_cases_view.php';
 require __DIR__ . '/_crew.php';
 
-admin_require(CASE_ROLES);
+admin_require(CREW_ROLES);
 $canApprove = admin_scope()->isManager();
 
 // عملکرد اکیپ از لحظه‌های ثبت موقعیت تابلوها و تیرها (بدون ردیابی پیوسته):

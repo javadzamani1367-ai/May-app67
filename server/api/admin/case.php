@@ -171,8 +171,13 @@ $audit = PositionAudit::text($r['position_at'] ?? null, $lat, $lon, $r['observer
   </table><?php endif; ?>
 </div>
 <div class="section-grid">
-  <?= case_approval_card($r, CaseActions::history($id), $errors['approval']) ?>
-  <?= case_dispatch_form($case, $errors['dispatch']) ?>
+  <?php $refusal = CaseActions::refusal($r, $manager); ?>
+  <?php if ($refusal === null): ?>
+    <?= case_approval_card($r, CaseActions::history($id), $errors['approval']) ?>
+    <?= case_dispatch_form($case, $errors['dispatch']) ?>
+  <?php else: ?>
+    <div class="card" id="approval"><h3>تأیید و ارسال به واحد</h3><p class="muted"><?= e($refusal) ?></p></div>
+  <?php endif; ?>
 </div>
 <p class="muted">آخرین تغییر روی گوشی: <?= e(Jalali::format((int) $r['updated_at'])) ?></p>
 <?php portal_footer();

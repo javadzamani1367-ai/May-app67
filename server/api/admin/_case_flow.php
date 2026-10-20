@@ -56,12 +56,16 @@ function case_flow_card(string $id, array $r, ?string $error): string
         . '<tr><th>بازدید / تأیید / ارسال به واحد</th><td>' . $date($flow['visited_at']) . ' / ' . $date($flow['approved_at'])
         . ' / ' . $date($flow['dispatched_at']) . '</td></tr></table>';
 
-    $open = (int) $r['status'] === 0;
+    // مدیر در برق غیرمجاز ناظر است: گردش را می‌بیند، فرمی ندارد.
+    if (!$scope->canActOn($r)) {
+        $html .= '<p class="muted">پرونده برق غیرمجاز را مجری غیرمجاز شهرستان و ستاد می‌گردانند؛ مدیر ناظر است.</p>';
+    }
+    $open = (int) $r['status'] === 0 && $scope->canActOn($r);
     $form = static fn (string $action, string $fields, string $button, string $color = '') => '<form method="post" style="margin-top:10px">'
         . csrf_field() . '<input type="hidden" name="action" value="' . $action . '">' . $fields
         . '<button type="submit"' . ($color ? ' style="background:' . $color . '"' : '') . '>' . $button . '</button></form>';
     $html .= '<div class="section-grid">';
-    if ($scope->isManager() && $open) {
+    if ($scope->role === CaseKind::topRole(CaseKind::of($r)) && $open) {
         $options = '<option value="">مجری ناحیه پرونده</option>';
         foreach ($scope->executors($r['area_code']) as $x) {
             $options .= '<option value="' . e($x['id']) . '">' . e($x['name']) . '</option>';
@@ -78,8 +82,11 @@ function case_flow_card(string $id, array $r, ?string $error): string
             . '<label>مهلت بازدید (روز کاری؛ خالی: تنظیمات)<input name="due_days" inputmode="numeric"></label>'
             . '<label>توضیح برای کارشناس<input name="note"></label>', 'ارجاع به کارشناس', '#0e7490') . '</div>';
     }
-    $html .= '<div>' . $form('followup', '<label>یادداشت پیگیری<textarea name="note" rows="2" required></textarea></label>', 'ثبت پیگیری', '#64748b')
-        . '</div></div>';
+    if ($scope->canActOn($r)) {
+        $html .= '<div>' . $form('followup', '<label>یادداشت پیگیری<textarea name="note" rows="2" required></textarea></label>', 'ثبت پیگیری', '#64748b')
+            . '</div>';
+    }
+    $html .= '</div>';
 
     if ($flow['timeline'] !== []) {
         $html .= '<h4 style="margin:14px 0 4px">خط زمانی</h4><table><tr><th>زمان</th><th>چه شد</th><th>چه کسی</th><th>توضیح</th></tr>';
