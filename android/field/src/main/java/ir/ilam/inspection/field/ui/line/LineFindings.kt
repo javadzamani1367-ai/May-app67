@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ir.ilam.inspection.field.R
+import ir.ilam.inspection.ui.common.phaseColors
 import ir.ilam.inspection.field.data.LinePoint
 import ir.ilam.inspection.field.data.LineSegment
 import ir.ilam.inspection.field.data.LineVerdict

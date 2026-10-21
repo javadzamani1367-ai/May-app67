@@ -17,7 +17,9 @@ import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.data.FeederCheck
 import ir.ilam.inspection.field.data.FeederReading
 import ir.ilam.inspection.field.data.FeederState
+import ir.ilam.inspection.field.data.HistoryTarget
 import ir.ilam.inspection.field.data.PhaseReading
+import ir.ilam.inspection.field.ui.history.CompareButton
 import ir.ilam.inspection.ui.common.AppTextField
 import ir.ilam.inspection.ui.common.ChoiceRow
 import ir.ilam.inspection.ui.common.NumberField
@@ -44,7 +46,7 @@ fun PhaseInputs(reading: PhaseReading, onChange: (PhaseReading) -> Unit) {
 }
 
 @Composable
-fun MainSwitchStep(reading: PhaseReading, onChange: (PhaseReading) -> Unit) {
+fun MainSwitchStep(reading: PhaseReading, plate: String, onChange: (PhaseReading) -> Unit) {
     SectionCard(
         title = stringResource(R.string.feeder_main_title),
         subtitle = stringResource(R.string.feeder_main_hint),
@@ -54,6 +56,7 @@ fun MainSwitchStep(reading: PhaseReading, onChange: (PhaseReading) -> Unit) {
         Column {
             PhaseInputs(reading, onChange)
             FeederCheck.imbalancePct(reading.values())?.let { ImbalanceLine(it) }
+            CompareButton(HistoryTarget.main(plate), reading)
         }
     }
 }
@@ -65,7 +68,7 @@ fun MainSwitchStep(reading: PhaseReading, onChange: (PhaseReading) -> Unit) {
  * forgotten one.
  */
 @Composable
-fun FeederStepCard(title: Int, hint: Int, reading: FeederReading, onChange: (FeederReading) -> Unit) {
+fun FeederStepCard(title: Int, hint: Int, reading: FeederReading, history: HistoryTarget, onChange: (FeederReading) -> Unit) {
     SectionCard(
         title = stringResource(title),
         subtitle = stringResource(hint),
@@ -85,6 +88,7 @@ fun FeederStepCard(title: Int, hint: Int, reading: FeederReading, onChange: (Fee
                 FeederState.MEASURED -> {
                     PhaseInputs(reading.phases) { onChange(reading.copy(phases = it)) }
                     FeederCheck.imbalancePct(reading.phases.values())?.let { ImbalanceLine(it) }
+                    CompareButton(history, reading.phases)
                 }
                 FeederState.NOT_MEASURED -> AppTextField(
                     stringResource(R.string.feeder_reason), reading.reason, { onChange(reading.copy(reason = it)) },

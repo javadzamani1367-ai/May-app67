@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Place
@@ -124,6 +125,10 @@ fun CaseCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 ColorTag(text = reportTypeLabel(report.reportType), color = typeColor)
+                // The domain at a glance: an illegal-power case is inspected without the devices section.
+                if (report.isIllegalPower) {
+                    StatusBadge(text = stringResource(R.string.kind_illegal_badge), tone = Tone.WARNING, icon = Icons.Filled.Bolt)
+                }
                 if (devices > 0) {
                     StatusBadge(
                         text = stringResource(R.string.case_devices_found, PersianNumbers.toPersian(devices)),

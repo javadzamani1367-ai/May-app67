@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.AppContainer
+import ir.ilam.inspection.data.model.DispatchChannel
 import ir.ilam.inspection.data.model.DispatchUnit
 import ir.ilam.inspection.data.model.OutputFormat
 import ir.ilam.inspection.data.model.ReportDetail
@@ -30,6 +31,8 @@ data class DispatchState(
     val fullBundle: Boolean = false,
     /** Days the unit has to report back. Blank means no deadline is set. */
     val deadlineDays: String = "",
+    /** SYSTEM: the unit's portal inbox, no file. SOCIAL: the form as a file, shared. */
+    val channel: DispatchChannel = DispatchChannel.SYSTEM,
     val busy: Boolean = false,
     val message: Int? = null
 )
@@ -58,6 +61,17 @@ class DispatchViewModel(
     private val _state = MutableStateFlow(DispatchState())
     val state: StateFlow<DispatchState> = _state.asStateFlow()
 
+    /** Making a file and sharing it is the manager's and headquarters' alone. */
+    val canExport: Boolean = UserRole.canExport
+
+    /** Which ways this user may send this case: the system if they run it, files if they may make them. */
+    fun channels(caseKind: Int): List<DispatchChannel> = listOfNotNull(
+        DispatchChannel.SYSTEM.takeIf { UserRole.actsOn(caseKind) },
+        DispatchChannel.SOCIAL.takeIf { canExport }
+    )
+
+    fun setChannel(channel: DispatchChannel) = _state.update { it.copy(channel = channel, message = null) }
+
     fun setUnit(unit: DispatchUnit) = _state.update { it.copy(unit = unit) }
     fun setFormat(format: OutputFormat) = _state.update { it.copy(format = format) }
     fun setNote(note: String) = _state.update { it.copy(note = note) }
@@ -76,9 +90,11 @@ class DispatchViewModel(
 
     fun generate(context: Context) {
         val current = _state.value
+        val files = current.channel != DispatchChannel.SYSTEM
+        if (files && !canExport) return
         val selectedCount = current.mediaIds.size + current.attachmentIds.size +
-            if (current.includeReportForm) 1 else 0
-        if (selectedCount == 0) {
+            if (current.includeReportForm && files) 1 else 0
+        if (selectedCount == 0 && files) {
             _state.update { it.copy(message = R.string.dispatch_nothing_selected) }
             return
         }
@@ -87,6 +103,19 @@ class DispatchViewModel(
             val report = detail.value ?: container.reportRepository.detail(reportId)
             if (report == null) {
                 _state.update { it.copy(busy = false, message = R.string.export_failed) }
+                return@launch
+            }
+            // Through the system no file is made: the unit sees the case and the ticked
+            // documents in its portal, once the case reaches the server.
+            if (!files) {
+                container.contentRepository.logDispatch(
+                    reportId = reportId, unit = current.unit,
+                    includedItemIds = current.mediaIds.toList() + current.attachmentIds.toList(),
+                    note = current.note, format = current.format,
+                    deadlineDays = PersianNumbers.parseIntOrNull(current.deadlineDays), channel = DispatchChannel.SYSTEM
+                )
+                container.backgroundScope.launch { runCatching { container.serverCaseSync.pushOne(reportId) } }
+                _state.update { it.copy(busy = false, message = R.string.dispatch_done_system) }
                 return@launch
             }
             val bundle = builder.build(report, current, context)
@@ -104,7 +133,8 @@ class DispatchViewModel(
                 includedItemIds = current.mediaIds.toList() + current.attachmentIds.toList(),
                 note = current.note,
                 format = current.format,
-                deadlineDays = PersianNumbers.parseIntOrNull(current.deadlineDays)
+                deadlineDays = PersianNumbers.parseIntOrNull(current.deadlineDays),
+                channel = DispatchChannel.SOCIAL
             )
 
             // Straight to the server, not at the next six-hourly sync: the

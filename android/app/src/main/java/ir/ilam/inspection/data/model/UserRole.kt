@@ -61,6 +61,13 @@ enum class UserRole {
          */
         fun actsOn(caseKind: Int): Boolean = !(isFullManager && caseKind == 1)
 
+        /**
+         * Makes the official form as PDF or Word and sends it on social networks: the
+         * manager (both domains) and illegal-power headquarters only. Area executors
+         * hand a case to a unit through the system; the expert does neither.
+         */
+        val canExport: Boolean get() = isFullManager || isIllegalHq
+
         /** Sent with the login so the server refuses an account meant for another app. */
         val appName: String
             get() = when (current) {

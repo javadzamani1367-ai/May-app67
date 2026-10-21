@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- سوابق و مقایسه هر تابلو و تیر: کادر مقایسه کنار کلید کل، فیدرها، هر تیر و هر پلاک ترموویژن. -->
+<resources>
+    <string name="history_compare">مقایسه با سوابق</string>
+    <string name="history_needs_plate">برای مقایسه، اول پلاک را بنویسید</string>
+    <string name="history_title_main">سوابق کلید کل تابلو %1$s</string>
+    <string name="history_title_feeder">سوابق فیدر %2$s تابلو %1$s</string>
+    <string name="history_title_pole">سوابق تیر %1$s</string>
+    <string name="history_title_thermal_pole">سوابق ترموویژن تیر %1$s</string>
+    <string name="history_title_thermal_panel">سوابق ترموویژن تابلو %1$s</string>
+    <string name="history_live">از سرور، همین حالا — از همین بازدید به قبل</string>
+    <string name="history_copy">بی‌اینترنت: نسخه گوشی، به‌روز تا %1$s</string>
+    <string name="history_empty">سابقه‌ای برای این پلاک نیست.</string>
+    <string name="history_this_visit">همین بازدید</string>
+    <string name="history_abnormal">افزایش نامتعارف</string>
+    <string name="history_change">(%1$s٪)</string>
+    <string name="history_neutral">نول: %1$s</string>
+    <string name="history_temps">بیشینه %1$s · کادر: بیشینه %2$s، میانگین %3$s</string>
+    <string name="history_no_picture">تصویر این بازرسی روی گوشی نیست؛ با اینترنت دوباره باز کنید.</string>
+</resources>

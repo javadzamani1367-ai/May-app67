@@ -22,6 +22,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import ir.ilam.inspection.field.R
+import ir.ilam.inspection.field.data.HistoryTarget
+import ir.ilam.inspection.field.ui.history.CompareButton
 import ir.ilam.inspection.field.data.PoleReading
 import ir.ilam.inspection.field.data.PoleState
 import ir.ilam.inspection.field.data.SegmentKind
@@ -114,6 +116,7 @@ fun PolePage(
                         PhaseInputs(pole.phases) { phases -> edit { it.copy(phases = phases) } }
                         NumberField(stringResource(R.string.line_neutral), pole.neutral, { v -> edit { it.copy(neutral = v) } }, decimal = true)
                         ChangeLine(viewModel, number)
+                        CompareButton(HistoryTarget.pole(pole.plate), pole.phases)
                     } else {
                         AppTextField(stringResource(R.string.line_reason), pole.reason, { v -> edit { it.copy(reason = v) } })
                     }

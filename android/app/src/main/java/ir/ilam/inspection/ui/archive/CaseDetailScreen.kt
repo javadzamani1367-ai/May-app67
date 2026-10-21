@@ -120,7 +120,7 @@ fun CaseDetailScreen(
                     // Only whoever runs the case sends to units and social networks; the expert
                     // hands it on through approval, and the manager only supervises illegal power.
                     if (UserRole.isManager) {
-                        if (UserRole.actsOn(current.report.caseKind)) PrimaryButton(
+                        if (UserRole.actsOn(current.report.caseKind) || UserRole.canExport) PrimaryButton(
                             text = stringResource(R.string.dispatch_title),
                             onClick = { onDispatch(reportId) },
                             icon = Icons.AutoMirrored.Filled.Send,

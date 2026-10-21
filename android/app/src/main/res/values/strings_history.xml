@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- سوابق بازرسی در اپ مدیر و مجری‌ها: هر تابلو و تیر با خوانش‌هایش، نمودار، خروجی و ارجاع. -->
+<resources>
+    <string name="hist_title">سوابق بازرسی</string>
+    <string name="hist_subtitle">کلید کل، فیدرها، تیرها و ترموویژن هر پلاک</string>
+    <string name="hist_excel">خروجی اکسل</string>
+    <string name="hist_word">خروجی Word</string>
+    <string name="hist_plate">پلاک تابلو یا تیر</string>
+    <string name="hist_search">جستجو</string>
+    <string name="hist_all">تابلو و تیر</string>
+    <string name="hist_panels">تابلو</string>
+    <string name="hist_poles">تیر</string>
+    <string name="hist_only_abnormal">فقط افزایش نامتعارف</string>
+    <string name="hist_empty">سابقه‌ای با این جستجو نیست.</string>
+    <string name="hist_count">%1$s خوانش</string>
+    <string name="hist_last">آخرین: %1$s — %2$s</string>
+    <string name="hist_change">(%1$s٪)</string>
+    <string name="hist_neutral">نول: %1$s</string>
+    <string name="hist_temps">بیشینه %1$s · کادر: بیشینه %2$s، میانگین %3$s</string>
+    <string name="hist_abnormal">افزایش نامتعارف</string>
+    <string name="hist_refer">ارجاع برای بازرسی رمزارز</string>
+    <string name="hist_refer_hint">پرونده «گزارش همکار» با نشانی آخرین بازرسی همین پلاک ساخته می‌شود و همان لحظه به کارشناس رمزارز انتخاب‌شده می‌رسد.</string>
+    <string name="hist_refer_note">توضیح برای کارشناس</string>
+    <string name="hist_referred">ارجاع شد؛ پرونده نزد کارشناس است.</string>
+    <string name="hist_item_title">سوابق و مقایسه</string>
+    <string name="hist_item_hint">خوانش‌های قبلی هر تابلو و تیر این بازرسی، از همین بازدید به قبل</string>
+    <string name="hist_item_empty">این بازرسی خوانشی با پلاک ندارد.</string>
+</resources>

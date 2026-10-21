@@ -9,6 +9,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.remember
+import androidx.lifecycle.ViewModelStoreOwner
+import ir.ilam.inspection.ui.history.HistoryScreen
+import ir.ilam.inspection.ui.history.HistorySeriesScreen
+import ir.ilam.inspection.ui.history.HistoryViewModel
 import androidx.compose.ui.platform.LocalContext
 import ir.ilam.inspection.container
 import ir.ilam.inspection.data.model.UserRole
@@ -62,6 +66,8 @@ object Routes {
     const val REFERRAL = "referral/{id}"
     const val FIELD_ITEMS = "field-items"
     const val FIELD_ITEM = "field-item/{id}"
+    const val HISTORY = "history"
+    const val HISTORY_SERIES = "history-series"
     const val CREW = "crew"
     const val BOARD = "board"
     const val CASE_FLOW = "case-flow/{id}"
@@ -125,8 +131,21 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             FieldItemsScreen(
                 viewModel = fieldItemsViewModel(),
                 onBack = { navController.popBackStack() },
-                onOpen = { navController.navigate("field-item/$it") }
+                onOpen = { navController.navigate("field-item/$it") },
+                onHistory = { navController.navigate(Routes.HISTORY) }
             )
+        }
+        composable(Routes.HISTORY) {
+            val viewModel = historyViewModel()
+            HistoryScreen(viewModel, onBack = { navController.popBackStack() }, onOpen = { summary ->
+                viewModel.open(summary)
+                navController.navigate(Routes.HISTORY_SERIES)
+            })
+        }
+        composable(Routes.HISTORY_SERIES) { entry ->
+            // The series shares the list's model: the search it came from decides referral and export.
+            val parent = remember(entry) { navController.getBackStackEntry(Routes.HISTORY) }
+            HistorySeriesScreen(historyViewModel(parent), onBack = { navController.popBackStack() })
         }
         composable(Routes.FIELD_ITEM, arguments = listOf(navArgument(ARG_ID) { type = NavType.StringType })) { entry ->
             FieldItemScreen(
@@ -249,6 +268,13 @@ private fun flowViewModel(): FlowViewModel {
 private fun manageViewModel(): ManageViewModel {
     val container = LocalContext.current.container
     return viewModel(factory = remember { ContainerViewModelFactory(container) { ManageViewModel(it) } })
+}
+
+@Composable
+private fun historyViewModel(owner: ViewModelStoreOwner? = null): HistoryViewModel {
+    val container = LocalContext.current.container
+    val factory = remember { ContainerViewModelFactory(container) { HistoryViewModel(it) } }
+    return if (owner != null) viewModel(owner, factory = factory) else viewModel(factory = factory)
 }
 
 @Composable

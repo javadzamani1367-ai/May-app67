@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -30,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.ilam.inspection.R
 import ir.ilam.inspection.container
+import ir.ilam.inspection.data.model.DispatchChannel
 import ir.ilam.inspection.data.model.OutputFormat
 import ir.ilam.inspection.data.repo.SnippetFields
 import ir.ilam.inspection.ui.common.BottomActionBar
@@ -71,7 +73,12 @@ fun DispatchScreen(reportId: String, onBack: () -> Unit) {
             state.mediaIds.isNotEmpty() || state.attachmentIds.isNotEmpty(),
         onLeave = onBack
     )
-    val selected = state.mediaIds.size + state.attachmentIds.size + if (state.includeReportForm) 1 else 0
+    val withFiles = state.channel != DispatchChannel.SYSTEM
+    val selected = state.mediaIds.size + state.attachmentIds.size + if (state.includeReportForm && withFiles) 1 else 0
+    val channels = detail?.report?.caseKind?.let(viewModel::channels).orEmpty()
+    // The way out follows who is sending: executors through the system, the manager on an
+    // illegal-power case by file only.
+    LaunchedEffect(channels) { if (channels.isNotEmpty() && state.channel !in channels) viewModel.setChannel(channels.first()) }
 
     Scaffold(
         topBar = {
@@ -85,7 +92,8 @@ fun DispatchScreen(reportId: String, onBack: () -> Unit) {
             BottomActionBar(
                 note = {
                     val message = state.message
-                    val good = message == R.string.dispatch_done || message == R.string.export_via_print_dialog
+                    val good = message == R.string.dispatch_done || message == R.string.export_via_print_dialog ||
+                        message == R.string.dispatch_done_system
                     Text(
                         text = message?.let { stringResource(it) }
                             ?: stringResource(R.string.dispatch_selected, PersianNumbers.toPersian(selected)),
@@ -100,10 +108,10 @@ fun DispatchScreen(reportId: String, onBack: () -> Unit) {
                 }
             ) {
                 PrimaryButton(
-                    text = stringResource(R.string.dispatch_generate),
+                    text = stringResource(if (withFiles) R.string.dispatch_generate else R.string.dispatch_send_system),
                     onClick = { viewModel.generate(context) },
                     busy = state.busy,
-                    enabled = selected > 0,
+                    enabled = (selected > 0 || !withFiles) && channels.isNotEmpty(),
                     icon = Icons.AutoMirrored.Filled.Send,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -119,6 +127,23 @@ fun DispatchScreen(reportId: String, onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Spacing.screen, vertical = Spacing.sm)
         ) {
+            if (channels.size > 1) SectionCard(
+                title = stringResource(R.string.dispatch_channel_title),
+                subtitle = stringResource(R.string.dispatch_channel_hint),
+                icon = Icons.AutoMirrored.Filled.Send
+            ) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                    channels.forEach { channel ->
+                        ToneChip(
+                            text = stringResource(if (channel == DispatchChannel.SYSTEM) R.string.dispatch_channel_system
+                                else R.string.dispatch_channel_social),
+                            selected = state.channel == channel,
+                            tone = Tone.BRAND,
+                            onClick = { viewModel.setChannel(channel) }
+                        )
+                    }
+                }
+            }
             SectionCard(
                 title = stringResource(R.string.dispatch_unit),
                 subtitle = stringResource(R.string.dispatch_unit_hint),
@@ -132,6 +157,7 @@ fun DispatchScreen(reportId: String, onBack: () -> Unit) {
                     state = state,
                     files = viewModel.files,
                     isManager = viewModel.isManager,
+                    withFiles = withFiles,
                     onToggleReportForm = viewModel::toggleReportForm,
                     onToggleFullBundle = viewModel::toggleFullBundle,
                     onToggleMedia = viewModel::toggleMedia,
@@ -167,7 +193,7 @@ fun DispatchScreen(reportId: String, onBack: () -> Unit) {
                     }
                 }
             }
-            SectionCard(
+            if (withFiles) SectionCard(
                 title = stringResource(R.string.dispatch_format),
                 subtitle = stringResource(R.string.dispatch_format_hint),
                 icon = Icons.Filled.Description,

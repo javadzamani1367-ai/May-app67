@@ -57,6 +57,15 @@ class FieldPrefs(context: Context) {
         get() = prefs.getInt(KEY_ABNORMAL_3, 40)
         set(value) = prefs.edit().putInt(KEY_ABNORMAL_3, value).apply()
 
+    /** The manager's abnormal rise for the history comparison: percent, and at least this many amps. */
+    var historyRisePct: Int
+        get() = prefs.getInt(KEY_RISE_PCT, 30)
+        set(value) = prefs.edit().putInt(KEY_RISE_PCT, value).apply()
+
+    var historyRiseMinA: Int
+        get() = prefs.getInt(KEY_RISE_MIN, 5)
+        set(value) = prefs.edit().putInt(KEY_RISE_MIN, value).apply()
+
     var purgeAfterSync: Boolean
         get() = prefs.getBoolean(KEY_PURGE, false)
         set(value) = prefs.edit().putBoolean(KEY_PURGE, value).apply()
@@ -101,6 +110,8 @@ class FieldPrefs(context: Context) {
         const val KEY_ROSTER = "roster"
         const val KEY_ABNORMAL_1 = "abnormal_single_a"
         const val KEY_ABNORMAL_3 = "abnormal_three_a"
+        const val KEY_RISE_PCT = "history_rise_pct"
+        const val KEY_RISE_MIN = "history_rise_min_a"
         const val KEY_PURGE = "purge_after_sync"
         const val KEY_EXPIRED = "session_expired"
         // "_v2": the pull now brings the office's result and notes too, so a

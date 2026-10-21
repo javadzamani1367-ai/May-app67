@@ -27,7 +27,8 @@ class FieldSync(
     private val dao: FieldDao,
     private val prefs: FieldPrefs,
     private val account: FieldAccount,
-    private val files: FileStore
+    private val files: FileStore,
+    private val history: HistoryCache
 ) {
 
     suspend fun run(): SyncOutcome {
@@ -41,6 +42,8 @@ class FieldSync(
             if (outcome != SyncOutcome.DONE) return outcome
         }
         pull(api, token)?.let { return it }
+        // Last, and never in the way of sending: the area's history for comparing without signal.
+        history.refresh(api, token)
         prefs.lastSyncAt = System.currentTimeMillis()
         return SyncOutcome.DONE
     }
@@ -69,6 +72,8 @@ class FieldSync(
                 rosterJson?.let { prefs.rosterJson = it }
                 prefs.abnormalSingleA = abnormalSingleA
                 prefs.abnormalThreeA = abnormalThreeA
+                prefs.historyRisePct = historyRisePct
+                prefs.historyRiseMinA = historyRiseMinA
                 prefs.sessionExpired = false
             }
             is ApiResult.Refused -> {

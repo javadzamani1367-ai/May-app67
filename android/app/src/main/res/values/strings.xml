@@ -319,6 +319,10 @@
     <string name="dispatch_history_empty">ارسالی ثبت نشده است</string>
     <string name="dispatch_share_failed">ارسال باز نشد. فایل‌ها ساخته شده و روی گوشی هستند؛ از صفحه پرونده دوباره تلاش کنید.</string>
     <string name="dispatch_done">فایل ساخته شد</string>
+    <string name="dispatch_done_system">ثبت شد؛ با رسیدن پرونده به سرور، واحد آن را در پرتال خودش می‌بیند</string>
+    <string name="dispatch_send_system">ارسال به واحد از راه سامانه</string>
+    <string name="dispatch_channel_title">راه ارسال</string>
+    <string name="dispatch_channel_hint">از راه سامانه واحد پرونده را در پرتال می‌بیند؛ با شبکه اجتماعی فرم PDF یا Word ساخته و فرستاده می‌شود</string>
     <string name="dispatch_nothing_selected">حداقل یک مورد را انتخاب کنید</string>
     <string-array name="dispatch_units">
         <item>واحد فروش</item>

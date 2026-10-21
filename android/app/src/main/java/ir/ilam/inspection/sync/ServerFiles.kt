@@ -64,29 +64,7 @@ class ServerFiles(private val baseUrl: String, private val token: String) {
         downloadRoute("sync/file&kind=$kind&id=$id", target)
 
     /** The same download for any route that answers with raw bytes — a referral's photo. */
-    suspend fun downloadRoute(route: String, target: File): Boolean = withContext(Dispatchers.IO) {
-        var connection: HttpURLConnection? = null
-        val partial = File(target.parentFile, target.name + ".part")
-        try {
-            target.parentFile?.mkdirs()
-            connection = openRoute("GET", route)
-            if (connection.responseCode >= 400) return@withContext false
-
-            connection.inputStream.use { input ->
-                partial.outputStream().use { output -> input.copyTo(output, BUFFER) }
-            }
-            if (partial.length() == 0L) {
-                partial.delete()
-                return@withContext false
-            }
-            partial.renameTo(target)
-        } catch (e: Exception) {
-            partial.delete()
-            false
-        } finally {
-            connection?.disconnect()
-        }
-    }
+    suspend fun downloadRoute(route: String, target: File): Boolean = RouteDownload.to(baseUrl, token, route, target)
 
     private fun open(method: String, kind: String, id: String): HttpURLConnection =
         openRoute(method, "sync/file&kind=$kind&id=$id")

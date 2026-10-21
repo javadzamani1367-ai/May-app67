@@ -75,6 +75,7 @@ fun HomeScreen(
     val cases by lists.cases.collectAsStateWithLifecycle()
     val query by lists.query.collectAsStateWithLifecycle()
     val deviceCounts by lists.deviceCounts.collectAsStateWithLifecycle()
+    val kind by lists.kind.collectAsStateWithLifecycle()
     val deleteMessage by lists.deleteMessage.collectAsStateWithLifecycle()
 
     var tab by rememberSaveable { mutableStateOf(HomeTab.DASHBOARD) }
@@ -171,6 +172,8 @@ fun HomeScreen(
                     cases = cases,
                     query = query,
                     deviceCounts = deviceCounts,
+                    kind = kind,
+                    onKind = lists::setKind,
                     onQuery = lists::search,
                     daysWaiting = lists::daysWaiting,
                     onOpen = ::open,

@@ -40,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.ilam.inspection.R
+import ir.ilam.inspection.ui.history.ItemHistorySection
 import ir.ilam.inspection.sync.FieldManage
 import ir.ilam.inspection.ui.common.BottomActionBar
 import ir.ilam.inspection.ui.common.PrimaryButton
@@ -99,6 +100,7 @@ fun FieldItemScreen(id: String, viewModel: FieldItemsViewModel, onBack: () -> Un
                 }
             }
             if (item.photos.isNotEmpty()) Photos(item.photos, viewModel)
+            if (item.row.kind in FieldManage.INSPECTIONS) ItemHistorySection(item.row.id)
             Timeline(item.events)
         }
         BottomActionBar {

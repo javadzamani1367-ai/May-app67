@@ -11,8 +11,6 @@ import ir.ilam.inspection.data.model.AttachmentCategory
 import ir.ilam.inspection.data.model.ApprovalState
 import ir.ilam.inspection.data.model.ReportDetail
 import ir.ilam.inspection.R
-import ir.ilam.inspection.export.PdfOutcome
-import ir.ilam.inspection.export.ShareUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,7 +19,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 
 /** The case file after the visit: documents, exports and the dispatch log. */
 class CaseDetailViewModel(
@@ -120,44 +117,4 @@ class CaseDetailViewModel(
     fun removeAttachment(attachment: AttachmentEntity) {
         viewModelScope.launch { container.contentRepository.removeAttachment(attachment) }
     }
-
-    fun exportPdf(context: Context) {
-        viewModelScope.launch {
-            val current = detail.value ?: container.reportRepository.detail(reportId) ?: return@launch
-            _busy.value = true
-            val html = container.htmlReportBuilder.build(current)
-            val outcome = runCatching {
-                container.pdfExporter.export(html, fileNameFor(current), context)
-            }.getOrDefault(PdfOutcome.Failed)
-            _busy.value = false
-            when (outcome) {
-                is PdfOutcome.Saved -> ShareUtil.share(context, outcome.file)
-                PdfOutcome.HandedToPrinter -> _message.value = R.string.export_via_print_dialog
-                PdfOutcome.Failed -> _message.value = R.string.export_failed
-            }
-        }
-    }
-
-    fun exportWord(context: Context) = exportFile(context) { detail ->
-        withContext(Dispatchers.IO) {
-            container.wordExporter.export(detail, fileNameFor(detail))
-        }
-    }
-
-    private fun exportFile(context: Context, block: suspend (ReportDetail) -> File?) {
-        viewModelScope.launch {
-            val current = detail.value ?: container.reportRepository.detail(reportId) ?: return@launch
-            _busy.value = true
-            val file = runCatching { block(current) }.getOrNull()
-            _busy.value = false
-            if (file == null) {
-                _message.value = R.string.export_failed
-            } else {
-                ShareUtil.share(context, file)
-            }
-        }
-    }
-
-    private fun fileNameFor(detail: ReportDetail): String =
-        (detail.report.displayCode ?: detail.report.id.take(8)).replace(" ", "")
 }

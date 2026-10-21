@@ -1,6 +1,10 @@
 package ir.ilam.inspection.ui.pending
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +31,8 @@ import ir.ilam.inspection.R
 import ir.ilam.inspection.data.db.ReportEntity
 import ir.ilam.inspection.data.model.ReportStatus
 import ir.ilam.inspection.ui.common.EmptyState
+import ir.ilam.inspection.ui.common.ToneChip
+import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.ui.common.appFieldColors
 import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.util.PersianNumbers
@@ -38,6 +44,8 @@ fun CaseListTab(
     cases: List<ReportEntity>,
     query: String,
     deviceCounts: Map<String, Int>,
+    kind: Int?,
+    onKind: (Int?) -> Unit,
     onQuery: (String) -> Unit,
     daysWaiting: (ReportEntity) -> Int,
     onOpen: (ReportEntity) -> Unit,
@@ -61,6 +69,14 @@ fun CaseListTab(
             colors = appFieldColors(),
             modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.screen, vertical = Spacing.md)
         )
+        // Crypto mining and illegal power side by side: one tap shows one domain only.
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = Spacing.screen)) {
+            listOf(null to R.string.kind_filter_all, 0 to R.string.kind_filter_crypto, 1 to R.string.kind_filter_illegal)
+                .forEach { (value, label) ->
+                    ToneChip(stringResource(label), kind == value, if (value == 1) Tone.WARNING else Tone.BRAND, onClick = { onKind(value) })
+                }
+        }
         Text(
             text = stringResource(R.string.cases_count, PersianNumbers.toPersian(cases.size)) +
                 "  ·  " + stringResource(R.string.card_long_press_hint),

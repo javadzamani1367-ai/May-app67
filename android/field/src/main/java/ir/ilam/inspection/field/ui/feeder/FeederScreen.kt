@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.ilam.inspection.field.R
+import ir.ilam.inspection.field.data.HistoryTarget
 import ir.ilam.inspection.field.data.FieldKind
 import ir.ilam.inspection.field.field
 import ir.ilam.inspection.field.ui.form.CrewSection
@@ -162,10 +163,11 @@ fun FeederScreen(itemId: String?, onClose: () -> Unit) {
             ) {
                 PanelDiagram(step, payload.feeders.map { it.state }) { pageState.value = keyOf(it) }
                 if (step == FeederStep.MAIN) {
-                    MainSwitchStep(payload.main, viewModel::setMain)
+                    MainSwitchStep(payload.main, item.plate.orEmpty(), viewModel::setMain)
                 } else {
                     val index = step.ordinal - FeederStep.A.ordinal
-                    FeederStepCard(FEEDER_TITLES[index], FEEDER_HINTS[index], payload.feeders[index]) {
+                    FeederStepCard(FEEDER_TITLES[index], FEEDER_HINTS[index], payload.feeders[index],
+                        HistoryTarget.feeder(item.plate.orEmpty(), "ABCD"[index].toString())) {
                         viewModel.setFeeder(index, it)
                     }
                 }

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -27,6 +28,10 @@ class CaseListViewModel(container: AppContainer) : ViewModel() {
     private val _tab = MutableStateFlow(ReportStatus.PENDING)
     val tab: StateFlow<ReportStatus> = _tab.asStateFlow()
 
+    /** Null: both domains; 0 crypto mining; 1 illegal power. Applies to every tab. */
+    private val _kind = MutableStateFlow<Int?>(null)
+    val kind: StateFlow<Int?> = _kind.asStateFlow()
+
     val cases: StateFlow<List<ReportEntity>> = _tab
         .flatMapLatest { status ->
             _query.flatMapLatest { text ->
@@ -41,6 +46,7 @@ class CaseListViewModel(container: AppContainer) : ViewModel() {
                 }
             }
         }
+        .combine(_kind) { list, kind -> if (kind == null) list else list.filter { it.caseKind == kind } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val pendingCount: StateFlow<Int> = repository.countPending()
@@ -52,6 +58,10 @@ class CaseListViewModel(container: AppContainer) : ViewModel() {
 
     fun selectTab(status: ReportStatus) {
         _tab.value = status
+    }
+
+    fun setKind(kind: Int?) {
+        _kind.value = kind
     }
 
     fun search(text: String) {

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Checkbox
@@ -23,6 +24,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +39,8 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.data.AssetType
+import ir.ilam.inspection.field.data.HistoryTarget
+import ir.ilam.inspection.field.ui.history.HistoryDialog
 import ir.ilam.inspection.field.data.db.FieldFileEntity
 import ir.ilam.inspection.field.field
 import ir.ilam.inspection.field.thermal.Temperatures
@@ -103,6 +109,14 @@ fun ThermalFileRow(
             }
         }
         Column {
+            // Earlier thermal pictures and temperatures of the same plate.
+            if (file.assetType != null && !file.plate.isNullOrBlank()) {
+                var history by remember { mutableStateOf(false) }
+                IconButton(onClick = { history = true }) {
+                    Icon(Icons.Filled.History, contentDescription = stringResource(R.string.history_compare), tint = Tavan.colors.info.strong)
+                }
+                if (history) HistoryDialog(HistoryTarget.thermal(file.assetType, file.plate), null, onDismiss = { history = false })
+            }
             if (!video) {
                 IconButton(onClick = onTemperatures) {
                     Icon(Icons.Filled.Thermostat, contentDescription = stringResource(R.string.thermal_temps_title),

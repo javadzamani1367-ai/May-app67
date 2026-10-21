@@ -84,7 +84,8 @@ interface ReportDao {
     @Query("SELECT COUNT(*) FROM reports")
     fun countAll(): Flow<Int>
 
-    @Query("SELECT report_type AS bucket, COUNT(*) AS total FROM reports GROUP BY report_type")
+    /** Crypto-mining cases only: illegal-power cases are all «colleague's report» and have their own line. */
+    @Query("SELECT report_type AS bucket, COUNT(*) AS total FROM reports WHERE case_kind = 0 GROUP BY report_type")
     fun countByType(): Flow<List<Bucket>>
 
     @Query("SELECT IFNULL(county, '') AS bucket, COUNT(*) AS total FROM reports GROUP BY county")
@@ -118,9 +119,11 @@ interface ReportDao {
           TOTAL(visit_date >= :todayStart) AS visitedToday,
           TOTAL(meter_tampered = 1) AS tampered,
           TOTAL(tap_point = 0) AS bypass,
-          (SELECT COUNT(DISTINCT report_id) FROM devices) AS detected,
-          (SELECT COUNT(*) FROM devices) AS devices,
-          (SELECT TOTAL(power_watt) FROM devices) AS devicePower
+          (SELECT COUNT(DISTINCT d.report_id) FROM devices d JOIN reports c ON c.id = d.report_id WHERE c.case_kind = 0) AS detected,
+          (SELECT COUNT(*) FROM devices d JOIN reports c ON c.id = d.report_id WHERE c.case_kind = 0) AS devices,
+          (SELECT TOTAL(d.power_watt) FROM devices d JOIN reports c ON c.id = d.report_id WHERE c.case_kind = 0) AS devicePower,
+          TOTAL(case_kind = 1) AS illegal,
+          TOTAL(case_kind = 1 AND status = 0) AS illegalPending
         FROM reports
         """
     )
@@ -188,7 +191,10 @@ data class DashboardCounts(
     val bypass: Double = 0.0,
     val detected: Int = 0,
     val devices: Int = 0,
-    val devicePower: Double = 0.0
+    val devicePower: Double = 0.0,
+    /** Illegal-power cases, counted apart from the crypto figures above. */
+    val illegal: Double = 0.0,
+    val illegalPending: Double = 0.0
 )
 
 data class TextBucket(val bucket: String, val total: Int)

@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.LinearProgressIndicator
@@ -57,7 +58,9 @@ fun FieldItemsScreen(
     onBack: (() -> Unit)?,
     onOpen: (String) -> Unit,
     /** The illegal-power app starts here, with settings in the header instead of "back". */
-    onSettings: (() -> Unit)? = null
+    onSettings: (() -> Unit)? = null,
+    /** Readings of every panel and pole, for comparing; the server decides what each role sees. */
+    onHistory: (() -> Unit)? = null
 ) {
     val state by viewModel.list.collectAsStateWithLifecycle()
     val filter = state.filter
@@ -71,6 +74,7 @@ fun FieldItemsScreen(
             showBrand = onBack == null
         ) {
             HeaderAction(Icons.Filled.Refresh, stringResource(R.string.fi_refresh), onClick = viewModel::reload)
+            onHistory?.let { HeaderAction(Icons.Filled.History, stringResource(R.string.hist_title), onClick = it) }
             onSettings?.let { HeaderAction(Icons.Filled.Settings, stringResource(R.string.ill_settings), onClick = it) }
         }
         if (state.busy) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
@@ -93,7 +97,8 @@ fun FieldItemsScreen(
         }
         // The server narrows the list by role; the chips only offer what can come back.
         val kinds = when {
-            UserRole.isIllegal -> emptyList()
+            // Illegal-power executors: their reports, and the network inspections to read (view only).
+            UserRole.isIllegal -> listOf(FieldManage.KIND_ILLEGAL) + FieldManage.INSPECTIONS
             UserRole.isExecutor -> FieldManage.KINDS - FieldManage.KIND_CRYPTO - FieldManage.KIND_ILLEGAL
             else -> FieldManage.KINDS
         }

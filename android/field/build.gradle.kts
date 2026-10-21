@@ -21,8 +21,8 @@ android {
         applicationId = "ir.ilam.inspection.field"
         minSdk = 26
         targetSdk = 34
-        versionCode = 16
-        versionName = "0.9.2"
+        versionCode = 17
+        versionName = "0.9.3"
         resourceConfigurations += listOf("fa")
         // The address every field phone starts with. It stays editable on the
         // entry screen, like the inspection apps', for when the server moves.

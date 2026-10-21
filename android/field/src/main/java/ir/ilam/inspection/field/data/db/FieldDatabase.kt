@@ -15,15 +15,16 @@ import ir.ilam.inspection.data.SecureDatabase
  * travel only to the server, whose `field_items` and `field_files` they mirror.
  */
 @Database(
-    entities = [FieldItemEntity::class, FieldFileEntity::class],
+    entities = [FieldItemEntity::class, FieldFileEntity::class, HistoryKeyEntity::class, HistoryMetaEntity::class],
     version = FieldDatabase.VERSION,
     exportSchema = true
 )
 abstract class FieldDatabase : RoomDatabase() {
     abstract fun dao(): FieldDao
+    abstract fun history(): HistoryDao
 
     companion object {
-        const val VERSION = 3
+        const val VERSION = 4
         private const val BASE = "field"
 
         @Volatile private var instance: FieldDatabase? = null
@@ -45,12 +46,22 @@ abstract class FieldDatabase : RoomDatabase() {
             }
         }
 
+        /** 0.9.3: the area's inspection history, for comparing readings without signal. */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `history_key` (`id` TEXT NOT NULL, `area` TEXT, `asset` INTEGER NOT NULL, " +
+                    "`plate_key` TEXT NOT NULL, `plate` TEXT NOT NULL, `part` TEXT NOT NULL, `rows_json` TEXT NOT NULL, " +
+                    "`fetched_at` INTEGER NOT NULL, PRIMARY KEY(`id`))")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `history_meta` (`k` TEXT NOT NULL, `v` INTEGER NOT NULL, PRIMARY KEY(`k`))")
+            }
+        }
+
         fun get(context: Context): FieldDatabase = instance ?: synchronized(this) {
             // One file per account: a person with an account in two areas sees each area's items apart.
             instance ?: Room.databaseBuilder(context.applicationContext, FieldDatabase::class.java,
                 KeyStoreVault(context).databaseName(BASE))
                 .openHelperFactory(SecureDatabase.factory(context))
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
                 .also { instance = it }
         }

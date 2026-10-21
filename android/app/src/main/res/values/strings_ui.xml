@@ -209,4 +209,10 @@
     <string name="form_sign_attendee">امضای نماینده حاضر در محل</string>
     <string name="form_sign_stamp">مهر و امضای واحد</string>
     <string name="form_photo_count">تصاویر پیوست</string>
+    <string name="kind_filter_all">همه</string>
+    <string name="kind_filter_crypto">رمزارز</string>
+    <string name="kind_filter_illegal">برق غیرمجاز</string>
+    <string name="kind_illegal_badge">برق غیرمجاز</string>
+    <string name="dashboard_by_type_crypto">فقط پرونده‌های رمزارز</string>
+    <string name="dashboard_illegal_line">پرونده‌های برق غیرمجاز: %1$s (در دست اقدام %2$s)</string>
 </resources>

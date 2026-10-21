@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.CloudUpload
@@ -179,6 +180,7 @@ fun TypeBreakdownCard(state: DashboardState) {
     val max = (state.byType.values.maxOrNull() ?: 0).coerceAtLeast(1)
     SectionCard(
         title = stringResource(R.string.dashboard_by_type),
+        subtitle = stringResource(R.string.dashboard_by_type_crypto),
         icon = Icons.Filled.Insights,
         modifier = Modifier.padding(top = Spacing.sm)
     ) {
@@ -190,6 +192,11 @@ fun TypeBreakdownCard(state: DashboardState) {
                 fraction = count.toFloat() / max,
                 color = colorForReportType(type.code, Tavan.colors.dark)
             )
+        }
+        // Illegal power is its own domain: never added into the crypto channels above.
+        if (state.counts.illegal > 0) {
+            OpsLine(Icons.Filled.Bolt, Tone.WARNING, stringResource(R.string.dashboard_illegal_line,
+                PersianNumbers.toPersian(state.counts.illegal.toInt()), PersianNumbers.toPersian(state.counts.illegalPending.toInt())))
         }
     }
 }

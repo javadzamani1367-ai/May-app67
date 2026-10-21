@@ -21,6 +21,8 @@ object FieldManage {
 
     const val KIND_CRYPTO = 1
     const val KIND_ILLEGAL = 2
+    /** Network inspections — thermal, panel feeders, pole by pole: they have a reading history. */
+    val INSPECTIONS = listOf(3, 4, 6)
 
     /** Kinds as the server numbers them: crypto, illegal, thermal, feeder panel, burn, pole by pole. */
     val KINDS = listOf(1, 2, 5, 3, 4, 6)

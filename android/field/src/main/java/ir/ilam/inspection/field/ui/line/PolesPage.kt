@@ -35,6 +35,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import ir.ilam.inspection.field.R
+import ir.ilam.inspection.ui.common.phaseColors
 import ir.ilam.inspection.field.data.LineAnalysis
 import ir.ilam.inspection.field.data.PoleReading
 import ir.ilam.inspection.field.data.PoleState

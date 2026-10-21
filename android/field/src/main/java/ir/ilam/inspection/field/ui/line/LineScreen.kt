@@ -18,6 +18,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.data.FieldKind
+import ir.ilam.inspection.field.data.HistoryTarget
+import ir.ilam.inspection.field.ui.history.CompareButton
 import ir.ilam.inspection.field.data.LinePayload
 import ir.ilam.inspection.field.field
 import ir.ilam.inspection.field.ui.feeder.PhaseInputs
@@ -145,7 +147,13 @@ fun LineScreen(itemId: String?, onClose: () -> Unit) {
                     icon = Icons.Filled.PowerSettingsNew,
                     tone = Tone.ACCENT
                 ) {
-                    PhaseInputs(payload.start, viewModel::setStart)
+                    Column {
+                        PhaseInputs(payload.start, viewModel::setStart)
+                        // The walk's start is the panel's own feeder: its history is that feeder's.
+                        payload.feeder?.takeIf { it in PANEL_FEEDERS }?.let {
+                            CompareButton(HistoryTarget.feeder(viewModel.item?.plate.orEmpty(), it), payload.start)
+                        }
+                    }
                 }
             }
         }
@@ -222,3 +230,6 @@ fun networkLabel(key: String): Int = when (key) {
     "underground" -> R.string.line_network_underground
     else -> R.string.line_network_overhead
 }
+
+/** The panel feeders a walk can start from; «other» has no place in the panel's history. */
+private val PANEL_FEEDERS = setOf("A", "B", "C", "D")

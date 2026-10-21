@@ -16,7 +16,9 @@ data class FieldProfile(
     val presenceLimitM: Int = 200,
     val rosterJson: String? = null,
     val abnormalSingleA: Int = 25,
-    val abnormalThreeA: Int = 40
+    val abnormalThreeA: Int = 40,
+    val historyRisePct: Int = 30,
+    val historyRiseMinA: Int = 5
 )
 
 data class PushResult(val trackingCode: String?, val status: Int, val missingFiles: Set<String>)
@@ -41,7 +43,9 @@ suspend fun ServerApi.fieldMe(token: String): ApiResult<FieldProfile> = get("fie
         presenceLimitM = settings.optInt("presence_limit_m", 200),
         rosterJson = data.optJSONObject("roster")?.toString(),
         abnormalSingleA = settings.optInt("abnormal_single_a", 25),
-        abnormalThreeA = settings.optInt("abnormal_three_a", 40)
+        abnormalThreeA = settings.optInt("abnormal_three_a", 40),
+        historyRisePct = settings.optInt("history_rise_pct", 30),
+        historyRiseMinA = settings.optInt("history_rise_min_a", 5)
     )
 }
 

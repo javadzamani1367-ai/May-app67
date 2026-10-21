@@ -13,7 +13,7 @@
     <string name="fh_handler">سپرده به مجری</string>
 
     <!-- اپ مجری برق غیرمجاز -->
-    <string name="ill_title">گزارش‌های برق غیرمجاز</string>
+    <string name="ill_title">گزارش‌های غیرمجاز و بازرسی‌ها</string>
     <string name="ill_settings">تنظیمات</string>
 
     <!-- میز پیگیری و گردش پرونده -->

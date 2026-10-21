@@ -42,6 +42,8 @@ fun DispatchItems(
     state: DispatchState,
     files: FileStore,
     isManager: Boolean,
+    /** A file is made (social network): the form and the full bundle are choices; through the system they are not. */
+    withFiles: Boolean,
     onToggleReportForm: () -> Unit,
     onToggleFullBundle: () -> Unit,
     onToggleMedia: (String) -> Unit,
@@ -54,13 +56,13 @@ fun DispatchItems(
         tone = Tone.ACCENT
     ) {
         Column {
-            CheckRow(
+            if (withFiles) CheckRow(
                 label = stringResource(R.string.dispatch_report_form),
                 checked = state.includeReportForm,
                 onToggle = onToggleReportForm
             )
 
-            if (isManager) {
+            if (isManager && withFiles) {
                 CheckRow(
                     label = stringResource(R.string.dispatch_full_bundle),
                     checked = state.fullBundle,

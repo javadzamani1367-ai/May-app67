@@ -35,14 +35,14 @@ import androidx.compose.ui.unit.dp
 import ir.ilam.inspection.field.R
 import ir.ilam.inspection.field.data.LineVerdict
 import ir.ilam.inspection.field.data.SegmentKind
+import ir.ilam.inspection.ui.common.PhaseLegend
+import ir.ilam.inspection.ui.common.phaseColors
 import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tavan
 import ir.ilam.inspection.util.PersianNumbers
 import kotlin.math.ceil
 
 /** The colour of each phase, in the order R, S, T: red, amber, blue, as on the network's own markings. */
-@Composable
-fun phaseColors(): List<Color> = listOf(Tavan.colors.danger.strong, Tavan.colors.warning.strong, Tavan.colors.info.strong)
 
 /**
  * The current on each phase along the walk, the panel first. A stretch that
@@ -114,7 +114,7 @@ fun LineChart(verdict: LineVerdict, modifier: Modifier = Modifier, height: Dp = 
                 modifier = Modifier.fillMaxWidth().padding(top = Spacing.xs),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.lg, Alignment.CenterHorizontally)
             ) {
-                listOf("R", "S", "T").forEachIndexed { i, name -> Legend(name, colors[i]) }
+                listOf("R", "S", "T").forEachIndexed { i, name -> PhaseLegend(name, colors[i]) }
             }
         }
     }
@@ -133,10 +133,3 @@ private fun niceStep(max: Double): Double {
     return listOf(1.0, 2.0, 5.0, 10.0).map { it * magnitude }.first { it >= rough }
 }
 
-@Composable
-private fun Legend(name: String, color: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Box(modifier = Modifier.size(10.dp).background(color, CircleShape))
-        Text(name, style = MaterialTheme.typography.labelMedium)
-    }
-}

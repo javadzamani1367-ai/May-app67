@@ -9,6 +9,7 @@ import ir.ilam.inspection.field.data.FieldPrefs
 import ir.ilam.inspection.field.data.db.FieldDatabase
 import ir.ilam.inspection.field.sync.FieldSync
 import ir.ilam.inspection.field.sync.FieldSyncWorker
+import ir.ilam.inspection.field.sync.HistoryCache
 import ir.ilam.inspection.util.AppFonts
 import ir.ilam.inspection.util.FileStore
 import ir.ilam.inspection.util.MediaProcessor
@@ -16,6 +17,7 @@ import ir.ilam.inspection.util.MapConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import java.io.File
 
 /** The field app's few dependencies, made once and by hand — no framework for this size. */
 class FieldContainer(private val context: Context) {
@@ -24,7 +26,11 @@ class FieldContainer(private val context: Context) {
     val files by lazy { FileStore(context) }
     val database by lazy { FieldDatabase.get(context) }
     val account by lazy { FieldAccount(vault, prefs) }
-    val sync by lazy { FieldSync(database.dao(), prefs, account, files) }
+    /** The area's inspection history, per account like the database (pictures in the account's own folder). */
+    val history by lazy {
+        HistoryCache(database.history(), prefs, account, File(context.filesDir, vault.databaseName("history").removeSuffix(".db")))
+    }
+    val sync by lazy { FieldSync(database.dao(), prefs, account, files, history) }
     val drafts by lazy { FieldDrafts(database.dao(), files) }
     val mediaProcessor by lazy { MediaProcessor(AppFonts.typeface(context)) }
     /** For a write that must finish even when the screen that asked for it is gone. */
