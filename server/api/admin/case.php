@@ -83,8 +83,10 @@ echo case_styles();
         <?= $r['address'] ? '— ' . e(mb_substr((string) $r['address'], 0, 90)) : '' ?></p>
     </div>
     <div class="actions-bar">
+      <?php if (CaseActions::canExport($manager)): ?>
       <a href="case_print.php?id=<?= e($id) ?>" target="_blank"><button type="button">فرم رسمی (چاپ و PDF)</button></a>
       <a href="case_docx.php?id=<?= e($id) ?>"><button type="button">خروجی Word</button></a>
+      <?php endif; ?>
       <a href="#flow"><button type="button" style="background:#7c3aed">گردش و پیگیری</button></a>
       <a href="#approval"><button type="button" style="background:#15803d">تأیید</button></a>
       <a href="#dispatch"><button type="button" style="background:#0e7490">ارسال به واحد</button></a>
@@ -174,9 +176,12 @@ $audit = PositionAudit::text($r['position_at'] ?? null, $lat, $lon, $r['observer
   <?php $refusal = CaseActions::refusal($r, $manager); ?>
   <?php if ($refusal === null): ?>
     <?= case_approval_card($r, CaseActions::history($id), $errors['approval']) ?>
-    <?= case_dispatch_form($case, $errors['dispatch']) ?>
+    <?= case_dispatch_form($case, $errors['dispatch'], true, CaseActions::canExport($manager)) ?>
   <?php else: ?>
     <div class="card" id="approval"><h3>تأیید و ارسال به واحد</h3><p class="muted"><?= e($refusal) ?></p></div>
+    <?php if (CaseActions::canExport($manager)): ?>
+      <?= case_dispatch_form($case, $errors['dispatch'], false, true) ?>
+    <?php endif; ?>
   <?php endif; ?>
 </div>
 <p class="muted">آخرین تغییر روی گوشی: <?= e(Jalali::format((int) $r['updated_at'])) ?></p>

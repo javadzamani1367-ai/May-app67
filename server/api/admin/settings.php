@@ -14,6 +14,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $presence = (int) ($_POST['presence_limit_m'] ?? $current['presence_limit_m']);
     $single = (int) ($_POST['abnormal_single_a'] ?? $current['abnormal_single_a']);
     $three = (int) ($_POST['abnormal_three_a'] ?? $current['abnormal_three_a']);
+    $risePct = (int) ($_POST['history_rise_pct'] ?? $current['history_rise_pct']);
+    $riseMin = (int) ($_POST['history_rise_min_a'] ?? $current['history_rise_min_a']);
     // «۷:۳۰» یا «07:30» به دقیقه از نیمه‌شب؛ نیامده، همان مقدار فعلی.
     $minutes = static function (string $key, int $fallback): ?int {
         if (!isset($_POST[$key])) {
@@ -30,6 +32,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $error = 'فاصله مجاز حضور باید بین ۲۰ و ۲۰۰۰ متر باشد.';
     } elseif ($single < 1 || $single > 500 || $three < 1 || $three > 500) {
         $error = 'آمپر نامتعارف باید بین ۱ و ۵۰۰ آمپر باشد.';
+    } elseif ($risePct < 5 || $risePct > 500 || $riseMin < 0 || $riseMin > 200) {
+        $error = 'درصد افزایش نامتعارف باید بین ۵ و ۵۰۰ و کف آن بین ۰ و ۲۰۰ آمپر باشد.';
     } elseif ($officeStart === null || $officeEnd === null || $officeEnd <= $officeStart) {
         $error = 'ساعت اداری را مثل ۰۷:۰۰ تا ۱۴:۳۰ بنویسید؛ پایان بعد از شروع باشد.';
     } else {
@@ -38,6 +42,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         FieldSettings::set('abnormal_single_a', $single);
         FieldSettings::set('abnormal_three_a', $three);
         FieldSettings::set('presence_limit_m', $presence);
+        FieldSettings::set('history_rise_pct', $risePct);
+        FieldSettings::set('history_rise_min_a', $riseMin);
         FieldSettings::set('amp_tolerance_pct', $pct);
         FieldSettings::set('amp_tolerance_min_a', $min);
         FieldSettings::set('purge_after_sync', isset($_POST['purge_after_sync']) ? 1 : 0);
@@ -86,6 +92,17 @@ admin_header('تنظیمات میدانی');
       </label>
     </div>
     <p class="muted">اپ آمپر بالاتر از این حد را سرخ و «نامتعارف» نشان می‌دهد.</p>
+
+    <h3 style="margin-top:16px">سوابق بازرسی: افزایش نامتعارف آمپر</h3>
+    <div class="grid">
+      <label>افزایش هر فاز بیش از (درصد) نسبت به بار قبل یا میانگین پنج بار قبل
+        <input name="history_rise_pct" type="number" min="5" max="500" value="<?= (int) $s['history_rise_pct'] ?>" dir="ltr">
+      </label>
+      <label>و دست‌کم (آمپر)
+        <input name="history_rise_min_a" type="number" min="0" max="200" value="<?= (int) $s['history_rise_min_a'] ?>" dir="ltr">
+      </label>
+    </div>
+    <p class="muted">خوانش نامتعارف در کادر مقایسه اپ میدانی و صفحه سوابق رنگی می‌شود و به مدیر و مجری رمزارز همان ناحیه هشدار می‌دهد.</p>
 
     <h3 style="margin-top:16px">ساعت اداری (عملکرد اکیپ)</h3>
     <?php $hm = static fn (int $m): string => sprintf('%02d:%02d', intdiv($m, 60), $m % 60); ?>

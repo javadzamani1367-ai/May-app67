@@ -83,12 +83,16 @@ function case_approval_card(array $r, array $history, ?string $error): string
     return $html . '</div>';
 }
 
-/** فرم ارسال به یک واحد: واحد، مهلت، توضیح، و تصاویر و پیوست‌هایی که همراهش می‌روند. */
-function case_dispatch_form(array $case, ?string $error): string
+/**
+ * فرم ارسال به یک واحد: واحد، مهلت، توضیح، و تصاویر و پیوست‌هایی که همراهش می‌روند.
+ * [$system] راه سامانه (گرداننده پرونده)، [$files] شبکه اجتماعی و بسته آفلاین (مدیر و ستاد).
+ */
+function case_dispatch_form(array $case, ?string $error, bool $system = true, bool $files = true): string
 {
-    $html = '<div class="card" id="dispatch"><h3>ارسال به واحد</h3>'
-        . '<p class="muted">از راه سامانه، واحد همان ناحیه پرونده را در پرتال می‌بیند، مدارک را دریافت می‌کند و مرحله‌به‌مرحله اقدامش را ثبت می‌کند. '
-        . 'با شبکه اجتماعی یا بسته آفلاین، فرم رسمی (Word) و مدارک انتخاب‌شده در یک فایل zip دانلود می‌شود و سابقه‌اش می‌ماند.</p>';
+    $html = '<div class="card" id="dispatch"><h3>' . ($system ? 'ارسال به واحد' : 'ارسال در شبکه اجتماعی') . '</h3>'
+        . '<p class="muted">' . ($system ? 'از راه سامانه، واحد همان ناحیه پرونده را در پرتال می‌بیند، مدارک را دریافت می‌کند و مرحله‌به‌مرحله اقدامش را ثبت می‌کند. ' : '')
+        . ($files ? 'با شبکه اجتماعی یا بسته آفلاین، فرم رسمی (Word) و مدارک انتخاب‌شده در یک فایل zip دانلود می‌شود و سابقه‌اش می‌ماند.' : '')
+        . '</p>';
     if (($_GET['done'] ?? '') === 'dispatched') {
         $html .= '<p class="notice">ارسال شد و به واحد اعلان رفت.</p>';
     }
@@ -102,9 +106,10 @@ function case_dispatch_form(array $case, ?string $error): string
     }
     $html .= '</select></label><label>مهلت اعلام نتیجه (روز، خالی یعنی بدون مهلت)'
         . '<input name="deadline_days" inputmode="numeric" placeholder="۷"></label>'
-        . '<label>قالب گزارش<select name="format"><option value="0">PDF</option><option value="1">Word</option></select></label>'
-        . '<label>راه ارسال<select name="channel"><option value="0">سامانه (پرتال واحد ناحیه)</option>'
-        . '<option value="1">شبکه اجتماعی (دانلود بسته برای فرستادن)</option><option value="2">بسته آفلاین</option></select></label></div>'
+        . ($files ? '<label>قالب گزارش<select name="format"><option value="0">PDF</option><option value="1">Word</option></select></label>' : '')
+        . '<label>راه ارسال<select name="channel">' . ($system ? '<option value="0">سامانه (پرتال واحد ناحیه)</option>' : '')
+        . ($files ? '<option value="1">شبکه اجتماعی (دانلود بسته برای فرستادن)</option><option value="2">بسته آفلاین</option>' : '')
+        . '</select></label></div>'
         . '<label>توضیح برای واحد<textarea name="note" rows="2"></textarea></label>';
     $choices = [];
     foreach ($case['media'] as $m) {
@@ -122,5 +127,5 @@ function case_dispatch_form(array $case, ?string $error): string
         }
         $html .= '</div>';
     }
-    return $html . '<button type="submit">ارسال به واحد</button></form></div>';
+    return $html . '<button type="submit">' . ($system ? 'ارسال به واحد' : 'ساخت بسته') . '</button></form></div>';
 }

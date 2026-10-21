@@ -49,6 +49,7 @@ final class FieldSchema
            handler_action_at BIGINT       NULL,
            expert_alert_at   BIGINT       NULL,
            manager_alert_at  BIGINT       NULL,
+           anomaly_at        BIGINT       NULL,   -- نخستین افزایش نامتعارف آمپر (سوابق بازرسی)
            UNIQUE KEY uq_field_items_code (tracking_code),
            KEY idx_field_items_kind (kind),
            KEY idx_field_items_status (status),
@@ -60,7 +61,8 @@ final class FieldSchema
            KEY idx_field_items_assigned (assigned_to),
            KEY idx_field_items_report (report_id),
            KEY idx_field_items_area (area_code),
-           KEY idx_field_items_handler (handler_id)
+           KEY idx_field_items_handler (handler_id),
+           KEY idx_field_items_anomaly (anomaly_at)
          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
         "CREATE TABLE IF NOT EXISTS field_files (

@@ -3,7 +3,8 @@ declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 require __DIR__ . '/_item_view.php';
 
-admin_require(ADMIN_ROLES);
+// سند به فایل (PDF و Word) فقط با مدیر و مجری ستاد (CaseActions::EXPORT_ROLES).
+admin_require(CaseActions::EXPORT_ROLES);
 
 // برگه ارجاع برای اکیپ: چاپی، و با «ذخیره به PDF» مرورگر همان فایل PDF است.
 // سند اداری است؛ نام نرم‌افزار در آن نیست.

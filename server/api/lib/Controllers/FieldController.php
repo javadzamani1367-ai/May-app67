@@ -65,6 +65,11 @@ final class FieldController
             throw $e;
         }
 
+        // سوابق تابلو و تیر از همین بازرسی: خوانش‌ها از نو، و هشدار افزایش نامتعارف یک بار.
+        if (in_array($kind, Field::INSPECTION_KINDS, true)) {
+            FieldReadings::rebuild($id);
+        }
+
         $row = Db::one('SELECT tracking_code, status FROM field_items WHERE id = ?', [$id]);
         Response::json([
             'tracking_code' => $row['tracking_code'],

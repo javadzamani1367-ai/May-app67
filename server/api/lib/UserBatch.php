@@ -4,9 +4,9 @@ declare(strict_types=1);
 /**
  * ساخت یک‌جای کاربرهای ناحیه‌ها: برای هر ناحیه یک مجری رمزارز و چهار واحد مقصد.
  *
- * کدها قابل حدس‌اند (401-legal) چون باید به خاطر بمانند؛ امنیت با رمز است که
- * تصادفی ساخته می‌شود و فقط یک بار، همان لحظه، نشان داده می‌شود. کدی که از قبل
- * هست دست نمی‌خورد — ساختن دوباره، رمز کسی را که کار می‌کند عوض نمی‌کرد.
+ * کد هر کاربری کد ناحیه و سه رقم است (401001)، مثل کاربری‌های صفحه اشخاص. امنیت با رمز است
+ * که تصادفی ساخته می‌شود و فقط یک بار، همان لحظه، نشان داده می‌شود. کاربری‌ای که همان نقش را
+ * در همان ناحیه از قبل دارد دست نمی‌خورد — ساختن دوباره، رمز کسی را که کار می‌کند عوض نمی‌کرد.
  */
 final class UserBatch
 {
@@ -25,21 +25,28 @@ final class UserBatch
     public static function plan(array $areas, array $kinds): array
     {
         $rows = [];
+        $taken = [];
         foreach (Areas::parse($areas) as $area) {
             foreach ($kinds as $kind) {
                 $unit = array_search($kind, UnitStages::SLUGS, true);
                 if ($kind !== self::EXECUTOR && $unit === false) {
                     continue;
                 }
-                $code = $area . '-' . $kind;
+                $role = $kind === self::EXECUTOR ? Auth::ROLE_EXECUTOR : Auth::ROLE_UNIT;
+                $existing = Db::one(
+                    'SELECT user_code FROM users WHERE role = ? AND (unit <=> ?) AND areas = ? AND active = 1 ORDER BY created_at LIMIT 1',
+                    [$role, $kind === self::EXECUTOR ? null : (int) $unit, $area]
+                );
+                $code = $existing !== null ? (string) $existing['user_code'] : Persons::suggestCode($area, $taken);
+                $taken[] = $code;
                 $title = $kind === self::EXECUTOR ? 'مجری رمزارز' : UnitStages::NAMES[(int) $unit];
                 $rows[] = [
                     'user_code' => $code,
                     'full_name' => $title . ' ' . Areas::label($area),
-                    'role' => $kind === self::EXECUTOR ? Auth::ROLE_EXECUTOR : Auth::ROLE_UNIT,
+                    'role' => $role,
                     'unit' => $kind === self::EXECUTOR ? null : (int) $unit,
                     'areas' => $area,
-                    'exists' => Db::one('SELECT id FROM users WHERE user_code = ?', [$code]) !== null,
+                    'exists' => $existing !== null,
                 ];
             }
         }

@@ -22,7 +22,8 @@ final class DispatchController
         if ($report === null || !(new Scope($user))->canSeeReport($report)) {
             Response::fail(404, 'not_found', 'پرونده پیدا نشد.');
         }
-        $refusal = CaseActions::refusal($report, $user);
+        $channel = $request->int('channel', 0) ?? 0;
+        $refusal = CaseActions::dispatchRefusal($report, $user, $channel);
         if ($refusal !== null) {
             Response::fail(403, 'not_your_turn', $refusal);
         }
@@ -34,7 +35,6 @@ final class DispatchController
 
         $id = $request->str('id') ?: Db::uuid();
         $deadlineDays = $request->int('deadline_days');
-        $channel = $request->int('channel', 0) ?? 0;
         $now = Db::now();
         $known = Db::one('SELECT id FROM dispatches WHERE id = ?', [$id]) !== null;
 

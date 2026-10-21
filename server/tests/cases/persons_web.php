@@ -25,7 +25,7 @@ check('صفحه شخص: کار در هر شهرستان', str_contains($page, '�
 $ticked = $probe->page("admin/person.php?id=$ali", $mgr, ['csrf' => $csrfOf($page), 'action' => 'accounts',
     'tick' => ['410:illegal', '410:expert', '410:legal', '405:crew_lead'], 'perm' => ['405:crew_lead' => ['1', '2']]]);
 $after = $probe->page((string) $ticked['location'] === '' ? "admin/person.php?id=$ali" : 'admin/' . $ticked['location'], $mgr)['body'];
-check('تیک تازه: کد و رمز یک‌بارمصرف همان‌جا', str_contains($after, 'فقط همین یک بار') && str_contains($after, '405-lead-'));
+check('تیک تازه: کد و رمز یک‌بارمصرف همان‌جا', str_contains($after, 'فقط همین یک بار') && str_contains($after, '405001'));
 check('و بار دوم دیده نمی‌شود', !str_contains($probe->page("admin/person.php?id=$ali", $mgr)['body'], 'فقط همین یک بار'));
 $pdo->exec("INSERT INTO device_requests (id, device_code, full_name, phone, status, created_at, national_id, app, note)
             VALUES ('rq-web-1', 'EEEE0000', 'درخواست وب', '0918', 0, 1, NULL, 'field', 'سیم‌بان')");

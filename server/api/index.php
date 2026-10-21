@@ -16,7 +16,8 @@ foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSch
           'Areas', 'Scope', 'UnitStages', 'UnitResponse', 'UserBatch', 'CaseCodes', 'CaseIntake', 'CaseFlow', 'CaseBoard',
           'FlowClock', 'FieldFlowClock', 'FieldHandOff', 'DeviceRegistry', 'DispatchMerge', 'Scores', 'ScoreBoard',
           'ScoreSheets', 'CaseKind', 'IllegalFlow', 'Persons', 'PersonAccounts', 'PersonDevices', 'PersonDirectory',
-          'PersonWork', 'DeviceRequests', 'CrewAccounts'] as $class) {
+          'PersonWork', 'DeviceRequests', 'CrewAccounts', 'FieldReadings', 'FieldHistory', 'FieldHistorySearch',
+          'FieldHistoryExport', 'HistoryReferral'] as $class) {
     require_once __DIR__ . '/lib/' . $class . '.php';
 }
 foreach (glob(__DIR__ . '/lib/Controllers/*.php') ?: [] as $controller) {
@@ -93,6 +94,15 @@ $routes = [
     'POST /manage/field/status'  => [FieldManageController::class, 'status'],
     'POST /manage/field/hand'    => [FieldManageController::class, 'hand'],
     'POST /manage/field/followup' => [FieldManageController::class, 'followUp'],
+    'GET /field/history'          => [HistoryController::class, 'phone'],
+    'GET /field/history/bundle'   => [HistoryController::class, 'bundle'],
+    'GET /field/history/image'    => [HistoryController::class, 'phoneImage'],
+    'GET /manage/history'         => [HistoryController::class, 'search'],
+    'GET /manage/history/series'  => [HistoryController::class, 'series'],
+    'GET /manage/history/item'    => [HistoryController::class, 'item'],
+    'GET /manage/history/image'   => [HistoryController::class, 'image'],
+    'GET /manage/history/export'  => [HistoryController::class, 'export'],
+    'POST /manage/history/refer'  => [HistoryController::class, 'refer'],
     'GET /manage/devices'        => [RegistryController::class, 'search'],
     'GET /manage/devices/history' => [RegistryController::class, 'history'],
     'GET /manage/devices/alerts' => [RegistryController::class, 'alerts'],

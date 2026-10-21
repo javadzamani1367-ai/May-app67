@@ -14,7 +14,8 @@ declare(strict_types=1);
  * @var string $illegal ستاد
  * @var string $exec410 مجری رمزارز ۴۱۰
  * @var string $legal410
- * @var int $number
+ * @var string $illCode
+ * @var string $expCode
  * @var array<string, string> $made
  * @var string $reset رمز تازه کارشناس ۴۱۰
  * @var callable $tick
@@ -44,25 +45,25 @@ $case = $pdo->query("SELECT r.*, f.executor_id, f.county_due_at, f.origin FROM r
                      WHERE r.tracking_code = '$ghCode'")->fetch(PDO::FETCH_ASSOC) ?: [];
 $ghCase = (string) ($case['id'] ?? '');
 equals('پرونده غیرمجاز با همان کد و ناحیه گزارشگر', [1, '410', 3], [(int) ($case['case_kind'] ?? 0), $case['area_code'] ?? null, (int) ($case['origin'] ?? 0)]);
-equals('نزد مجری غیرمجاز همان شهرستان', $id("410-ill-$number"), $case['executor_id'] ?? null);
+equals('نزد مجری غیرمجاز همان شهرستان', $id($illCode), $case['executor_id'] ?? null);
 equals('گزارش میدانی به پرونده وصل شد', $ghCase, (string) $pdo->query("SELECT report_id FROM field_items WHERE id = '{$first['id']}'")->fetchColumn());
 check('مجری شهرستان و ستاد باخبر شدند', (int) $pdo->query("SELECT COUNT(*) FROM notifications WHERE report_id = '$ghCase' AND kind = 'illegal_new'
     AND ((role = 6 AND area_code = '410') OR role = 5)")->fetchColumn() === 2);
 
-$illArea = (string) ($probe->json('POST', 'auth/login', ['user_code' => "410-ill-$number", 'password' => $made["410-ill-$number"],
+$illArea = (string) ($probe->json('POST', 'auth/login', ['user_code' => $illCode, 'password' => $made[$illCode],
     'app' => 'illegal', 'device_code' => 'CCCC-0000-1111-2222'])['body']['data']['token'] ?? '');
 $boardIds = static fn (string $t) => array_column($probe->json('GET', 'cases/board', [], $t)['body']['data']['cases'] ?? [], 'id');
 check('روی میز مجری غیرمجاز شهرستان', in_array($ghCase, $boardIds($illArea), true));
 check('روی میز ستاد', in_array($ghCase, $boardIds($illegal), true));
 check('مجری رمزارز همان ناحیه نمی‌بیند', !in_array($ghCase, $boardIds($exec410), true));
 check('مدیر ناظر است و می‌بیند', in_array($ghCase, $boardIds($managerToken), true));
-$expertId = $id("410-exp-$number");
+$expertId = $id($expCode);
 equals('مدیر ارجاع نمی‌دهد', 409, $probe->json('POST', 'cases/expert', ['report_id' => $ghCase, 'expert_id' => $expertId], $managerToken)['status']);
 $refer = $probe->json('POST', 'cases/expert', ['report_id' => $ghCase, 'expert_id' => $expertId, 'note' => 'فوری'], $illArea);
 check('مجری شهرستان به کارشناس ارجاع داد', ($refer['body']['ok'] ?? false) === true, $refer['raw']);
 
 echo "\n— بازرسی کارشناس، تأیید و ارسال —\n";
-$expertTok = (string) ($probe->json('POST', 'auth/login', ['user_code' => "410-exp-$number", 'password' => $reset, 'app' => 'expert',
+$expertTok = (string) ($probe->json('POST', 'auth/login', ['user_code' => $expCode, 'password' => $reset, 'app' => 'expert',
     'device_code' => 'DDDD-0000-1111-2222'])['body']['data']['token'] ?? '');
 $assigned = $probe->json('GET', 'cases/assigned', [], $expertTok)['body']['data']['assigned'] ?? [];
 equals('کارشناس پرونده غیرمجاز را می‌گیرد', [$ghCase, 1], [$assigned[0]['report_id'] ?? null, $assigned[0]['case_kind'] ?? null]);
@@ -107,15 +108,15 @@ equals('میز ستاد: نزد ستاد', 'with_hq', $stages[$case2] ?? null);
 $tick((int) $flow2['hq_due_at'] + 60_000);
 $auto = $pdo->query("SELECT f.expert_id, f.auto_referred, r.expert_code FROM case_flow f JOIN reports r ON r.id = f.report_id
                      WHERE f.report_id = '$case2'")->fetch(PDO::FETCH_ASSOC) ?: [];
-equals('ستاد هم ارجاع نداد: خودکار به کارشناس همان شهرستان', [$expertId, 1, "410-exp-$number"],
+equals('ستاد هم ارجاع نداد: خودکار به کارشناس همان شهرستان', [$expertId, 1, $expCode],
     [$auto['expert_id'] ?? null, (int) ($auto['auto_referred'] ?? 0), $auto['expert_code'] ?? null]);
 
 echo "\n— امتیاز و عملکرد حوزه غیرمجاز —\n";
 $scores = $probe->json('GET', 'manage/scores&to=99999999999999', [], $illegal)['body']['data'] ?? [];
 equals('امتیاز ستاد، حوزه برق غیرمجاز', 1, $scores['case_kind'] ?? null);
-check('مجری غیرمجاز شهرستان در جدول مجریان', in_array($id("410-ill-$number"), array_column($scores['executors'] ?? [], 'id'), true));
+check('مجری غیرمجاز شهرستان در جدول مجریان', in_array($id($illCode), array_column($scores['executors'] ?? [], 'id'), true));
 $crypto = $probe->json('GET', 'manage/scores&to=99999999999999', [], $managerToken)['body']['data'] ?? [];
 check('امتیاز مدیر پیش‌فرض رمزارز است و مجری غیرمجاز در آن نیست', ($crypto['case_kind'] ?? null) === 0
-    && !in_array($id("410-ill-$number"), array_column($crypto['executors'] ?? [], 'id'), true));
+    && !in_array($id($illCode), array_column($crypto['executors'] ?? [], 'id'), true));
 $perf = $probe->json('GET', 'stats/units&kind=1', [], $managerToken)['body']['data']['units'] ?? [];
 equals('مدیر عملکرد واحدها در برق غیرمجاز را می‌گیرد', 1, (int) ($perf[0]['sent'] ?? 0));

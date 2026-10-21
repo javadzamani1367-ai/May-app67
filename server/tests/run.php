@@ -223,7 +223,7 @@ check('هر ستون گوشی روی سرور هست', $missingOnServer === [], 
 check('سرور ستون اضافه ندارد', $extraOnServer === [], implode(', ', $extraOnServer));
 
 $tableCount = preg_match_all('/CREATE TABLE IF NOT EXISTS/', $sql);
-check('هر ۳۱ جدول در schema.sql هست', $tableCount === 31, "$tableCount جدول");
+check('هر ۳۲ جدول در schema.sql هست', $tableCount === 32, "$tableCount جدول");
 
 // نسخه اسکیما در سه زبان نوشته شده و هیچ کامپایلری آن سه را با هم مقایسه
 // نمی‌کند. اگر یکی جا بماند، سرور در /ping عددی را اعلام می‌کند که اسکیمای
@@ -542,6 +542,38 @@ equals('پلاک یکسان‌شده', 'P100', CrewWork::key('p-۱۰۰'));
 
 // ---------------------------------------------------------------------------
 echo "\n";
+// ---------------------------------------------------------------------------
+echo "\n— سوابق بازرسی —\n";
+require_once __DIR__ . '/../api/lib/FieldHistory.php';
+equals('پلاک یکسان: رقم فارسی، فاصله و خط تیره', ['77100', '77100', 'P5521'],
+    [FieldReadings::key('۷۷-۱۰۰'), FieldReadings::key(' 77 100 '), FieldReadings::key('p-5521')]);
+check('افزایش ۶۰٪ و ۶۰ آمپر نامتعارف', FieldHistory::isRise(160.0, 100.0, 102.5, 30, 5));
+check('افزایش ۵٪ عادی', !FieldHistory::isRise(105.0, 100.0, 100.0, 30, 5));
+check('بار کم: ۲ به ۴ آمپر زیر کف آمپر است', !FieldHistory::isRise(4.0, 2.0, 2.0, 30, 5));
+check('نسبت به میانگین، حتی اگر بار قبل هم بالا بود', FieldHistory::isRise(150.0, 145.0, 100.0, 30, 5));
+check('بی سابقه، نامتعارف نیست', !FieldHistory::isRise(150.0, null, null, 30, 5));
+$feederItem = ['kind' => Field::KIND_FEEDER, 'plate' => '۷۷-۱۰۰', 'created_at' => 1000, 'position_at' => 2000,
+    'payload' => json_encode(['main' => ['r' => 10, 's' => 11, 't' => 12], 'feeders' => [
+        'A' => ['state' => 'measured', 'phases' => ['r' => 5]], 'B' => ['state' => 'not_measured', 'reason' => 'قفل']]])];
+$readings = FieldReadings::extract($feederItem);
+equals('تابلو: کلید کل و فیدر اندازه‌گرفته، نه فیدر بی‌خوانش', [['main', 10.0, 2000], ['A', 5.0, 2000]],
+    array_map(static fn ($r) => [$r['part'], $r['r'], $r['measured_at']], $readings));
+$lineItem = ['kind' => Field::KIND_LINE, 'plate' => 'T1', 'created_at' => 1000, 'payload' => json_encode([
+    'feeder' => 'other', 'start' => ['r' => 50], 'poles' => [
+        ['plate' => '۱۲۳', 'state' => 'measured', 'phases' => ['r' => 7, 's' => 8, 't' => 9], 'neutral' => 1, 'at' => 3000],
+        ['plate' => '', 'state' => 'measured', 'phases' => ['r' => 1]],
+        ['plate' => '124', 'state' => 'not_measured', 'reason' => 'دسترسی نبود']]])];
+equals('تیربه‌تیر: فقط تیر پلاک‌دار اندازه‌گرفته؛ فیدر «سایر» در تابلو نیست', [[0, '123', 'pole', 1.0, 3000]],
+    array_map(static fn ($r) => [$r['asset'], $r['plate_key'], $r['part'], $r['n'], $r['measured_at']], FieldReadings::extract($lineItem)));
+$thermalItem = ['id' => 'x', 'kind' => Field::KIND_THERMAL, 'created_at' => 1000,
+    'payload' => json_encode(['files' => ['f1' => ['temperatures' => ['max' => 71.5, 'r1_max' => 60]]]])];
+$thermal = FieldReadings::extract($thermalItem, [
+    ['id' => 'f1', 'role' => Field::ROLE_THERMAL, 'asset_type' => Field::ASSET_POLE, 'plate' => '۱۲۳', 'captured_at' => 4000],
+    ['id' => 'f2', 'role' => Field::ROLE_THERMAL, 'asset_type' => Field::ASSET_PANEL, 'plate' => 'T1', 'captured_at' => null],
+    ['id' => 'f3', 'role' => Field::ROLE_THERMAL_EXIF, 'asset_type' => Field::ASSET_POLE, 'plate' => '۱۲۳', 'captured_at' => 4000]]);
+equals('ترموویژن: هر تصویر اصلی، با دما اگر وارد شده و بی دما اگر نه', [['f1', 71.5, 0], ['f2', null, 1]],
+    array_map(static fn ($r) => [$r['file_id'], $r['temp_max'], $r['asset']], $thermal));
+
 echo "$passed تست موفق";
 if ($failed > 0) {
     echo "، $failed تست ناموفق\n";

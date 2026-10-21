@@ -113,7 +113,8 @@ final class FieldManage
         $files = (int) (Db::one('SELECT COUNT(*) AS n FROM field_files WHERE item_id = ?', [$id])['n'] ?? 0);
         // گزارش غیرمجازی که پرونده شده، از صفحه پرونده گردانده می‌شود؛ اینجا فقط دیده می‌شود.
         $inCase = (int) $row['kind'] === Field::KIND_ILLEGAL && ($row['report_id'] ?? null) !== null;
-        $next = $row['merged_into'] === null && !$inCase ? (FieldAdmin::NEXT[(int) $row['status']] ?? []) : [];
+        $next = $row['merged_into'] === null && !$inCase && $scope->canActOnField($row)
+            ? (FieldAdmin::NEXT[(int) $row['status']] ?? []) : [];
         $details = FieldPresenter::rows((int) $row['kind'], $payload);
         if ((int) $row['kind'] === Field::KIND_LINE) {
             foreach (FieldLine::poleTable($payload) as $pole) {

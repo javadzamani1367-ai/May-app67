@@ -2,7 +2,8 @@
 declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 
-admin_require(CASE_ROLES);
+// فرم رسمی به فایل فقط با مدیر و مجری ستاد (CaseActions::EXPORT_ROLES).
+admin_require(CaseActions::EXPORT_ROLES);
 
 // فرم رسمی گزارش بازدید (CLAUDE.md بخش ۷)، برای چاپ؛ «ذخیره به PDF» مرورگر
 // همان فایل PDF است. سند اداری است و به سازمان‌های دیگر می‌رود: نام نرم‌افزار

@@ -35,11 +35,15 @@ final class FieldSettings
         // ستاد، و مهلت ستاد پیش از ارجاع خودکار به کارشناس همان شهرستان.
         'illegal_county_days' => 2,
         'illegal_hq_days' => 2,
+        // سوابق بازرسی: افزایش یک فاز بیش از این درصد نسبت به بار قبل یا میانگین، و دست‌کم
+        // این‌قدر آمپر، «نامتعارف» است و به مدیر و مجری رمزارز ناحیه هشدار می‌دهد.
+        'history_rise_pct' => 30,
+        'history_rise_min_a' => 5,
     ];
 
     /** کلیدهایی که به گوشی کاربر میدانی می‌روند. */
     private const FOR_PHONE = ['amp_tolerance_pct', 'amp_tolerance_min_a', 'purge_after_sync', 'presence_limit_m',
-        'abnormal_single_a', 'abnormal_three_a'];
+        'abnormal_single_a', 'abnormal_three_a', 'history_rise_pct', 'history_rise_min_a'];
 
     /** @return array<string, int> */
     public static function all(): array

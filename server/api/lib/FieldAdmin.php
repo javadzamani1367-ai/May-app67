@@ -143,6 +143,9 @@ final class FieldAdmin
         if (!$scope->canSeeField($item)) {
             return 'این مورد در محدوده شما نیست.';
         }
+        if (!$scope->canActOnField($item)) {
+            return 'بازرسی‌های شبکه را مجری برق غیرمجاز فقط می‌بیند.';
+        }
         if ((int) $item['kind'] === Field::KIND_ILLEGAL && ($item['report_id'] ?? null) !== null) {
             return 'این گزارش پرونده بازرسی برق غیرمجاز شده است؛ از صفحه همان پرونده پیگیری می‌شود.';
         }

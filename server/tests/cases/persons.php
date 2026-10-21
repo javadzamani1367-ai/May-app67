@@ -36,23 +36,28 @@ $ticks = $probe->json('POST', 'persons/accounts', ['person_id' => $ali,
     'permissions' => ['401:crew_lineman' => 1]], $managerToken)['body']['data'] ?? [];
 $made = array_column($ticks['made'] ?? [], 'password', 'user_code');
 equals('چهار کاربری، هر کدام با کد و رمز خودش', 4, count($made));
-$number = (int) $pdo->query("SELECT number FROM persons WHERE id = '$ali'")->fetchColumn();
-check('کد پیشنهادی ناحیه-نقش-شماره شخص', isset($made["410-ill-$number"], $made["410-exp-$number"], $made["401-lineman-$number"]));
+$codes = array_map('strval', array_keys($made));
+check('کد هر کاربری کد ناحیه و سه رقم', count(preg_grep('/^(410|401)\d{3}$/', $codes)) === 4, implode(',', $codes));
+$codeOf = static fn (int $role, string $area): string => (string) $pdo->query(
+    "SELECT user_code FROM users WHERE person_id = '$ali' AND role = $role AND areas = '$area'")->fetchColumn();
+$lineman = $codeOf(3, '401');
+$illCode = $codeOf(6, '410');
+check('سه کاربری ناحیه ۴۱۰ کدهای پشت سر هم', count(array_unique(preg_grep('/^410\d{3}$/', $codes))) === 3);
 check('رمز هر کاربری جداست', count(array_unique(array_values($made))) === 4);
 $crew = $pdo->query("SELECT c.full_name, c.role, c.county, c.active FROM crew_members c JOIN users u ON u.id = c.user_id
-                     WHERE u.user_code = '401-lineman-$number'")->fetch(PDO::FETCH_ASSOC);
+                     WHERE u.user_code = '$lineman'")->fetch(PDO::FETCH_ASSOC);
 equals('سیم‌بان خودکار در فهرست اکیپ همان شهرستان', ['علی نمونه', 1, 'ایلام', 1],
     [$crew['full_name'] ?? null, (int) ($crew['role'] ?? -1), $crew['county'] ?? null, (int) ($crew['active'] ?? 0)]);
-equals('مجوز اکیپ همان تیک', 1, (int) $pdo->query("SELECT permissions FROM users WHERE user_code = '401-lineman-$number'")->fetchColumn());
+equals('مجوز اکیپ همان تیک', 1, (int) $pdo->query("SELECT permissions FROM users WHERE user_code = '$lineman'")->fetchColumn());
 
 echo "\n— ورود هر کاربری از اپ خودش و نصب ثبت‌شده —\n";
 $login = static fn (string $code, string $password, string $app, string $device) => $probe->json('POST', 'auth/login',
     ['user_code' => $code, 'password' => $password, 'app' => $app, 'device_code' => $device]);
-$expCode = "410-exp-$number";
+$expCode = $codeOf(0, '410');
 equals('بی ثبت نصب، ورود رد می‌شود و راه را می‌گوید', 'device_unregistered',
     $login($expCode, $made[$expCode], 'expert', 'AAAA-1111-2222-3333')['body']['error']['code'] ?? null);
 equals('کاربری مجری غیرمجاز در اپ کارشناس، پیام اپ اشتباه', 'wrong_app',
-    $login("410-ill-$number", $made["410-ill-$number"], 'expert', 'AAAA-1111-2222-3333')['body']['error']['code'] ?? null);
+    $login($illCode, $made[$illCode], 'expert', 'AAAA-1111-2222-3333')['body']['error']['code'] ?? null);
 $request = $probe->json('POST', 'auth/request-device', ['device_code' => 'AAAA-1111-2222-3333', 'full_name' => 'علی نمونه',
     'national_id' => strtr($aliNid, ['0' => '۰', '1' => '۱', '2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶', '7' => '۷', '8' => '۸', '9' => '۹']), 'phone' => '09123456789', 'app' => 'expert', 'note' => 'کارشناس دره‌شهر']);
 check('درخواست کاربری با کد ملی فارسی پذیرفته شد', ($request['body']['ok'] ?? false) === true, $request['raw']);
@@ -65,10 +70,10 @@ $decided = $probe->json('POST', 'persons/requests/decide', ['id' => $req['id'] ?
 equals('ثبت نصب برای همان شخص', $ali, $decided['body']['data']['person_id'] ?? null);
 check('حالا کارشناس وارد می‌شود', ($login($expCode, $made[$expCode], 'expert', 'AAAA-1111-2222-3333')['body']['ok'] ?? false) === true);
 equals('نصب اپ کارشناس، اپ غیرمجاز را باز نمی‌کند', 'device_unregistered',
-    $login("410-ill-$number", $made["410-ill-$number"], 'illegal', 'AAAA-1111-2222-3333')['body']['error']['code'] ?? null);
-bindDevice($probe, $pdo, $managerToken, "410-ill-$number", 'illegal', 'CCCC-0000-1111-2222');
+    $login($illCode, $made[$illCode], 'illegal', 'AAAA-1111-2222-3333')['body']['error']['code'] ?? null);
+bindDevice($probe, $pdo, $managerToken, $illCode, 'illegal', 'CCCC-0000-1111-2222');
 check('اپ غیرمجاز با کد نصب خودش باز می‌شود',
-    ($login("410-ill-$number", $made["410-ill-$number"], 'illegal', 'CCCC-0000-1111-2222')['body']['ok'] ?? false) === true);
+    ($login($illCode, $made[$illCode], 'illegal', 'CCCC-0000-1111-2222')['body']['ok'] ?? false) === true);
 bindDevice($probe, $pdo, $managerToken, $expCode, 'expert', 'DDDD-0000-1111-2222');
 equals('نصب تازه کارشناس جای قبلی را می‌گیرد', 'device_mismatch',
     $login($expCode, $made[$expCode], 'expert', 'AAAA-1111-2222-3333')['body']['error']['code'] ?? null);
@@ -86,9 +91,9 @@ equals('کد نصب هر اپ جدا', ['expert' => 'DDDD000011112222', 'illegal
 
 $closed = $probe->json('POST', 'persons/accounts', ['person_id' => $ali, 'ticks' => ['410:illegal', '410:expert', '410:legal']],
     $managerToken)['body']['data'] ?? [];
-equals('تیک برداشته، کاربری بسته شد', ["401-lineman-$number"], $closed['closed'] ?? null);
+equals('تیک برداشته، کاربری بسته شد', [$lineman], $closed['closed'] ?? null);
 equals('و از فهرست اکیپ بیرون رفت', 0, (int) $pdo->query("SELECT c.active FROM crew_members c JOIN users u ON u.id = c.user_id
-    WHERE u.user_code = '401-lineman-$number'")->fetchColumn());
+    WHERE u.user_code = '$lineman'")->fetchColumn());
 $reset = $probe->json('POST', 'persons/password', ['user_id' => (string) $pdo->query("SELECT id FROM users WHERE user_code = '$expCode'")->fetchColumn()],
     $managerToken)['body']['data']['password'] ?? '';
 check('رمز تازه یک‌بارمصرف', strlen($reset) === 10 && ($login($expCode, $reset, 'expert', 'DDDD-0000-1111-2222')['body']['ok'] ?? false) === true);

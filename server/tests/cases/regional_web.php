@@ -51,8 +51,9 @@ check('امتیاز همه ناحیه‌ها', str_contains($probe->page('admin/
 $areasPage = $probe->page('admin/areas.php', $mgr)['body'];
 $created = $probe->page('admin/areas.php', $mgr, ['csrf' => $csrfOf($areasPage), 'action' => 'create', 'areas' => ['419'],
     'kinds' => ['exec', 'sales', 'security', 'legal', 'power']]);
-check('پنج کاربر ناحیه ۴۱۹ با رمز ساخته شد', substr_count($created['body'], '419-') >= 5 && str_contains($created['body'], 'فقط همین حالا'));
-equals('کاربرهای ۴۱۹ در پایگاه داده', 5, (int) $pdo->query("SELECT COUNT(*) FROM users WHERE user_code LIKE '419-%' AND areas = '419'")->fetchColumn());
+check('پنج کاربر ناحیه ۴۱۹ با رمز ساخته شد', str_contains($created['body'], '419005') && str_contains($created['body'], 'فقط همین حالا'));
+equals('کاربرهای ۴۱۹ با کد ناحیه و سه رقم', ['419001', '419002', '419003', '419004', '419005'],
+    $pdo->query("SELECT user_code FROM users WHERE areas = '419' ORDER BY user_code")->fetchAll(PDO::FETCH_COLUMN));
 $again = $probe->page('admin/areas.php', $mgr, ['csrf' => $csrfOf($areasPage), 'action' => 'create', 'areas' => ['419'], 'kinds' => ['exec']]);
 check('بار دوم کسی دوباره ساخته نمی‌شود', str_contains($again['body'], 'از قبل ساخته شده بودند'));
 $flowPage = $probe->page('admin/flow_settings.php', $mgr)['body'];

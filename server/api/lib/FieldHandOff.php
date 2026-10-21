@@ -54,7 +54,7 @@ final class FieldHandOff
     /** یادداشت پیگیری روی یک مورد؛ برای مجری «اقدام» است. */
     public static function followUp(array $item, string $note, Scope $scope): ?string
     {
-        if (!$scope->canSeeField($item)) {
+        if (!$scope->canActOnField($item)) {
             return 'این مورد در محدوده شما نیست.';
         }
         $note = trim($note);

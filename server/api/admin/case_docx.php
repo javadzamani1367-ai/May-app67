@@ -2,7 +2,8 @@
 declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 
-admin_require(CASE_ROLES);
+// فرم رسمی به فایل فقط با مدیر و مجری ستاد (CaseActions::EXPORT_ROLES).
+admin_require(CaseActions::EXPORT_ROLES);
 
 // همان فرم رسمی، به Word: هفت بخش، جدول دستگاه‌ها و حاضرین، و پیوست تصاویر.
 // مثل فرم چاپی، نام نرم‌افزار در آن نیست.

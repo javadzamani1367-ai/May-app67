@@ -10,6 +10,7 @@ require_once __DIR__ . '/IllegalFlow.php';
 require_once __DIR__ . '/FieldRoster.php';
 require_once __DIR__ . '/CrewCalendar.php';
 require_once __DIR__ . '/FlowSchema.php';
+require_once __DIR__ . '/FieldHistory.php';
 
 /**
  * به‌روزرسانی خودکار پایگاه داده.
@@ -90,6 +91,13 @@ final class Migrations
                 array_map(static fn (array $c) => static fn () => self::addColumn(...$c), PersonSchema::COLUMNS),
                 array_map(static fn (array $i) => static fn () => self::addIndex(...$i), PersonSchema::INDEXES),
                 [static fn () => PersonSchema::backfill()]
+            ),
+            // سوابق بازرسی: هر خوانش تابلو و تیر یک سطر، و نشان افزایش نامتعارف هر مورد.
+            10 => array_merge(
+                FieldReadings::TABLES,
+                array_map(static fn (array $c) => static fn () => self::addColumn(...$c), FieldReadings::COLUMNS),
+                array_map(static fn (array $i) => static fn () => self::addIndex(...$i), FieldReadings::INDEXES),
+                [static fn () => FieldReadings::backfill()]
             ),
         ];
     }

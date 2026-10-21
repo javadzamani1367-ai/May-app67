@@ -72,7 +72,7 @@ final class PersonAccounts
             return 'نوع کاربری نامعتبر است.';
         }
         $code = Auth::latin(trim((string) $code));
-        $code = $code === '' ? Persons::suggestCode($area, $kind, (int) $person['number']) : $code;
+        $code = $code === '' ? Persons::suggestCode($area) : $code;
         if (Db::one('SELECT id FROM users WHERE user_code = ?', [$code]) !== null) {
             return 'کد کاربری ' . $code . ' از قبل هست.';
         }

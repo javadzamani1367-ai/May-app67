@@ -21,6 +21,31 @@ final class CaseActions
      * چرا این کاربر نمی‌تواند روی این پرونده تصمیم بگیرد یا آن را به واحد بفرستد؛ تهی یعنی
      * می‌تواند. مدیر در برق غیرمجاز ناظر است و ستاد فقط پس از مهلت مجری شهرستان.
      */
+    /**
+     * ساختن فرم رسمی PDF و Word و فرستادن در شبکه اجتماعی یا بسته آفلاین: فقط مدیر (هر دو حوزه)
+     * و مجری ستاد برق غیرمجاز. مجری‌های ناحیه از راه سامانه به واحد می‌فرستند و کارشناس هیچ‌کدام.
+     */
+    public const EXPORT_ROLES = [Auth::ROLE_MANAGER, Auth::ROLE_ILLEGAL];
+    public const EXPORT_REFUSAL = 'ساختن PDF و Word و ارسال در شبکه‌های اجتماعی فقط با مدیر و مجری ستاد برق غیرمجاز است.';
+
+    public static function canExport(array $user): bool
+    {
+        return in_array((int) $user['role'], self::EXPORT_ROLES, true);
+    }
+
+    /**
+     * آیا این کاربر این پرونده را از این راه می‌فرستد. راه سامانه (۰) کار گرداننده پرونده است؛
+     * شبکه اجتماعی و بسته آفلاین (۱ و ۲) فایل می‌سازند و فقط با نقش‌های [EXPORT_ROLES] است —
+     * مدیر هم در برق غیرمجاز، که پرونده‌اش را نمی‌گرداند.
+     */
+    public static function dispatchRefusal(array $report, array $user, int $channel): ?string
+    {
+        if ($channel !== 0) {
+            return self::canExport($user) ? null : self::EXPORT_REFUSAL;
+        }
+        return self::refusal($report, $user);
+    }
+
     public static function refusal(array $report, array $user): ?string
     {
         if (!(new Scope($user))->canActOn($report)) {
@@ -137,7 +162,7 @@ final class CaseActions
         if ($report === null || !(new Scope($manager))->canSeeReport($report)) {
             return 'پرونده پیدا نشد.';
         }
-        $refusal = self::refusal($report, $manager);
+        $refusal = self::dispatchRefusal($report, $manager, $channel);
         if ($refusal !== null) {
             return $refusal;
         }

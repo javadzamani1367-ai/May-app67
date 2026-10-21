@@ -2,7 +2,8 @@
 declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 
-admin_require(CASE_ROLES);
+// فرم رسمی به فایل فقط با مدیر و مجری ستاد (CaseActions::EXPORT_ROLES).
+admin_require(CaseActions::EXPORT_ROLES);
 
 // بسته یک ارسال برای شبکه اجتماعی یا انتقال آفلاین: فرم رسمی Word و مدارکی که در
 // همان ارسال انتخاب شده، در یک zip. ارسال پیش‌تر در سابقه پرونده ثبت شده است.

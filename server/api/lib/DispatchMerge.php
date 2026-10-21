@@ -40,9 +40,14 @@ final class DispatchMerge
                 continue;
             }
 
+            $report = Db::one('SELECT id, area_code, case_kind FROM reports WHERE id = ?', [$reportId]);
+            // همان قاعده ارسال از پنل: راه سامانه با گرداننده پرونده، فایل و شبکه اجتماعی با مدیر و ستاد.
+            if ($report === null || CaseActions::dispatchRefusal($report, $user, (int) ($row['channel'] ?? 0)) !== null) {
+                continue;
+            }
             $items = $row['included_items'] ?? '[]';
             $unit = (int) $row['unit'];
-            $area = Db::one('SELECT area_code FROM reports WHERE id = ?', [$reportId])['area_code'] ?? null;
+            $area = $report['area_code'];
             Db::run(
                 'INSERT INTO dispatches (id, report_id, unit, included_items, note, output_format,
                                          dispatched_at, sent_by, channel, deadline_at, status, area_code)

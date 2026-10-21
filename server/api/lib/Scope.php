@@ -143,12 +143,14 @@ final class Scope
             return ["$alias.kind NOT IN (?, ?) AND " . self::in("$alias.area_code", $this->areas),
                 array_merge([Field::KIND_CRYPTO, Field::KIND_ILLEGAL], $this->areas)];
         }
+        // مجری‌های برق غیرمجاز: گزارش‌های غیرمجاز، و بازرسی‌های شبکه فقط برای دیدن سوابق.
+        $illegalKinds = array_merge([Field::KIND_ILLEGAL], Field::INSPECTION_KINDS);
         if ($this->isIllegalHq()) {
-            return ["$alias.kind = ?", [Field::KIND_ILLEGAL]];
+            return [self::in("$alias.kind", $illegalKinds), $illegalKinds];
         }
         if ($this->isIllegal() && $this->areas !== []) {
-            return ["$alias.kind = ? AND " . self::in("$alias.area_code", $this->areas),
-                array_merge([Field::KIND_ILLEGAL], $this->areas)];
+            return [self::in("$alias.kind", $illegalKinds) . ' AND ' . self::in("$alias.area_code", $this->areas),
+                array_merge($illegalKinds, $this->areas)];
         }
         return ['1=0', []];
     }
@@ -163,9 +165,17 @@ final class Scope
             return !in_array($kind, [Field::KIND_CRYPTO, Field::KIND_ILLEGAL], true) && $this->coversArea($item['area_code'] ?? null);
         }
         if ($this->isIllegal()) {
-            return $kind === Field::KIND_ILLEGAL && $this->coversArea($item['area_code'] ?? null);
+            return ($kind === Field::KIND_ILLEGAL || in_array($kind, Field::INSPECTION_KINDS, true))
+                && $this->coversArea($item['area_code'] ?? null);
         }
         return false;
+    }
+
+    /** آنچه دیده می‌شود و کاری هم رویش می‌شود کرد: مجری غیرمجاز بازرسی‌های شبکه را فقط می‌بیند. */
+    public function canActOnField(array $item): bool
+    {
+        return $this->canSeeField($item)
+            && !($this->isIllegal() && in_array((int) $item['kind'], Field::INSPECTION_KINDS, true));
     }
 
     /**

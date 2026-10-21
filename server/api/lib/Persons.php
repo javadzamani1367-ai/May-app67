@@ -190,15 +190,27 @@ final class Persons
         return $rows;
     }
 
-    /** کد پیشنهادی: «ناحیه-نوع-شماره شخص»، یا «نوع-شماره» برای کاربری استانی. */
-    public static function suggestCode(?string $area, string $kind, int $number): string
+    /** پیشوند کاربری‌های استانی (مدیر، مجری ستاد) که ناحیه ندارند. */
+    public const PROVINCE_PREFIX = '000';
+
+    /**
+     * کد کاربری تازه: کد ناحیه و سه رقم (401001، 401002…)، استانی با 000. شماره بعدی
+     * از بزرگ‌ترین کد همین قالب در همان ناحیه ساخته می‌شود و هرگز کد کسی را تکرار
+     * نمی‌کند؛ [$taken] کدهایی است که در همین درخواست رزرو شده‌اند و هنوز ذخیره نشده‌اند.
+     *
+     * @param list<string> $taken
+     */
+    public static function suggestCode(?string $area, array $taken = []): string
     {
-        $slug = self::KINDS[$kind]['slug'] ?? self::PROVINCE_KINDS[$kind]['slug'] ?? $kind;
-        $base = ($area === null ? '' : $area . '-') . $slug . '-' . $number;
-        $code = $base;
-        for ($n = 2; Db::one('SELECT id FROM users WHERE user_code = ?', [$code]) !== null; $n++) {
-            $code = $base . '-' . $n;
+        $prefix = $area ?? self::PROVINCE_PREFIX;
+        $rows = Db::all('SELECT user_code FROM users WHERE user_code LIKE ?', [$prefix . '%']);
+        $used = array_merge(array_map(static fn ($r) => (string) $r['user_code'], $rows), $taken);
+        $max = 0;
+        foreach ($used as $code) {
+            if (preg_match('/^' . preg_quote($prefix, '/') . '(\d{3,})$/', $code, $m)) {
+                $max = max($max, (int) $m[1]);
+            }
         }
-        return $code;
+        return $prefix . str_pad((string) ($max + 1), 3, '0', STR_PAD_LEFT);
     }
 }

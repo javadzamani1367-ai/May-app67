@@ -333,6 +333,7 @@ CREATE TABLE IF NOT EXISTS field_items (
   handler_action_at BIGINT       NULL,
   expert_alert_at   BIGINT       NULL,
   manager_alert_at  BIGINT       NULL,
+  anomaly_at        BIGINT       NULL,   -- نخستین افزایش نامتعارف آمپر (سوابق بازرسی)
   UNIQUE KEY uq_field_items_code (tracking_code),
   KEY idx_field_items_kind (kind),
   KEY idx_field_items_status (status),
@@ -344,7 +345,8 @@ CREATE TABLE IF NOT EXISTS field_items (
   KEY idx_field_items_assigned (assigned_to),
   KEY idx_field_items_report (report_id),
   KEY idx_field_items_area (area_code),
-  KEY idx_field_items_handler (handler_id)
+  KEY idx_field_items_handler (handler_id),
+  KEY idx_field_items_anomaly (anomaly_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS field_files (
@@ -525,8 +527,36 @@ CREATE TABLE IF NOT EXISTS person_devices (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- آنجا یکی باشد؛ تست run.php همین را می‌سنجد.
+-- سوابق بازرسی: هر خوانش تابلو و تیر یک سطر (api/lib/FieldReadings.php؛ گام ۱۰)
+CREATE TABLE IF NOT EXISTS field_readings (
+  id           BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  item_id      CHAR(36)     NOT NULL,
+  kind         TINYINT      NOT NULL,
+  area_code    VARCHAR(8)   NULL,
+  asset        TINYINT      NOT NULL,
+  plate        VARCHAR(64)  NOT NULL,
+  plate_key    VARCHAR(64)  NOT NULL,
+  part         VARCHAR(8)   NOT NULL,
+  file_id      CHAR(36)     NULL,
+  r            DOUBLE       NULL,
+  s            DOUBLE       NULL,
+  t            DOUBLE       NULL,
+  n            DOUBLE       NULL,
+  temp_max     DOUBLE       NULL,
+  temp_box_max DOUBLE       NULL,
+  temp_box_avg DOUBLE       NULL,
+  measured_at  BIGINT       NOT NULL,
+  user_id      CHAR(36)     NOT NULL,
+  anomaly      TINYINT      NOT NULL DEFAULT 0,
+  anomaly_note VARCHAR(255) NULL,
+  created_at   BIGINT       NOT NULL,
+  KEY idx_field_readings_key (area_code, asset, plate_key, part, measured_at),
+  KEY idx_field_readings_item (item_id),
+  KEY idx_field_readings_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS schema_meta (
   id      TINYINT NOT NULL PRIMARY KEY,
   version INT     NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 9);
+INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 10);

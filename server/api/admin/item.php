@@ -3,6 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 require __DIR__ . '/_item_view.php';
 require __DIR__ . '/_item_merge.php';
+require __DIR__ . '/_history_view.php';
 
 $manager = admin_require(ADMIN_ROLES);
 $scope = admin_scope();
@@ -64,7 +65,9 @@ $experts = array_map(static fn ($x) => ['id' => $x['id'], 'full_name' => $x['nam
 $executors = $scope->isExecutor() ? [] : $scope->executors();
 $target = $item['merged_into'] === null ? null : Db::one('SELECT id, tracking_code FROM field_items WHERE id = ?', [$item['merged_into']]);
 // مورد ادغام‌شده وضعیت جدا ندارد؛ اول باید از ادغام جدا شود.
-$next = $target === null ? (FieldAdmin::NEXT[(int) $item['status']] ?? []) : [];
+// مجری برق غیرمجاز بازرسی‌های شبکه را فقط می‌بیند: نه تغییر وضعیت، نه پیگیری.
+$acts = $scope->canActOnField($item);
+$next = $target === null && $acts ? (FieldAdmin::NEXT[(int) $item['status']] ?? []) : [];
 $candidates = $scope->isManager() ? FieldDuplicates::candidatesFor($item) : [];
 $merged = FieldDuplicates::mergedInto($id);
 $lat = $item['latitude'] === null ? null : (float) $item['latitude'];
@@ -79,8 +82,10 @@ admin_header((string) ($item['tracking_code'] ?? 'مورد'));
       <p><?= e(FieldAdmin::KIND_NAMES[(int) $item['kind']] ?? '—') ?> — <?= field_status_tag($item) ?></p>
     </div>
     <div>
+      <?php if (CaseActions::canExport($manager)): ?>
       <a href="sheet.php?id=<?= e($id) ?>" target="_blank"><button type="button">برگه ارجاع (چاپ / PDF)</button></a>
       <a href="item_docx.php?id=<?= e($id) ?>"><button type="button">خروجی Word</button></a>
+      <?php endif; ?>
       <a href="items.php">بازگشت به فهرست</a>
     </div>
   </div>
@@ -125,6 +130,20 @@ admin_header((string) ($item['tracking_code'] ?? 'مورد'));
 <?php endif; ?>
 <?php endif; ?>
 
+<?php if (in_array((int) $item['kind'], Field::INSPECTION_KINDS, true)): $groups = FieldHistory::forItem($id); ?>
+<div class="card" id="history"><h3>سوابق و مقایسه</h3>
+  <p class="muted">خوانش‌های قبلی هر تابلو و تیر این بازرسی، از همین بازدید به قبل؛ گزارش‌دهنده این بخش را نمی‌بیند.
+    <a href="history.php">همه سوابق</a></p>
+  <?php if ($groups === []): ?><p class="muted">این بازرسی خوانشی با پلاک ندارد.</p><?php endif; ?>
+  <?php foreach ($groups as $g): ?>
+    <details <?= count($groups) <= 2 ? 'open' : '' ?>><summary><strong><?= e($g['label']) ?></strong> — <?= fa_digits((string) count($g['rows'])) ?> خوانش</summary>
+      <?= $g['part'] === FieldReadings::PART_THERMAL ? '' : history_chart($g['rows']) ?>
+      <?= history_table($g['rows'], $g['part']) ?>
+    </details>
+  <?php endforeach; ?>
+</div>
+<?php endif; ?>
+
 <?= render_merge($item, $target, $candidates, $merged) ?>
 <?php if ($error !== null && $next === []): ?><div class="card"><p class="error"><?= e($error) ?></p></div><?php endif; ?>
 
@@ -160,7 +179,7 @@ admin_header((string) ($item['tracking_code'] ?? 'مورد'));
 </div>
 <?php endif; ?>
 
-<?php if ($target === null): ?>
+<?php if ($target === null && $acts): ?>
 <div class="section-grid">
   <?php if ($executors !== [] && !in_array((int) $item['status'], [Field::STATUS_CLOSED, Field::STATUS_REJECTED], true)): ?>
   <div class="card"><h3>سپردن به مجری رمزارز</h3>

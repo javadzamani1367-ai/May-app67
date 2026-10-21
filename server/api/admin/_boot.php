@@ -15,7 +15,8 @@ foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSch
           'Areas', 'Scope', 'UnitStages', 'UnitResponse', 'UserBatch', 'CaseCodes', 'CaseIntake', 'CaseFlow', 'CaseBoard',
           'FlowClock', 'FieldFlowClock', 'FieldHandOff', 'DeviceRegistry', 'DispatchMerge', 'Scores', 'ScoreBoard', 'ScoreSheets',
           'FieldCodes', 'CaseKind', 'IllegalFlow', 'Persons', 'PersonAccounts', 'PersonDevices', 'PersonDirectory', 'PersonWork',
-          'DeviceRequests', 'CrewAccounts'] as $class) {
+          'DeviceRequests', 'CrewAccounts', 'FieldReadings', 'FieldHistory', 'FieldHistorySearch', 'FieldHistoryExport',
+          'HistoryReferral'] as $class) {
     require_once dirname(__DIR__) . '/lib/' . $class . '.php';
 }
 require_once dirname(__DIR__) . '/portal/_layout.php';
@@ -129,14 +130,14 @@ function admin_header(string $title): void
     $nav = match ($role) {
         Auth::ROLE_EXECUTOR => [['board.php', 'میز پیگیری'], ['intake.php', 'ثبت گزارش'], ['cases.php', 'پرونده‌ها'],
             ['approvals.php', 'تأییدها'], ['performance.php', 'عملکرد واحدها'], ['scores.php', 'امتیازها'],
-            ['crew.php', 'عملکرد اکیپ'], ['items.php', 'موردهای میدانی']],
+            ['crew.php', 'عملکرد اکیپ'], ['items.php', 'موردهای میدانی'], ['history.php', 'سوابق بازرسی']],
         Auth::ROLE_ILLEGAL, Auth::ROLE_ILLEGAL_AREA => [['board.php', 'میز پیگیری'], ['intake.php', 'ثبت گزارش'],
             ['cases.php', 'پرونده‌ها'], ['approvals.php', 'تأییدها'], ['performance.php', 'عملکرد واحدها'],
-            ['scores.php', 'امتیازها'], ['items.php', 'گزارش‌های میدانی']],
+            ['scores.php', 'امتیازها'], ['items.php', 'موردهای میدانی'], ['history.php', 'سوابق بازرسی']],
         default => [['index.php', 'داشبورد'], ['board.php', 'میز پیگیری'], ['intake.php', 'ثبت گزارش'],
             ['cases.php', 'آرشیو پرونده‌ها'], ['approvals.php', 'تأییدها'], ['performance.php', 'عملکرد واحدها'],
             ['scores.php', 'امتیازها'], ['devices.php', 'بانک دستگاه‌ها'], ['crew.php', 'عملکرد اکیپ'],
-            ['items.php', 'موردهای میدانی'], ['map.php', 'نقشه'], ['persons.php', 'اشخاص و کاربری‌ها'], ['roster.php', 'اکیپ و فیدرها'],
+            ['items.php', 'موردهای میدانی'], ['history.php', 'سوابق بازرسی'], ['map.php', 'نقشه'], ['persons.php', 'اشخاص و کاربری‌ها'], ['roster.php', 'اکیپ و فیدرها'],
             ['settings.php', 'تنظیمات']],
     };
     $nav[] = ['logout.php', 'خروج'];

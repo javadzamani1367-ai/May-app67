@@ -32,6 +32,8 @@ final class Field
 
     /** گزارش‌ها (نه بازرسی‌ها): شرح و موقعیت اجباری، و تکراری‌یابی با فاصله. */
     public const REPORT_KINDS = [self::KIND_CRYPTO, self::KIND_ILLEGAL, self::KIND_BURN];
+    /** بازرسی‌های شبکه (نه گزارش): سوابق خوانش دارند و مجری‌های برق غیرمجاز فقط می‌بینندشان. */
+    public const INSPECTION_KINDS = [self::KIND_THERMAL, self::KIND_FEEDER, self::KIND_LINE];
     /** نوع‌هایی که اکیپ دارند و در گزارش عملکرد اکیپ شمرده می‌شوند. */
     public const CREW_KINDS = [self::KIND_CRYPTO, self::KIND_ILLEGAL, self::KIND_THERMAL, self::KIND_FEEDER, self::KIND_LINE];
 
