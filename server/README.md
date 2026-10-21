@@ -252,6 +252,9 @@ https://دامنه-شما/api/admin/
 | `POST /persons/save` · `POST /persons/accounts` | ذخیره شخص، و تیک‌های ناحیه × نقش (کاربری‌های تازه با رمز یک‌بارمصرف) |
 | `POST /persons/password` · `POST /persons/device` · `POST /persons/attach` | رمز تازه، کد نصب هر اپ، چسباندن کاربری موجود به شخص |
 | `GET /persons/requests` · `POST /persons/requests/decide` | صف درخواست‌های کاربری، ثبت یا رد |
+| `GET /field/history?plate=&asset=&part=` · `GET /field/history/bundle?since=&after=` · `GET /field/history/image?id=` | سوابق یک پلاک، بسته سوابق ناحیه برای کار بی‌اینترنت و تصویر ترموویژن — کاربر میدانی، بی نام ثبت‌کننده |
+| `GET /manage/history` · `/manage/history/series` · `/manage/history/item?id=` · `/manage/history/image?id=` | جستجو و رشته سوابق و سوابق یک بازرسی — مدیر و مجری‌ها |
+| `GET /manage/history/export?format=xlsx\|docx` · `POST /manage/history/refer` | اکسل و Word (مدیر و ستاد) و ارجاع از سوابق به کارشناس رمزارز (مدیر و مجری رمزارز) |
 | `GET /sync/manifest?since=` | شناسه پرونده‌های تغییرکرده |
 | `POST /sync/report` · `GET /sync/report?id=` | ارسال و دریافت یک پرونده |
 | `POST /sync/file` · `GET /sync/file?path=` | بارگذاری و دریافت فایل |
