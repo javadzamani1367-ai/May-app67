@@ -4,7 +4,9 @@ declare(strict_types=1);
 /** راه‌اندازی مشترک صفحات پرتال: کتابخانه، نشست، و کاربر واردشده. */
 foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSchema', 'Migrations', 'Storage', 'Notifications', 'Jalali',
           'Field', 'FieldSettings', 'CaseLabels', 'Areas', 'Scope', 'UnitStages', 'UnitResponse', 'CrewCalendar', 'CaseIntake',
-          'CaseFlow', 'FlowClock', 'FieldFlowClock'] as $class) {
+          'CaseFlow', 'FlowClock', 'FieldFlowClock', 'FieldCodes', 'CaseKind', 'Users', 'CenterSchema', 'CenterColumns', 'CenterValues',
+          'CenterSystem', 'CenterMatch', 'CenterCheck', 'CenterLocks', 'CenterSettings', 'RewardRules', 'RewardSpec', 'CenterRewards',
+          'CenterRows', 'CenterEdit', 'CenterCharts'] as $class) {
     require_once dirname(__DIR__) . '/lib/' . $class . '.php';
 }
 require_once __DIR__ . '/_layout.php';
@@ -41,6 +43,17 @@ function portal_require_user(): array
     return $user;
 }
 
+
+/** منوی پرتال: آمار جامع فقط وقتی مدیر ستونی برای واحد این کاربر تیک زده است. */
+function portal_nav(array $user): array
+{
+    $nav = [['index.php', 'صندوق ورودی']];
+    if (CenterSettings::access($user) !== null) {
+        $nav[] = ['centers.php', 'آمار جامع مراکز'];
+    }
+    $nav[] = ['logout.php', 'خروج'];
+    return $nav;
+}
 
 function unit_name(?int $unit): string
 {

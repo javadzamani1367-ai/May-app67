@@ -17,7 +17,10 @@ foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSch
           'FlowClock', 'FieldFlowClock', 'FieldHandOff', 'DeviceRegistry', 'DispatchMerge', 'Scores', 'ScoreBoard',
           'ScoreSheets', 'CaseKind', 'IllegalFlow', 'Persons', 'PersonAccounts', 'PersonDevices', 'PersonDirectory',
           'PersonWork', 'DeviceRequests', 'CrewAccounts', 'FieldReadings', 'FieldHistory', 'FieldHistorySearch',
-          'FieldHistoryExport', 'HistoryReferral'] as $class) {
+          'FieldHistoryExport', 'HistoryReferral', 'CenterSchema', 'CenterColumns', 'CenterValues', 'CenterSystem', 'CenterMatch', 'CenterCheck', 'CenterLocks',
+          'CenterSettings', 'RewardRules', 'RewardSpec', 'CenterRewards', 'CenterRows', 'CenterEdit', 'XlsxReader', 'CenterHeader',
+          'CenterSupplement', 'CenterImport', 'CenterImportRun', 'CenterTemplate', 'CenterGrid', 'CenterSupplementSheet', 'CenterXlsx',
+          'CenterDocx', 'CenterRewardReport', 'CenterCharts'] as $class) {
     require_once __DIR__ . '/lib/' . $class . '.php';
 }
 foreach (glob(__DIR__ . '/lib/Controllers/*.php') ?: [] as $controller) {
@@ -135,6 +138,20 @@ $routes = [
     'POST /notifications/read'   => [NotificationController::class, 'markRead'],
 
     'GET /stats/units'           => [StatsController::class, 'units'],
+
+    'GET /centers'               => [CenterController::class, 'index'],
+    'GET /centers/row'           => [CenterController::class, 'row'],
+    'POST /centers/row'          => [CenterController::class, 'save'],
+    'POST /centers/add'          => [CenterController::class, 'add'],
+    'POST /centers/delete'       => [CenterController::class, 'delete'],
+    'POST /centers/import'       => [CenterController::class, 'import'],
+    'POST /centers/import/apply' => [CenterController::class, 'apply'],
+    'GET /centers/export'        => [CenterController::class, 'export'],
+    'GET /centers/rewards'       => [CenterController::class, 'rewards'],
+    'GET /centers/rules'         => [CenterController::class, 'rules'],
+    'POST /centers/rules'        => [CenterController::class, 'rules'],
+    'GET /centers/settings'      => [CenterController::class, 'settings'],
+    'POST /centers/settings'     => [CenterController::class, 'settings'],
 ];
 
 $key = $request->method . ' ' . $request->path;

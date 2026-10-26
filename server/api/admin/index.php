@@ -40,6 +40,9 @@ $deviceRequests = (int) (Db::one('SELECT COUNT(*) AS n FROM device_requests WHER
 $experts = FieldAdmin::expertStats();
 $board = CaseBoard::counts(CaseBoard::open(admin_scope(), 2000));
 $deviceAlerts = DeviceRegistry::unseenAlerts();
+// آمار جامع مراکز سال جاری، برای نمودارهای داشبورد.
+[$centerFrom, $centerTo] = CenterCharts::year(FieldCodes::jalaliYear($now));
+$centerCharts = CenterCharts::summary(CenterRows::query(CenterSettings::access(admin_user()), $centerFrom, $centerTo));
 
 admin_header('داشبورد');
 echo case_styles();
@@ -55,6 +58,21 @@ $tile = static fn (string $href, int $n, string $label, string $tone = '') => '<
     <?= $tile('approvals.php', $approvals, 'در انتظار تأیید شما', $approvals > 0 ? 'danger' : '') ?>
     <?= $tile('performance.php', $lateDispatches, 'ارسال به واحد با مهلت گذشته', $lateDispatches > 0 ? 'danger' : '') ?>
     <?= $tile('users.php', $deviceRequests, 'درخواست ثبت دستگاه', $deviceRequests > 0 ? 'warn' : '') ?>
+  </div>
+</div>
+<div class="card">
+  <h2>آمار جامع مراکز استخراج — سال <?= fa_digits((string) FieldCodes::jalaliYear($now)) ?></h2>
+  <div class="kpis">
+    <?= $tile('centers.php', $centerCharts['totals']['centers'], 'مرکز کشف‌شده') ?>
+    <?= $tile('centers.php', $centerCharts['totals']['miners'], 'ماینر') ?>
+    <?= $tile('centers.php', (int) round($centerCharts['totals']['kw']), 'کیلووات برآوردی') ?>
+    <?= $tile('centers.php', $centerCharts['totals']['conflicts'], 'خانه ناسازگار', $centerCharts['totals']['conflicts'] > 0 ? 'warn' : '') ?>
+  </div>
+  <div class="grid" style="margin-top:10px">
+    <div><h3>مراکز هر ماه</h3><?= CenterCharts::svg(array_map(static fn ($m) => [$m['label'], $m['centers']], $centerCharts['months'])) ?></div>
+    <div><h3>ماینر هر ناحیه</h3><?= CenterCharts::svg(array_map(static fn ($a) => [$a['label'], $a['miners']], array_slice($centerCharts['areas'], 0, 10)), '#1d4ed8') ?></div>
+    <div><h3>وضعیت اقدام</h3><?= CenterCharts::svg(array_map(static fn ($s) => [$s['label'], $s['count']], array_slice($centerCharts['status'], 0, 10)), '#b45309') ?></div>
+    <div><h3>مبالغ (ریال)</h3><?= CenterCharts::svg(array_map(static fn ($m) => [$m['label'], $m['amount']], $centerCharts['money']), '#15803d', true) ?></div>
   </div>
 </div>
 <div class="card">

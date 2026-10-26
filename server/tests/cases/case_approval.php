@@ -121,3 +121,4 @@ require __DIR__ . '/persons.php';
 require __DIR__ . '/illegal_flow.php';
 require __DIR__ . '/persons_web.php';
 require __DIR__ . '/history.php';
+require __DIR__ . '/centers.php';

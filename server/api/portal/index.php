@@ -16,7 +16,7 @@ $rows = Db::all(
 );
 $areas = Areas::parse($user['areas'] ?? '');
 
-portal_header('صندوق ورودی — ' . unit_name($unit));
+portal_header('صندوق ورودی — ' . unit_name($unit), true, 'پرتال واحدها', portal_nav($user));
 ?>
 <div class="card">
   <div class="row">

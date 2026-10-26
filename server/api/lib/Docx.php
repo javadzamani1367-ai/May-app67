@@ -14,10 +14,10 @@ final class Docx
     private const FONT = 'Tahoma';
 
     /** @param array<int, array{0:string, 1:mixed}> $blocks */
-    public static function send(string $name, array $blocks): void
+    public static function send(string $name, array $blocks, array $options = []): void
     {
         $path = tempnam(sys_get_temp_dir(), 'docx');
-        self::write($path, $blocks);
+        self::write($path, $blocks, $options);
         header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         header('Content-Disposition: attachment; filename="' . $name . '.docx"');
         header('Content-Length: ' . filesize($path));
@@ -26,9 +26,18 @@ final class Docx
         @unlink($path);
     }
 
-    /** @param array<int, array{0:string, 1:mixed}> $blocks */
-    public static function write(string $path, array $blocks): void
+    /** پهنای جدول چندستونی به dxa؛ برگه افقی پهن‌تر است. */
+    private static int $tableWidth = 9600;
+
+    /**
+     * @param array<int, array{0:string, 1:mixed}> $blocks
+     * @param array{landscape?: bool, size?: int} $options برگه افقی؛ اندازه قلم به نیم‌نقطه (۱۴ یعنی ۷)،
+     *        برای جدول‌های پرستون مثل آمار جامع
+     */
+    public static function write(string $path, array $blocks, array $options = []): void
     {
+        $size = (int) ($options['size'] ?? 22);
+        self::$tableWidth = empty($options['landscape']) ? 9600 : 15900;
         $zip = new ZipArchive();
         if ($zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
             throw new RuntimeException('cannot create docx');
@@ -48,7 +57,7 @@ final class Docx
         $font = '<w:rFonts w:ascii="' . self::FONT . '" w:hAnsi="' . self::FONT . '" w:cs="' . self::FONT . '"/>';
         $zip->addFromString('word/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             . '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-            . '<w:docDefaults><w:rPrDefault><w:rPr>' . $font . '<w:sz w:val="22"/><w:szCs w:val="22"/>'
+            . '<w:docDefaults><w:rPrDefault><w:rPr>' . $font . '<w:sz w:val="' . $size . '"/><w:szCs w:val="' . $size . '"/>'
             . '<w:lang w:bidi="fa-IR"/></w:rPr></w:rPrDefault>'
             . '<w:pPrDefault><w:pPr><w:spacing w:after="120" w:line="300" w:lineRule="auto"/></w:pPr></w:pPrDefault>'
             . '</w:docDefaults>'
@@ -79,8 +88,10 @@ final class Docx
                 . 'officeDocument/2006/relationships/image" Target="media/image' . $n . '.jpg"/>', $images))
             . '</Relationships>');
         // صفحه A4 با حاشیه ۲ سانتی‌متر؛ بخش آخر هم راست‌به‌چپ.
-        $body .= '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>'
-            . '<w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/>'
+        $landscape = !empty($options['landscape']);
+        $body .= '<w:sectPr>' . ($landscape ? '<w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/>' : '<w:pgSz w:w="11906" w:h="16838"/>')
+            . ($landscape ? '<w:pgMar w:top="567" w:right="454" w:bottom="567" w:left="454" w:header="340" w:footer="340" w:gutter="0"/>'
+                : '<w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/>')
             . '<w:bidi/></w:sectPr>';
         $zip->addFromString('word/document.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" '
@@ -161,8 +172,8 @@ final class Docx
             return '';
         }
         $widths = count($percents) === count($header)
-            ? array_map(static fn ($p): int => (int) round(9600 * $p / array_sum($percents)), $percents)
-            : array_fill(0, count($header), intdiv(9600, count($header)));
+            ? array_map(static fn ($p): int => (int) round(self::$tableWidth * $p / array_sum($percents)), $percents)
+            : array_fill(0, count($header), intdiv(self::$tableWidth, count($header)));
         $column = 0;
         $cell = static function (string $text, bool $head) use (&$column, $widths): string {
             $width = $widths[$column++ % count($widths)];

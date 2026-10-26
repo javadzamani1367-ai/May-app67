@@ -223,7 +223,7 @@ check('هر ستون گوشی روی سرور هست', $missingOnServer === [], 
 check('سرور ستون اضافه ندارد', $extraOnServer === [], implode(', ', $extraOnServer));
 
 $tableCount = preg_match_all('/CREATE TABLE IF NOT EXISTS/', $sql);
-check('هر ۳۲ جدول در schema.sql هست', $tableCount === 32, "$tableCount جدول");
+check('هر ۳۷ جدول در schema.sql هست', $tableCount === 37, "$tableCount جدول");
 
 // نسخه اسکیما در سه زبان نوشته شده و هیچ کامپایلری آن سه را با هم مقایسه
 // نمی‌کند. اگر یکی جا بماند، سرور در /ping عددی را اعلام می‌کند که اسکیمای
@@ -320,6 +320,7 @@ echo "\n— نسخه پایگاه داده —\n";
 // می‌کند یا گامی را هرگز نمی‌بیند.
 require_once __DIR__ . '/../api/lib/FieldSchema.php';
 require_once __DIR__ . '/../api/lib/Migrations.php';
+require_once __DIR__ . '/../api/lib/CenterSchema.php';
 preg_match('/INSERT IGNORE INTO schema_meta \(id, version\) VALUES \(1, (\d+)\)/',
     (string) file_get_contents(__DIR__ . '/../schema.sql'), $versionMatch);
 equals('نسخه schema.sql با آخرین گام به‌روزرسانی یکی است', Migrations::latest(), (int) ($versionMatch[1] ?? -1));
@@ -328,7 +329,7 @@ equals('نسخه schema.sql با آخرین گام به‌روزرسانی یک�
 // عوض شود و دیگری نه، نصب تازه و نصب به‌روزشده دو پایگاه داده متفاوت دارند.
 $flat = static fn (string $s): string => preg_replace('/\s+/', ' ', trim($s));
 $schemaFlat = $flat((string) file_get_contents(__DIR__ . '/../schema.sql'));
-foreach (FieldSchema::TABLES as $statement) {
+foreach (array_merge(FieldSchema::TABLES, CenterSchema::TABLES) as $statement) {
     preg_match('/CREATE TABLE IF NOT EXISTS (\w+)/', $statement, $tableName);
     check("جدول {$tableName[1]} در schema.sql عیناً همان گام به‌روزرسانی است",
         str_contains($schemaFlat, $flat($statement)));

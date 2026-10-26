@@ -16,7 +16,10 @@ foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSch
           'FlowClock', 'FieldFlowClock', 'FieldHandOff', 'DeviceRegistry', 'DispatchMerge', 'Scores', 'ScoreBoard', 'ScoreSheets',
           'FieldCodes', 'CaseKind', 'IllegalFlow', 'Persons', 'PersonAccounts', 'PersonDevices', 'PersonDirectory', 'PersonWork',
           'DeviceRequests', 'CrewAccounts', 'FieldReadings', 'FieldHistory', 'FieldHistorySearch', 'FieldHistoryExport',
-          'HistoryReferral'] as $class) {
+          'HistoryReferral', 'CenterSchema', 'CenterColumns', 'CenterValues', 'CenterSystem', 'CenterMatch', 'CenterCheck', 'CenterLocks',
+          'CenterSettings', 'RewardRules', 'RewardSpec', 'CenterRewards', 'CenterRows', 'CenterEdit', 'XlsxReader', 'CenterHeader',
+          'CenterSupplement', 'CenterImport', 'CenterImportRun', 'CenterTemplate', 'CenterGrid', 'CenterSupplementSheet', 'CenterXlsx',
+          'CenterDocx', 'CenterRewardReport', 'CenterCharts'] as $class) {
     require_once dirname(__DIR__) . '/lib/' . $class . '.php';
 }
 require_once dirname(__DIR__) . '/portal/_layout.php';
@@ -136,10 +139,13 @@ function admin_header(string $title): void
             ['scores.php', 'امتیازها'], ['items.php', 'موردهای میدانی'], ['history.php', 'سوابق بازرسی']],
         default => [['index.php', 'داشبورد'], ['board.php', 'میز پیگیری'], ['intake.php', 'ثبت گزارش'],
             ['cases.php', 'آرشیو پرونده‌ها'], ['approvals.php', 'تأییدها'], ['performance.php', 'عملکرد واحدها'],
-            ['scores.php', 'امتیازها'], ['devices.php', 'بانک دستگاه‌ها'], ['crew.php', 'عملکرد اکیپ'],
+            ['scores.php', 'امتیازها'], ['centers.php', 'آمار جامع مراکز'], ['devices.php', 'بانک دستگاه‌ها'], ['crew.php', 'عملکرد اکیپ'],
             ['items.php', 'موردهای میدانی'], ['history.php', 'سوابق بازرسی'], ['map.php', 'نقشه'], ['persons.php', 'اشخاص و کاربری‌ها'], ['roster.php', 'اکیپ و فیدرها'],
             ['settings.php', 'تنظیمات']],
     };
+    if ($role === Auth::ROLE_EXECUTOR && CenterSettings::executorAllowed()) {
+        $nav[] = ['centers.php', 'آمار جامع مراکز'];
+    }
     $nav[] = ['logout.php', 'خروج'];
     $subtitle = match ($role) {
         Auth::ROLE_EXECUTOR => 'پنل مجری رمزارز — ' . implode('، ', array_map([Areas::class, 'label'], Areas::parse($user['areas'] ?? ''))),

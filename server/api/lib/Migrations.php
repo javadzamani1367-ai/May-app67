@@ -11,6 +11,7 @@ require_once __DIR__ . '/FieldRoster.php';
 require_once __DIR__ . '/CrewCalendar.php';
 require_once __DIR__ . '/FlowSchema.php';
 require_once __DIR__ . '/FieldHistory.php';
+require_once __DIR__ . '/CenterSchema.php';
 
 /**
  * به‌روزرسانی خودکار پایگاه داده.
@@ -99,6 +100,9 @@ final class Migrations
                 array_map(static fn (array $i) => static fn () => self::addIndex(...$i), FieldReadings::INDEXES),
                 [static fn () => FieldReadings::backfill()]
             ),
+            // آمار جامع مراکز استخراج: سطرها، تاریخچه هر خانه، قفل سال، جدول تکمیلی مشترکان
+            // و دستورالعمل‌های پاداش.
+            11 => CenterSchema::TABLES,
         ];
     }
 
