@@ -255,6 +255,11 @@ https://دامنه-شما/api/admin/
 | `GET /field/history?plate=&asset=&part=` · `GET /field/history/bundle?since=&after=` · `GET /field/history/image?id=` | سوابق یک پلاک، بسته سوابق ناحیه برای کار بی‌اینترنت و تصویر ترموویژن — کاربر میدانی، بی نام ثبت‌کننده |
 | `GET /manage/history` · `/manage/history/series` · `/manage/history/item?id=` · `/manage/history/image?id=` | جستجو و رشته سوابق و سوابق یک بازرسی — مدیر و مجری‌ها |
 | `GET /manage/history/export?format=xlsx\|docx` · `POST /manage/history/refer` | اکسل و Word (مدیر و ستاد) و ارجاع از سوابق به کارشناس رمزارز (مدیر و مجری رمزارز) |
+| `GET /centers?year=\|from=&to=&q=&charts=1` · `GET /centers/row?id=` · `POST /centers/row` | آمار جامع مراکز: سطرهای بازه، یک سطر با منابع، ذخیره و انتخاب ناسازگاری — مدیر، مجری با اجازه، واحد در ستون‌های خودش |
+| `POST /centers/add` · `POST /centers/delete` | سطر دستی یا سطر دوم یک مرکز؛ حذف فقط مدیر |
+| `POST /centers/import?year=` · `POST /centers/import/apply` | ورود اکسل (multipart یا بایت خام): پیش‌نمایش، بعد اجرا با نشانه — فقط مدیر |
+| `GET /centers/export?format=xlsx\|docx` · `GET /centers/rewards?kind=staff\|agents&format=xlsx` | اکسل فرم توانیر، Word، گزارش‌های پاداش (پاداش فقط مدیر) |
+| `GET\|POST /centers/rules` · `GET\|POST /centers/settings` | دستورالعمل‌های پاداش؛ دسترسی‌ها، ستون‌های واحدها و خروجی‌ها، قفل سال — فقط مدیر |
 | `GET /sync/manifest?since=` | شناسه پرونده‌های تغییرکرده |
 | `POST /sync/report` · `GET /sync/report?id=` | ارسال و دریافت یک پرونده |
 | `POST /sync/file` · `GET /sync/file?path=` | بارگذاری و دریافت فایل |
