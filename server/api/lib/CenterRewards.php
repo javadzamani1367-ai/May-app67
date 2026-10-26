@@ -20,8 +20,10 @@ final class CenterRewards
     }
 
     /**
-     * عوامل اجرایی حاضر و سهم هر نفر. @param list<array<string, mixed>> $attendees
-     * @return array{amount:float, rule:array, people:list<array{name:string, org:string, share:float}>}|null
+     * عوامل اجرایی حاضر و سهم هر نفر: مبلغ مرکز (پلکان و سقف) میان سازمان‌های حاضر برابر، و
+     * سهم هر سازمان میان حاضران همان سازمان برابر. @param list<array<string, mixed>> $attendees
+     * @return array{amount:float, rule:array, people:list<array{name:string, org:string, share:float}>,
+     *   orgs:array<string, float>}|null
      */
     public static function enforcement(array $values, ?int $date, array $attendees): ?array
     {
@@ -29,41 +31,28 @@ final class CenterRewards
         if ($rule === null) {
             return null;
         }
-        $spec = $rule['spec'];
-        $people = [];
+        $allowed = $rule['spec']['orgs'] ?? array_keys(RewardRules::ENFORCERS);
+        $members = [];
         foreach ($attendees as $a) {
             $org = self::enforcer($a);
-            if ($org !== null && in_array($org, $spec['orgs'] ?? [], true)) {
-                $people[] = ['name' => $a['name'] ?? '—', 'org' => $org];
+            if ($org !== null && in_array($org, $allowed, true)) {
+                $members[$org][] = $a['name'] ?? '—';
             }
         }
-        $count = (int) ($values['miners'] ?? 0);
-        $pot = RewardRules::amount($spec, $count);
-        if ($people === [] || $pot <= 0) {
-            return ['amount' => 0.0, 'rule' => $rule, 'people' => []];
+        $pot = RewardRules::amount($rule['spec'], (int) ($values['miners'] ?? 0));
+        if ($members === [] || $pot <= 0) {
+            return ['amount' => 0.0, 'rule' => $rule, 'people' => [], 'orgs' => []];
         }
-        $cap = (float) ($spec['cap'] ?? 0);
-        $n = count($people);
-        $split = $spec['split'] ?? 'person';
-        if ($split === 'each') {
-            // هر نفر همان مبلغ؛ سقف برای کل مرکز است.
-            $each = RewardRules::amount(['tiers' => $spec['tiers'], 'mode' => $spec['mode']], $count);
-            $total = $cap > 0 ? min($each * $n, $cap) : $each * $n;
-            $shares = array_fill(0, $n, $total / $n);
-        } elseif ($split === 'org') {
-            $orgs = array_count_values(array_column($people, 'org'));
-            $total = $pot;
-            $shares = array_map(static fn ($p) => $pot / count($orgs) / $orgs[$p['org']], $people);
-        } else {
-            $total = $pot;
-            $shares = array_fill(0, $n, $pot / $n);
+        $perOrg = $pot / count($members);
+        $people = [];
+        $orgs = [];
+        foreach ($members as $org => $names) {
+            $orgs[RewardRules::ENFORCERS[$org]] = round($perOrg);
+            foreach ($names as $name) {
+                $people[] = ['name' => $name, 'org' => RewardRules::ENFORCERS[$org], 'share' => round($perOrg / count($names))];
+            }
         }
-        foreach ($people as $i => &$person) {
-            $person['share'] = round($shares[$i]);
-            $person['org'] = RewardRules::ENFORCERS[$person['org']];
-        }
-        unset($person);
-        return ['amount' => round($total), 'rule' => $rule, 'people' => $people];
+        return ['amount' => round($pot), 'rule' => $rule, 'people' => $people, 'orgs' => $orgs];
     }
 
     /**
@@ -100,19 +89,17 @@ final class CenterRewards
             'roles' => $roles, 'rule' => $rule];
     }
 
-    /** نهاد اجرایی یک حاضر: پلیس امنیت، سپاه، یا مأمور وصول شرکت؛ دیگران تهی. */
+    /** سازمان اجرایی یک حاضر: نیروی انتظامی یا سپاه؛ کارکنان شرکت توزیع و دیگران تهی. */
     public static function enforcer(array $attendee): ?string
     {
         $org = (int) ($attendee['org'] ?? -1);
         $text = CenterValues::cleanText(($attendee['org_name'] ?? '') . ' ' . ($attendee['position'] ?? ''));
-        if ($org === 1 || str_contains($text, 'فراجا') || str_contains($text, 'امنیت اقتصادی')) {
-            return 'faraja';
-        }
         if (str_contains($text, 'سپاه')) {
             return 'sepah';
         }
-        if (str_contains($text, 'وصول')) {
-            return 'collection';
+        if ($org === 1 || ($org === 2 && (str_contains($text, 'فراجا') || str_contains($text, 'انتظامی')
+            || str_contains($text, 'امنیت اقتصادی') || str_contains($text, 'پلیس')))) {
+            return 'faraja';
         }
         return null;
     }

@@ -37,13 +37,14 @@ $pdo->exec("INSERT INTO attendees (id, report_id, organization, full_name) VALUE
 $pdo->exec("INSERT INTO attendees (id, report_id, organization, full_name, org_name) VALUES ('c2000000-0000-4000-8000-000000000002', '$cRep', 2, 'سروان آزمون', 'اطلاعات سپاه')");
 $pdo->exec("INSERT INTO attendees (id, report_id, organization, full_name, position) VALUES ('c2000000-0000-4000-8000-000000000003', '$cRep', 0, 'مأمور آزمون', 'مأمور وصول')");
 $pdo->exec("INSERT INTO attendees (id, report_id, organization, full_name, position) VALUES ('c2000000-0000-4000-8000-000000000004', '$cRep', 0, 'کارشناس برق', 'کارشناس')");
+$pdo->exec("INSERT INTO attendees (id, report_id, organization, full_name) VALUES ('c2000000-0000-4000-8000-000000000005', '$cRep', 1, 'ستوان آزمون')");
 $pdo->exec("INSERT INTO attachments (id, report_id, category, file_path, added_at) VALUES ('c3000000-0000-4000-8000-000000000001', '$cRep', 2, 'x.pdf', $at)");
 
 $list = static fn (string $token, string $q = '') => $probe->json('GET', 'centers&year=1404' . $q, [], $token);
 $mgr = $list($managerToken)['body']['data'] ?? [];
 equals('فقط پرونده تأییدشده رمزارز سطر گرفت', 1, count($mgr['rows'] ?? []));
 $v = $mgr['rows'][0]['values'] ?? [];
-equals('مقدارهای سامانه', [3, 9.0, 1, 1, 'صنعتی', 'دارای انشعاب', 12.5, 'دیجیتال', 'ایلام / مرکزی'],
+equals('مقدارهای سامانه؛ ظرفیت برآوردی = توان اندازه‌گیری کارشناس، کیلووات شناسایی دستی', [3, 12.5, 1, 1, 'صنعتی', 'دارای انشعاب', 0.0, 'دیجیتال', 'ایلام / مرکزی'],
     [$v['miners'] ?? null, (float) ($v['capacity_kw'] ?? 0), $v['commission'] ?? null, $v['with_found'] ?? null, $v['branch_type'] ?? null,
         $v['adjust_branch'] ?? null, (float) ($v['with_kw'] ?? 0), $v['meter_type'] ?? null, $v['county'] ?? null]);
 $rowId = (string) ($mgr['rows'][0]['id'] ?? '');
@@ -82,8 +83,8 @@ $rule(['kind' => 2, 'effective_from' => '1400/01/01', 'spec' => ['pct' => 1.5, '
 $save = $probe->json('POST', 'centers/row', ['id' => $rowId, 'values' => ['energy_amount' => '۱۰۰٬۰۰۰٬۰۰۰', 'sheba' => 'IR062960000000100324200001']], $managerToken);
 $d = $save['body']['data'] ?? [];
 equals('پاداش شناسایی پلکانی با دستورالعمل جاری در تاریخ گزارش', 4000000, (int) ($d['values']['finder_reward'] ?? 0));
-equals('پاداش اجرایی میان سه عامل اجرایی حاضر', [900000, 3, 300000], [(int) ($d['values']['police_reward'] ?? 0),
-    count($d['police']['people'] ?? []), (int) ($d['police']['people'][0]['share'] ?? 0)]);
+equals('پاداش اجرایی: نیمی انتظامی میان دو نفرش، نیمی سپاه؛ مأمور وصول نه', [900000, [225000, 225000, 450000]],
+    [(int) ($d['values']['police_reward'] ?? 0), array_map('intval', array_column($d['police']['people'] ?? [], 'share'))]);
 equals('عوامل اداری: کل، مدیرعامل، کارکنان، نقش مجری', [1500000, 500000, 1000000, 300000],
     [(int) ($d['staff']['amount'] ?? 0), (int) ($d['staff']['ceo'] ?? 0), (int) ($d['staff']['staff'] ?? 0), (int) ($d['staff']['roles'][0]['amount'] ?? 0)]);
 equals('شبای نادرست پذیرفته نیست', 400, $probe->json('POST', 'centers/row', ['id' => $rowId, 'values' => ['sheba' => 'IR062960000000100324200002']], $managerToken)['status']);
@@ -137,9 +138,25 @@ $zip->close();
 $reimport = $probe->upload('centers/import&year=1404', 'file', $tmp, $managerToken)['body']['data']['summary'] ?? [];
 equals('خروجی خود سامانه دوباره خوانده می‌شود و با همان دو سطر جور است', [2, 0], [$reimport['match'] ?? null, $reimport['new'] ?? null]);
 check('Word', str_starts_with($probe->raw('centers/export&year=1404&format=docx', $exec401)['bytes'], 'PK'));
-$staff = $probe->json('GET', 'centers/rewards&year=1404', [], $managerToken)['body']['data'] ?? [];
-equals('گزارش پاداش عوامل اداری: جمع هر نفر', [1500000, 3], [(int) ($staff['totals']['amount'] ?? 0), count($staff['people'] ?? [])]);
-check('اکسل گزارش پاداش اجرایی', str_starts_with($probe->raw('centers/rewards&year=1404&kind=agents&format=xlsx', $managerToken)['bytes'], 'PK'));
+$staff = $probe->json('GET', 'centers/rewards&year=1404&kind=staff', [], $managerToken)['body']['data'] ?? [];
+equals('گزارش پاداش عوامل اداری: پاداش کل و جمع هر نفر', ['۱,۵۰۰,۰۰۰', 3],
+    [$staff['tables'][0]['total'][5] ?? null, count($staff['tables'][1]['rows'] ?? [])]);
+check('مقدمه گزارش شرح دستورالعمل را دارد', str_contains(implode(' ', $staff['paragraphs'] ?? []), 'سهم مدیرعامل'));
+$enf = $probe->json('GET', 'centers/rewards&year=1404&kind=enforcement', [], $managerToken)['body']['data'] ?? [];
+equals('گزارش عوامل اجرایی: سه نفر از دو سازمان', 3, count($enf['tables'][1]['rows'] ?? []));
+foreach (['finder', 'enforcement', 'staff'] as $kind) {
+    foreach (['xlsx' => 'xl/styles.xml', 'docx' => 'word/document.xml'] as $format => $part) {
+        $bytes = $probe->raw("centers/rewards&year=1404&kind=$kind&format=$format", $managerToken)['bytes'];
+        $tmpR = sys_get_temp_dir() . "/reward-$kind.$format";
+        file_put_contents($tmpR, $bytes);
+        $zr = new ZipArchive();
+        $opened = $zr->open($tmpR) === true;
+        $xml = $opened ? (string) $zr->getFromName($part) : '';
+        $opened && $zr->close();
+        @unlink($tmpR);
+        check("گزارش $kind به $format با قلم‌های فرم", str_contains($xml, 'B Titr') || str_contains($xml, 'B Nazanin'));
+    }
+}
 equals('مجری گزارش پاداش ندارد', 403, $probe->json('GET', 'centers/rewards&year=1404', [], $exec401)['status']);
 $charts = $list($managerToken, '&charts=1')['body']['data']['charts'] ?? [];
 equals('نمودار: دو مرکز در دو ماه', [2, 2], [$charts['totals']['centers'] ?? null, count($charts['months'] ?? [])]);
@@ -157,7 +174,18 @@ $posted = $probe->page('admin/center_row.php?id=' . $rowId, $jar, ['_c' => $csrf
 check('ویرایش سطر از پنل', str_contains($posted['body'], 'ذخیره شد'), substr(strip_tags($posted['body']), 0, 300));
 equals('پنل فقط خانه تغییرکرده را نوشت', ['account_reason'], array_values(array_diff(array_keys(
     $probe->json('GET', 'centers/row&id=' . $rowId, [], $managerToken)['body']['data']['own'] ?? []), ['energy_amount', 'sheba', 'miners', 'status'])));
-foreach (['center_import.php', 'center_rules.php', 'center_settings.php', 'center_rewards.php?year=1404', 'index.php'] as $p) {
+$picked = $probe->page('admin/center_export.php?year=1404&format=xlsx&cols%5B%5D=subscription&cols%5B%5D=miners', $jar);
+$tmpP = sys_get_temp_dir() . '/picked-' . getmypid() . '.xlsx';
+file_put_contents($tmpP, $picked['body']);
+$zp = new ZipArchive();
+$zp->open($tmpP);
+$pickedSheet = (string) $zp->getFromName('xl/worksheets/sheet1.xml');
+$zp->close();
+@unlink($tmpP);
+check('خروجی اکسل فقط با ستون‌های تیک‌خورده', str_contains($pickedSheet, 'شماره اشتراک') && !str_contains($pickedSheet, 'کمیسیون رمزارز'));
+check('Word رسمی پاداش از پنل', str_starts_with($probe->page('admin/center_export.php?year=1404&reward=staff&format=docx', $jar)['body'], 'PK'));
+check('Word آمار پرونده‌ها از پنل', str_starts_with($probe->page('admin/cases_export.php?format=docx', $jar)['body'], 'PK'));
+foreach (['center_import.php', 'center_rules.php', 'center_settings.php', 'center_rewards.php?year=1404', 'index.php', 'case_stats.php'] as $p) {
     equals("صفحه $p", 200, $probe->page('admin/' . $p, $jar)['status']);
 }
 $unitJar = tempnam(sys_get_temp_dir(), 'ujar');

@@ -18,7 +18,7 @@ foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSch
           'DeviceRequests', 'CrewAccounts', 'FieldReadings', 'FieldHistory', 'FieldHistorySearch', 'FieldHistoryExport',
           'HistoryReferral', 'CenterSchema', 'CenterColumns', 'CenterValues', 'CenterSystem', 'CenterMatch', 'CenterCheck', 'CenterLocks',
           'CenterSettings', 'RewardRules', 'RewardSpec', 'CenterRewards', 'CenterRows', 'CenterEdit', 'XlsxReader', 'CenterHeader',
-          'CenterSupplement', 'CenterImport', 'CenterImportRun', 'CenterTemplate', 'CenterGrid', 'CenterSupplementSheet', 'CenterXlsx',
+          'CenterSupplement', 'CenterImport', 'CenterImportRun', 'CenterTemplate', 'CenterGrid', 'TemplateBook', 'OfficialXlsx', 'OfficialDocx',  'CenterSupplementSheet', 'CenterXlsx',
           'CenterDocx', 'CenterRewardReport', 'CenterCharts'] as $class) {
     require_once dirname(__DIR__) . '/lib/' . $class . '.php';
 }

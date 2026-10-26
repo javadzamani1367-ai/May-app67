@@ -7,8 +7,8 @@ declare(strict_types=1);
  *
  * پلکان (عامل شناسایی و عوامل اجرایی): mode، tiers [{from, to, amount}] که پشت هم و
  * بی‌هم‌پوشانی‌اند (آخرین پله می‌تواند بی‌انتها باشد)، cap سقف هر مرکز.
- * عوامل اجرایی: orgs کدام نهادها، split: person (تقسیم میان حاضران)، each (هر نفر
- * همان مبلغ)، org (تقسیم میان نهادهای حاضر و بعد میان افراد هر نهاد).
+ * عوامل اجرایی: orgs کدام سازمان‌ها (نیروی انتظامی، سپاه)؛ مبلغ مرکز میان سازمان‌های حاضر برابر
+ * و سهم هر سازمان میان حاضران همان سازمان برابر تقسیم می‌شود.
  * عوامل اداری: base، pct کل، ceo_pct، staff_pct (جمع این دو همان کل)، cap، و roles
  * [{label, weight, people}] که وزن‌ها جمعاً ۱۰۰ درصد سهم کارکنان است.
  */
@@ -40,11 +40,9 @@ final class RewardSpec
         if ($kind === RewardRules::ENFORCEMENT) {
             $orgs = array_values(array_intersect(array_keys(RewardRules::ENFORCERS), array_map('strval', (array) ($spec['orgs'] ?? []))));
             if ($orgs === []) {
-                return 'دست‌کم یک نهاد اجرایی را انتخاب کنید.';
+                return 'دست‌کم یکی از دو سازمان اجرایی را انتخاب کنید.';
             }
-            $split = (string) ($spec['split'] ?? 'person');
             $out['orgs'] = $orgs;
-            $out['split'] = in_array($split, ['person', 'each', 'org'], true) ? $split : 'person';
         }
         return $out;
     }

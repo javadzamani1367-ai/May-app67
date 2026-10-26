@@ -26,6 +26,7 @@ admin_header('آرشیو پرونده‌ها');
     <div>
       <a href="case_stats.php<?= e(query_with($values)) ?>"><button type="button">آمار و نمودار</button></a>
       <a href="cases_export.php<?= e(query_with($values)) ?>"><button type="button">خروجی اکسل</button></a>
+      <a href="cases_export.php<?= e(query_with($values, ['format' => 'docx'])) ?>"><button type="button" style="background:#1d4ed8">خروجی Word</button></a>
     </div>
   </div>
   <?= case_kpis($stats) ?>

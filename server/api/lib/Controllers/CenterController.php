@@ -139,20 +139,21 @@ final class CenterController
         exit;
     }
 
+    /** سه گزارش پاداش: kind = finder، enforcement یا staff؛ format = json، xlsx یا docx. */
     public function rewards(Request $request): void
     {
         $user = Auth::require($request, null);
         $access = CenterSettings::require($user, true);
         [$from, $to] = self::range($request);
-        $rows = CenterRows::query($access, $from, $to);
-        $staff = $request->str('kind') !== 'agents';
-        $report = $staff ? CenterRewardReport::staff($rows) : CenterRewardReport::agents($rows);
-        if ($request->str('format') === 'xlsx') {
-            Xlsx::sendBook($staff ? 'staff-rewards' : 'agent-rewards',
-                $staff ? CenterRewardReport::staffBook($report) : CenterRewardReport::agentsBook($report));
-            exit;
-        }
-        Response::json($report + ['from' => $from, 'to' => $to]);
+        $kind = $request->str('kind');
+        $kind = isset(CenterRewardReport::KINDS[$kind]) ? $kind : 'finder';
+        $model = CenterRewardReport::model($kind, CenterRows::query($access, $from, $to), $from, $to);
+        match ($request->str('format')) {
+            'xlsx' => OfficialXlsx::send($kind . '-rewards', $model),
+            'docx' => OfficialDocx::send($kind . '-rewards', $model),
+            default => Response::json(CenterRewardReport::forApp($model) + ['kind' => $kind, 'from' => $from, 'to' => $to]),
+        };
+        exit;
     }
 
     public function rules(Request $request): void

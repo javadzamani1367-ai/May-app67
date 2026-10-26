@@ -20,7 +20,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             ? ['pct' => $_POST['pct'] ?? '', 'ceo_pct' => $_POST['ceo_pct'] ?? '', 'staff_pct' => $_POST['staff_pct'] ?? '',
                 'base' => $_POST['base'] ?? 'energy', 'cap' => $_POST['cap'] ?? '', 'roles' => (array) ($_POST['roles'] ?? [])]
             : ['mode' => $_POST['mode'] ?? 'progressive', 'tiers' => (array) ($_POST['tiers'] ?? []), 'cap' => $_POST['cap'] ?? '',
-                'orgs' => (array) ($_POST['orgs'] ?? []), 'split' => $_POST['split'] ?? 'person'];
+                'orgs' => (array) ($_POST['orgs'] ?? [])];
         $result = RewardRules::save($_POST + ['spec' => $spec], $user, ((string) ($_POST['id'] ?? '')) ?: null);
         $saved = Field::isUuid($result);
         $error = $saved ? null : $result;
@@ -36,8 +36,8 @@ echo center_styles();
 ?>
 <div class="card">
   <h2>دستورالعمل‌های پاداش</h2>
-  <p class="muted">هر پاداش سقف هر مرکز دارد. پاداش عامل شناسایی و عوامل اجرایی را توانیر می‌پردازد ولی اینجا حساب و گزارش می‌شود؛ تعداد
-    دستگاه هر مرکز و حاضران بازدید از اپ کارشناس و پس از تأیید مدیر می‌آیند. پاداش عوامل اداری درصدی از مبلغ صورتحساب پرونده است.</p>
+  <p class="muted">هر پاداش سقف هر مرکز دارد. پاداش عامل شناسایی و عوامل اجرایی (نیروی انتظامی و سپاه) را توانیر می‌پردازد ولی اینجا حساب و گزارش
+    می‌شود؛ تعداد دستگاه هر مرکز و حاضران بازدید از اپ کارشناس و پس از تأیید مدیر می‌آیند. پاداش عوامل اداری درصدی از مبلغ صورتحساب پرونده است.</p>
   <?php if ($saved): ?><p style="color:#15803d">ذخیره شد.</p><?php endif; ?>
   <?php if ($error !== null): ?><p class="warn"><?= e($error) ?></p><?php endif; ?>
   <?php foreach (RewardRules::NAMES as $k => $name): ?>
@@ -73,14 +73,12 @@ echo center_styles();
           <td><input name="tiers[<?= $i ?>][amount]" dir="ltr" value="<?= e((string) ($t['amount'] ?? '')) ?>"></td></tr>
         <?php endfor; ?></table>
       <?php if ($kind === RewardRules::ENFORCEMENT): ?>
-        <h3 style="margin-top:12px">نهادهای اجرایی</h3>
+        <h3 style="margin-top:12px">سازمان‌های اجرایی</h3>
         <?php foreach (RewardRules::ENFORCERS as $o => $label): ?><label class="check"><input type="checkbox" name="orgs[]" value="<?= $o ?>" style="width:auto"
           <?= in_array($o, $spec['orgs'] ?? array_keys(RewardRules::ENFORCERS), true) ? 'checked' : '' ?>> <?= e($label) ?></label><?php endforeach; ?>
-        <label>تقسیم<select name="split">
-          <option value="person" <?= ($spec['split'] ?? 'person') === 'person' ? 'selected' : '' ?>>مبلغ مرکز میان حاضران، برابر</option>
-          <option value="each" <?= ($spec['split'] ?? '') === 'each' ? 'selected' : '' ?>>هر حاضر همان مبلغ (سقف برای کل مرکز)</option>
-          <option value="org" <?= ($spec['split'] ?? '') === 'org' ? 'selected' : '' ?>>اول میان نهادهای حاضر، بعد میان افراد هر نهاد</option></select></label>
-        <p class="srcs">حاضر «پلیس امنیت» یا با نام نهاد فراجا، «سپاه» در نام نهاد، و «وصول» در سمت یا نام نهاد شناخته می‌شوند.</p>
+        <p class="srcs">مبلغ مرکز اگر هر دو سازمان حاضر بودند میان دو سازمان برابر، و سهم هر سازمان میان حاضران همان سازمان
+          برابر تقسیم می‌شود. حاضر «پلیس امنیت» یا با نام نهاد نیروی انتظامی و فراجا، و «سپاه» در نام نهاد شناخته می‌شوند؛ کارکنان
+          شرکت توزیع (از جمله مأموران وصول) پاداش اجرایی ندارند.</p>
       <?php endif; ?>
     <?php else: ?>
       <div class="grid">

@@ -2,28 +2,26 @@
 declare(strict_types=1);
 
 /**
- * Word آمار جامع: برگه A4 افقی با قلم ریز، فقط ستون‌هایی که مدیر برای Word تیک زده
- * (همه ستون‌های فرم در یک برگه Word جا نمی‌شوند؛ اکسل همه را دارد)، و سطر جمع.
+ * Word آمار جامع: برگه A4 افقی با قلم‌های فرم (OfficialDocx)، فقط ستون‌های تیک‌خورده (همه
+ * ستون‌های فرم در یک برگه Word خوانا جا نمی‌شوند؛ اکسل همه را دارد)، و سطر جمع.
  */
 final class CenterDocx
 {
     public static function send(string $name, array $rows, array $keys, string $title, string $subtitle): void
     {
-        $path = tempnam(sys_get_temp_dir(), 'cdx');
-        self::write($path, $rows, $keys, $title, $subtitle);
-        header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-        header('Content-Disposition: attachment; filename="' . $name . '.docx"');
-        header('Content-Length: ' . filesize($path));
-        header('X-Content-Type-Options: nosniff');
-        readfile($path);
-        @unlink($path);
+        OfficialDocx::send($name, self::model($rows, $keys, $title, $subtitle));
     }
 
     public static function write(string $path, array $rows, array $keys, string $title, string $subtitle): void
     {
+        OfficialDocx::write($path, self::model($rows, $keys, $title, $subtitle));
+    }
+
+    private static function model(array $rows, array $keys, string $title, string $subtitle): array
+    {
         $header = array_map([CenterColumns::class, 'label'], $keys);
-        $lines = [];
         $longest = array_map(static fn ($h) => min(14, mb_strlen($h) / 2), $header);
+        $lines = [];
         foreach ($rows as $row) {
             $line = [];
             foreach ($keys as $i => $key) {
@@ -40,11 +38,8 @@ final class CenterDocx
             $sum[] = isset($totals[$key]) ? CenterValues::display($type === 'tick' || $type === 'text' ? 'int' : $type, $totals[$key])
                 : ($i === 0 ? 'جمع کل' : '');
         }
-        $lines[] = $sum;
-        Docx::write($path, [
-            ['h', $title],
-            ['p', $subtitle],
-            ['grid', [$header, $lines, array_map(static fn ($n) => max(3, $n), $longest)]],
-        ], ['landscape' => true, 'size' => count($keys) > 16 ? 13 : 15]);
+        return ['title' => $title, 'subtitle' => $subtitle,
+            'tables' => [['header' => $header, 'rows' => $lines, 'total' => $sum, 'widths' => array_map(static fn ($n) => max(3, $n), $longest)]],
+            'cell_size' => count($keys) > 16 ? 15 : (count($keys) > 10 ? 18 : 22)];
     }
 }

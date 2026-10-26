@@ -17,60 +17,16 @@ final class CenterXlsx
     {
         $path = tempnam(sys_get_temp_dir(), 'cxl');
         self::write($path, $rows, $keys, $title);
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename="' . $name . '.xlsx"');
-        header('Content-Length: ' . filesize($path));
-        header('X-Content-Type-Options: nosniff');
-        readfile($path);
-        @unlink($path);
+        TemplateBook::send($name, $path);
     }
 
     public static function write(string $path, array $rows, array $keys, string $title): void
     {
-        $title = mb_substr(str_replace(['/', '\\', '?', '*', '[', ']', ':'], ' ', $title), 0, 31);
         [$main, $mainRef, $lastRow] = self::mainSheet($rows, $keys);
-        $supp = CenterSupplementSheet::xml(CenterSupplement::rows($rows));
-        $zip = new ZipArchive();
-        if ($zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new RuntimeException('cannot create xlsx');
-        }
-        $dir = dirname(__DIR__) . '/templates/stats';
-        $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-            . '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-            . '<Default Extension="xml" ContentType="application/xml"/>'
-            . '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
-            . '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
-            . '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
-            . '<Override PartName="/xl/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>'
-            . '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
-            . '</Types>');
-        $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
-            . '</Relationships>');
-        $quoted = "'" . str_replace("'", "''", $title) . "'";
-        $zip->addFromString('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
-            . 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-            . '<sheets><sheet name="' . self::esc($title) . '" sheetId="1" r:id="rId1"/>'
-            . '<sheet name="جدول اطلاعات تکمیلی" sheetId="2" r:id="rId2"/></sheets>'
-            . '<definedNames>'
-            . ($lastRow >= self::FIRST_DATA ? '<definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">' . self::esc($quoted . '!' . $mainRef) . '</definedName>' : '')
-            . '<definedName name="_xlnm.Print_Titles" localSheetId="0">' . self::esc($quoted . '!$1:$4') . '</definedName>'
-            . '</definedNames></workbook>');
-        $zip->addFromString('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
-            . '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>'
-            . '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>'
-            . '<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
-            . '</Relationships>');
-        $zip->addFile($dir . '/styles.xml', 'xl/styles.xml');
-        $zip->addFile($dir . '/theme1.xml', 'xl/theme/theme1.xml');
-        $zip->addFromString('xl/worksheets/sheet1.xml', $main);
-        $zip->addFromString('xl/worksheets/sheet2.xml', $supp);
-        $zip->close();
+        TemplateBook::write($path, [
+            ['name' => $title, 'xml' => $main, 'filter' => $lastRow >= self::FIRST_DATA ? $mainRef : null, 'titles' => '$1:$4'],
+            ['name' => 'جدول اطلاعات تکمیلی', 'xml' => CenterSupplementSheet::xml(CenterSupplement::rows($rows)), 'titles' => '$2:$2'],
+        ]);
     }
 
     /** @return array{0:string, 1:string, 2:int} xml برگه، محدوده فیلتر، آخرین سطر داده */

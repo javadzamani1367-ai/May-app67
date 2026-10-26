@@ -6,8 +6,9 @@ declare(strict_types=1);
  * و توان دستگاه‌ها، شناسه‌های مشترک، کمیسیون (صورتجلسه پیوست)، نوع انشعاب و کنتور.
  *
  * فقط پرونده تأییدشده رمزارز وارد آمار می‌شود؛ برق غیرمجاز نه.
- * «کیلو وات شناسایی شده» همان توانی است که کارشناس در محل از آمپر و ولتاژ ساخت
- * (total_watt)، و «ظرفیت برآوردی» مجموع توان دستگاه‌های ثبت‌شده، و اگر نبود همان.
+ * «مجموع ظرفیت برآوردی دستگاه‌ها (KW)» توانی است که کارشناس در محل از آمپر و ولتاژ ساخت
+ * (total_watt)؛ اگر نبود، مجموع توان دستگاه‌های ثبت‌شده. «کیلو وات شناسایی شده» مصرف یک
+ * بازه است (چند ماه) و از صورتحساب می‌آید، نه از بازدید؛ پس دستی است.
  */
 final class CenterSystem
 {
@@ -73,7 +74,7 @@ final class CenterSystem
             },
             'miners' => $count,
             'sms_code' => $type === 1 ? self::text($r['tracking_code']) : null,
-            'capacity_kw' => $deviceKw ?? $kw,
+            'capacity_kw' => $kw ?? $deviceKw,
             'bill_id' => self::text($r['bill_number']),
             'subscriber' => self::text($r['subscriber_name']) ?? self::text($r['owner_name']),
             'subscription' => $subscription ?: null,
@@ -81,9 +82,7 @@ final class CenterSystem
             'commission' => $commission ? 1 : null,
             'branch_type' => $tariff !== null && $tariff >= 0 && $tariff <= 4 ? CaseLabels::TARIFFS[$tariff] : null,
             'with_found' => $hasBranch ? 1 : null,
-            'with_kw' => $hasBranch ? $kw : null,
             'without_found' => $hasBranch ? null : 1,
-            'without_kw' => $hasBranch ? null : $kw,
             'adjust_branch' => CenterColumns::ADJUST[$hasBranch ? 0 : 1],
             'meter_type' => match ($r['meter_type'] === null ? null : (int) $r['meter_type']) {
                 0 => 'مکانیکی', 1 => 'دیجیتال', default => null,

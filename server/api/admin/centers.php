@@ -30,7 +30,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '')
 $rows = CenterRows::query($access, $from, $to, ($_GET['area'] ?? '') ?: null, (string) ($_GET['q'] ?? ''));
 $charts = CenterCharts::summary($rows);
 $t = $charts['totals'];
-$export = static fn (string $format) => 'center_export.php' . query_with($_GET, ['format' => $format]);
 $list = ['row', 'county', 'report_date', 'subscription', 'subscriber', 'miners', 'capacity_kw', 'finder_reward', 'energy_amount',
     'damage_amount', 'collected_amount', 'status'];
 $list = array_values(array_intersect($list, $access['see']));
@@ -42,9 +41,8 @@ echo center_styles();
   <h2>آمار جامع مراکز استخراج و اقدامات</h2>
   <p class="muted">هر پرونده رمزارز که تأیید شود خودکار یک سطر می‌گیرد؛ سطرهای سال‌های پیش از فایل اکسل وارد می‌شوند. خانه‌ای که سامانه و
     فایل در آن یکی نیستند «ناسازگار» است تا یکی را انتخاب کنید.</p>
-  <?= center_range_form($_GET, $access['areas'],
-      '<a href="' . e($export('xlsx')) . '"><button type="button" style="background:#15803d">اکسل (فرم توانیر)</button></a> '
-      . '<a href="' . e($export('docx')) . '"><button type="button" style="background:#1d4ed8">Word</button></a>') ?>
+  <?= center_range_form($_GET, $access['areas']) ?>
+  <?= center_export_form($_GET, $access) ?>
   <?php if ($access['manage']): ?>
   <p><a href="center_import.php">ورود فایل اکسل</a> · <a href="center_rewards.php<?= e(query_with($_GET)) ?>">گزارش‌های پاداش</a> ·
     <a href="center_rules.php">دستورالعمل‌های پاداش</a> · <a href="center_settings.php">ستون‌ها، دسترسی‌ها و قفل سال</a></p>

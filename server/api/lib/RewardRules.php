@@ -8,8 +8,8 @@ declare(strict_types=1);
  *
  * سه نوع:
  *  - عامل شناسایی (گزارش‌دهنده): پلکانی بر تعداد دستگاه، با سقف هر مرکز (ستون M فرم)
- *  - عوامل اجرایی: پلیس امنیت اقتصادی، اطلاعات سپاه، عوامل وصول شرکت توزیع که در
- *    بازدید حاضر بودند؛ همان پلکان و سقف، تقسیم میان حاضران
+ *  - عوامل اجرایی: نیروی انتظامی (پلیس امنیت اقتصادی) و اطلاعات سپاه حاضر در بازدید؛ همان
+ *    پلکان و سقف. اگر هر دو بودند میان دو سازمان برابر، و سهم هر سازمان میان حاضران همان سازمان
  *  - عوامل اداری: درصدی از مبلغ صورتحساب پرونده؛ سهم مدیرعامل و سهم کارکنان که میان
  *    نقش‌ها با وزن هر نقش و میان دارندگان هر نقش برابر تقسیم می‌شود
  *
@@ -26,8 +26,8 @@ final class RewardRules
     /** پلکان: هر دستگاه با نرخ پله خودش / همه با نرخ پله‌ای که تعداد در آن است / مبلغ ثابت پله. */
     public const MODES = ['progressive' => 'پلکانی (هر دستگاه با نرخ پله خودش)',
         'bracket' => 'همه دستگاه‌ها با نرخ پله‌ای که تعداد در آن است', 'fixed' => 'مبلغ ثابت هر پله'];
-    public const ENFORCERS = ['faraja' => 'پلیس امنیت اقتصادی (فراجا)', 'sepah' => 'اطلاعات سپاه',
-        'collection' => 'عوامل وصول شرکت توزیع'];
+    /** فقط نیروی انتظامی و سپاه؛ مأموران شرکت توزیع (وصول و…) پاداش اجرایی نمی‌گیرند. */
+    public const ENFORCERS = ['faraja' => 'پلیس امنیت اقتصادی (فراجا)', 'sepah' => 'اطلاعات سپاه'];
     public const BASES = ['energy' => 'مبلغ انرژی', 'energy_damage' => 'مبلغ انرژی و خسارت', 'collected' => 'مبلغ وصول'];
 
     /** @var array<int, list<array<string, mixed>>>|null */
@@ -84,7 +84,33 @@ final class RewardRules
             $rule['letter_id'] ? 'شناسه ' . $rule['letter_id'] : null,
             $rule['letter_date'] ? Jalali::format((int) $rule['letter_date'], false) : null,
         ]);
-        return Jalali::digits(implode(' — ', $parts) . '، اجرا از ' . Jalali::format((int) $rule['effective_from'], false));
+        return Jalali::digits(($parts === [] ? 'دستورالعمل' : implode(' — ', $parts)) . '، اجرا از '
+            . Jalali::format((int) $rule['effective_from'], false));
+    }
+
+    /** شرح دستورالعمل برای مقدمه گزارش‌ها: نامه، پلکان و سقف، یا درصدها و نقش‌ها. */
+    public static function explain(array $rule): string
+    {
+        $spec = $rule['spec'];
+        $money = static fn ($n) => number_format((float) $n) . ' ریال';
+        if ($rule['kind'] === self::STAFF) {
+            $roles = implode('، ', array_map(static fn ($r) => $r['label'] . ' ' . $r['weight'] . '٪', $spec['roles'] ?? []));
+            $text = $spec['pct'] . ' درصد ' . self::BASES[$spec['base'] ?? 'energy'] . ' هر مرکز: ' . $spec['ceo_pct']
+                . ' درصد سهم مدیرعامل و ' . $spec['staff_pct'] . ' درصد سهم کارکنان'
+                . ($roles === '' ? '' : ' که به این نسبت میان نقش‌ها و میان دارندگان هر نقش برابر تقسیم می‌شود: ' . $roles);
+        } else {
+            $tiers = implode('؛ ', array_map(static fn ($t) => 'از ' . $t['from'] . ($t['to'] === null ? ' به بالا' : ' تا ' . $t['to'])
+                . ' دستگاه ' . $money($t['amount']), $spec['tiers'] ?? []));
+            $text = self::MODES[$spec['mode'] ?? 'progressive'] . ': ' . $tiers;
+            if ($rule['kind'] === self::ENFORCEMENT) {
+                $text .= '. میان ' . implode(' و ', array_map(static fn ($o) => self::ENFORCERS[$o], $spec['orgs'] ?? []))
+                    . ' حاضر در بازدید؛ اگر هر دو حاضر بودند میان دو سازمان برابر و سهم هر سازمان میان حاضران همان سازمان برابر';
+            }
+        }
+        if ((float) ($spec['cap'] ?? 0) > 0) {
+            $text .= '. سقف هر مرکز ' . $money($spec['cap']);
+        }
+        return Jalali::digits('بر پایه ' . self::describe($rule) . ' — ' . $text . '.');
     }
 
     /**

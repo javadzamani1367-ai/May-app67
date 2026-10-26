@@ -39,6 +39,7 @@ admin_header('آمار پرونده‌ها');
     <div class="actions-bar">
       <a href="cases.php<?= e(query_with($values)) ?>"><button type="button">فهرست پرونده‌ها</button></a>
       <a href="cases_export.php<?= e(query_with($values)) ?>"><button type="button">خروجی اکسل</button></a>
+      <a href="cases_export.php<?= e(query_with($values, ['format' => 'docx'])) ?>"><button type="button" style="background:#1d4ed8">خروجی Word</button></a>
     </div>
   </div>
   <?= case_kpis($s) ?>

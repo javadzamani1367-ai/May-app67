@@ -183,3 +183,34 @@ function center_changes(array $changes): string
     }
     return $html . '</table></div>';
 }
+
+/**
+ * فرم خروجی: ستون‌ها با تیک، جدا برای اکسل و Word، از پیش با تنظیمات مدیر پر شده؛ بازه و
+ * جستجوی فعلی صفحه همراهش می‌رود. فایل در مرورگر دانلود و ذخیره می‌شود.
+ */
+function center_export_form(array $q, array $access): string
+{
+    $hidden = '';
+    foreach (['year', 'from', 'to', 'area', 'q'] as $k) {
+        if (($q[$k] ?? '') !== '') {
+            $hidden .= '<input type="hidden" name="' . $k . '" value="' . e((string) $q[$k]) . '">';
+        }
+    }
+    $html = '';
+    foreach (['xlsx' => ['خروجی اکسل (فرم توانیر)', '#15803d'], 'docx' => ['خروجی Word', '#1d4ed8']] as $format => [$label, $color]) {
+        $picked = array_flip(CenterSettings::columns($format));
+        $html .= '<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:bold">' . e($label) . ' — انتخاب ستون‌ها</summary>'
+            . '<form method="get" action="center_export.php">' . $hidden . '<input type="hidden" name="format" value="' . $format . '">'
+            . '<div class="fields" style="margin-top:6px">';
+        foreach (CenterColumns::all() as $key => $c) {
+            if (!in_array($key, $access['see'], true)) {
+                continue;
+            }
+            $html .= '<label class="check"><input type="checkbox" name="cols[]" value="' . e($key) . '" style="width:auto"'
+                . (isset($picked[$key]) ? ' checked' : '') . '> ' . e(CenterColumns::label($key))
+                . ($c['cols'] === null ? ' <span class="srcs">(اضافه)</span>' : '') . '</label>';
+        }
+        $html .= '</div><button type="submit" style="background:' . $color . '">ساختن و ذخیره ' . e($label) . '</button></form></details>';
+    }
+    return $html;
+}
