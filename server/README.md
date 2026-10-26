@@ -258,7 +258,7 @@ https://دامنه-شما/api/admin/
 | `GET /centers?year=\|from=&to=&q=&charts=1` · `GET /centers/row?id=` · `POST /centers/row` | آمار جامع مراکز: سطرهای بازه، یک سطر با منابع، ذخیره و انتخاب ناسازگاری — مدیر، مجری با اجازه، واحد در ستون‌های خودش |
 | `POST /centers/add` · `POST /centers/delete` | سطر دستی یا سطر دوم یک مرکز؛ حذف فقط مدیر |
 | `POST /centers/import?year=` · `POST /centers/import/apply` | ورود اکسل (multipart یا بایت خام): پیش‌نمایش، بعد اجرا با نشانه — فقط مدیر |
-| `GET /centers/export?format=xlsx\|docx` · `GET /centers/rewards?kind=staff\|agents&format=xlsx` | اکسل فرم توانیر، Word، گزارش‌های پاداش (پاداش فقط مدیر) |
+| `GET /centers/export?format=xlsx\|docx&cols=a,b` · `GET /centers/rewards?kind=finder\|enforcement\|staff&format=json\|xlsx\|docx` | اکسل فرم توانیر و Word با ستون‌های تیک‌خورده؛ سه گزارش پاداش رسمی (فقط مدیر) |
 | `GET\|POST /centers/rules` · `GET\|POST /centers/settings` | دستورالعمل‌های پاداش؛ دسترسی‌ها، ستون‌های واحدها و خروجی‌ها، قفل سال — فقط مدیر |
 | `GET /sync/manifest?since=` | شناسه پرونده‌های تغییرکرده |
 | `POST /sync/report` · `GET /sync/report?id=` | ارسال و دریافت یک پرونده |
