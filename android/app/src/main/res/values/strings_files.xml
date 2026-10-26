@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- پرسش پس از ساختن هر فایل خروجی: ذخیره روی گوشی یا ارسال در شبکه‌های اجتماعی. -->
+<resources>
+    <string name="file_ready_title">فایل آماده است</string>
+    <string name="file_save_phone">ذخیره روی گوشی</string>
+    <string name="file_send">ارسال (واتساپ، تلگرام، ایتا، بله…)</string>
+    <string name="file_saved">فایل ذخیره شد.</string>
+    <string name="file_save_failed">ذخیره فایل انجام نشد.</string>
+</resources>

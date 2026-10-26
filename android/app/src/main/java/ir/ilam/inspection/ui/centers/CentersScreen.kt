@@ -74,12 +74,21 @@ fun CentersScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state.page == null) viewModel.load() }
     var search by remember { mutableStateOf(state.search) }
+    var exporting by remember { mutableStateOf<String?>(null) }
     val page = state.page
+    exporting?.let { format ->
+        if (page != null) CenterExportDialog(page, format, onDismiss = { exporting = null }) { f, columns ->
+            exporting = null
+            viewModel.export(context, f, columns)
+        }
+    }
     Column(modifier = Modifier.fillMaxSize()) {
         TavanTopBar(title = stringResource(R.string.ct_title), subtitle = stringResource(R.string.ct_year, PersianNumbers.toPersian(state.year)),
             onBack = onBack) {
-            HeaderAction(Icons.Filled.TableChart, stringResource(R.string.ct_excel), onClick = { viewModel.export(context, "xlsx") })
-            HeaderAction(Icons.Filled.Description, stringResource(R.string.ct_word), onClick = { viewModel.export(context, "docx") })
+            if (page != null) {
+                HeaderAction(Icons.Filled.TableChart, stringResource(R.string.ct_excel), onClick = { exporting = "xlsx" })
+                HeaderAction(Icons.Filled.Description, stringResource(R.string.ct_word), onClick = { exporting = "docx" })
+            }
             if (page?.manage == true) {
                 HeaderAction(Icons.Filled.UploadFile, stringResource(R.string.ct_import), onClick = onImport)
                 HeaderAction(Icons.Filled.Paid, stringResource(R.string.ct_rewards), onClick = onRewards)

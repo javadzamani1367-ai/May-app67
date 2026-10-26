@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.AppContainer
-import ir.ilam.inspection.export.ShareUtil
+import ir.ilam.inspection.export.FileOutbox
 import ir.ilam.inspection.sync.ApiResult
 import ir.ilam.inspection.sync.Flow
 import ir.ilam.inspection.sync.Readings
@@ -77,7 +77,7 @@ class HistoryViewModel(private val container: AppContainer) : ViewModel() {
         val target = File(container.cacheDir, "history/history-${System.currentTimeMillis()}.$format")
         val ok = download(historyExportRoute(_state.value.filter, format), target)
         _state.update { it.copy(busy = false, message = if (ok) null else R.string.export_failed) }
-        if (ok) ShareUtil.share(context, target)
+        if (ok) FileOutbox.offer(target)
     }
 
     /** A thermal picture of an earlier inspection, cached; null when it cannot be had. */

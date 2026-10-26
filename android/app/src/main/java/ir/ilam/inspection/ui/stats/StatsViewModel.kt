@@ -7,8 +7,9 @@ import ir.ilam.inspection.R
 import ir.ilam.inspection.data.AppContainer
 import ir.ilam.inspection.data.model.ReportStatus
 import ir.ilam.inspection.data.model.ReportType
-import ir.ilam.inspection.export.ShareUtil
+import ir.ilam.inspection.export.FileOutbox
 import ir.ilam.inspection.util.PersianDate
+import ir.ilam.inspection.util.PersianNumbers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -74,7 +75,8 @@ class StatsViewModel(private val container: AppContainer) : ViewModel() {
         _message.value = null
     }
 
-    fun exportExcel(context: Context) {
+    /** The filtered cases as Excel, or as Word for letters; then saved on the phone or sent. */
+    fun export(context: Context, word: Boolean = false) {
         viewModelScope.launch {
             _busy.value = true
             val current = _filter.value
@@ -87,23 +89,32 @@ class StatsViewModel(private val container: AppContainer) : ViewModel() {
                 fromDate = current.fromDate,
                 toDate = current.toDate
             )
+            val name = "reports-" + PersianDate.trackingStamp(System.currentTimeMillis())
             val file = withContext(Dispatchers.IO) {
                 val details = reports.mapNotNull { repository.detail(it.id) }
                 runCatching {
-                    container.excelExporter.export(
-                        details = details,
-                        fileName = "reports-" + PersianDate.trackingStamp(System.currentTimeMillis()),
-                        expertName = settings.expertName
-                    )
+                    if (word) container.excelExporter.word(details, name, settings.expertName, summary(context, details))
+                    else container.excelExporter.export(details = details, fileName = name, expertName = settings.expertName)
                 }.getOrNull()
             }
             _busy.value = false
             if (file == null) {
                 _message.value = R.string.export_failed
             } else {
-                ShareUtil.share(context, file)
+                FileOutbox.offer(file)
             }
         }
+    }
+
+    private fun summary(context: Context, details: List<ir.ilam.inspection.data.model.ReportDetail>): List<Pair<String, String>> {
+        val count = { status: ReportStatus -> details.count { it.report.status == status.code } }
+        return listOf(
+            context.getString(R.string.stats_total) to PersianNumbers.toPersian(details.size),
+            context.getString(R.string.stats_pending) to PersianNumbers.toPersian(count(ReportStatus.PENDING)),
+            context.getString(R.string.stats_visited) to PersianNumbers.toPersian(count(ReportStatus.VISITED)),
+            context.getString(R.string.stats_archived) to PersianNumbers.toPersian(count(ReportStatus.ARCHIVED)),
+            context.getString(R.string.stats_total_power) to PersianNumbers.grouped(details.sumOf { it.totalPower }.toDouble())
+        )
     }
 
     private fun update(mutate: (StatsFilter) -> StatsFilter) {

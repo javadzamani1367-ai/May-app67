@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.AppContainer
 import ir.ilam.inspection.data.repo.AppSettings
-import ir.ilam.inspection.export.ShareUtil
+import ir.ilam.inspection.export.FileOutbox
 import ir.ilam.inspection.sync.ServerCaseSync
 import ir.ilam.inspection.sync.ServerSyncWorker
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -103,7 +103,7 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
             container.syncService.acknowledgeExported(ids)
             _packagePassword.value = container.vault.packagePassword()
             _message.value = R.string.sync_package_done
-            ShareUtil.share(context, file)
+            FileOutbox.offer(file)
         }
     }
 

@@ -23,6 +23,9 @@ final class CenterController
             'years' => $access['manage'] ? CenterLocks::overview() : [],
             'charts' => $request->int('charts') === 1 ? CenterCharts::summary($rows) : null,
             'status_list' => CenterColumns::STATUS_LIST,
+            // ستون‌های پیش‌فرض هر خروجی، تا اپ تیک‌ها را از همان‌جا شروع کند.
+            'export' => ['xlsx' => array_values(array_intersect(CenterSettings::columns('xlsx'), $access['see'])),
+                'docx' => array_values(array_intersect(CenterSettings::columns('docx'), $access['see']))],
         ]);
     }
 

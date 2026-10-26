@@ -74,12 +74,13 @@
     <string name="ct_applied">انجام شد: %1$s سطر به‌روز، %2$s سطر تازه، %3$s سطر جدول تکمیلی.</string>
 
     <string name="ct_rewards_staff">عوامل اداری</string>
-    <string name="ct_rewards_agents">شناسایی و اجرایی</string>
+    <string name="ct_rewards_finder">عامل شناسایی</string>
+    <string name="ct_rewards_enforcement">عوامل اجرایی (انتظامی و سپاه)</string>
+    <string name="ct_export_title">خروجی آمار جامع</string>
+    <string name="ct_export_make">ساختن فایل</string>
+    <string name="ct_cols_all">همه</string>
+    <string name="ct_cols_form">ستون‌های فرم</string>
+    <string name="ct_cols_none">هیچ</string>
     <string name="ct_rewards_empty">در این سال مرکزی با پاداش و دستورالعمل جاری نیست.</string>
     <string name="ct_totals">جمع</string>
-    <string name="ct_base">مبنا (ریال)</string>
-    <string name="ct_total_reward">پاداش کل</string>
-    <string name="ct_ceo">سهم مدیرعامل</string>
-    <string name="ct_staff_share">سهم کارکنان</string>
-    <string name="ct_people">جمع هر نفر</string>
 </resources>

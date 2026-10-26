@@ -9,7 +9,7 @@ import ir.ilam.inspection.data.repo.PerformanceReport
 import ir.ilam.inspection.data.repo.PerformanceSource
 import ir.ilam.inspection.export.PdfOutcome
 import ir.ilam.inspection.export.PerformanceExporter
-import ir.ilam.inspection.export.ShareUtil
+import ir.ilam.inspection.export.FileOutbox
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -80,7 +80,7 @@ class PerformanceViewModel(private val container: AppContainer) : ViewModel() {
             }.getOrDefault(PdfOutcome.Failed)
             _state.update { it.copy(busy = false) }
             when (outcome) {
-                is PdfOutcome.Saved -> ShareUtil.share(context, outcome.file)
+                is PdfOutcome.Saved -> FileOutbox.offer(outcome.file)
                 PdfOutcome.HandedToPrinter ->
                     _state.update { it.copy(messageRes = R.string.export_via_print_dialog) }
                 PdfOutcome.Failed ->
@@ -102,7 +102,7 @@ class PerformanceViewModel(private val container: AppContainer) : ViewModel() {
             if (file == null) {
                 _state.update { it.copy(messageRes = R.string.export_failed) }
             } else {
-                ShareUtil.share(context, file)
+                FileOutbox.offer(file)
             }
         }
     }

@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.data.AppContainer
-import ir.ilam.inspection.export.ShareUtil
+import ir.ilam.inspection.export.FileOutbox
 import ir.ilam.inspection.sync.ApiResult
 import ir.ilam.inspection.sync.CrewWork
 import ir.ilam.inspection.sync.ServerApi
@@ -96,7 +96,7 @@ class CrewViewModel(private val container: AppContainer) : ViewModel() {
             val target = File(context.cacheDir, "crew/crew-${PersianDate.trackingStamp(from)}-${PersianDate.trackingStamp(to)}.$format")
             val ok = server.isNotBlank() && ServerFiles(server, token).downloadRoute(crewExportRoute(from, to, format, memberKey), target)
             _state.update { it.copy(busy = false, offline = !ok && it.offline) }
-            if (ok) ShareUtil.share(context, target) else _state.update { it.copy(offline = true) }
+            if (ok) FileOutbox.offer(target) else _state.update { it.copy(offline = true) }
         }
     }
 

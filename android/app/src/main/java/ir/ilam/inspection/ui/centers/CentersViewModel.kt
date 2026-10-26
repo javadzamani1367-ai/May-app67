@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.R
 import ir.ilam.inspection.data.AppContainer
-import ir.ilam.inspection.export.ShareUtil
+import ir.ilam.inspection.export.FileOutbox
 import ir.ilam.inspection.sync.ApiResult
 import ir.ilam.inspection.sync.Centers
 import ir.ilam.inspection.sync.ServerApi
@@ -46,7 +46,7 @@ data class CentersState(
     val sheets: Set<String> = emptySet(),
     val applied: Centers.Applied? = null,
     val rewards: Centers.Rewards? = null,
-    val rewardKind: String = "staff",
+    val rewardKind: String = "finder",
     val busy: Boolean = false,
     val problem: FieldProblem? = null,
     val message: Int? = null
@@ -145,10 +145,13 @@ class CentersViewModel(private val container: AppContainer) : ViewModel() {
         call({ api, token -> api.centerRewards(token, _state.value.year, kind) }) { copy(rewards = it) }
     }
 
-    /** The Tavanir-form Excel or the Word of the ticked columns, shared from the phone. */
-    fun export(context: Context, format: String) = share(context, centerExportRoute(_state.value.year, _state.value.search, format), format)
+    /** The Tavanir-form Excel or the Word, with the columns ticked in the export dialog; saved or sent from the phone. */
+    fun export(context: Context, format: String, columns: List<String>) =
+        share(context, centerExportRoute(_state.value.year, _state.value.search, format, columns), format)
 
-    fun exportRewards(context: Context) = share(context, centerRewardsRoute(_state.value.year, _state.value.rewardKind), "xlsx")
+    /** The reward report on screen, as formal Excel or Word. */
+    fun exportRewards(context: Context, format: String) =
+        share(context, centerRewardsRoute(_state.value.year, _state.value.rewardKind, format), format)
 
     fun clearMessage() = _state.update { it.copy(message = null) }
 
@@ -159,7 +162,7 @@ class CentersViewModel(private val container: AppContainer) : ViewModel() {
         val token = container.vault.serverToken()
         val ok = token != null && server.isNotBlank() && ServerFiles(server, token).downloadRoute(route, target)
         _state.update { it.copy(busy = false, message = if (ok) null else R.string.export_failed) }
-        if (ok) ShareUtil.share(context, target)
+        if (ok) FileOutbox.offer(target)
     }
 
     private suspend fun <T> call(block: suspend (ServerApi, String) -> ApiResult<T>, change: CentersState.(T) -> CentersState): ApiResult<T> {

@@ -18,9 +18,11 @@ object WordDocumentXml {
     private const val TITLE_SIZE = 30
     private const val HEADING_SIZE = 26
 
-    fun document(body: String): String =
+    /** [landscape] for wide tables such as the statistics' case list. */
+    fun document(body: String, landscape: Boolean = false): String =
         "<w:document $NAMESPACES><w:body>$body" +
-            "<w:sectPr><w:pgSz w:w=\"11906\" w:h=\"16838\"/>" +
+            (if (landscape) "<w:sectPr><w:pgSz w:w=\"16838\" w:h=\"11906\" w:orient=\"landscape\"/>"
+            else "<w:sectPr><w:pgSz w:w=\"11906\" w:h=\"16838\"/>") +
             "<w:pgMar w:top=\"850\" w:right=\"700\" w:bottom=\"850\" w:left=\"700\"/>" +
             "<w:bidi/></w:sectPr></w:body></w:document>"
 

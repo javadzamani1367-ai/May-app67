@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.PendingActions
 import androidx.compose.material.icons.filled.TableView
 import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Factory
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Memory
@@ -225,13 +226,20 @@ fun StatsScreen(
                     )
                     PrimaryButton(
                         text = stringResource(R.string.export_excel),
-                        onClick = { viewModel.exportExcel(context) },
+                        onClick = { viewModel.export(context) },
                         busy = busy,
                         icon = Icons.Filled.TableView,
                         tone = Tone.SUCCESS,
                         modifier = Modifier.weight(1f)
                     )
                 }
+                PrimaryButton(
+                    text = stringResource(R.string.export_word),
+                    onClick = { viewModel.export(context, word = true) },
+                    busy = busy,
+                    icon = Icons.Filled.Description,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                )
             }
         }
     }

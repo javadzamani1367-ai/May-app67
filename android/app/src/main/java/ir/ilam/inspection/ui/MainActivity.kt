@@ -86,6 +86,7 @@ class MainActivity : ComponentActivity() {
                             // the manager app records no positions and leaves the GPS off.
                             if (UserRole.current == UserRole.EXPERT) KeepLocationWarm()
                             AppNavigation()
+                            FileReadyHost()
                         }
                         else -> LockScreen(vault = vault, onUnlocked = { unlocked = true })
                     }

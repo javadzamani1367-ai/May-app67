@@ -15,6 +15,11 @@ import java.io.File
  */
 class ExcelExporter(private val context: Context, private val files: FileStore) {
 
+    private companion object {
+        /** Code, type, report date, county, subscription, owner, measured power, devices, status, expert. */
+        val WORD_COLUMNS = listOf(0, 1, 2, 4, 7, 10, 13, 14, 16, 17)
+    }
+
     private val labels = ReportLabels(context)
 
     fun export(details: List<ReportDetail>, fileName: String, expertName: String = ""): File {
@@ -24,6 +29,23 @@ class ExcelExporter(private val context: Context, private val files: FileStore) 
         details.forEach { rows.add(row(it, expertName)) }
 
         return XlsxWriter(context.getString(R.string.excel_sheet_name)).write(target, rows)
+    }
+
+    /**
+     * The same filtered cases as a Word document for letters: the figures, then the
+     * main columns of each case on a landscape page (all twenty do not fit a page).
+     */
+    fun word(details: List<ReportDetail>, fileName: String, expertName: String, summary: List<Pair<String, String>>): File {
+        val target = files.newExportFile(if (fileName.endsWith(".docx", true)) fileName else "$fileName.docx")
+        val headers = context.resources.getStringArray(R.array.excel_headers).toList()
+        val body = buildString {
+            append(WordDocumentXml.title(context.getString(R.string.stats_word_title)))
+            append(WordDocumentXml.paragraph(PersianDate.format(System.currentTimeMillis()), centered = true))
+            append(WordDocumentXml.table(summary.map { listOf(labels.escape(it.first), labels.escape(it.second)) }, headerRow = false))
+            append(WordDocumentXml.table(listOf(WORD_COLUMNS.map { headers[it] }) +
+                details.map { d -> row(d, expertName).let { r -> WORD_COLUMNS.map { labels.escape(r[it]) } } }))
+        }
+        return DocxWriter().write(target, WordDocumentXml.document(body, landscape = true))
     }
 
     private fun row(detail: ReportDetail, expertName: String): List<String> {

@@ -179,7 +179,8 @@
     <string name="stats_subtitle">شمارش پرونده‌ها و خروجی اکسل با فیلتر</string>
     <string name="stats_performance_hint">ارسال‌ها، پاسخ‌ها و مهلت‌های هر واحد</string>
     <string name="stats_by_county_empty">هنوز پرونده‌ای با شهرستان ثبت نشده است</string>
-    <string name="stats_export_hint">پرونده‌ها را بر اساس وضعیت، نوع، شهرستان و بازه تاریخ فیلتر کنید و فایل اکسل بگیرید</string>
+    <string name="stats_export_hint">پرونده‌ها را بر اساس وضعیت، نوع، شهرستان و بازه تاریخ فیلتر کنید و فایل اکسل یا Word بگیرید؛ فایل روی گوشی ذخیره یا در شبکه‌های اجتماعی ارسال می‌شود</string>
+    <string name="stats_word_title">آمار پرونده‌های بازدید مراکز استخراج رمزارز</string>
 
     <!-- گزارش عملکرد -->
     <string name="perf_period_days">%1$s روز اخیر</string>

@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.ilam.inspection.data.AppContainer
-import ir.ilam.inspection.export.ShareUtil
+import ir.ilam.inspection.export.FileOutbox
 import ir.ilam.inspection.sync.ApiResult
 import ir.ilam.inspection.sync.Manage
 import ir.ilam.inspection.sync.ServerApi
@@ -114,7 +114,7 @@ class ManageViewModel(private val container: AppContainer) : ViewModel() {
         val server = container.settingsRepository.current().syncTarget
         val token = container.vault.serverToken() ?: return@launch
         val target = File(container.cacheDir, "manage/$name-${System.currentTimeMillis()}.xlsx").apply { parentFile?.mkdirs() }
-        if (ServerFiles(server, token).downloadRoute(route(), target)) ShareUtil.share(context, target)
+        if (ServerFiles(server, token).downloadRoute(route(), target)) FileOutbox.offer(target)
     }
 
     private fun range(days: Int): Pair<Long, Long> {

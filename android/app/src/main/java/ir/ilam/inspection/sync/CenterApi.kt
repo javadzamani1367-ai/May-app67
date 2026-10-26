@@ -29,7 +29,9 @@ object Centers {
                       val areas: List<Bar>, val status: List<Bar>, val money: List<Bar>)
 
     data class Page(val from: Long, val to: Long, val rows: List<Row>, val totals: Map<String, Any?>, val columns: List<Column>,
-                    val writable: Set<String>, val manage: Boolean, val years: List<Year>, val charts: Charts?)
+                    val writable: Set<String>, val manage: Boolean, val years: List<Year>, val charts: Charts?,
+                    /** Default ticked columns of each export: «xlsx» and «docx». */
+                    val exportColumns: Map<String, List<String>> = emptyMap())
 
     data class Change(val label: String, val old: String?, val new: String?, val how: String, val at: Long, val who: String?)
     data class Share(val name: String, val group: String, val amount: Double)
@@ -46,8 +48,10 @@ object Centers {
     data class Plan(val token: String, val sheets: List<Sheet>, val summary: Map<String, Int>, val rows: List<PlanRow>)
     data class Applied(val updated: Int, val created: Int, val supplement: Int)
 
-    data class RewardLine(val title: String, val amounts: List<Double>, val note: String)
-    data class Rewards(val totals: Map<String, Double>, val lines: List<RewardLine>, val people: List<Share>)
+    /** A table of a reward report, every cell already as it reads. */
+    data class Table(val caption: String?, val header: List<String>, val rows: List<List<String>>, val total: List<String>?)
+    /** One of the three reward reports: the explanation of the instructions used, then its tables. */
+    data class Rewards(val title: String, val subtitle: String, val paragraphs: List<String>, val tables: List<Table>)
 
     internal fun row(o: JSONObject) = Row(
         o.optString("id"), o.str("report_id"), o.optInt("year"), o.str("area_code"), o.optInt("source"),
@@ -91,7 +95,10 @@ suspend fun ServerApi.centers(token: String, year: Int?, search: String, charts:
                 Centers.Charts(t.optInt("centers"), t.optDouble("miners", 0.0), t.optDouble("kw", 0.0), t.optInt("conflicts"),
                     Centers.bars(c.optJSONArray("months"), "label", "centers"), Centers.bars(c.optJSONArray("areas"), "label", "miners"),
                     Centers.bars(c.optJSONArray("status"), "label", "count"), Centers.bars(c.optJSONArray("money"), "label", "amount"))
-            }
+            },
+            exportColumns = d.optJSONObject("export")?.let { e ->
+                listOf("xlsx", "docx").associateWith { f -> with(Centers) { e.optJSONArray(f).strings() } }
+            }.orEmpty()
         )
     }
 
@@ -155,26 +162,24 @@ suspend fun ServerApi.centerApply(token: String, plan: String, sheets: List<Stri
         Centers.Applied(it.optInt("updated"), it.optInt("created"), it.optInt("supplement"))
     }
 
-/** Administrative staff (kind «staff») or finder and enforcement agents («agents»). */
+/** One reward report: «finder», «enforcement» or «staff». */
 suspend fun ServerApi.centerRewards(token: String, year: Int?, kind: String): ApiResult<Centers.Rewards> =
     get("centers/rewards&kind=$kind" + Centers.query(year, ""), token) { d ->
         with(Centers) {
-            val totals = d.optJSONObject("totals").toMap().mapValues { (it.value as? Number)?.toDouble() ?: 0.0 }
-            val lines = d.optJSONArray("lines").objects().map { l ->
-                val v = l.optJSONObject("values")
-                val title = listOfNotNull(v?.str("subscription"), v?.str("subscriber")).joinToString(" — ")
-                if (kind == "staff") Centers.RewardLine(title, listOf(l.optDouble("base", 0.0), l.optDouble("amount", 0.0),
-                    l.optDouble("ceo", 0.0), l.optDouble("staff", 0.0)), l.optString("rule"))
-                else Centers.RewardLine(title, listOf(v?.optDouble("miners", 0.0) ?: 0.0, l.optDouble("finder", 0.0),
-                    l.optDouble("police", 0.0)), l.optJSONArray("people").objects().joinToString(" / ") { it.optString("name") })
-            }
-            val people = d.optJSONArray("people").objects().map {
-                Centers.Share(it.optString("name"), it.optString(if (kind == "staff") "role" else "org"), it.optDouble("amount", 0.0))
-            }
-            Centers.Rewards(totals, lines, people)
+            Centers.Rewards(
+                title = d.optString("title"), subtitle = d.optString("subtitle"),
+                paragraphs = d.optJSONArray("paragraphs").strings(),
+                tables = d.optJSONArray("tables").objects().map { t ->
+                    Centers.Table(t.str("caption"), t.optJSONArray("header").strings(),
+                        (0 until (t.optJSONArray("rows")?.length() ?: 0)).map { i -> t.optJSONArray("rows")!!.optJSONArray(i).strings() },
+                        t.optJSONArray("total")?.strings())
+                }
+            )
         }
     }
 
-fun centerExportRoute(year: Int?, search: String, format: String) = "centers/export&format=$format" + Centers.query(year, search)
+/** The statistics as Excel or Word with the ticked columns; empty means the manager's defaults. */
+fun centerExportRoute(year: Int?, search: String, format: String, columns: List<String> = emptyList()) =
+    "centers/export&format=$format" + Centers.query(year, search) + if (columns.isEmpty()) "" else "&cols=" + columns.joinToString(",")
 
-fun centerRewardsRoute(year: Int?, kind: String) = "centers/rewards&format=xlsx&kind=$kind" + Centers.query(year, "")
+fun centerRewardsRoute(year: Int?, kind: String, format: String) = "centers/rewards&format=$format&kind=$kind" + Centers.query(year, "")
