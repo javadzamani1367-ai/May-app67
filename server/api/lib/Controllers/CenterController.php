@@ -76,13 +76,24 @@ final class CenterController
     {
         $user = Auth::require($request, null);
         CenterSettings::require($user, true);
+        // پنل با multipart می‌فرستد، اپ بایت‌های خام فایل را در بدنه.
         $file = $_FILES['file'] ?? null;
-        if (!is_array($file) || ($file['error'] ?? 1) !== UPLOAD_ERR_OK || !is_uploaded_file((string) $file['tmp_name'])) {
+        $path = is_array($file) && ($file['error'] ?? 1) === UPLOAD_ERR_OK && is_uploaded_file((string) $file['tmp_name'])
+            ? (string) $file['tmp_name'] : null;
+        $raw = $path === null ? (string) file_get_contents('php://input', false, null, 0, 30 * 1024 * 1024) : '';
+        if ($path === null && str_starts_with($raw, 'PK')) {
+            $path = (string) tempnam(sys_get_temp_dir(), 'cimp');
+            file_put_contents($path, $raw);
+        }
+        if ($path === null) {
             Response::fail(400, 'no_file', 'فایل اکسل نرسید.');
         }
         $year = $request->int('year') ?? FieldCodes::jalaliYear(Db::now());
         try {
-            $token = CenterImportRun::stash((string) $file['tmp_name'], $user, $year);
+            $token = CenterImportRun::stash($path, $user, $year);
+            if ($raw !== '') {
+                @unlink($path);
+            }
             $plan = CenterImportRun::plan(CenterImportRun::open($token, $user)[0], $year, null);
         } catch (Throwable $e) {
             Response::fail(400, 'bad_file', 'این فایل اکسل (xlsx) خوانده نشد.');

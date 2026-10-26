@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ir.ilam.inspection.R
+import ir.ilam.inspection.ui.centers.CentersDashboardCard
 import ir.ilam.inspection.data.db.ReportEntity
 import ir.ilam.inspection.data.model.ReportStatus
 import ir.ilam.inspection.ui.common.EmptyState
@@ -52,7 +53,9 @@ fun DashboardTab(
     onNewVisit: (() -> Unit)?,
     onSettings: () -> Unit,
     onApprovals: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** The manager's comprehensive centre statistics, live from the server. */
+    onCenters: (() -> Unit)? = null
 ) {
     val counts = state.counts
     if (counts.total == 0) {
@@ -78,6 +81,7 @@ fun DashboardTab(
         contentPadding = PaddingValues(start = Spacing.screen, end = Spacing.screen, top = Spacing.md, bottom = 96.dp)
     ) {
         item { KpiGrid(state, onShowTab) }
+        onCenters?.let { open -> item { CentersDashboardCard(open) } }
         item { StatusOverviewCard(state) }
         item { OperationsCard(state, onSettings, onApprovals) }
         caseGroup(

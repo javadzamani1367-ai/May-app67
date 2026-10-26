@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- آمار جامع مراکز استخراج و اقدامات در اپ مدیر (و مجری، با اجازه مدیر): فهرست سال، ویرایش سطر، ورود فایل، پاداش‌ها. -->
+<resources>
+    <string name="ct_title">آمار جامع مراکز</string>
+    <string name="ct_link_hint">مراکز کشف‌شده و اقدامات، به شکل فرم توانیر؛ ورود فایل و پاداش‌ها</string>
+    <string name="ct_year">سال %1$s</string>
+    <string name="ct_excel">اکسل (فرم توانیر)</string>
+    <string name="ct_word">Word</string>
+    <string name="ct_import">ورود فایل اکسل</string>
+    <string name="ct_import_hint">سرستون و ستون‌ها خودکار پیدا می‌شوند</string>
+    <string name="ct_rewards">پاداش‌ها</string>
+    <string name="ct_search">جستجو: اشتراک، قبض، نام</string>
+    <string name="ct_empty">در این سال مرکزی ثبت نشده است.</string>
+    <string name="ct_centers">مرکز</string>
+    <string name="ct_miners">ماینر</string>
+    <string name="ct_miners_n">%1$s ماینر</string>
+    <string name="ct_kw">کیلووات برآوردی</string>
+    <string name="ct_conflicts">خانه ناسازگار</string>
+    <string name="ct_conflict_n">%1$s ناسازگار</string>
+    <string name="ct_locked">سال قفل</string>
+    <string name="ct_chart_months">مراکز هر ماه</string>
+    <string name="ct_chart_areas">ماینر هر ناحیه</string>
+    <string name="ct_chart_status">وضعیت اقدام</string>
+    <string name="ct_chart_money">مبالغ (ریال)</string>
+
+    <string name="ct_row">سطر آمار</string>
+    <string name="ct_copy">سطر دیگر برای همین مرکز</string>
+    <string name="ct_delete">حذف سطر</string>
+    <string name="ct_delete_confirm">این سطر از آمار حذف شود؟ تاریخچه‌اش می‌ماند.</string>
+    <string name="ct_save">ذخیره</string>
+    <string name="ct_saved">ذخیره شد.</string>
+    <string name="ct_locked_hint">سال این سطر قفل است و ویرایش نمی‌شود.</string>
+    <string name="ct_not_approved">پرونده این سطر دیگر تأییدشده نیست.</string>
+    <string name="ct_from_system">سامانه</string>
+    <string name="ct_from_file">فایل</string>
+    <string name="ct_from_own">نوشته کاربر</string>
+    <string name="ct_other_value">یا مقدار دیگر</string>
+    <string name="ct_date_hint">مثل ۱۴۰۴/۰۳/۱۱</string>
+    <string name="ct_conflict_text">ناسازگار: سامانه «%1$s» و فایل «%2$s»</string>
+    <string name="ct_pick_system">مقدار سامانه</string>
+    <string name="ct_pick_file">مقدار فایل</string>
+    <string name="ct_pick_own">مقدار نوشته‌شده</string>
+    <string name="ct_back_to_system">برگرد به مقدار سامانه (%1$s)</string>
+    <string name="ct_will_use_system">با ذخیره، مقدار سامانه گذاشته می‌شود.</string>
+    <string name="ct_unit_stage">آخرین مرحله واحدها: %1$s</string>
+    <string name="ct_suggest">پیشنهاد وضعیت: %1$s</string>
+    <string name="ct_finder_reward">پاداش عامل شناسایی</string>
+    <string name="ct_police_reward">پاداش عوامل اجرایی</string>
+    <string name="ct_staff_reward">پاداش عوامل اداری</string>
+    <string name="ct_changes">تاریخچه تغییرات</string>
+    <string name="ct_no_changes">تغییری ثبت نشده.</string>
+    <string name="ct_how_edit">ویرایش</string>
+    <string name="ct_how_system">انتخاب سامانه</string>
+    <string name="ct_how_file">انتخاب فایل</string>
+    <string name="ct_how_import">ورود فایل</string>
+    <string name="ct_how_add">افزودن سطر</string>
+    <string name="ct_how_other">دیگر</string>
+
+    <string name="ct_import_explain">سرستون، ستون‌ها و سطرها خودکار پیدا می‌شوند، حتی اگر ترتیب ستون‌ها فرق کند. هر سطر با اشتراک، شناسه قبض، شماره پرونده یا کد سامانه پیامکی به سطر موجود همان سال وصل می‌شود و مقدار فایل جای مقدار سامانه را نمی‌گیرد. سطرهای بی‌تاریخ سال %1$s حساب می‌شوند.</string>
+    <string name="ct_choose_file">انتخاب فایل اکسل (xlsx)</string>
+    <string name="ct_file_unread">فایل خوانده نشد.</string>
+    <string name="ct_plan_match">جور با سطر موجود</string>
+    <string name="ct_plan_new">سطر تازه</string>
+    <string name="ct_plan_repeat">تکراری در برگه دیگر</string>
+    <string name="ct_plan_supplement">جدول تکمیلی</string>
+    <string name="ct_plan_skipped">وارد نمی‌شود: %1$s تکراری، %2$s در سال قفل</string>
+    <string name="ct_plan_rows">سطرهای فایل</string>
+    <string name="ct_sheets">برگه‌ها</string>
+    <string name="ct_sheet_main">«%1$s» — %2$s ستون، %3$s سطر</string>
+    <string name="ct_sheet_supp">«%1$s» — جدول اطلاعات تکمیلی، %3$s سطر</string>
+    <string name="ct_sheet_missing">ستون‌های فرم که نبود: %1$s</string>
+    <string name="ct_sheet_unknown">ستون‌های ناشناخته: %1$s</string>
+    <string name="ct_apply">ورود</string>
+    <string name="ct_applied">انجام شد: %1$s سطر به‌روز، %2$s سطر تازه، %3$s سطر جدول تکمیلی.</string>
+
+    <string name="ct_rewards_staff">عوامل اداری</string>
+    <string name="ct_rewards_agents">شناسایی و اجرایی</string>
+    <string name="ct_rewards_empty">در این سال مرکزی با پاداش و دستورالعمل جاری نیست.</string>
+    <string name="ct_totals">جمع</string>
+    <string name="ct_base">مبنا (ریال)</string>
+    <string name="ct_total_reward">پاداش کل</string>
+    <string name="ct_ceo">سهم مدیرعامل</string>
+    <string name="ct_staff_share">سهم کارکنان</string>
+    <string name="ct_people">جمع هر نفر</string>
+</resources>

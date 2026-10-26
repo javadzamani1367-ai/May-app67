@@ -61,7 +61,8 @@ fun HomeScreen(
     onReferrals: () -> Unit,
     onFieldItems: () -> Unit,
     onBoard: () -> Unit = {},
-    onNotifications: () -> Unit = {}
+    onNotifications: () -> Unit = {},
+    onCenters: () -> Unit = {}
 ) {
     val container = LocalContext.current.container
     val lists: CaseListViewModel = viewModel(
@@ -164,7 +165,8 @@ fun HomeScreen(
                     onShowTab = ::show,
                     onNewVisit = onNewReport.takeUnless { UserRole.isManager },
                     onSettings = onSettings,
-                    onApprovals = onApprovals
+                    onApprovals = onApprovals,
+                    onCenters = onCenters.takeIf { UserRole.isFullManager }
                 )
             } else {
                 CaseListTab(

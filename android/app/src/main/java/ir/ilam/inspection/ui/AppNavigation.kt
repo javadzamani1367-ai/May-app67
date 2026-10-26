@@ -15,6 +15,8 @@ import ir.ilam.inspection.ui.history.HistorySeriesScreen
 import ir.ilam.inspection.ui.history.HistoryViewModel
 import androidx.compose.ui.platform.LocalContext
 import ir.ilam.inspection.container
+import ir.ilam.inspection.ui.centers.CenterRoutes
+import ir.ilam.inspection.ui.centers.centerScreens
 import ir.ilam.inspection.data.model.UserRole
 import ir.ilam.inspection.ui.archive.CaseDetailScreen
 import ir.ilam.inspection.ui.common.ContainerViewModelFactory
@@ -101,7 +103,8 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                 onReferrals = { navController.navigate(Routes.REFERRALS) },
                 onFieldItems = { navController.navigate(Routes.FIELD_ITEMS) },
                 onBoard = { navController.navigate(Routes.BOARD) },
-                onNotifications = { navController.navigate(Routes.NOTIFICATIONS) }
+                onNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
+                onCenters = { navController.navigate(CenterRoutes.LIST) }
             )
         }
         composable(Routes.BOARD) {
@@ -135,6 +138,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                 onHistory = { navController.navigate(Routes.HISTORY) }
             )
         }
+        centerScreens(navController)
         composable(Routes.HISTORY) {
             val viewModel = historyViewModel()
             HistoryScreen(viewModel, onBack = { navController.popBackStack() }, onOpen = { summary ->
@@ -223,7 +227,8 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                 onCrew = { navController.navigate(Routes.CREW) },
                 onScores = { navController.navigate(Routes.SCORES) },
                 onDevices = { navController.navigate(Routes.DEVICES) },
-                onMap = { navController.navigate(Routes.MAP) }
+                onMap = { navController.navigate(Routes.MAP) },
+                onCenters = { navController.navigate(CenterRoutes.LIST) }
             )
         }
         composable(Routes.USERS) {

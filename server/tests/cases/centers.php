@@ -100,6 +100,8 @@ $up = $probe->upload('centers/import&year=1404', 'file', $file, $managerToken);
 $plan = $up['body']['data'] ?? [];
 equals('پیش‌نمایش: یک جور، یک تازه، یک ناسازگار', [1, 1, 1], [$plan['summary']['match'] ?? null, $plan['summary']['new'] ?? null,
     $plan['summary']['conflicts'] ?? null], $up['raw']);
+$asBytes = $probe->bytes('centers/import&year=1404', (string) file_get_contents($file), $managerToken)['body']['data']['summary'] ?? [];
+equals('اپ فایل را با بایت‌های خام می‌فرستد', [1, 1], [$asBytes['match'] ?? null, $asBytes['new'] ?? null]);
 equals('مجری فایل وارد نمی‌کند', 403, $probe->upload('centers/import&year=1404', 'file', $file, $exec401)['status']);
 $applied = $probe->json('POST', 'centers/import/apply', ['token' => $plan['token'] ?? ''], $managerToken);
 equals('ورود: یک به‌روز و یک تازه', [1, 1], [$applied['body']['data']['updated'] ?? null, $applied['body']['data']['created'] ?? null], $applied['raw']);

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.PendingActions
 import androidx.compose.material.icons.filled.TableView
 import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.Factory
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Star
@@ -75,7 +76,8 @@ fun StatsScreen(
     onCrew: () -> Unit,
     onScores: () -> Unit = {},
     onDevices: () -> Unit = {},
-    onMap: () -> Unit = {}
+    onMap: () -> Unit = {},
+    onCenters: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val appContainer = context.container
@@ -114,6 +116,7 @@ fun StatsScreen(
             // Manager only: how the units are performing is a different
             // question from how many cases exist, and it has its own report.
             if (UserRole.isManager) {
+                ReportLink(Icons.Filled.Factory, stringResource(R.string.ct_title), stringResource(R.string.ct_link_hint), onCenters)
                 ReportLink(Icons.Filled.Groups, stringResource(R.string.performance_title), stringResource(R.string.stats_performance_hint), onPerformance)
                 ReportLink(Icons.Filled.Engineering, stringResource(R.string.cw_title), stringResource(R.string.stats_crew_hint), onCrew)
                 ReportLink(Icons.Filled.Star, stringResource(R.string.sc_title), stringResource(R.string.sc_subtitle), onScores)
