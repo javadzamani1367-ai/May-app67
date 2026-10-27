@@ -67,26 +67,93 @@ $full = $probe->json('GET', 'centers/row&id=' . $rowId, [], $managerToken)['body
 check('ستون بسته واحد نوشته نشد', ($full['values']['energy_amount'] ?? null) === null);
 
 $rule = static fn (array $body) => $probe->json('POST', 'centers/rules', $body, $managerToken);
-$old = $rule(['kind' => 0, 'letter_no' => '۱۲۳/ص', 'effective_from' => '1400/01/01', 'spec' => ['mode' => 'progressive', 'cap' => '5000000',
-    'tiers' => [['from' => 1, 'to' => 2, 'amount' => 1000000], ['from' => 3, 'to' => '', 'amount' => 2000000]]]]);
-equals('دستورالعمل شناسایی ثبت شد', 200, $old['status'], $old['raw']);
-$rule(['kind' => 0, 'effective_from' => '1405/01/01', 'spec' => ['tiers' => [['from' => 1, 'amount' => 99000000]]]]);
-equals('پله‌های هم‌پوشان پذیرفته نیست', 400, $rule(['kind' => 0, 'effective_from' => '1404/01/01',
-    'spec' => ['tiers' => [['from' => 1, 'to' => 5, 'amount' => 1], ['from' => 3, 'amount' => 2]]]])['status']);
-$rule(['kind' => 1, 'effective_from' => '1400/01/01', 'spec' => ['mode' => 'bracket', 'orgs' => ['faraja', 'sepah', 'collection'],
-    'split' => 'person', 'tiers' => [['from' => 1, 'amount' => 300000]]]]);
-equals('وزن نقش‌ها باید ۱۰۰ باشد', 400, $rule(['kind' => 2, 'effective_from' => '1400/01/01',
-    'spec' => ['pct' => 1.5, 'ceo_pct' => 0.5, 'staff_pct' => 1, 'roles' => [['label' => 'مجری رمزارز', 'weight' => 30, 'people' => 'الف']]]])['status']);
-$rule(['kind' => 2, 'effective_from' => '1400/01/01', 'spec' => ['pct' => 1.5, 'ceo_pct' => 0.5, 'staff_pct' => 1, 'base' => 'energy',
-    'roles' => [['label' => 'مجری رمزارز', 'weight' => 30, 'people' => 'الف'], ['label' => 'دبیر کمیسیون', 'weight' => 70, 'people' => "ب\nج"]]]]);
+// یک نامه برای هر چهار پاداش.
+$old = $rule(['letter_no' => '۱۲۳/ص', 'letter_id' => '۹۸۷۶', 'letter_date' => '1399/12/01', 'effective_from' => '1400/01/01', 'sections' => [
+    'finder' => ['mode' => 'progressive', 'cap' => '5000000',
+        'tiers' => [['from' => 1, 'to' => 2, 'amount' => 1000000], ['from' => 3, 'to' => '', 'amount' => 2000000]]],
+    'collection' => ['per_device' => '200000', 'count' => 'collected', 'cap' => '500000'],
+    'enforcement' => ['per_device' => '۳۰۰٬۰۰۰', 'orgs' => ['faraja', 'sepah', 'collection']],
+    'staff' => ['pct' => 1.5, 'ceo_pct' => 0.5, 'staff_pct' => 1, 'base' => 'energy',
+        'roles' => [['label' => 'مجری نظارت و ساماندهی رمزارز', 'weight' => 30], ['label' => 'دبیر کمیسیون رمزارز', 'weight' => 70]]],
+]]);
+equals('دستورالعمل یک‌جای چهار پاداش ثبت شد', 200, $old['status'], $old['raw']);
+equals('هر چهار بخش در یک دستورالعمل', ['finder', 'collection', 'enforcement', 'staff'],
+    array_keys($old['body']['data']['rules'][0]['sections'] ?? []));
+// دستورالعمل بعدی فقط عامل شناسایی را عوض می‌کند و از ۱۴۰۵ است؛ بقیه از نامه پیشین می‌آیند.
+$rule(['effective_from' => '1405/01/01', 'sections' => ['finder' => ['tiers' => [['from' => 1, 'amount' => 99000000]]]]]);
+equals('پله‌های هم‌پوشان پذیرفته نیست', 400, $rule(['effective_from' => '1404/01/01',
+    'sections' => ['finder' => ['tiers' => [['from' => 1, 'to' => 5, 'amount' => 1], ['from' => 3, 'amount' => 2]]]]])['status']);
+equals('درصد پست‌ها باید ۱۰۰ باشد', 400, $rule(['effective_from' => '1400/01/01',
+    'sections' => ['staff' => ['pct' => 1.5, 'ceo_pct' => 0.5, 'staff_pct' => 1, 'roles' => [['label' => 'مجری', 'weight' => 30]]]]])['status']);
+equals('دستورالعمل بی هیچ بخش پذیرفته نیست', 400, $rule(['effective_from' => '1400/01/01', 'sections' => []])['status']);
 
 $save = $probe->json('POST', 'centers/row', ['id' => $rowId, 'values' => ['energy_amount' => '۱۰۰٬۰۰۰٬۰۰۰', 'sheba' => 'IR062960000000100324200001']], $managerToken);
 $d = $save['body']['data'] ?? [];
+$rw = array_column($d['rewards'] ?? [], null, 'kind');
 equals('پاداش شناسایی پلکانی با دستورالعمل جاری در تاریخ گزارش', 4000000, (int) ($d['values']['finder_reward'] ?? 0));
-equals('پاداش اجرایی: نیمی انتظامی میان دو نفرش، نیمی سپاه؛ مأمور وصول نه', [900000, [225000, 225000, 450000]],
-    [(int) ($d['values']['police_reward'] ?? 0), array_map('intval', array_column($d['police']['people'] ?? [], 'share'))]);
-equals('عوامل اداری: کل، مدیرعامل، کارکنان، نقش مجری', [1500000, 500000, 1000000, 300000],
-    [(int) ($d['staff']['amount'] ?? 0), (int) ($d['staff']['ceo'] ?? 0), (int) ($d['staff']['staff'] ?? 0), (int) ($d['staff']['roles'][0]['amount'] ?? 0)]);
+equals('جمع‌آوری: ۳ دستگاه (جمع‌آوری‌شده ننوشته) × ۲۰۰ هزار تا سقف ۵۰۰ هزار', 500000, (int) ($d['values']['collection_reward'] ?? 0));
+$form = static fn (string $kind, array $post = []) => $post === []
+    ? $probe->json('GET', "centers/form&row=$rowId&kind=$kind", [], $managerToken)
+    : $probe->json('POST', "centers/form&row=$rowId&kind=$kind", $post, $managerToken);
+$enf = $form('enforcement')['body']['data'] ?? [];
+equals('انتظامی: هر نفر یک سوم، دو انتظامی و یک سپاه؛ مأمور وصول نه', [900000, [300000, 300000, 300000], ['faraja', 'sepah', 'faraja']],
+    [(int) ($enf['calc']['amount'] ?? 0), array_map('intval', array_column($enf['people'] ?? [], 'share')), array_column($enf['people'] ?? [], 'org')]);
+equals('سهم انتظامی را توانیر و سهم سپاه را شرکت توزیع می‌پردازد', ['شرکت توانیر' => 600000, 'شرکت توزیع' => 300000],
+    array_map('intval', $enf['calc']['payers'] ?? []));
+$col = $form('collection')['body']['data'] ?? [];
+$colOn = array_values(array_filter($col['people'] ?? [], static fn ($p) => $p['on']));
+equals('جمع‌آوری: کارشناس بازدید و حاضران شرکت توزیع با تیک، برابر', [['کارشناس ایلام', 'مأمور آزمون', 'کارشناس برق'], [166667, 166667, 166667]],
+    [array_column($colOn, 'name'), array_map('intval', array_column($colOn, 'share'))]);
+$staffForm = $form('staff')['body']['data'] ?? [];
+equals('اداری: مدیرعامل و دو پست با درصد پیش‌فرض', [1500000, [500000, 300000, 700000], ['مدیرعامل', 'مجری نظارت و ساماندهی رمزارز', 'دبیر کمیسیون رمزارز']],
+    [(int) ($staffForm['calc']['amount'] ?? 0), array_map('intval', array_column($staffForm['people'] ?? [], 'share')), array_column($staffForm['people'] ?? [], 'post')]);
+equals('بی نام ثبت نهایی نمی‌شود', 400, $form('staff', ['action' => 'final'])['status']);
+
+// مدیر دو نفر به جمع‌آوری می‌افزاید و دو نفر را برمی‌دارد؛ بعد ثبت نهایی.
+$people = $col['people'];
+$people[0]['on'] = false;
+$people[1]['on'] = false;
+$people[] = ['name' => 'افزوده مدیر', 'post' => 'راننده', 'org' => 'company', 'on' => true];
+$people[] = ['name' => 'دوم افزوده', 'post' => 'سیم‌بان', 'org' => 'company', 'on' => true];
+$saved = $form('collection', ['people' => $people])['body']['data'] ?? [];
+equals('پس از ذخیره: سه نفر، هر نفر یک سوم', [3, 166667], [count(array_filter($saved['people'] ?? [], static fn ($p) => $p['on'])),
+    (int) ($saved['calc']['each'] ?? 0)]);
+$final = $form('collection', ['action' => 'final']);
+equals('ثبت نهایی با شماره سال/حرف/ترتیب', '1404/ج/1', $final['body']['data']['number'] ?? null, $final['raw']);
+equals('فرم ثبت‌شده ویرایش نمی‌شود', 400, $form('collection', ['people' => $col['people']])['status']);
+// دستورالعمل تازه‌ای که از ۱۴۰۰ اجرا شود، فرم ثبت‌شده را عوض نمی‌کند.
+$rule(['effective_from' => '1400/06/01', 'sections' => ['collection' => ['per_device' => 1, 'cap' => '']]]);
+equals('فرم ثبت‌شده محاسبه ثابت خودش را دارد', 500000, (int) ($form('collection')['body']['data']['calc']['amount'] ?? 0));
+equals('باز کردن فرم', false, $form('collection', ['action' => 'unlock'])['body']['data']['final'] ?? null);
+equals('باز شده با دستورالعمل تازه حساب می‌شود', 3, (int) ($form('collection')['body']['data']['calc']['amount'] ?? 0));
+$reFinal = $form('collection', ['action' => 'final'])['body']['data'] ?? [];
+equals('ثبت دوباره همان شماره', '1404/ج/1', $reFinal['number'] ?? null);
+
+// پیشنهاد کارشناس برای پست اداری همان پست را پر می‌کند؛ مدیر درصد را عوض می‌کند و ثبت نهایی می‌کند.
+$pdo->exec("INSERT INTO reward_proposals (id, report_id, kind, full_name, post, org, updated_at) VALUES
+    ('c4000000-0000-4000-8000-000000000001', '$cRep', 2, 'مجری پیشنهادی', 'مجری نظارت و ساماندهی رمزارز', NULL, 1),
+    ('c4000000-0000-4000-8000-000000000002', '$cRep', 2, 'مدیرعامل آزمون', 'مدیرعامل', NULL, 1),
+    ('c4000000-0000-4000-8000-000000000003', '$cRep', 2, 'دبیر آزمون', 'دبیر کمیسیون رمزارز', NULL, 1)");
+$sp = $form('staff')['body']['data']['people'] ?? [];
+equals('دارندگان پیشنهادی جای پست‌ها نشستند', ['مدیرعامل آزمون', 'مجری پیشنهادی', 'دبیر آزمون'], array_column($sp, 'name'));
+$sp[1]['pct'] = 40;
+$sp[2]['pct'] = 60;
+$staffFinal = $form('staff', ['people' => $sp, 'action' => 'final']);
+equals('اداری با درصد مدیر ثبت نهایی شد', ['1404/د/1', [500000, 400000, 600000]], [$staffFinal['body']['data']['number'] ?? null,
+    array_map('intval', array_column($staffFinal['body']['data']['people'] ?? [], 'share'))], $staffFinal['raw']);
+foreach (['xlsx' => 'xl/worksheets/sheet1.xml', 'docx' => 'word/document.xml'] as $format => $part) {
+    $bytes = $probe->raw("centers/form/export&row=$rowId&kind=staff&format=$format", $managerToken)['bytes'];
+    $tmpF = sys_get_temp_dir() . "/form-staff.$format";
+    file_put_contents($tmpF, $bytes);
+    $zf = new ZipArchive();
+    $xml = $zf->open($tmpF) === true ? (string) $zf->getFromName($part) : '';
+    $zf->close();
+    @unlink($tmpF);
+    check("فرم تک‌صفحه‌ای اداری $format: سربرگ، شماره، مستند و امضاکنندگان",
+        str_contains($xml, 'شرکت توزیع نیروی برق استان ایلام') && str_contains($xml, '۱۴۰۴/د/۱') && str_contains($xml, '۹۸۷۶')
+        && str_contains($xml, 'معاون فروش و خدمات مشترکین') && str_contains($xml, 'مجری پیشنهادی'));
+}
+equals('مجری فرم پاداش ندارد', 403, $probe->json('GET', "centers/form&row=$rowId&kind=staff", [], $exec401)['status']);
 equals('شبای نادرست پذیرفته نیست', 400, $probe->json('POST', 'centers/row', ['id' => $rowId, 'values' => ['sheba' => 'IR062960000000100324200002']], $managerToken)['status']);
 check('تاریخچه تغییرات با نام کاربر', count(array_filter($d['changes'] ?? [], static fn ($c) => $c['field'] === 'energy_amount' && $c['who'] !== null)) === 1);
 
@@ -139,12 +206,16 @@ $reimport = $probe->upload('centers/import&year=1404', 'file', $tmp, $managerTok
 equals('خروجی خود سامانه دوباره خوانده می‌شود و با همان دو سطر جور است', [2, 0], [$reimport['match'] ?? null, $reimport['new'] ?? null]);
 check('Word', str_starts_with($probe->raw('centers/export&year=1404&format=docx', $exec401)['bytes'], 'PK'));
 $staff = $probe->json('GET', 'centers/rewards&year=1404&kind=staff', [], $managerToken)['body']['data'] ?? [];
-equals('گزارش پاداش عوامل اداری: پاداش کل و جمع هر نفر', ['۱,۵۰۰,۰۰۰', 3],
-    [$staff['tables'][0]['total'][5] ?? null, count($staff['tables'][1]['rows'] ?? [])]);
+equals('گزارش پاداش عوامل اداری: پاداش کل، شماره فرم و جمع هر نفر', ['۱,۵۰۰,۰۰۰', '۱۴۰۴/د/۱', 3],
+    [$staff['tables'][0]['total'][5] ?? null, $staff['tables'][0]['rows'][0][9] ?? null, count($staff['tables'][1]['rows'] ?? [])]);
 check('مقدمه گزارش شرح دستورالعمل را دارد', str_contains(implode(' ', $staff['paragraphs'] ?? []), 'سهم مدیرعامل'));
-$enf = $probe->json('GET', 'centers/rewards&year=1404&kind=enforcement', [], $managerToken)['body']['data'] ?? [];
-equals('گزارش عوامل اجرایی: سه نفر از دو سازمان', 3, count($enf['tables'][1]['rows'] ?? []));
-foreach (['finder', 'enforcement', 'staff'] as $kind) {
+$enfR = $probe->json('GET', 'centers/rewards&year=1404&kind=enforcement', [], $managerToken)['body']['data'] ?? [];
+// ماینر سطر اکنون ۴ است (مقدار سوم مدیر): ۱٬۲۰۰٬۰۰۰ میان سه نفر، دو انتظامی و یک سپاه.
+equals('گزارش عوامل انتظامی: سه نفر و سهم دو سازمان', [3, '۸۰۰,۰۰۰', '۴۰۰,۰۰۰'],
+    [count($enfR['tables'][1]['rows'] ?? []), $enfR['tables'][0]['total'][6] ?? null, $enfR['tables'][0]['total'][7] ?? null]);
+$colR = $probe->json('GET', 'centers/rewards&year=1404&kind=collection', [], $managerToken)['body']['data'] ?? [];
+equals('گزارش جمع‌آوری: سه نفر', 3, count($colR['tables'][1]['rows'] ?? []));
+foreach (['finder', 'collection', 'enforcement', 'staff'] as $kind) {
     foreach (['xlsx' => 'xl/styles.xml', 'docx' => 'word/document.xml'] as $format => $part) {
         $bytes = $probe->raw("centers/rewards&year=1404&kind=$kind&format=$format", $managerToken)['bytes'];
         $tmpR = sys_get_temp_dir() . "/reward-$kind.$format";
@@ -185,7 +256,8 @@ $zp->close();
 check('خروجی اکسل فقط با ستون‌های تیک‌خورده', str_contains($pickedSheet, 'شماره اشتراک') && !str_contains($pickedSheet, 'کمیسیون رمزارز'));
 check('Word رسمی پاداش از پنل', str_starts_with($probe->page('admin/center_export.php?year=1404&reward=staff&format=docx', $jar)['body'], 'PK'));
 check('Word آمار پرونده‌ها از پنل', str_starts_with($probe->page('admin/cases_export.php?format=docx', $jar)['body'], 'PK'));
-foreach (['center_import.php', 'center_rules.php', 'center_settings.php', 'center_rewards.php?year=1404', 'index.php', 'case_stats.php'] as $p) {
+foreach (['center_import.php', 'center_rules.php', 'center_settings.php', 'center_rewards.php?year=1404', 'index.php', 'case_stats.php',
+    "center_form.php?row=$rowId&kind=enforcement", "center_form.php?row=$rowId&kind=finder"] as $p) {
     equals("صفحه $p", 200, $probe->page('admin/' . $p, $jar)['status']);
 }
 $unitJar = tempnam(sys_get_temp_dir(), 'ujar');

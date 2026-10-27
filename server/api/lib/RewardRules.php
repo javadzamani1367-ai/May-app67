@@ -2,64 +2,88 @@
 declare(strict_types=1);
 
 /**
- * دستورالعمل‌های پاداش، هر کدام با شماره، شناسه و تاریخ نامه و تاریخ اجرا. دستورالعمل
- * تازه از تاریخ اجرایش به بعد حساب می‌شود و پرونده‌های پیش از آن با دستورالعمل قبلی
- * می‌مانند؛ تاریخ هر مرکز تاریخ گزارش آن است.
+ * دستورالعمل‌های پاداش. هر دستورالعمل یک نامه است — شماره، شناسه و تاریخ نامه و تاریخ اجرا —
+ * که هر چهار پاداش را با هم تعیین می‌کند و از تاریخ اجرایش تا اجرای دستورالعمل بعدی برای
+ * تاریخ گزارش هر مرکز حساب می‌شود:
+ *  - عامل شناسایی (گزارش‌دهنده): پلکانی بر تعداد دستگاه، با سقف هر مرکز؛ پرداخت توانیر
+ *  - جمع‌آوری شرکت توزیع: مبلغ هر دستگاه با سقف، میان پرسنل جمع‌آوری برابر؛ پرداخت شرکت توزیع
+ *  - عوامل انتظامی: مبلغ هر دستگاه با سقف، میان همه پرسنل حاضر نیروی انتظامی و سپاه برابر
+ *    (نه میان دو سازمان)؛ سهم نیروی انتظامی را توانیر و سهم سپاه را شرکت توزیع می‌پردازد
+ *  - عوامل اداری: درصدی از مبلغ صورتحساب؛ سهم مدیرعامل و سهم کارکنان که درصد پیش‌فرض هر پست
+ *    را دارد و مدیر پیش از ثبت نهایی فرم هر مرکز تغییرش می‌دهد؛ پرداخت شرکت توزیع
  *
- * سه نوع:
- *  - عامل شناسایی (گزارش‌دهنده): پلکانی بر تعداد دستگاه، با سقف هر مرکز (ستون M فرم)
- *  - عوامل اجرایی: نیروی انتظامی (پلیس امنیت اقتصادی) و اطلاعات سپاه حاضر در بازدید؛ همان
- *    پلکان و سقف. اگر هر دو بودند میان دو سازمان برابر، و سهم هر سازمان میان حاضران همان سازمان
- *  - عوامل اداری: درصدی از مبلغ صورتحساب پرونده؛ سهم مدیرعامل و سهم کارکنان که میان
- *    نقش‌ها با وزن هر نقش و میان دارندگان هر نقش برابر تقسیم می‌شود
- *
- * دو نوع اول را توانیر می‌پردازد ولی باید حساب و گزارش شوند.
+ * دستورالعمل‌های نسخه پیش هر کدام یک نوع داشتند (kind ۰ تا ۲)؛ همچنان خوانده می‌شوند. بخشی که
+ * در دستورالعملی خالی مانده از دستورالعمل پیش از آن می‌آید.
  */
 final class RewardRules
 {
     public const FINDER = 0;
     public const ENFORCEMENT = 1;
     public const STAFF = 2;
-    public const NAMES = [self::FINDER => 'پاداش عامل شناسایی', self::ENFORCEMENT => 'پاداش عوامل اجرایی',
-        self::STAFF => 'پاداش عوامل اداری'];
+    public const COLLECTION = 3;
+    /** دستورالعمل یک‌جای هر چهار پاداش. */
+    public const COMBINED = 9;
+    public const NAMES = [self::FINDER => 'پاداش عامل شناسایی', self::COLLECTION => 'پاداش جمع‌آوری شرکت توزیع',
+        self::ENFORCEMENT => 'پاداش عوامل انتظامی', self::STAFF => 'پاداش عوامل اداری'];
+    public const KEYS = [self::FINDER => 'finder', self::COLLECTION => 'collection', self::ENFORCEMENT => 'enforcement',
+        self::STAFF => 'staff'];
 
-    /** پلکان: هر دستگاه با نرخ پله خودش / همه با نرخ پله‌ای که تعداد در آن است / مبلغ ثابت پله. */
+    public const TAVANIR = 'شرکت توانیر';
+    public const COMPANY = 'شرکت توزیع';
+    /** نیروی انتظامی و سپاه؛ مأموران شرکت توزیع (وصول و…) از پاداش جمع‌آوری سهم می‌برند، نه از این. */
+    public const ENFORCERS = ['faraja' => 'نیروی انتظامی (پلیس امنیت اقتصادی)', 'sepah' => 'اطلاعات سپاه'];
+    public const ORG_PAYER = ['faraja' => self::TAVANIR, 'sepah' => self::COMPANY];
+
+    /** پلکان عامل شناسایی: هر دستگاه با نرخ پله خودش / همه با نرخ پله‌ای که تعداد در آن است / مبلغ ثابت پله. */
     public const MODES = ['progressive' => 'پلکانی (هر دستگاه با نرخ پله خودش)',
         'bracket' => 'همه دستگاه‌ها با نرخ پله‌ای که تعداد در آن است', 'fixed' => 'مبلغ ثابت هر پله'];
-    /** فقط نیروی انتظامی و سپاه؛ مأموران شرکت توزیع (وصول و…) پاداش اجرایی نمی‌گیرند. */
-    public const ENFORCERS = ['faraja' => 'پلیس امنیت اقتصادی (فراجا)', 'sepah' => 'اطلاعات سپاه'];
+    public const COUNTS = ['found' => 'دستگاه کشف‌شده', 'collected' => 'دستگاه جمع‌آوری‌شده'];
     public const BASES = ['energy' => 'مبلغ انرژی', 'energy_damage' => 'مبلغ انرژی و خسارت', 'collected' => 'مبلغ وصول'];
 
-    /** @var array<int, list<array<string, mixed>>>|null */
+    /** @var list<array<string, mixed>>|null */
     private static ?array $cache = null;
 
-    /** دستورالعمل‌های یک نوع، تازه‌ترین بالا. @return list<array<string, mixed>> */
-    public static function list(int $kind): array
+    /** پرداخت‌کننده هر پاداش؛ عوامل انتظامی به سازمان هر نفر بسته است. */
+    public static function payer(int $kind, ?string $org = null): string
     {
-        self::$cache ??= self::load();
-        return self::$cache[$kind] ?? [];
+        return match ($kind) {
+            self::FINDER => self::TAVANIR,
+            self::ENFORCEMENT => self::ORG_PAYER[$org ?? ''] ?? self::TAVANIR,
+            default => self::COMPANY,
+        };
     }
 
-    /** دستورالعمل جاری در یک تاریخ؛ تهی اگر پیش از نخستین دستورالعمل است. */
+    /** دستورالعمل‌ها، تازه‌ترین بالا؛ با kind فقط آن‌هایی که این پاداش را دارند. @return list<array<string, mixed>> */
+    public static function list(?int $kind = null): array
+    {
+        self::$cache ??= self::load();
+        return $kind === null ? self::$cache
+            : array_values(array_filter(self::$cache, static fn (array $r) => isset($r['sections'][$kind])));
+    }
+
+    /** دستورالعمل جاری یک پاداش در یک تاریخ، با kind و spec همان بخش؛ تهی اگر پیش از نخستین است. */
     public static function at(int $kind, ?int $millis): ?array
     {
         foreach (self::list($kind) as $rule) {
             if ($millis === null || $rule['effective_from'] <= $millis) {
-                return $rule;
+                return ['kind' => $kind, 'spec' => $rule['sections'][$kind]] + $rule;
             }
         }
         return null;
     }
 
-    /** مبلغ پلکان برای یک تعداد، با سقف. */
+    /** مبلغ مرکز برای یک تعداد دستگاه: مبلغ هر دستگاه یا پلکان، با سقف. */
     public static function amount(array $spec, int $count): float
     {
         if ($count <= 0) {
             return 0.0;
         }
-        $mode = $spec['mode'] ?? 'progressive';
         $total = 0.0;
-        foreach ($spec['tiers'] ?? [] as $tier) {
+        if (isset($spec['per_device'])) {
+            $total = $count * (float) $spec['per_device'];
+        }
+        $mode = $spec['mode'] ?? 'progressive';
+        foreach (isset($spec['per_device']) ? [] : $spec['tiers'] ?? [] as $tier) {
             $from = max(1, (int) ($tier['from'] ?? 1));
             $to = isset($tier['to']) && $tier['to'] !== null && $tier['to'] !== '' ? (int) $tier['to'] : PHP_INT_MAX;
             $rate = (float) ($tier['amount'] ?? 0);
@@ -73,7 +97,7 @@ final class RewardRules
         return $cap > 0 ? min($total, $cap) : $total;
     }
 
-    /** «نامه ۱۲۳/ص — شناسه ۴۵۶ — ۱۴۰۴/۰۲/۱۰، از ۱۴۰۴/۰۳/۰۱» */
+    /** «نامه ۱۲۳/ص — شناسه ۴۵۶ — ۱۴۰۴/۰۲/۱۰، اجرا از ۱۴۰۴/۰۳/۰۱» */
     public static function describe(?array $rule): string
     {
         if ($rule === null) {
@@ -88,57 +112,89 @@ final class RewardRules
             . Jalali::format((int) $rule['effective_from'], false));
     }
 
-    /** شرح دستورالعمل برای مقدمه گزارش‌ها: نامه، پلکان و سقف، یا درصدها و نقش‌ها. */
+    /** «دستورالعمل … به شماره نامه … و شناسه … مورخ …، اجرا از …» برای استناد فرم. */
+    public static function cite(array $rule): string
+    {
+        $text = 'دستورالعمل ' . self::NAMES[$rule['kind']] . ($rule['letter_no'] ? ' به شماره نامه ' . $rule['letter_no'] : '')
+            . ($rule['letter_id'] ? ' و شناسه ' . $rule['letter_id'] : '')
+            . ($rule['letter_date'] ? ' مورخ ' . Jalali::format((int) $rule['letter_date'], false) : '')
+            . '، اجرا از ' . Jalali::format((int) $rule['effective_from'], false);
+        return Jalali::digits($text);
+    }
+
+    /** شرح یک بخش دستورالعمل (rule از at): مبلغ، پلکان یا درصدها، سقف و پرداخت‌کننده. */
     public static function explain(array $rule): string
+    {
+        return Jalali::digits('بر پایه ' . self::describe($rule) . ' — ' . self::terms($rule) . '.');
+    }
+
+    /** متن شرط‌های یک بخش، بی نامه؛ فرم هر مرکز درصد پست‌ها را در جدول خودش دارد (withRoles نه). */
+    public static function terms(array $rule, bool $withRoles = true): string
     {
         $spec = $rule['spec'];
         $money = static fn ($n) => number_format((float) $n) . ' ریال';
-        if ($rule['kind'] === self::STAFF) {
-            $roles = implode('، ', array_map(static fn ($r) => $r['label'] . ' ' . $r['weight'] . '٪', $spec['roles'] ?? []));
-            $text = $spec['pct'] . ' درصد ' . self::BASES[$spec['base'] ?? 'energy'] . ' هر مرکز: ' . $spec['ceo_pct']
-                . ' درصد سهم مدیرعامل و ' . $spec['staff_pct'] . ' درصد سهم کارکنان'
-                . ($roles === '' ? '' : ' که به این نسبت میان نقش‌ها و میان دارندگان هر نقش برابر تقسیم می‌شود: ' . $roles);
-        } else {
-            $tiers = implode('؛ ', array_map(static fn ($t) => 'از ' . $t['from'] . ($t['to'] === null ? ' به بالا' : ' تا ' . $t['to'])
-                . ' دستگاه ' . $money($t['amount']), $spec['tiers'] ?? []));
-            $text = self::MODES[$spec['mode'] ?? 'progressive'] . ': ' . $tiers;
-            if ($rule['kind'] === self::ENFORCEMENT) {
-                $text .= '. میان ' . implode(' و ', array_map(static fn ($o) => self::ENFORCERS[$o], $spec['orgs'] ?? []))
-                    . ' حاضر در بازدید؛ اگر هر دو حاضر بودند میان دو سازمان برابر و سهم هر سازمان میان حاضران همان سازمان برابر';
+        $cap = (float) ($spec['cap'] ?? 0) > 0 ? '؛ سقف هر مرکز ' . $money($spec['cap']) : '';
+        $rate = static function (array $spec) use ($money): string {
+            if (isset($spec['per_device'])) {
+                return 'هر ' . self::COUNTS[$spec['count'] ?? 'found'] . ' ' . $money($spec['per_device']);
             }
-        }
-        if ((float) ($spec['cap'] ?? 0) > 0) {
-            $text .= '. سقف هر مرکز ' . $money($spec['cap']);
-        }
-        return Jalali::digits('بر پایه ' . self::describe($rule) . ' — ' . $text . '.');
+            return self::MODES[$spec['mode'] ?? 'progressive'] . ': ' . implode('؛ ', array_map(static fn ($t) => 'از ' . $t['from']
+                . ($t['to'] === null ? ' به بالا' : ' تا ' . $t['to']) . ' دستگاه ' . $money($t['amount']), $spec['tiers'] ?? []));
+        };
+        return match ($rule['kind']) {
+            self::STAFF => $spec['pct'] . ' درصد ' . self::BASES[$spec['base'] ?? 'energy'] . ' هر مرکز: ' . $spec['ceo_pct']
+                . ' درصد سهم مدیرعامل و ' . $spec['staff_pct'] . ' درصد سهم کارکنان' . $cap
+                . (($spec['roles'] ?? []) === [] || !$withRoles ? '' : '؛ درصد پیش‌فرض هر پست از سهم کارکنان: '
+                    . implode('، ', array_map(static fn ($r) => $r['label'] . ' ' . $r['weight'] . '٪', $spec['roles'])))
+                . '؛ پرداخت ' . self::COMPANY,
+            self::ENFORCEMENT => $rate($spec) . $cap . '؛ مبلغ مرکز به‌طور مساوی میان همه پرسنل حاضر '
+                . implode(' و ', array_map(static fn ($o) => self::ENFORCERS[$o], $spec['orgs'] ?? array_keys(self::ENFORCERS)))
+                . ' تقسیم می‌شود (نه میان سازمان‌ها)؛ سهم نیروی انتظامی را ' . self::TAVANIR . ' و سهم سپاه را ' . self::COMPANY . ' می‌پردازد',
+            self::COLLECTION => $rate($spec) . $cap . '؛ مبلغ مرکز به‌طور مساوی میان پرسنل حاضر در جمع‌آوری و افرادی که مدیر افزوده'
+                . ' تقسیم می‌شود؛ پرداخت ' . self::COMPANY,
+            default => $rate($spec) . $cap . '؛ پرداخت ' . self::TAVANIR,
+        };
     }
 
     /**
-     * ثبت یا ویرایش؛ خطا متن فارسی، موفق شناسه. ورودی: kind، letter_no، letter_id،
-     * letter_date (شمسی)، effective_from (شمسی)، note و spec.
+     * ثبت یا ویرایش؛ خطا متن فارسی، موفق شناسه. ورودی: letter_no، letter_id، letter_date و
+     * effective_from (شمسی)، note و sections {finder, collection, enforcement, staff}؛ بخش خالی یعنی
+     * این دستورالعمل آن پاداش را عوض نمی‌کند. ورودی قدیمی kind و spec هم پذیرفته است.
      */
     public static function save(array $input, array $user, ?string $id = null): string
     {
-        $kind = (int) ($input['kind'] ?? -1);
-        if (!isset(self::NAMES[$kind])) {
-            return 'نوع پاداش معتبر نیست.';
+        $raw = is_array($input['sections'] ?? null) ? $input['sections'] : [];
+        if ($raw === [] && isset($input['kind'], self::KEYS[(int) $input['kind']])) {
+            $raw = [self::KEYS[(int) $input['kind']] => is_array($input['spec'] ?? null) ? $input['spec'] : []];
+        }
+        $sections = [];
+        foreach (self::KEYS as $kind => $key) {
+            if (!isset($raw[$key]) || !is_array($raw[$key])) {
+                continue;
+            }
+            $spec = RewardSpec::clean($kind, $raw[$key]);
+            if (is_string($spec)) {
+                return self::NAMES[$kind] . ': ' . $spec;
+            }
+            if ($spec !== null) {
+                $sections[$key] = $spec;
+            }
+        }
+        if ($sections === []) {
+            return 'دست‌کم یکی از چهار پاداش را با مبلغ یا درصد بنویسید.';
         }
         $from = CenterValues::date($input['effective_from'] ?? '');
         if ($from === null) {
             return 'تاریخ اجرا را به شکل ۱۴۰۴/۰۱/۰۱ بنویسید.';
         }
         $letterDate = trim((string) ($input['letter_date'] ?? '')) === '' ? null : CenterValues::date($input['letter_date']);
-        $spec = RewardSpec::clean($kind, is_array($input['spec'] ?? null) ? $input['spec'] : []);
-        if (is_string($spec)) {
-            return $spec;
-        }
         $fields = [
-            'kind' => $kind,
+            'kind' => self::COMBINED,
             'letter_no' => self::short($input['letter_no'] ?? null, 64),
             'letter_id' => self::short($input['letter_id'] ?? null, 64),
             'letter_date' => $letterDate,
             'effective_from' => self::dayStart($from),
-            'spec_json' => json_encode($spec, JSON_UNESCAPED_UNICODE),
+            'spec_json' => json_encode($sections, JSON_UNESCAPED_UNICODE),
             'note' => self::short($input['note'] ?? null, 500),
         ];
         if ($id !== null && Db::one('SELECT id FROM reward_rules WHERE id = ? AND deleted_at IS NULL', [$id]) !== null) {
@@ -164,27 +220,35 @@ final class RewardRules
 
     public static function find(string $id): ?array
     {
-        foreach (self::NAMES as $kind => $name) {
-            foreach (self::list($kind) as $rule) {
-                if ($rule['id'] === $id) {
-                    return $rule;
-                }
+        foreach (self::list() as $rule) {
+            if ($rule['id'] === $id) {
+                return $rule;
             }
         }
         return null;
     }
 
-    /** @return array<int, list<array<string, mixed>>> */
+    /** هر سطر جدول با sections [نوع => بخش]؛ دستورالعمل تک‌نوع نسخه پیش یک بخش دارد. @return list<array<string, mixed>> */
     private static function load(): array
     {
         $out = [];
         foreach (Db::all('SELECT * FROM reward_rules WHERE deleted_at IS NULL ORDER BY effective_from DESC, created_at DESC') as $row) {
-            $row['kind'] = (int) $row['kind'];
+            $spec = CenterValues::decode($row['spec_json']);
+            $sections = [];
+            if ((int) $row['kind'] === self::COMBINED) {
+                foreach (self::KEYS as $kind => $key) {
+                    if (is_array($spec[$key] ?? null)) {
+                        $sections[$kind] = $spec[$key];
+                    }
+                }
+            } elseif (isset(self::NAMES[(int) $row['kind']])) {
+                $sections[(int) $row['kind']] = $spec;
+            }
+            unset($row['spec_json'], $row['kind']);
             $row['effective_from'] = (int) $row['effective_from'];
             $row['letter_date'] = $row['letter_date'] === null ? null : (int) $row['letter_date'];
-            $row['spec'] = CenterValues::decode($row['spec_json']);
-            unset($row['spec_json']);
-            $out[$row['kind']][] = $row;
+            $row['sections'] = $sections;
+            $out[] = $row;
         }
         return $out;
     }

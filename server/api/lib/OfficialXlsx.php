@@ -56,8 +56,11 @@ final class OfficialXlsx
         $total = array_sum($widths);
         $grid = new CenterGrid();
         $r = 1;
-        $grid->put($r, max(0, $n - 2), "شماره: ..........\nتاریخ: ..........\nپیوست: ..........", self::NOTE);
+        $grid->put($r, max(0, $n - 2), OfficialDocx::metaText($model['meta'] ?? []), self::NOTE);
         $grid->merge($r, max(0, $n - 2), $r, $n - 1);
+        if (!empty($model['letterhead']) && $n > 2) {
+            self::cells($grid, $r, [[0, $n - 3]], [(string) $model['letterhead']], static fn () => self::SIGN);
+        }
         $grid->height($r, 50);
         $r++;
         self::line($grid, $r++, $n, (string) $model['title'], self::TITLE, 32);

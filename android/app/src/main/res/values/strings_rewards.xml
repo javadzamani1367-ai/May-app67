@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- افرادی که کارشناس برای پاداش‌های مرکز پیشنهاد می‌کند؛ مدیر در فرم پاداش هر مرکز تأییدشان می‌کند. -->
+<resources>
+    <string name="rp_title">عوامل پاداش</string>
+    <string name="rp_hint">پرسنل جمع‌آوری، عوامل انتظامی و سپاه، و دارندگان پست‌های اداری؛ همراه پرونده به سرور می‌رود و مدیر تأیید می‌کند.</string>
+    <string name="rp_add">افزودن فرد</string>
+    <string name="rp_remove">حذف</string>
+    <string name="rp_kind">پاداش</string>
+    <string name="rp_kind_collection">جمع‌آوری شرکت توزیع</string>
+    <string name="rp_kind_enforcement">عوامل انتظامی</string>
+    <string name="rp_kind_staff">عوامل اداری</string>
+    <string name="rp_org_faraja">نیروی انتظامی</string>
+    <string name="rp_org_sepah">سپاه</string>
+    <string-array name="rp_staff_posts">
+        <item>مدیرعامل</item>
+        <item>مدیر فروش و وصول مطالبات</item>
+        <item>مدیر دفتر حقوقی</item>
+        <item>رئیس دفتر لوازم اندازه‌گیری</item>
+        <item>مدیر حراست</item>
+        <item>کارشناس حقوقی</item>
+        <item>معاون فروش و خدمات مشترکین</item>
+        <item>دبیر کمیسیون رمزارز</item>
+        <item>مجری نظارت و ساماندهی رمزارز</item>
+        <item>کارشناس استخراج لاگ</item>
+        <item>کارشناس تحلیل لاگ</item>
+    </string-array>
+    <string-array name="rp_field_posts">
+        <item>سرپرست اکیپ</item>
+        <item>سیم‌بان</item>
+        <item>مأمور وصول</item>
+        <item>راننده</item>
+        <item>کارشناس حراست</item>
+        <item>فرمانده عملیات</item>
+        <item>افسر</item>
+        <item>درجه‌دار</item>
+    </string-array>
+</resources>

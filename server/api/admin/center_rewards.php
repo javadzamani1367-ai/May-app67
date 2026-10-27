@@ -3,8 +3,8 @@ declare(strict_types=1);
 require __DIR__ . '/_boot.php';
 require __DIR__ . '/_centers_view.php';
 
-// سه گزارش پاداش یک بازه: عامل شناسایی، عوامل اجرایی (نیروی انتظامی و سپاه) و «گزارش پاداش
-// عوامل اداری»؛ هر کدام با اکسل و Word رسمی برای مکاتبه. فقط مدیر.
+// چهار گزارش پاداش یک بازه: عامل شناسایی، جمع‌آوری شرکت توزیع، عوامل انتظامی (نیروی انتظامی و سپاه) و
+// عوامل اداری؛ هر کدام با اکسل و Word رسمی برای مکاتبه. فرم تک‌صفحه‌ای هر مرکز در center_form.php. فقط مدیر.
 $user = admin_require([Auth::ROLE_MANAGER]);
 $access = CenterSettings::require($user, true);
 [$from, $to] = center_range($_GET);

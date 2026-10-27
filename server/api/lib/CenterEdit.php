@@ -130,11 +130,21 @@ final class CenterEdit
         );
     }
 
+    /** نام خانه در تاریخچه؛ «reward:staff» یعنی فرم پاداش آن نوع. */
+    private static function fieldLabel(string $field): string
+    {
+        if (str_starts_with($field, 'reward:')) {
+            $kind = array_search(substr($field, 7), RewardRules::KEYS, true);
+            return 'فرم ' . ($kind === false ? 'پاداش' : RewardRules::NAMES[$kind]);
+        }
+        return $field === '*' ? '' : CenterColumns::label($field);
+    }
+
     /** تاریخچه یک سطر، تازه‌ترین بالا. @return list<array<string, mixed>> */
     public static function changes(string $rowId): array
     {
         return array_map(static fn (array $c) => [
-            'field' => $c['field'], 'label' => $c['field'] === '*' ? '' : CenterColumns::label($c['field']),
+            'field' => $c['field'], 'label' => self::fieldLabel($c['field']),
             'old' => $c['old_value'], 'new' => $c['new_value'], 'how' => $c['how'], 'at' => (int) $c['at'],
             'who' => $c['full_name'],
         ], Db::all(

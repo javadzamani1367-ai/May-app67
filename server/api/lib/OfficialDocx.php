@@ -7,7 +7,8 @@ declare(strict_types=1);
  * دستورالعمل، جدول‌ها با سرستون سایه‌دار و سطر جمع، یادداشت‌ها و جای امضا.
  *
  * مدل: title، subtitle، paragraphs، tables [{caption, header, rows, total, widths}]، notes،
- * signatures. خانه‌های جدول همان متنی است که نشان داده می‌شود (رقم فارسی).
+ * signatures، letterhead (نام شرکت در سربرگ) و meta (شماره و تاریخ فرم ثبت‌شده).
+ * خانه‌های جدول همان متنی است که نشان داده می‌شود (رقم فارسی).
  */
 final class OfficialDocx
 {
@@ -29,7 +30,7 @@ final class OfficialDocx
     public static function write(string $path, array $model, bool $landscape = true): void
     {
         $width = $landscape ? 15400 : 10000;
-        $body = self::meta($width)
+        $body = self::meta($width, $model)
             . self::para($model['title'] ?? '', $landscape ? 32 : 28, true, 'center', self::HEAD)
             . (empty($model['subtitle']) ? '' : self::para($model['subtitle'], 24, false, 'center'));
         foreach ($model['paragraphs'] ?? [] as $text) {
@@ -45,7 +46,7 @@ final class OfficialDocx
             $body .= self::para($text, 20, false, 'both');
         }
         if (!empty($model['signatures'])) {
-            $body .= self::signatures($model['signatures'], $width);
+            $body .= self::signatures($model['signatures'], $width, $landscape ? 22 : 20);
         }
         $size = $landscape ? '<w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/>' : '<w:pgSz w:w="11906" w:h="16838"/>';
         $body .= '<w:sectPr>' . $size . '<w:pgMar w:top="567" w:right="680" w:bottom="567" w:left="680" w:header="340" w:footer="340" w:gutter="0"/>'
@@ -80,17 +81,28 @@ final class OfficialDocx
         $zip->close();
     }
 
-    /** «شماره / تاریخ / پیوست» در گوشه بالای برگه، برای ثبت دبیرخانه. */
-    private static function meta(int $width): string
+    /**
+     * سربرگ: نام شرکت (letterhead) در گوشه راست و «شماره / تاریخ / پیوست» در گوشه چپ برای ثبت
+     * دبیرخانه؛ فرمی که ثبت نهایی شده شماره و تاریخ خودش را دارد (meta).
+     */
+    private static function meta(int $width, array $model): string
     {
-        $cell = static fn (string $text, int $w, string $jc) => '<w:tc><w:tcPr><w:tcW w:w="' . $w . '" w:type="dxa"/></w:tcPr>'
-            . self::para($text, 22, true, $jc, self::BODY, true) . '</w:tc>';
+        $cell = static fn (string $text, int $w, string $jc, string $font) => '<w:tc><w:tcPr><w:tcW w:w="' . $w . '" w:type="dxa"/></w:tcPr>'
+            . self::para($text, 22, true, $jc, $font, true) . '</w:tc>';
         $side = 3200;
         return '<w:tbl><w:tblPr><w:bidiVisual/><w:tblW w:w="' . $width . '" w:type="dxa"/><w:tblLayout w:type="fixed"/></w:tblPr>'
             . '<w:tblGrid><w:gridCol w:w="' . ($width - $side) . '"/><w:gridCol w:w="' . $side . '"/></w:tblGrid><w:tr>'
-            . $cell('', $width - $side, 'right')
-            . $cell("شماره: ....................\nتاریخ: ....................\nپیوست: ....................", $side, 'left')
+            . $cell((string) ($model['letterhead'] ?? ''), $width - $side, 'right', self::HEAD)
+            . $cell(self::metaText($model['meta'] ?? []), $side, 'left', self::BODY)
             . '</w:tr></w:tbl>';
+    }
+
+    /** «شماره: …» با مقدار فرم یا نقطه‌چین برای دبیرخانه. */
+    public static function metaText(array $meta): string
+    {
+        $dots = '....................';
+        return 'شماره: ' . self::show($meta['number'] ?? $dots) . "\nتاریخ: " . self::show($meta['date'] ?? $dots)
+            . "\nپیوست: " . self::show($meta['attach'] ?? $dots);
     }
 
     private static function table(array $table, int $width, int $size): string
@@ -119,7 +131,6 @@ final class OfficialDocx
         return $xml . '</w:tbl>' . self::para('', 12, false, 'right');
     }
 
-    /** @param list<string> $cells */
     /** @param list<string> $cells pairs: برچسب‌ها (خانه‌های زوج) سایه‌دار و پررنگ، مقدارها راست‌چین */
     private static function row(array $cells, array $cols, ?string $fill, bool $bold, string $font, int $size, bool $repeat,
                                 bool $pairs = false): string
@@ -137,13 +148,13 @@ final class OfficialDocx
     }
 
     /** جای امضا: هر عنوان یک ستون، بی کادر. @param list<string> $titles */
-    private static function signatures(array $titles, int $width): string
+    private static function signatures(array $titles, int $width, int $size = 22): string
     {
         $w = intdiv($width, count($titles));
         $xml = self::para('', 20, false, 'right') . '<w:tbl><w:tblPr><w:bidiVisual/><w:tblW w:w="' . $width . '" w:type="dxa"/>'
             . '<w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>' . str_repeat('<w:gridCol w:w="' . $w . '"/>', count($titles)) . '</w:tblGrid><w:tr>';
         foreach ($titles as $title) {
-            $xml .= '<w:tc><w:tcPr><w:tcW w:w="' . $w . '" w:type="dxa"/></w:tcPr>' . self::para($title, 22, true, 'center', self::HEAD, true)
+            $xml .= '<w:tc><w:tcPr><w:tcW w:w="' . $w . '" w:type="dxa"/></w:tcPr>' . self::para($title, $size, true, 'center', self::HEAD, true)
                 . self::para('امضا و تاریخ', 18, false, 'center', self::BODY, true) . '</w:tc>';
         }
         return $xml . '</w:tr></w:tbl>';

@@ -181,6 +181,7 @@ fun CaseDetailScreen(
             CaseNarrativeSection(current)
             CaseMediaSection(current)
             AttachmentSection(detail = current, viewModel = viewModel)
+            if (!UserRole.isManager && !current.report.isIllegalPower) RewardPeopleSection(reportId)
 
             if (UserRole.isManager) SectionCard(
                 title = stringResource(R.string.dispatch_history),

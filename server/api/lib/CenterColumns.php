@@ -34,7 +34,8 @@ final class CenterColumns
             'account_reason'],
         'انشعاب غیرمجاز' => ['with_found', 'with_collected', 'with_kw', 'with_bill', 'without_found', 'without_collected',
             'without_kw', 'without_bill'],
-        'مبالغ و پاداش‌ها' => ['energy_amount', 'damage_amount', 'reward_amount', 'collected_amount', 'police_reward', 'staff_reward'],
+        'مبالغ و پاداش‌ها' => ['energy_amount', 'damage_amount', 'reward_amount', 'collected_amount', 'collection_reward', 'police_reward',
+            'staff_reward'],
         'وضعیت' => ['status'],
     ];
 
@@ -104,7 +105,8 @@ final class CenterColumns
             self::c('owner_name', null, [['نام مالک یا متصرف', 1, 4]], 'text', 'sys'),
             self::c('owner_national_id', null, [['کد ملی مالک', 1, 4]], 'text', 'sys'),
             self::c('measured_amperage', null, [['آمپر اندازه‌گیری‌شده', 1, 4]], 'kw', 'sys'),
-            self::c('police_reward', null, [['پاداش عوامل اجرایی (ریال)', 1, 4]], 'money', 'calc', true),
+            self::c('collection_reward', null, [['پاداش جمع‌آوری شرکت توزیع (ریال)', 1, 4]], 'money', 'calc', true),
+            self::c('police_reward', null, [['پاداش عوامل انتظامی (ریال)', 1, 4]], 'money', 'calc', true),
             self::c('staff_reward', null, [['پاداش عوامل اداری (ریال)', 1, 4]], 'money', 'calc', true),
         ];
         self::$all = [];

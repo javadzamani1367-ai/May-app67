@@ -2,6 +2,7 @@ package ir.ilam.inspection.sync
 
 import ir.ilam.inspection.data.db.AttachmentEntity
 import ir.ilam.inspection.data.db.AttendeeEntity
+import ir.ilam.inspection.data.db.RewardPersonEntity
 import ir.ilam.inspection.data.db.DeviceEntity
 import ir.ilam.inspection.data.db.MediaEntity
 import ir.ilam.inspection.data.db.ReportEntity
@@ -97,6 +98,17 @@ object SyncPayloadReader {
                     powerWatt = row.number("power_watt"),
                     entryMethod = row.optInt("entry_method", 1),
                     note = row.text("note")
+                )
+            },
+            rewardPeople = if (!json.has("reward_people")) null else json.rows("reward_people") { row ->
+                RewardPersonEntity(
+                    id = row.id() ?: return@rows null,
+                    reportId = id,
+                    kind = row.text("kind") ?: return@rows null,
+                    fullName = row.text("full_name") ?: return@rows null,
+                    post = row.text("post"),
+                    org = row.text("org"),
+                    action = row.text("action")
                 )
             },
             attendees = json.rows("attendees") { row ->

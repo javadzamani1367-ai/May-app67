@@ -59,7 +59,8 @@ class ReportRepository(
             attendees = db.attendeeDao().listFor(id),
             media = db.mediaDao().listFor(id),
             attachments = db.attachmentDao().listFor(id),
-            dispatches = db.dispatchDao().listFor(id)
+            dispatches = db.dispatchDao().listFor(id),
+            rewardPeople = db.rewardPersonDao().listFor(id)
         )
     }
 

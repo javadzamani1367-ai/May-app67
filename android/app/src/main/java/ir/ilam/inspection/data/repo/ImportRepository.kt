@@ -48,6 +48,10 @@ class ImportRepository(private val db: AppDatabase, private val files: FileStore
         if (detail.attendees.isNotEmpty()) db.attendeeDao().upsertAll(detail.attendees)
         if (detail.media.isNotEmpty()) db.mediaDao().upsertAll(detail.media)
         if (detail.attachments.isNotEmpty()) db.attachmentDao().upsertAll(detail.attachments)
+        detail.rewardPeople?.let { people ->
+            db.rewardPersonDao().deleteFor(incoming.id)
+            if (people.isNotEmpty()) db.rewardPersonDao().upsertAll(people)
+        }
         return true
     }
 

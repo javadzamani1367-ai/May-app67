@@ -11,6 +11,10 @@ declare(strict_types=1);
  */
 final class CenterRows
 {
+    /** ستون‌های محاسبه‌ای پاداش و نوع هر کدام. */
+    public const REWARD_COLUMNS = ['finder_reward' => RewardRules::FINDER, 'collection_reward' => RewardRules::COLLECTION,
+        'police_reward' => RewardRules::ENFORCEMENT, 'staff_reward' => RewardRules::STAFF];
+
     /** پرونده‌های تأییدشده‌ای که هنوز سطر ندارند. */
     public static function sync(): int
     {
@@ -106,8 +110,8 @@ final class CenterRows
     }
 
     /**
-     * مقدار نهایی هر خانه. با detail، مقدار سامانه و فایل هر خانه، حاضران، پاداش‌ها و
-     * تاریخچه هم؛ با withSystem فقط مقدار سامانه (برای جور کردن فایل).
+     * مقدار نهایی هر خانه و پاداش‌ها (rewards، با افراد هر فرم). با detail، مقدار سامانه و فایل
+     * هر خانه و تاریخچه هم؛ با withSystem فقط مقدار سامانه (برای جور کردن فایل).
      *
      * @param list<array<string, mixed>> $rows
      * @return list<array<string, mixed>>
@@ -116,7 +120,7 @@ final class CenterRows
     {
         $reportIds = array_values(array_filter(array_column($rows, 'report_id')));
         $system = CenterSystem::values($reportIds);
-        $attendees = CenterSystem::attendees($reportIds);
+        $people = RewardPeople::forRows($rows);
         $hints = CenterSystem::statusHints($reportIds);
         $locked = CenterLocks::years();
         $columns = CenterColumns::all();
@@ -134,11 +138,18 @@ final class CenterRows
                 }
             }
             $plain = array_map(static fn ($cell) => $cell['value'], $cells);
-            $finder = CenterRewards::finder($plain, $date);
-            $police = CenterRewards::enforcement($plain, $date, $attendees[$row['report_id']] ?? []);
-            $staff = CenterRewards::staff($plain, $date);
-            $calc = ['finder_reward' => $finder['amount'] ?? null, 'police_reward' => $police['amount'] ?? null,
-                'staff_reward' => $staff['amount'] ?? null];
+            // هر پاداش با افراد فرم همان مرکز؛ فرم ثبت نهایی‌شده نسخه ثابت خودش را دارد.
+            $rewards = [];
+            foreach (RewardRules::KEYS as $kind => $key) {
+                $state = $people[$row['id']][$kind];
+                $form = $state['form'];
+                $rewards[$kind] = ['calc' => RewardForms::calc($kind, $plain, $date, $state), 'people' => $state['people'],
+                    'saved' => $state['saved'], 'number' => $form['number'] ?? null, 'final_at' => $form['final_at'] ?? null];
+            }
+            $calc = [];
+            foreach (self::REWARD_COLUMNS as $key => $kind) {
+                $calc[$key] = $rewards[$kind]['calc']['amount'] ?? null;
+            }
             foreach ($calc as $key => $value) {
                 $cells[$key] = CenterValues::effective($key, 'money', $value ?: null, $values, $import, $choices);
             }
@@ -152,6 +163,7 @@ final class CenterRows
                 'conflicts' => array_keys(array_filter($cells, static fn ($cell) => $cell['conflict'])),
                 'hint' => $hints[$row['report_id']] ?? null,
             ];
+            $built['rewards'] = $rewards;
             $built['warnings'] = CenterCheck::warnings($built['values']);
             if ($detail || $withSystem) {
                 $built['system'] = array_intersect_key($sys + $calc, $columns);
@@ -160,9 +172,6 @@ final class CenterRows
                 $built['file'] = $import;
                 $built['own'] = $values;
                 $built['choices'] = $choices;
-                $built['police'] = $police;
-                $built['staff'] = $staff;
-                $built['finder'] = $finder;
                 $built['changes'] = CenterEdit::changes($row['id']);
             }
             $out[] = $built;

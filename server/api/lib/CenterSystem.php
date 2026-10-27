@@ -103,7 +103,8 @@ final class CenterSystem
     }
 
     /**
-     * حاضران هر پرونده، برای پاداش عوامل اجرایی. @return array<string, list<array{org:int, name:?string, org_name:?string, position:?string}>>
+     * حاضران هر پرونده، برای پاداش جمع‌آوری و عوامل انتظامی.
+     * @return array<string, list<array{id:string, org:int, name:?string, org_name:?string, position:?string}>>
      */
     public static function attendees(array $ids): array
     {
@@ -113,8 +114,8 @@ final class CenterSystem
         }
         $in = implode(',', array_fill(0, count($ids), '?'));
         $out = [];
-        foreach (Db::all("SELECT report_id, organization, full_name, position, org_name FROM attendees WHERE report_id IN ($in)", $ids) as $a) {
-            $out[$a['report_id']][] = ['org' => (int) $a['organization'], 'name' => self::text($a['full_name']),
+        foreach (Db::all("SELECT id, report_id, organization, full_name, position, org_name FROM attendees WHERE report_id IN ($in)", $ids) as $a) {
+            $out[$a['report_id']][] = ['id' => (string) $a['id'], 'org' => (int) $a['organization'], 'name' => self::text($a['full_name']),
                 'org_name' => self::text($a['org_name']), 'position' => self::text($a['position'])];
         }
         return $out;

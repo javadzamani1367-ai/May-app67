@@ -20,7 +20,8 @@ foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSch
           'FieldHistoryExport', 'HistoryReferral', 'CenterSchema', 'CenterColumns', 'CenterValues', 'CenterSystem', 'CenterMatch', 'CenterCheck', 'CenterLocks',
           'CenterSettings', 'RewardRules', 'RewardSpec', 'CenterRewards', 'CenterRows', 'CenterEdit', 'XlsxReader', 'CenterHeader',
           'CenterSupplement', 'CenterImport', 'CenterImportRun', 'CenterTemplate', 'CenterGrid', 'TemplateBook', 'OfficialXlsx', 'OfficialDocx',  'CenterSupplementSheet', 'CenterXlsx',
-          'CenterDocx', 'CenterRewardReport', 'CenterCharts'] as $class) {
+          'CenterDocx', 'CenterRewardReport', 'CenterCharts', 'RewardProposals', 'RewardPeople', 'RewardForms', 'NumberWords',
+          'RewardFormModel'] as $class) {
     require_once __DIR__ . '/lib/' . $class . '.php';
 }
 foreach (glob(__DIR__ . '/lib/Controllers/*.php') ?: [] as $controller) {
@@ -150,6 +151,9 @@ $routes = [
     'GET /centers/rewards'       => [CenterController::class, 'rewards'],
     'GET /centers/rules'         => [CenterController::class, 'rules'],
     'POST /centers/rules'        => [CenterController::class, 'rules'],
+    'GET /centers/form'          => [RewardFormController::class, 'form'],
+    'POST /centers/form'         => [RewardFormController::class, 'form'],
+    'GET /centers/form/export'   => [RewardFormController::class, 'formExport'],
     'GET /centers/settings'      => [CenterController::class, 'settings'],
     'POST /centers/settings'     => [CenterController::class, 'settings'],
 ];

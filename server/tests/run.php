@@ -223,7 +223,7 @@ check('هر ستون گوشی روی سرور هست', $missingOnServer === [], 
 check('سرور ستون اضافه ندارد', $extraOnServer === [], implode(', ', $extraOnServer));
 
 $tableCount = preg_match_all('/CREATE TABLE IF NOT EXISTS/', $sql);
-check('هر ۳۷ جدول در schema.sql هست', $tableCount === 37, "$tableCount جدول");
+check('هر ۳۹ جدول در schema.sql هست', $tableCount === 39, "$tableCount جدول");
 
 // نسخه اسکیما در سه زبان نوشته شده و هیچ کامپایلری آن سه را با هم مقایسه
 // نمی‌کند. اگر یکی جا بماند، سرور در /ping عددی را اعلام می‌کند که اسکیمای
@@ -329,7 +329,7 @@ equals('نسخه schema.sql با آخرین گام به‌روزرسانی یک�
 // عوض شود و دیگری نه، نصب تازه و نصب به‌روزشده دو پایگاه داده متفاوت دارند.
 $flat = static fn (string $s): string => preg_replace('/\s+/', ' ', trim($s));
 $schemaFlat = $flat((string) file_get_contents(__DIR__ . '/../schema.sql'));
-foreach (array_merge(FieldSchema::TABLES, CenterSchema::TABLES) as $statement) {
+foreach (array_merge(FieldSchema::TABLES, CenterSchema::TABLES, CenterSchema::FORMS) as $statement) {
     preg_match('/CREATE TABLE IF NOT EXISTS (\w+)/', $statement, $tableName);
     check("جدول {$tableName[1]} در schema.sql عیناً همان گام به‌روزرسانی است",
         str_contains($schemaFlat, $flat($statement)));

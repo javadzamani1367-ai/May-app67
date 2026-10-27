@@ -76,6 +76,12 @@ object SyncPayload {
         json.put("media", media(detail))
         json.put("attachments", attachments(detail))
         json.put("dispatches", dispatches(detail))
+        detail.rewardPeople?.let { people ->
+            json.put("reward_people", JSONArray(people.map {
+                JSONObject().put("id", it.id).put("kind", it.kind).put("full_name", it.fullName).put("post", it.post)
+                    .put("org", it.org).put("action", it.action)
+            }))
+        }
         return json
     }
 

@@ -1,5 +1,6 @@
 package ir.ilam.inspection.ui.centers
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,7 +49,7 @@ import ir.ilam.inspection.util.PersianNumbers
  * the instruction in force on its date, and every change with who made it.
  */
 @Composable
-fun CenterRowScreen(viewModel: CentersViewModel, onBack: () -> Unit, onOpen: (String) -> Unit) {
+fun CenterRowScreen(viewModel: CentersViewModel, onBack: () -> Unit, onOpen: (String) -> Unit, onForm: (String, String) -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val detail = state.detail
     val columns = state.page?.columns.orEmpty()
@@ -89,7 +90,7 @@ fun CenterRowScreen(viewModel: CentersViewModel, onBack: () -> Unit, onOpen: (St
                 Text(stringResource(R.string.ct_unit_stage, hint) + (detail.row.suggest?.let { " — " + stringResource(R.string.ct_suggest, it) } ?: ""),
                     style = MaterialTheme.typography.bodySmall, color = Tavan.colors.info.strong, modifier = Modifier.padding(vertical = Spacing.sm))
             }
-            if (manage) RewardsCard(detail)
+            if (manage) RewardsCard(detail) { kind -> onForm(detail.row.id, kind) }
             ChangesCard(detail.changes)
         }
         if (dirty && !detail.row.locked) BottomActionBar {
@@ -107,16 +108,20 @@ fun CenterRowScreen(viewModel: CentersViewModel, onBack: () -> Unit, onOpen: (St
     )
 }
 
+/** The centre's four rewards, each opening its own one-page form. */
 @Composable
-private fun RewardsCard(detail: Centers.Detail) {
+private fun RewardsCard(detail: Centers.Detail, onForm: (String) -> Unit) {
     SectionCard(title = stringResource(R.string.ct_rewards), icon = Icons.Filled.Paid, tone = Tone.SUCCESS) {
         Column {
-            ValueRow(stringResource(R.string.ct_finder_reward), CenterFormat.show("money", detail.row.values["finder_reward"]).ifBlank { "—" })
-            Text(PersianNumbers.toPersian(detail.finderRule), style = MaterialTheme.typography.bodySmall)
-            ValueRow(stringResource(R.string.ct_police_reward), CenterFormat.show("money", detail.row.values["police_reward"]).ifBlank { "—" })
-            detail.enforcement.forEach { ValueRow(it.name + " (" + it.group + ")", PersianNumbers.grouped(it.amount)) }
-            detail.staffTotal?.let { ValueRow(stringResource(R.string.ct_staff_reward), PersianNumbers.grouped(it)) }
-            detail.staff.forEach { ValueRow(it.name + (if (it.group.isNotBlank()) " — " + it.group else ""), PersianNumbers.grouped(it.amount)) }
+            Text(stringResource(R.string.rf_row_hint), style = MaterialTheme.typography.bodySmall)
+            detail.rewards.forEach { r ->
+                Column(modifier = Modifier.fillMaxWidth().clickable { onForm(r.kind) }.padding(vertical = Spacing.xs)) {
+                    ValueRow(r.name, r.amount?.let { PersianNumbers.grouped(it) } ?: "—", emphasize = true)
+                    Text(PersianNumbers.toPersian(r.rule) + " · " + if (r.final) stringResource(R.string.rf_final_n, PersianNumbers.toPersian(r.number.orEmpty()))
+                        else stringResource(R.string.rf_draft), style = MaterialTheme.typography.bodySmall,
+                        color = if (r.final) Tavan.colors.success.strong else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
         }
     }
 }

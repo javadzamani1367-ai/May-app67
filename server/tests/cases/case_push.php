@@ -105,6 +105,22 @@ equals(
     count($again['body']['data']['missing_files'] ?? ['x'])
 );
 
+// افرادی که کارشناس برای پاداش پیشنهاد کرده همراه پرونده می‌رسند و هر بار جای قبلی را می‌گیرند؛
+// اپ قدیمی که فهرست را نمی‌فرستد آن را پاک نمی‌کند.
+$proposal = ['id' => 'b5000000-0000-4000-8000-000000000001', 'kind' => 'staff', 'full_name' => 'دبیر پیشنهادی',
+    'post' => 'دبیر کمیسیون رمزارز', 'action' => 'تنظیم صورتجلسه'];
+$probe->json('POST', 'sync/report', ['report' => array_merge($report, ['updated_at' => 1757700000002,
+    'reward_people' => [$proposal, ['kind' => 'enforcement', 'full_name' => 'سروان', 'org' => 'sepah'], ['kind' => 'bogus', 'full_name' => 'x']]]),
+    'device_code' => 'DEVICE-AAA'], $expertToken);
+equals('پیشنهاد پاداش رسید؛ نوع نامعتبر نه', 2, (int) $pdo->query("SELECT COUNT(*) FROM reward_proposals WHERE report_id = '$reportId'")->fetchColumn());
+$probe->json('POST', 'sync/report', ['report' => array_merge($report, ['updated_at' => 1757700000003]), 'device_code' => 'DEVICE-AAA'], $expertToken);
+equals('اپ قدیمی پیشنهادها را پاک نکرد', 2, (int) $pdo->query("SELECT COUNT(*) FROM reward_proposals WHERE report_id = '$reportId'")->fetchColumn());
+$probe->json('POST', 'sync/report', ['report' => array_merge($report, ['updated_at' => 1757700000004, 'reward_people' => [$proposal]]),
+    'device_code' => 'DEVICE-AAA'], $expertToken);
+$pulled = $probe->json('GET', "sync/report&id=$reportId", [], $expertToken)['body']['data']['report']['reward_people'] ?? [];
+equals('فهرست تازه جای قبلی را گرفت و با پرونده پایین می‌آید', [['دبیر پیشنهادی'], ['staff']],
+    [array_column($pulled, 'full_name'), array_column($pulled, 'kind')]);
+
 echo "\n— دسترسی به فایل —\n";
 $download = $probe->raw("sync/file&kind=media&id=$mediaId", $expertToken);
 equals('کارشناس فایل خودش را می‌گیرد', 200, $download['status']);

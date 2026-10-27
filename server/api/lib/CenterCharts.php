@@ -29,7 +29,7 @@ final class CenterCharts
         $status = [];
         $orgs = ['org_sepah' => 0, 'org_vaja' => 0, 'org_faraja' => 0, 'org_other' => 0];
         $money = ['energy_amount' => 0.0, 'damage_amount' => 0.0, 'collected_amount' => 0.0, 'finder_reward' => 0.0,
-            'police_reward' => 0.0, 'staff_reward' => 0.0];
+            'collection_reward' => 0.0, 'police_reward' => 0.0, 'staff_reward' => 0.0];
         $totals = ['centers' => count($rows), 'miners' => 0, 'kw' => 0.0, 'conflicts' => 0, 'warnings' => 0, 'commission' => 0];
         foreach ($rows as $row) {
             $v = $row['values'];

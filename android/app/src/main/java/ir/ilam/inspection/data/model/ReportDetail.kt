@@ -6,6 +6,7 @@ import ir.ilam.inspection.data.db.DeviceEntity
 import ir.ilam.inspection.data.db.DispatchEntity
 import ir.ilam.inspection.data.db.MediaEntity
 import ir.ilam.inspection.data.db.ReportEntity
+import ir.ilam.inspection.data.db.RewardPersonEntity
 
 /** A whole case with its children — what the exporters and the sync API need. */
 data class ReportDetail(
@@ -14,7 +15,9 @@ data class ReportDetail(
     val attendees: List<AttendeeEntity> = emptyList(),
     val media: List<MediaEntity> = emptyList(),
     val attachments: List<AttachmentEntity> = emptyList(),
-    val dispatches: List<DispatchEntity> = emptyList()
+    val dispatches: List<DispatchEntity> = emptyList(),
+    /** People proposed for the rewards; null when the source did not say (an older server or archive). */
+    val rewardPeople: List<RewardPersonEntity>? = null
 ) {
     val photos: List<MediaEntity> get() = media.filter { it.type == MediaType.IMAGE.code }
     val videos: List<MediaEntity> get() = media.filter { it.type == MediaType.VIDEO.code }

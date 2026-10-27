@@ -21,7 +21,7 @@ const val SCHEMA_VERSION = 7
  * gains a table the archive has no business knowing about — a local typing
  * convenience must not make an up-to-date archive look incompatible.
  */
-const val DATABASE_VERSION = 12
+const val DATABASE_VERSION = 13
 
 @Database(
     entities = [
@@ -36,7 +36,8 @@ const val DATABASE_VERSION = 12
         UserEntity::class,
         ServerSyncEntity::class,
         LocationFixEntity::class,
-        ReferralEntity::class
+        ReferralEntity::class,
+        RewardPersonEntity::class
     ],
     version = DATABASE_VERSION,
     exportSchema = true
@@ -55,6 +56,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun serverSyncDao(): ServerSyncDao
     abstract fun locationFixDao(): LocationFixDao
     abstract fun referralDao(): ReferralDao
+    abstract fun rewardPersonDao(): RewardPersonDao
 
     companion object {
         private const val DB_BASE = "inspection"
@@ -260,20 +262,6 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        /** Schema 7: crypto-mining visit or illegal-power inspection. */
-        val MIGRATION_11_12 = object : Migration(11, 12) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE reports ADD COLUMN case_kind INTEGER NOT NULL DEFAULT 0")
-            }
-        }
-
-        /** Schema 6: the account holder's name, for the miner device registry. */
-        val MIGRATION_10_11 = object : Migration(10, 11) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE reports ADD COLUMN subscriber_name TEXT")
-            }
-        }
-
         private fun build(context: Context, name: String): AppDatabase {
             return Room.databaseBuilder(context, AppDatabase::class.java, name)
                 .openHelperFactory(SecureDatabase.factory(context))
@@ -288,7 +276,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_8_9,
                     MIGRATION_9_10,
                     MIGRATION_10_11,
-                    MIGRATION_11_12
+                    MIGRATION_11_12,
+                    MIGRATION_12_13
                 )
                 .build()
         }

@@ -17,6 +17,8 @@ object CenterRoutes {
     const val ROW = "center-row"
     const val IMPORT = "center-import"
     const val REWARDS = "center-rewards"
+    const val FORM = "center-form/{row}/{kind}"
+    fun form(row: String, kind: String) = "center-form/$row/$kind"
 }
 
 fun NavGraphBuilder.centerScreens(navController: NavHostController) {
@@ -33,7 +35,20 @@ fun NavGraphBuilder.centerScreens(navController: NavHostController) {
     composable(CenterRoutes.ROW) { entry ->
         val parent = remember(entry) { navController.getBackStackEntry(CenterRoutes.LIST) }
         val viewModel = centersViewModel(parent)
-        CenterRowScreen(viewModel, onBack = { navController.popBackStack() }, onOpen = { id -> viewModel.open(id) })
+        CenterRowScreen(viewModel, onBack = { navController.popBackStack() }, onOpen = { id -> viewModel.open(id) },
+            onForm = { row, kind -> navController.navigate(CenterRoutes.form(row, kind)) })
+    }
+    composable(CenterRoutes.FORM) { entry ->
+        val container = LocalContext.current.container
+        val form: RewardFormViewModel = viewModel(factory = remember { ContainerViewModelFactory(container) { RewardFormViewModel(it) } })
+        val parent = remember(entry) { navController.getBackStackEntry(CenterRoutes.LIST) }
+        val list = centersViewModel(parent)
+        RewardFormScreen(form, entry.arguments?.getString("row").orEmpty(), entry.arguments?.getString("kind").orEmpty(),
+            onBack = {
+                // The row's amounts follow the form: read it again on the way back.
+                list.state.value.detail?.row?.id?.let(list::open)
+                navController.popBackStack()
+            })
     }
     composable(CenterRoutes.IMPORT) { entry ->
         val parent = remember(entry) { navController.getBackStackEntry(CenterRoutes.LIST) }

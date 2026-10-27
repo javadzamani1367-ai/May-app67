@@ -3,6 +3,7 @@ package ir.ilam.inspection.data.repo
 import ir.ilam.inspection.data.db.AppDatabase
 import ir.ilam.inspection.data.db.AttachmentEntity
 import ir.ilam.inspection.data.db.AttendeeEntity
+import ir.ilam.inspection.data.db.RewardPersonEntity
 import ir.ilam.inspection.data.db.DeviceEntity
 import ir.ilam.inspection.data.db.DispatchEntity
 import ir.ilam.inspection.data.db.MediaEntity
@@ -90,6 +91,22 @@ class CaseContentRepository(
     suspend fun removeAttendee(attendee: AttendeeEntity) {
         db.attendeeDao().delete(attendee)
         touch(attendee.reportId)
+    }
+
+    // ---- people proposed for the rewards ----------------------------------
+
+    fun observeRewardPeople(reportId: String) = db.rewardPersonDao().observeFor(reportId)
+
+    fun observeKnownNames() = db.rewardPersonDao().observeNames()
+
+    suspend fun saveRewardPerson(person: RewardPersonEntity) {
+        db.rewardPersonDao().upsert(person)
+        touch(person.reportId)
+    }
+
+    suspend fun removeRewardPerson(person: RewardPersonEntity) {
+        db.rewardPersonDao().delete(person)
+        touch(person.reportId)
     }
 
     // ---- media ------------------------------------------------------------

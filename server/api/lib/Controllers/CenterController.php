@@ -142,7 +142,7 @@ final class CenterController
         exit;
     }
 
-    /** سه گزارش پاداش: kind = finder، enforcement یا staff؛ format = json، xlsx یا docx. */
+    /** چهار گزارش پاداش: kind = finder، collection، enforcement یا staff؛ format = json، xlsx یا docx. */
     public function rewards(Request $request): void
     {
         $user = Auth::require($request, null);
@@ -173,13 +173,13 @@ final class CenterController
                 }
             }
         }
-        $out = [];
-        foreach (RewardRules::NAMES as $kind => $name) {
-            $out[] = ['kind' => $kind, 'name' => $name, 'rules' => array_map(static fn ($r) => $r + ['text' => RewardRules::describe($r)],
-                RewardRules::list($kind))];
-        }
-        Response::json(['kinds' => $out, 'modes' => RewardRules::MODES, 'enforcers' => RewardRules::ENFORCERS,
-            'bases' => RewardRules::BASES, 'staff_roles' => RewardSpec::STAFF_ROLES]);
+        // هر دستورالعمل یک نامه با بخش هر چهار پاداش (finder، collection، enforcement، staff).
+        $rules = array_map(static fn ($r) => array_diff_key($r, ['sections' => 1]) + ['text' => RewardRules::describe($r),
+            'sections' => array_combine(array_map(static fn ($k) => RewardRules::KEYS[$k], array_keys($r['sections'])), array_values($r['sections']))],
+            RewardRules::list());
+        Response::json(['rules' => $rules, 'names' => array_combine(RewardRules::KEYS, RewardRules::NAMES), 'modes' => RewardRules::MODES,
+            'counts' => RewardRules::COUNTS, 'enforcers' => RewardRules::ENFORCERS, 'bases' => RewardRules::BASES,
+            'staff_roles' => RewardSpec::STAFF_ROLES]);
     }
 
     public function settings(Request $request): void
@@ -231,10 +231,21 @@ final class CenterController
             'own' => array_intersect_key($row['own'], $see),
             'choices' => array_intersect_key($row['choices'], $see),
             'changes' => array_values(array_filter($row['changes'], static fn ($c) => $c['field'] === '*' || isset($see[$c['field']]))),
-            'police' => $access['manage'] ? $row['police'] : null,
-            'staff' => $access['manage'] ? $row['staff'] : null,
-            'finder_rule' => RewardRules::describe($row['finder']['rule'] ?? null),
+            'rewards' => $access['manage'] ? self::rewardSummary($row) : [],
         ];
+    }
+
+    /** خلاصه چهار پاداش سطر برای صفحه سطر؛ فرم هر کدام از centers/form. */
+    private static function rewardSummary(array $row): array
+    {
+        $out = [];
+        foreach (RewardRules::KEYS as $kind => $key) {
+            $state = $row['rewards'][$kind];
+            $out[] = ['kind' => $key, 'name' => RewardRules::NAMES[$kind], 'amount' => $state['calc']['amount'] ?? null,
+                'rule' => RewardRules::describe($state['calc']['rule'] ?? null), 'final' => $state['final_at'] !== null,
+                'number' => $state['number'], 'people' => count($state['calc']['people'] ?? [])];
+        }
+        return $out;
     }
 
     private static function plan(array $plan): array

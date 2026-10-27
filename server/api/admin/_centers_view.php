@@ -174,7 +174,7 @@ function center_changes(array $changes): string
         return '<p class="muted">تغییری ثبت نشده.</p>';
     }
     $how = ['edit' => 'ویرایش', 'choose:system' => 'انتخاب سامانه', 'choose:file' => 'انتخاب فایل', 'import' => 'ورود فایل',
-        'add' => 'افزودن سطر', 'delete' => 'حذف'];
+        'add' => 'افزودن سطر', 'delete' => 'حذف', 'reward' => 'ذخیره فرم پاداش', 'final' => 'ثبت نهایی', 'unlock' => 'باز کردن فرم'];
     $html = '<div class="cscroll"><table class="ctable"><tr><th>زمان</th><th>کاربر</th><th>ستون</th><th>پیش</th><th>پس</th><th>روش</th></tr>';
     foreach ($changes as $c) {
         $html .= '<tr><td>' . e(Jalali::format($c['at'])) . '</td><td>' . e($c['who'] ?? '—') . '</td><td>' . e($c['label'])

@@ -63,26 +63,17 @@ echo center_styles();
 
 <?php if ($access['manage']): ?>
 <div class="card">
-  <h2>پاداش‌ها</h2>
-  <p>عامل شناسایی: <b><?= e(center_show('finder_reward', $v['finder_reward'] ?? null) ?: '—') ?></b> ریال —
-    <span class="srcs"><?= e(RewardRules::describe($row['finder']['rule'] ?? null)) ?></span></p>
-  <p>عوامل اجرایی: <b><?= e(center_show('police_reward', $v['police_reward'] ?? null) ?: '—') ?></b> ریال —
-    <span class="srcs"><?= e(RewardRules::describe($row['police']['rule'] ?? null)) ?></span></p>
-  <?php if (($row['police']['people'] ?? []) !== []): ?>
-  <table class="ctable"><tr><th>حاضر</th><th>نهاد</th><th>سهم (ریال)</th></tr>
-    <?php foreach ($row['police']['people'] as $p): ?><tr><td><?= e($p['name']) ?></td><td><?= e($p['org']) ?></td><td><?= e(fa_digits(number_format($p['share']))) ?></td></tr><?php endforeach; ?>
+  <h2>پاداش‌ها و فرم هر پاداش</h2>
+  <p class="srcs">هر پاداش فرم تک‌صفحه‌ای خودش را دارد: افراد، سمت، اقدام و سهم هر نفر با استناد به دستورالعمل؛ پس از ثبت نهایی شماره می‌گیرد و قفل می‌شود.</p>
+  <table class="ctable"><tr><th>پاداش</th><th>مبلغ مرکز (ریال)</th><th>نفرات</th><th>دستورالعمل</th><th>فرم</th></tr>
+  <?php foreach (RewardRules::KEYS as $kind => $key): $st = $row['rewards'][$kind]; ?>
+    <tr><td><a href="center_form.php?row=<?= e(urlencode($id)) ?>&kind=<?= $key ?>"><?= e(RewardRules::NAMES[$kind]) ?></a></td>
+      <td><?= e(fa_digits(number_format((float) ($st['calc']['amount'] ?? 0)))) ?></td>
+      <td><?= $kind === RewardRules::FINDER ? '—' : e(fa_digits((string) count($st['calc']['people'] ?? []))) ?></td>
+      <td class="srcs"><?= e(RewardRules::describe($st['calc']['rule'] ?? null)) ?></td>
+      <td><?= $st['final_at'] !== null ? '<span class="badge">ثبت نهایی ' . e(fa_digits((string) $st['number'])) . '</span>' : 'پیش‌نویس' ?></td></tr>
+  <?php endforeach; ?>
   </table>
-  <?php endif; ?>
-  <?php if ($row['staff'] !== null): $s = $row['staff']; ?>
-  <p>عوامل اداری: مبنا <?= e(fa_digits(number_format($s['base']))) ?> ریال؛ کل <b><?= e(fa_digits(number_format($s['amount']))) ?></b>،
-    مدیرعامل <?= e(fa_digits(number_format($s['ceo']))) ?>، کارکنان <?= e(fa_digits(number_format($s['staff']))) ?> —
-    <span class="srcs"><?= e(RewardRules::describe($s['rule'])) ?></span></p>
-  <?php if ($s['roles'] !== []): ?>
-  <table class="ctable"><tr><th>نقش</th><th>وزن</th><th>سهم نقش</th><th>دارندگان</th><th>هر نفر</th></tr>
-    <?php foreach ($s['roles'] as $r): ?><tr><td><?= e($r['label']) ?></td><td><?= e(fa_digits((string) $r['weight'])) ?>٪</td>
-      <td><?= e(fa_digits(number_format($r['amount']))) ?></td><td><?= e(implode('، ', $r['people'])) ?></td><td><?= e(fa_digits(number_format($r['each']))) ?></td></tr><?php endforeach; ?>
-  </table>
-  <?php endif; endif; ?>
 </div>
 <?php endif; ?>
 

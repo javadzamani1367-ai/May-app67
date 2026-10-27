@@ -103,6 +103,11 @@ final class SyncController
         $this->replaceChildren('attendees', $report['attendees'] ?? [], (string) $report['id'], [
             'id', 'report_id', 'organization', 'full_name', 'position', 'org_name',
         ]);
+        // افرادی که کارشناس برای پاداش پیشنهاد کرده؛ فقط از خود کارشناس، و اپ قدیمی که نمی‌فرستد
+        // چیزی را پاک نمی‌کند. نسخه گوشی مدیر یا مجری پیشنهاد تازه کارشناس را پاک نمی‌کند.
+        if ((int) $user['role'] === Auth::ROLE_EXPERT) {
+            RewardProposals::replace($report['reward_people'] ?? null, (string) $report['id'], $user);
+        }
         $this->replaceChildren('media', $report['media'] ?? [], (string) $report['id'], [
             'id', 'report_id', 'type', 'file_path', 'caption', 'captured_at', 'latitude',
             'longitude', 'size_bytes',
@@ -211,6 +216,7 @@ final class SyncController
             [$id]
         );
         $report['attendees'] = Db::all('SELECT * FROM attendees WHERE report_id = ?', [$id]);
+        $report['reward_people'] = RewardProposals::forSync($id);
         $report['media'] = Db::all('SELECT * FROM media WHERE report_id = ? ORDER BY captured_at', [$id]);
         $report['attachments'] = Db::all('SELECT * FROM attachments WHERE report_id = ? ORDER BY added_at', [$id]);
         Response::json(['report' => $report]);

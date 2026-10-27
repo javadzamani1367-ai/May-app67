@@ -2,34 +2,38 @@
 declare(strict_types=1);
 
 /**
- * سه گزارش پاداش از سطرهای آمار یک بازه، هر کدام یک مدل که اکسل رسمی (OfficialXlsx)،
+ * چهار گزارش تجمیعی پاداش از سطرهای آمار یک بازه، هر کدام یک مدل که اکسل رسمی (OfficialXlsx)،
  * Word رسمی (OfficialDocx) و اپ (forApp) از آن ساخته می‌شوند:
  *  - finder: پاداش عامل شناسایی (پرداخت توانیر)
- *  - enforcement: پاداش عوامل اجرایی — نیروی انتظامی و سپاه (پرداخت توانیر)
- *  - staff: «گزارش پاداش عوامل اداری»، درصد مبلغ صورتحساب با سهم مدیرعامل و کارکنان
+ *  - collection: پاداش جمع‌آوری شرکت توزیع
+ *  - enforcement: پاداش عوامل انتظامی — نیروی انتظامی (توانیر) و سپاه (شرکت توزیع)
+ *  - staff: پاداش عوامل اداری، درصد مبلغ صورتحساب با سهم مدیرعامل و درصد هر نفر
  *
- * مقدمه هر گزارش دستورالعمل‌هایی را که در این بازه به کار رفت با شماره، شناسه و تاریخ نامه
- * و شرح محاسبه می‌آورد. مبلغ هر مرکز همان مقدار نهایی ستون آمار است.
+ * افراد و سهم‌ها همان فرم پاداش هر مرکز است (RewardPeople، RewardForms)؛ فرم تک‌صفحه‌ای هر مرکز
+ * جداست (RewardFormModel). مقدمه هر گزارش دستورالعمل‌هایی را که در این بازه به کار رفت می‌آورد.
  */
 final class CenterRewardReport
 {
-    public const KINDS = ['finder' => 'پاداش عامل شناسایی', 'enforcement' => 'پاداش عوامل اجرایی',
-        'staff' => 'گزارش پاداش عوامل اداری'];
-    private const SIGNS = ['تهیه‌کننده', 'دبیر کمیسیون رمزارز', 'مدیر حراست', 'تأیید مدیرعامل'];
+    public const KINDS = ['finder' => 'پاداش عامل شناسایی', 'collection' => 'پاداش جمع‌آوری شرکت توزیع',
+        'enforcement' => 'پاداش عوامل انتظامی', 'staff' => 'پاداش عوامل اداری'];
+    private const COLUMN = ['collection' => 'collection_reward', 'enforcement' => 'police_reward', 'staff' => 'staff_reward'];
+    private const LEADS = [
+        'finder' => 'پاداش عامل شناسایی (گزارش‌دهنده) هر مرکز کشف‌شده بر اساس تعداد دستگاه‌های کشف‌شده و دستورالعمل جاری در تاریخ گزارش همان مرکز حساب شده و پرداخت آن با شرکت توانیر است.',
+        'collection' => 'پاداش جمع‌آوری هر مرکز به‌طور مساوی میان پرسنل حاضر در جمع‌آوری و افرادی که مدیر افزوده تقسیم شده و پرداخت آن با شرکت توزیع است.',
+        'enforcement' => 'پاداش عوامل انتظامی هر مرکز به‌طور مساوی میان همه پرسنل حاضر نیروی انتظامی و سپاه تقسیم شده است (نه میان سازمان‌ها)؛ سهم نیروی انتظامی را شرکت توانیر و سهم سپاه را شرکت توزیع می‌پردازد.',
+        'staff' => 'پاداش عوامل اداری درصدی از مبلغ صورتحساب هر مرکز است: سهم مدیرعامل جدا و سهم کارکنان به درصدی که مدیر برای هر نفر در فرم همان مرکز تعیین کرده تقسیم شده است.',
+    ];
 
     public static function model(string $kind, array $rows, int $from, int $to): array
     {
-        $model = match ($kind) {
-            'enforcement' => self::enforcement($rows),
-            'staff' => self::staff($rows),
-            default => self::finder($rows),
-        };
-        $title = self::KINDS[$kind] ?? self::KINDS['finder'];
+        $kind = isset(self::KINDS[$kind]) ? $kind : 'finder';
+        $model = $kind === 'finder' ? self::finder($rows) : self::shared($kind, $rows);
         return $model + [
-            'title' => $title . ' — مراکز استخراج رمزارز',
-            'sheet' => $title,
+            'title' => self::KINDS[$kind] . ' — مراکز استخراج رمزارز',
+            'sheet' => self::KINDS[$kind],
             'subtitle' => 'از ' . Jalali::format($from, false) . ' تا ' . Jalali::format($to, false),
-            'signatures' => self::SIGNS,
+            'letterhead' => RewardFormModel::LETTERHEAD,
+            'signatures' => RewardFormModel::SIGNATURES,
         ];
     }
 
@@ -45,7 +49,7 @@ final class CenterRewardReport
             if ($amount <= 0) {
                 continue;
             }
-            $rule = CenterRewards::finder($v, $row['row_date'])['rule'] ?? null;
+            $rule = $row['rewards'][RewardRules::FINDER]['calc']['rule'] ?? null;
             $rule !== null && $rules[$rule['id']] = $rule;
             $name = (string) ($v['finder_name'] ?? '') ?: '—';
             $lines[] = [count($lines) + 1, self::text($v['subscription'] ?? null), self::text($v['subscriber'] ?? null),
@@ -59,7 +63,7 @@ final class CenterRewardReport
             $sum['amount'] += $amount;
         }
         return [
-            'paragraphs' => self::intro('پاداش عامل شناسایی (گزارش‌دهنده) هر مرکز کشف‌شده بر اساس تعداد دستگاه‌های کشف‌شده و دستورالعمل جاری در تاریخ گزارش همان مرکز حساب شده و پرداخت آن با شرکت توانیر است.', $rules),
+            'paragraphs' => self::intro(self::LEADS['finder'], $rules),
             'tables' => [
                 ['header' => ['ردیف', 'شماره اشتراک', 'نام مشترک متخلف', 'تاریخ گزارش', 'شهرستان / بخش', 'عامل شناسایی',
                     'ارگان شناسایی‌کننده', 'شماره شبا', 'تعداد ماینر', 'مبلغ پاداش (ریال)'],
@@ -72,103 +76,67 @@ final class CenterRewardReport
         ];
     }
 
-    private static function enforcement(array $rows): array
+    /** جمع‌آوری، عوامل انتظامی و عوامل اداری: یک سطر برای هر مرکز و جمع هر نفر. */
+    private static function shared(string $kind, array $rows): array
     {
-        $attendees = CenterSystem::attendees(array_values(array_filter(array_column($rows, 'report_id'))));
-        $orgNames = array_values(RewardRules::ENFORCERS);
+        $type = array_search($kind, RewardRules::KEYS, true);
+        $groups = match ($kind) {
+            'enforcement' => [RewardRules::ENFORCERS['faraja'] => 'faraja', RewardRules::ENFORCERS['sepah'] => 'sepah'],
+            'staff' => ['سهم مدیرعامل' => 'ceo', 'سهم کارکنان' => 'staff'],
+            default => [],
+        };
         $lines = [];
         $people = [];
         $rules = [];
-        $sum = ['amount' => 0.0] + array_fill_keys($orgNames, 0.0);
+        $sum = ['count' => 0, 'amount' => 0.0, 'base' => 0.0] + array_fill_keys(array_values($groups), 0.0);
         foreach ($rows as $row) {
-            $v = $row['values'];
-            $amount = (float) ($v['police_reward'] ?? 0);
-            if ($amount <= 0) {
+            $state = $row['rewards'][$type];
+            $calc = $state['calc'];
+            $amount = (float) ($row['values'][self::COLUMN[$kind]] ?? 0);
+            if ($calc === null || $amount <= 0) {
                 continue;
             }
-            $calc = CenterRewards::enforcement($v, $row['row_date'], $attendees[$row['report_id']] ?? []);
-            $calc !== null && $rules[$calc['rule']['id']] = $calc['rule'];
-            // مبلغی که مدیر دستی نوشته، به همان نسبت محاسبه میان سازمان‌ها و افراد پخش می‌شود.
-            $factor = ($calc['amount'] ?? 0) > 0 ? $amount / $calc['amount'] : 0.0;
+            $rules[$calc['rule']['id']] = $calc['rule'];
+            // مبلغی که مدیر در آمار دستی نوشته، به همان نسبت میان افراد پخش می‌شود.
+            $factor = (float) $calc['amount'] > 0 ? $amount / (float) $calc['amount'] : 0.0;
+            $v = $row['values'];
             $line = [count($lines) + 1, self::text($v['subscription'] ?? null), self::text($v['subscriber'] ?? null),
-                self::date($v['report_date'] ?? null), (int) ($v['miners'] ?? 0), $amount];
-            foreach ($orgNames as $org) {
-                $share = round(($calc['orgs'][$org] ?? 0) * $factor);
-                $line[] = $share;
-                $sum[$org] += $share;
+                self::date($v['report_date'] ?? null)];
+            $line[] = $kind === 'staff' ? (float) $calc['base'] : (int) $calc['count'];
+            $line[] = $amount;
+            foreach ($groups as $g) {
+                $part = $kind === 'staff' ? (float) $calc[$g]
+                    : array_sum(array_column(array_filter($calc['people'], static fn ($p) => $p['org'] === $g), 'share'));
+                $line[] = round($part * $factor);
+                $sum[$g] += round($part * $factor);
             }
-            $line[] = implode('، ', array_map(static fn ($p) => $p['name'] . ' (' . $p['org'] . ')', $calc['people'] ?? [])) ?: '—';
+            $line[] = count($calc['people']);
+            $line[] = self::text($state['final_at'] !== null ? $state['number'] : 'پیش‌نویس');
             $lines[] = $line;
-            foreach ($calc['people'] ?? [] as $p) {
-                $key = $p['name'] . '|' . $p['org'];
-                $people[$key] ??= [$p['name'], $p['org'], 0, 0.0];
+            foreach ($calc['people'] as $p) {
+                $group = $kind === 'enforcement' ? RewardRules::ENFORCERS[$p['org']] : ($p['post'] ?: '—');
+                $key = $p['name'] . '|' . $group;
+                $people[$key] ??= [$p['name'] ?: '—', $group, 0, 0.0];
                 $people[$key][2]++;
-                $people[$key][3] += round($p['share'] * $factor);
+                $people[$key][3] += round((float) $p['share'] * $factor);
             }
+            $sum['count'] += $kind === 'staff' ? 0 : (int) $calc['count'];
+            $sum['base'] += $kind === 'staff' ? (float) $calc['base'] : 0;
             $sum['amount'] += $amount;
         }
+        $head = $kind === 'staff' ? 'مبنای پاداش (ریال)' : 'تعداد دستگاه';
+        $header = array_merge(['ردیف', 'شماره اشتراک', 'نام مشترک متخلف', 'تاریخ گزارش', $head, 'مبلغ مرکز (ریال)'],
+            array_map(static fn ($g) => $kind === 'enforcement' ? 'سهم ' . $g . ' (' . RewardRules::ORG_PAYER[$groups[$g]] . ')' : $g,
+                array_keys($groups)), ['نفرات', 'شماره فرم']);
+        $total = array_merge(['جمع کل', '', '', '', $kind === 'staff' ? $sum['base'] : $sum['count'], $sum['amount']],
+            array_map(static fn ($g) => $sum[$g], array_values($groups)), ['', '']);
         return [
-            'paragraphs' => self::intro('پاداش عوامل اجرایی فقط به نیروی انتظامی (پلیس امنیت اقتصادی) و اطلاعات سپاه حاضر در بازدید تعلق می‌گیرد: اگر هر دو سازمان حاضر بودند مبلغ مرکز میان دو سازمان برابر و سهم هر سازمان میان حاضران همان سازمان برابر تقسیم شده است. حاضران از صورت بازدید کارشناس پس از تأیید مدیر آمده‌اند و پرداخت با شرکت توانیر است.', $rules),
+            'paragraphs' => self::intro(self::LEADS[$kind], $rules),
             'tables' => [
-                ['header' => array_merge(['ردیف', 'شماره اشتراک', 'نام مشترک متخلف', 'تاریخ گزارش', 'تعداد ماینر', 'مبلغ مرکز (ریال)'],
-                    array_map(static fn ($o) => 'سهم ' . $o, $orgNames), ['حاضران']),
-                    'rows' => $lines, 'total' => array_merge(['جمع کل', '', '', '', '', $sum['amount']],
-                        array_map(static fn ($o) => $sum[$o], $orgNames), ['']),
-                    'widths' => [4, 9, 14, 8, 7, 11, 11, 11, 24], 'right' => [2, 8]],
-                ['caption' => 'سهم هر نفر', 'header' => ['نام و نام خانوادگی', 'سازمان', 'تعداد مراکز', 'مبلغ پاداش (ریال)'],
-                    'rows' => array_values($people), 'widths' => [16, 16, 8, 12], 'right' => [0]],
-            ],
-            'totals' => $sum,
-        ];
-    }
-
-    private static function staff(array $rows): array
-    {
-        $lines = [];
-        $roles = [];
-        $people = [];
-        $rules = [];
-        $sum = ['base' => 0.0, 'amount' => 0.0, 'ceo' => 0.0, 'staff' => 0.0];
-        $calcs = [];
-        foreach ($rows as $row) {
-            $staff = CenterRewards::staff($row['values'], $row['row_date']);
-            if ($staff !== null && $staff['base'] > 0) {
-                $calcs[] = [$row, $staff];
-                $rules[$staff['rule']['id']] = $staff['rule'];
-                foreach ($staff['roles'] as $role) {
-                    $roles[$role['label']] = true;
-                }
-            }
-        }
-        $roles = array_keys($roles);
-        foreach ($calcs as [$row, $staff]) {
-            $v = $row['values'];
-            $byRole = array_column($staff['roles'], 'amount', 'label');
-            $lines[] = array_merge([count($lines) + 1, self::text($v['subscription'] ?? null), self::text($v['subscriber'] ?? null),
-                self::date($v['report_date'] ?? null), $staff['base'], $staff['amount'], $staff['ceo'], $staff['staff']],
-                array_map(static fn ($r) => (float) ($byRole[$r] ?? 0), $roles));
-            foreach ($staff['roles'] as $role) {
-                foreach ($role['people'] as $name) {
-                    $key = $name . '|' . $role['label'];
-                    $people[$key] ??= [$name, $role['label'], 0, 0.0];
-                    $people[$key][2]++;
-                    $people[$key][3] += $role['each'];
-                }
-            }
-            foreach (array_keys($sum) as $k) {
-                $sum[$k] += $staff[$k];
-            }
-        }
-        $roleTotals = array_map(static fn ($i) => array_sum(array_column($lines, 8 + $i)), array_keys($roles));
-        return [
-            'paragraphs' => self::intro('پاداش عوامل اداری درصدی از مبلغ صورتحساب هر مرکز است: سهم مدیرعامل جدا و سهم کارکنان به وزن هر نقش (اعضای کمیسیون رمزارز، مجری رمزارز، کارشناسان استخراج و تحلیل لاگ و…) و میان دارندگان هر نقش برابر تقسیم شده است.', $rules),
-            'tables' => [
-                ['header' => array_merge(['ردیف', 'شماره اشتراک', 'نام مشترک متخلف', 'تاریخ گزارش', 'مبنای پاداش (ریال)', 'پاداش کل',
-                    'سهم مدیرعامل', 'سهم کارکنان'], $roles),
-                    'rows' => $lines, 'total' => array_merge(['جمع کل', '', '', '', $sum['base'], $sum['amount'], $sum['ceo'], $sum['staff']], $roleTotals),
-                    'widths' => array_merge([4, 9, 14, 8, 12, 10, 10, 10], array_fill(0, count($roles), 9)), 'right' => [2]],
-                ['caption' => 'جمع هر نفر', 'header' => ['نام و نام خانوادگی', 'نقش', 'تعداد مراکز', 'مبلغ پاداش (ریال)'],
-                    'rows' => array_values($people), 'widths' => [16, 16, 8, 12], 'right' => [0, 1]],
+                ['header' => $header, 'rows' => $lines, 'total' => $total, 'right' => [2],
+                    'widths' => array_merge([4, 9, 14, 8, 9, 11], array_fill(0, count($groups), 11), [5, 9])],
+                ['caption' => 'جمع هر نفر', 'header' => ['نام و نام خانوادگی', $kind === 'enforcement' ? 'سازمان' : 'سمت / پست', 'تعداد مراکز',
+                    'مبلغ پاداش (ریال)'], 'rows' => array_values($people), 'widths' => [16, 16, 8, 12], 'right' => [0, 1]],
             ],
             'totals' => $sum,
         ];
@@ -178,8 +146,9 @@ final class CenterRewardReport
     public static function forApp(array $model): array
     {
         $show = static fn (array $line) => array_map([OfficialDocx::class, 'show'], array_values($line));
-        $model['tables'] = array_map(static fn ($t) => ['caption' => $t['caption'] ?? null, 'header' => $t['header'],
-            'rows' => array_map($show, $t['rows']), 'total' => isset($t['total']) ? $show($t['total']) : null], $model['tables']);
+        $model['tables'] = array_map(static fn ($t) => ['caption' => $t['caption'] ?? null, 'header' => $t['header'] ?? null,
+            'pairs' => !empty($t['pairs']), 'rows' => array_map($show, $t['rows']),
+            'total' => isset($t['total']) ? $show($t['total']) : null], $model['tables']);
         unset($model['totals']);
         return $model;
     }

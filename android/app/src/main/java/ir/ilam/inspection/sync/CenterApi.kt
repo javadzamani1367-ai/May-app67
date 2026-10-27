@@ -34,11 +34,13 @@ object Centers {
                     val exportColumns: Map<String, List<String>> = emptyMap())
 
     data class Change(val label: String, val old: String?, val new: String?, val how: String, val at: Long, val who: String?)
-    data class Share(val name: String, val group: String, val amount: Double)
+    /** One of the centre's four rewards: its amount, the instruction, and whether its form is final. */
+    data class RewardLine(val kind: String, val name: String, val amount: Double?, val rule: String, val final: Boolean,
+                          val number: String?, val people: Int)
 
     data class Detail(
         val row: Row, val from: Map<String, String>, val system: Map<String, Any?>, val file: Map<String, Any?>,
-        val changes: List<Change>, val enforcement: List<Share>, val staff: List<Share>, val staffTotal: Double?, val finderRule: String
+        val changes: List<Change>, val rewards: List<RewardLine>
     )
 
     data class Sheet(val name: String, val kind: String, val rows: Int, val selected: Boolean, val columns: Int,
@@ -50,7 +52,7 @@ object Centers {
 
     /** A table of a reward report, every cell already as it reads. */
     data class Table(val caption: String?, val header: List<String>, val rows: List<List<String>>, val total: List<String>?)
-    /** One of the three reward reports: the explanation of the instructions used, then its tables. */
+    /** One of the four reward reports: the explanation of the instructions used, then its tables. */
     data class Rewards(val title: String, val subtitle: String, val paragraphs: List<String>, val tables: List<Table>)
 
     internal fun row(o: JSONObject) = Row(
@@ -103,18 +105,16 @@ suspend fun ServerApi.centers(token: String, year: Int?, search: String, charts:
     }
 
 private fun detail(d: JSONObject): Centers.Detail = with(Centers) {
-    val police = d.optJSONObject("police")?.optJSONArray("people").objects()
-        .map { Centers.Share(it.optString("name"), it.optString("org"), it.optDouble("share", 0.0)) }
-    val staff = d.optJSONObject("staff")
-    val roles = staff?.optJSONArray("roles").objects().map { Centers.Share(it.optString("label"),
-        it.optJSONArray("people").strings().joinToString(" / "), it.optDouble("amount", 0.0)) }
     Centers.Detail(
         row = row(d), from = d.optJSONObject("from").toMap().mapValues { it.value.toString() },
         system = d.optJSONObject("system").toMap(), file = d.optJSONObject("file").toMap(),
         changes = d.optJSONArray("changes").objects().map {
             Centers.Change(it.optString("label"), it.str("old"), it.str("new"), it.optString("how"), it.optLong("at"), it.str("who"))
         },
-        enforcement = police, staff = roles, staffTotal = staff?.optDouble("amount"), finderRule = d.optString("finder_rule")
+        rewards = d.optJSONArray("rewards").objects().map {
+            Centers.RewardLine(it.optString("kind"), it.optString("name"), if (it.isNull("amount")) null else it.optDouble("amount"),
+                it.optString("rule"), it.optBoolean("final"), it.str("number"), it.optInt("people"))
+        }
     )
 }
 
@@ -162,7 +162,7 @@ suspend fun ServerApi.centerApply(token: String, plan: String, sheets: List<Stri
         Centers.Applied(it.optInt("updated"), it.optInt("created"), it.optInt("supplement"))
     }
 
-/** One reward report: «finder», «enforcement» or «staff». */
+/** One reward report: «finder», «collection», «enforcement» or «staff». */
 suspend fun ServerApi.centerRewards(token: String, year: Int?, kind: String): ApiResult<Centers.Rewards> =
     get("centers/rewards&kind=$kind" + Centers.query(year, ""), token) { d ->
         with(Centers) {

@@ -625,8 +625,36 @@ CREATE TABLE IF NOT EXISTS reward_rules (
   KEY idx_reward_rules_kind (kind, effective_from)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- فرم پاداش هر مرکز و افرادی که کارشناس برای پاداش پیشنهاد کرده (گام ۱۲).
+CREATE TABLE IF NOT EXISTS reward_forms (
+  id            CHAR(36)    NOT NULL PRIMARY KEY,
+  row_id        CHAR(36)    NOT NULL,
+  kind          TINYINT     NOT NULL,
+  people_json   LONGTEXT    NULL,
+  number        VARCHAR(32) NULL,
+  final_at      BIGINT      NULL,
+  final_by      CHAR(36)    NULL,
+  snapshot_json LONGTEXT    NULL,
+  updated_by    CHAR(36)    NULL,
+  updated_at    BIGINT      NOT NULL,
+  UNIQUE KEY uq_reward_forms (row_id, kind)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS reward_proposals (
+  id         CHAR(36)     NOT NULL PRIMARY KEY,
+  report_id  CHAR(36)     NOT NULL,
+  kind       TINYINT      NOT NULL,
+  full_name  VARCHAR(100) NOT NULL,
+  post       VARCHAR(100) NULL,
+  org        VARCHAR(16)  NULL,
+  action     VARCHAR(255) NULL,
+  user_id    CHAR(36)     NULL,
+  updated_at BIGINT       NOT NULL,
+  KEY idx_reward_proposals_report (report_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS schema_meta (
   id      TINYINT NOT NULL PRIMARY KEY,
   version INT     NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 11);
+INSERT IGNORE INTO schema_meta (id, version) VALUES (1, 12);

@@ -6,7 +6,7 @@ foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSch
           'Field', 'FieldSettings', 'CaseLabels', 'Areas', 'Scope', 'UnitStages', 'UnitResponse', 'CrewCalendar', 'CaseIntake',
           'CaseFlow', 'FlowClock', 'FieldFlowClock', 'FieldCodes', 'CaseKind', 'Users', 'CenterSchema', 'CenterColumns', 'CenterValues',
           'CenterSystem', 'CenterMatch', 'CenterCheck', 'CenterLocks', 'CenterSettings', 'RewardRules', 'RewardSpec', 'CenterRewards',
-          'CenterRows', 'CenterEdit', 'CenterCharts'] as $class) {
+          'CenterRows', 'CenterEdit', 'CenterCharts', 'RewardProposals', 'RewardPeople', 'RewardForms'] as $class) {
     require_once dirname(__DIR__) . '/lib/' . $class . '.php';
 }
 require_once __DIR__ . '/_layout.php';

@@ -35,12 +35,13 @@ import ir.ilam.inspection.ui.theme.Spacing
 import ir.ilam.inspection.ui.theme.Tone
 import ir.ilam.inspection.util.PersianNumbers
 
-private val KINDS = listOf("finder" to R.string.ct_rewards_finder, "enforcement" to R.string.ct_rewards_enforcement,
-    "staff" to R.string.ct_rewards_staff)
+private val KINDS = listOf("finder" to R.string.ct_rewards_finder, "collection" to R.string.ct_rewards_collection,
+    "enforcement" to R.string.ct_rewards_enforcement, "staff" to R.string.ct_rewards_staff)
 
 /**
- * The year's three reward reports — finder, enforcement agents (police and IRGC),
- * administrative staff — each as the server builds it: the instructions it was
+ * The year's four reward reports — finder, the company's collection crew,
+ * enforcement agents (police and IRGC), administrative staff — each as the
+ * server builds it from the centres' reward forms: the instructions it was
  * computed by, every centre, and each person's total. Formal Excel and Word from
  * the top bar, saved on the phone or sent.
  */

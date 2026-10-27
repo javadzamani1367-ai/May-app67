@@ -19,7 +19,8 @@ foreach (['Response', 'Config', 'Db', 'Request', 'Auth', 'LoginGuard', 'FieldSch
           'HistoryReferral', 'CenterSchema', 'CenterColumns', 'CenterValues', 'CenterSystem', 'CenterMatch', 'CenterCheck', 'CenterLocks',
           'CenterSettings', 'RewardRules', 'RewardSpec', 'CenterRewards', 'CenterRows', 'CenterEdit', 'XlsxReader', 'CenterHeader',
           'CenterSupplement', 'CenterImport', 'CenterImportRun', 'CenterTemplate', 'CenterGrid', 'TemplateBook', 'OfficialXlsx', 'OfficialDocx',  'CenterSupplementSheet', 'CenterXlsx',
-          'CenterDocx', 'CenterRewardReport', 'CenterCharts'] as $class) {
+          'CenterDocx', 'CenterRewardReport', 'CenterCharts', 'RewardProposals', 'RewardPeople', 'RewardForms', 'NumberWords',
+          'RewardFormModel'] as $class) {
     require_once dirname(__DIR__) . '/lib/' . $class . '.php';
 }
 require_once dirname(__DIR__) . '/portal/_layout.php';
