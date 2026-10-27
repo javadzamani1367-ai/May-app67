@@ -17,6 +17,8 @@ object CenterRoutes {
     const val ROW = "center-row"
     const val IMPORT = "center-import"
     const val REWARDS = "center-rewards"
+    const val RULES = "center-rules"
+    const val SETTINGS = "center-settings"
     const val FORM = "center-form/{row}/{kind}"
     fun form(row: String, kind: String) = "center-form/$row/$kind"
 }
@@ -30,8 +32,12 @@ fun NavGraphBuilder.centerScreens(navController: NavHostController) {
                 navController.navigate(CenterRoutes.ROW)
             },
             onImport = { navController.navigate(CenterRoutes.IMPORT) },
-            onRewards = { navController.navigate(CenterRoutes.REWARDS) })
+            onRewards = { navController.navigate(CenterRoutes.REWARDS) },
+            onRules = { navController.navigate(CenterRoutes.RULES) },
+            onSettings = { navController.navigate(CenterRoutes.SETTINGS) })
     }
+    composable(CenterRoutes.RULES) { CenterRulesScreen(adminViewModel(), onBack = { navController.popBackStack() }) }
+    composable(CenterRoutes.SETTINGS) { CenterSettingsScreen(adminViewModel(), onBack = { navController.popBackStack() }) }
     composable(CenterRoutes.ROW) { entry ->
         val parent = remember(entry) { navController.getBackStackEntry(CenterRoutes.LIST) }
         val viewModel = centersViewModel(parent)
@@ -65,4 +71,10 @@ private fun centersViewModel(owner: ViewModelStoreOwner? = null): CentersViewMod
     val container = LocalContext.current.container
     val factory = remember { ContainerViewModelFactory(container) { CentersViewModel(it) } }
     return if (owner != null) viewModel(owner, factory = factory) else viewModel(factory = factory)
+}
+
+@Composable
+private fun adminViewModel(): CenterAdminViewModel {
+    val container = LocalContext.current.container
+    return viewModel(factory = remember { ContainerViewModelFactory(container) { CenterAdminViewModel(it) } })
 }

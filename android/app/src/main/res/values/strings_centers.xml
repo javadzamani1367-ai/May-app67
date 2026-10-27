@@ -109,4 +109,54 @@
     <string name="rf_hint_collection">مبلغ مرکز میان همه افراد تیک‌خورده برابر تقسیم می‌شود. کارشناس بازدید و حاضران شرکت توزیع خودکار آمده‌اند؛ نام را از فهرست برگزینید.</string>
     <string name="rf_hint_enforcement">مبلغ مرکز میان همه پرسنل تیک‌خورده نیروی انتظامی و سپاه برابر تقسیم می‌شود، نه میان دو سازمان. سهم نیروی انتظامی را توانیر و سهم سپاه را شرکت توزیع می‌پردازد.</string>
     <string name="rf_hint_staff">سهم مدیرعامل جداست و درصد بقیه از سهم کارکنان است که باید جمعاً ۱۰۰ باشد. دارندگان پست‌ها را کارشناس پیشنهاد کرده؛ تأیید، کم یا زیاد کنید.</string>
+
+    <!-- دستورالعمل‌های پاداش و تنظیمات آمار جامع، همان صفحه‌های پنل وب -->
+    <string name="cr_title">دستورالعمل‌های پاداش</string>
+    <string name="cr_subtitle">هر نامه هر چهار پاداش را تعیین می‌کند</string>
+    <string name="cr_new">دستورالعمل تازه</string>
+    <string name="cr_edit">ویرایش دستورالعمل</string>
+    <string name="cr_explain">هر دستورالعمل یک نامه است و برای مرکزهایی که تاریخ گزارششان از تاریخ اجرای آن تا اجرای دستورالعمل بعدی است حساب می‌شود. پاداش عامل شناسایی و سهم نیروی انتظامی را شرکت توانیر می‌پردازد؛ جمع‌آوری، سهم سپاه و عوامل اداری را شرکت توزیع.</string>
+    <string name="cr_empty">هنوز دستورالعملی ثبت نشده است.</string>
+    <string name="cr_tap_edit">برای ویرایش بزنید</string>
+    <string name="cr_delete">حذف دستورالعمل</string>
+    <string name="cr_delete_confirm">این دستورالعمل حذف شود؟ فرم‌هایی که ثبت نهایی شده‌اند عوض نمی‌شوند.</string>
+    <string name="cr_save">ذخیره دستورالعمل</string>
+    <string name="cr_letter">نامه</string>
+    <string name="cr_letter_no">شماره نامه</string>
+    <string name="cr_letter_id">شناسه نامه</string>
+    <string name="cr_letter_date">تاریخ نامه (مثل ۱۴۰۴/۰۱/۰۱)</string>
+    <string name="cr_effective">اجرا از تاریخ (مثل ۱۴۰۴/۰۱/۰۱)</string>
+    <string name="cr_note">توضیح</string>
+    <string name="cr_empty_section">بخشی که خالی بماند از دستورالعمل پیشین می‌آید. دستورالعمل تازه با عددهای تازه‌ترین دستورالعمل پر شده است.</string>
+    <string name="cr_finder_hint">پلکانی؛ پرداخت شرکت توانیر</string>
+    <string name="cr_collection_hint">مبلغ هر دستگاه با سقف؛ میان پرسنل جمع‌آوری برابر؛ پرداخت شرکت توزیع</string>
+    <string name="cr_enforcement_hint">مبلغ هر دستگاه با سقف؛ میان همه پرسنل حاضر برابر، نه میان دو سازمان</string>
+    <string name="cr_staff_hint">درصدی از مبلغ صورتحساب؛ پرداخت شرکت توزیع</string>
+    <string name="cr_mode">روش پلکان</string>
+    <string name="cr_tier_n">پله %1$s</string>
+    <string name="cr_from">از دستگاه</string>
+    <string name="cr_to">تا دستگاه (خالی: بی‌انتها)</string>
+    <string name="cr_per_device">مبلغ هر دستگاه (ریال)</string>
+    <string name="cr_cap">سقف هر مرکز (ریال)</string>
+    <string name="cr_cap_optional">سقف هر مرکز (ریال، اختیاری)</string>
+    <string name="cr_count">شمار دستگاه</string>
+    <string name="cr_pct">درصد کل</string>
+    <string name="cr_ceo_pct">سهم مدیرعامل</string>
+    <string name="cr_staff_pct">سهم کارکنان</string>
+    <string name="cr_base">مبنا</string>
+    <string name="cr_roles">درصد پیش‌فرض هر پست از سهم کارکنان (جمعاً ۱۰۰)</string>
+    <string name="cr_weight">درصد</string>
+    <string name="cr_add_role">افزودن پست</string>
+    <string name="cr_rial">ریال</string>
+
+    <string name="cs_title">ستون‌ها، دسترسی‌ها و قفل سال</string>
+    <string name="cs_access">دسترسی‌ها</string>
+    <string name="cs_executor">مجری رمزارز هر ناحیه آمار جامع ناحیه‌های خودش را ببیند و ویرایش کند (بی دستورالعمل، تنظیمات، قفل سال و ورود فایل)</string>
+    <string name="cs_units_hint">برای هر ستون، واحدی که تیک بخورد آن ستون را در پرتال واحدها برای سطرهای ناحیه‌اش می‌بیند و پر می‌کند. اکسل و Word ستون‌های پیش‌فرض هر خروجی‌اند.</string>
+    <string name="cs_years">قفل سال</string>
+    <string name="cs_years_hint">سطرهای سال قفل‌شده ویرایش، حذف یا با فایل تازه عوض نمی‌شوند</string>
+    <string name="cs_year_line">سال %1$s — %2$s سطر</string>
+    <string name="cs_lock">قفل کردن</string>
+    <string name="cs_unlock">باز کردن</string>
+    <string name="cs_columns">ستون‌ها</string>
 </resources>

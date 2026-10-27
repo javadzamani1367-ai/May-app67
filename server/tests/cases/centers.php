@@ -55,6 +55,10 @@ equals('واحد بی تیک مدیر دسترسی ندارد', 403, $list($lega
 $set = $probe->json('POST', 'centers/settings', ['executor' => 1, 'units' => ['2' => ['status', 'collected_amount']],
     'excel' => [], 'word' => ['row', 'subscription', 'miners', 'status']], $managerToken);
 equals('مدیر دسترسی‌ها را ذخیره کرد', 200, $set['status'], $set['raw']);
+// اپ واحدها را فهرستی به ترتیب واحد می‌فرستد و همان شکل را پس می‌گیرد.
+$appSet = $probe->json('POST', 'centers/settings', ['executor' => 1, 'units' => [[], [], ['status', 'collected_amount'], []],
+    'excel' => [], 'word' => ['row', 'subscription', 'miners', 'status']], $managerToken)['body']['data'] ?? [];
+equals('تنظیمات از اپ: ستون‌های واحد حقوقی', ['collected_amount', 'status'], $appSet['units'][2] ?? null);
 equals('مجری ۴۰۱ سطر ناحیه‌اش را می‌بیند', 1, count($list($exec401)['body']['data']['rows'] ?? []));
 equals('مجری ۴۱۰ سطر ۴۰۱ را نمی‌بیند', 0, count($list($exec410)['body']['data']['rows'] ?? []));
 equals('مجری تنظیمات را عوض نمی‌کند', 403, $probe->json('POST', 'centers/settings', ['executor' => 0], $exec401)['status']);

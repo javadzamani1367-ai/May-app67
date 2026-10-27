@@ -15,10 +15,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Factory
+import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Paid
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TableChart
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
@@ -46,6 +48,7 @@ import ir.ilam.inspection.ui.common.EmptyState
 import ir.ilam.inspection.ui.common.GroupHeader
 import ir.ilam.inspection.ui.common.HeaderAction
 import ir.ilam.inspection.ui.common.KpiTile
+import ir.ilam.inspection.ui.common.SecondaryButton
 import ir.ilam.inspection.ui.common.SectionCard
 import ir.ilam.inspection.ui.common.StatusBadge
 import ir.ilam.inspection.ui.common.TavanTopBar
@@ -68,7 +71,9 @@ fun CentersScreen(
     onBack: () -> Unit,
     onOpen: (String) -> Unit,
     onImport: () -> Unit,
-    onRewards: () -> Unit
+    onRewards: () -> Unit,
+    onRules: () -> Unit = {},
+    onSettings: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -112,6 +117,12 @@ fun CentersScreen(
                     IconButton(onClick = { viewModel.setSearch(search) }) {
                         Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.ct_search), tint = MaterialTheme.colorScheme.primary)
                     }
+                }
+                // The manager's own pages, as on the web panel's statistics page.
+                if (page?.manage == true) Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    modifier = Modifier.padding(vertical = Spacing.xs)) {
+                    SecondaryButton(stringResource(R.string.cr_title), onClick = onRules, icon = Icons.Filled.Gavel, modifier = Modifier.weight(1f))
+                    SecondaryButton(stringResource(R.string.cs_title), onClick = onSettings, icon = Icons.Filled.Tune, modifier = Modifier.weight(1f))
                 }
                 page?.charts?.let { ChartsBlock(it) }
             }

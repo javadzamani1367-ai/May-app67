@@ -897,3 +897,5 @@ GET  /sync/file             → همان فایل پایین
   مجری نظارت و ساماندهی رمزارز، معاون فروش و خدمات مشترکین، مدیر عامل. آرم شرکت هنوز نرسیده
 - پنل: `admin/center_rules.php` (یک فرم با چهار بخش) و `admin/center_form.php` (از صفحه سطر آمار)؛ API: `GET|POST /centers/form`،
   `GET /centers/form/export`؛ اپ مدیر: `ui/centers/RewardFormScreen.kt`؛ اپ کارشناس: `ui/archive/RewardPeopleSection.kt`
+- **هرچه پنل وب برای آمار جامع دارد اپ مدیر هم دارد**: دستورالعمل‌های پاداش (`CenterRulesScreen`، `CenterRuleEditor`) و ستون‌ها،
+  دسترسی‌ها و قفل سال (`CenterSettingsScreen`)، با همان API (`/centers/rules`، `/centers/settings`؛ `sync/CenterAdminApi.kt`)
