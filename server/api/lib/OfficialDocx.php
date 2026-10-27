@@ -30,10 +30,10 @@ final class OfficialDocx
     {
         $width = $landscape ? 15400 : 10000;
         $body = self::meta($width)
-            . self::para($model['title'] ?? '', 32, true, 'center', self::HEAD)
+            . self::para($model['title'] ?? '', $landscape ? 32 : 28, true, 'center', self::HEAD)
             . (empty($model['subtitle']) ? '' : self::para($model['subtitle'], 24, false, 'center'));
         foreach ($model['paragraphs'] ?? [] as $text) {
-            $body .= self::para($text, 24, false, 'both');
+            $body .= self::para($text, $landscape ? 24 : 21, false, 'both');
         }
         foreach ($model['tables'] ?? [] as $table) {
             if (!empty($table['caption'])) {
@@ -48,7 +48,7 @@ final class OfficialDocx
             $body .= self::signatures($model['signatures'], $width);
         }
         $size = $landscape ? '<w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/>' : '<w:pgSz w:w="11906" w:h="16838"/>';
-        $body .= '<w:sectPr>' . $size . '<w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="340" w:footer="340" w:gutter="0"/>'
+        $body .= '<w:sectPr>' . $size . '<w:pgMar w:top="567" w:right="680" w:bottom="567" w:left="680" w:header="340" w:footer="340" w:gutter="0"/>'
             . '<w:bidi/></w:sectPr>';
         $zip = new ZipArchive();
         if ($zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
@@ -95,8 +95,9 @@ final class OfficialDocx
 
     private static function table(array $table, int $width, int $size): string
     {
-        $header = $table['header'];
-        $count = count($header);
+        $header = $table['header'] ?? null;
+        $count = count($header ?? $table['rows'][0] ?? [1]);
+        $pairs = !empty($table['pairs']);
         $weights = $table['widths'] ?? array_fill(0, $count, 1);
         $sum = array_sum($weights) ?: 1;
         $cols = array_map(static fn ($w) => (int) round($width * $w / $sum), $weights);
@@ -106,9 +107,11 @@ final class OfficialDocx
         $xml = '<w:tbl><w:tblPr><w:bidiVisual/><w:tblW w:w="' . $width . '" w:type="dxa"/><w:tblBorders>' . $border . '</w:tblBorders>'
             . '<w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="60" w:type="dxa"/><w:right w:w="60" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>'
             . implode('', array_map(static fn ($w) => '<w:gridCol w:w="' . $w . '"/>', $cols)) . '</w:tblGrid>';
-        $xml .= self::row($header, $cols, 'DCE6F2', true, self::HEAD, $size - 2, true);
+        if ($header !== null) {
+            $xml .= self::row($header, $cols, 'DCE6F2', true, self::HEAD, $size - 2, true);
+        }
         foreach ($table['rows'] as $i => $row) {
-            $xml .= self::row($row, $cols, $i % 2 === 1 ? 'F8FAFC' : null, false, self::BODY, $size, false);
+            $xml .= self::row($row, $cols, $i % 2 === 1 && !$pairs ? 'F8FAFC' : null, false, self::BODY, $size, false, $pairs);
         }
         if (!empty($table['total'])) {
             $xml .= self::row($table['total'], $cols, 'F1F5F9', true, self::HEAD, $size - 2, false);
@@ -117,13 +120,18 @@ final class OfficialDocx
     }
 
     /** @param list<string> $cells */
-    private static function row(array $cells, array $cols, ?string $fill, bool $bold, string $font, int $size, bool $repeat): string
+    /** @param list<string> $cells pairs: برچسب‌ها (خانه‌های زوج) سایه‌دار و پررنگ، مقدارها راست‌چین */
+    private static function row(array $cells, array $cols, ?string $fill, bool $bold, string $font, int $size, bool $repeat,
+                                bool $pairs = false): string
     {
         $xml = '<w:tr>' . ($repeat ? '<w:trPr><w:tblHeader/><w:cantSplit/></w:trPr>' : '<w:trPr><w:cantSplit/></w:trPr>');
         foreach (array_values($cells) as $i => $text) {
+            $label = $pairs && $i % 2 === 0;
+            $shade = $label ? 'EEF2F7' : $fill;
             $xml .= '<w:tc><w:tcPr><w:tcW w:w="' . ($cols[$i] ?? 1000) . '" w:type="dxa"/><w:vAlign w:val="center"/>'
-                . ($fill === null ? '' : '<w:shd w:val="clear" w:color="auto" w:fill="' . $fill . '"/>') . '</w:tcPr>'
-                . self::para(self::show($text), $size, $bold, 'center', $font, true) . '</w:tc>';
+                . ($shade === null ? '' : '<w:shd w:val="clear" w:color="auto" w:fill="' . $shade . '"/>') . '</w:tcPr>'
+                . self::para(self::show($text), $size, $bold || $label, $pairs && !$label ? 'right' : 'center',
+                    $label ? self::HEAD : $font, true) . '</w:tc>';
         }
         return $xml . '</w:tr>';
     }
@@ -136,7 +144,7 @@ final class OfficialDocx
             . '<w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>' . str_repeat('<w:gridCol w:w="' . $w . '"/>', count($titles)) . '</w:tblGrid><w:tr>';
         foreach ($titles as $title) {
             $xml .= '<w:tc><w:tcPr><w:tcW w:w="' . $w . '" w:type="dxa"/></w:tcPr>' . self::para($title, 22, true, 'center', self::HEAD, true)
-                . self::para("\n\nامضا و تاریخ", 20, false, 'center', self::BODY, true) . '</w:tc>';
+                . self::para('امضا و تاریخ', 18, false, 'center', self::BODY, true) . '</w:tc>';
         }
         return $xml . '</w:tr></w:tbl>';
     }

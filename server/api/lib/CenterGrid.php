@@ -58,7 +58,7 @@ final class CenterGrid
     }
 
     /** @param array<int, float> $widths */
-    public function sheet(array $widths, int $freeze, ?string $filter): string
+    public function sheet(array $widths, int $freeze, ?string $filter, bool $landscape = true): string
     {
         ksort($this->cells);
         $cols = '';
@@ -102,7 +102,7 @@ final class CenterGrid
             . ($filter !== null ? '<autoFilter ref="' . $filter . '"/>' : '')
             . ($merges !== '' ? '<mergeCells count="' . count($this->merges) . '">' . $merges . '</mergeCells>' : '')
             . '<pageMargins left="0.2" right="0.2" top="0.35" bottom="0.35" header="0.12" footer="0.12"/>'
-            . '<pageSetup paperSize="9" fitToHeight="0" orientation="landscape"/>'
+            . '<pageSetup paperSize="9" fitToHeight="' . ($landscape ? 0 : 1) . '" orientation="' . ($landscape ? 'landscape' : 'portrait') . '"/>'
             . '</worksheet>';
     }
 }
