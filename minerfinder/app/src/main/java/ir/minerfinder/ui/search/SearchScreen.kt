@@ -34,6 +34,7 @@ import ir.minerfinder.ui.common.Header
 import ir.minerfinder.ui.common.ScoreBar
 import ir.minerfinder.ui.common.Section
 import ir.minerfinder.ui.common.rememberPermissionAsker
+import ir.minerfinder.ui.signatures.MatchSection
 import ir.minerfinder.ui.theme.Palette
 
 /** Permissions a scan asks for; missing ones only switch off what needs them. */
@@ -65,6 +66,7 @@ fun SearchScreen() {
                     asker.ask(scanPermissions()) { graph.scan.start() }
                 })
             }
+            if (running) MatchSection()
             graph.catalog.all.filter { graph.settings.current.isEnabled(it.id) }.forEach { source ->
                 SourceCard(source, detection)
             }

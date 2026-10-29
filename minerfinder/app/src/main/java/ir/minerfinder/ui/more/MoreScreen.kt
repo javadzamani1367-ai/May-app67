@@ -22,10 +22,12 @@ import ir.minerfinder.ui.common.Header
 import ir.minerfinder.ui.common.Section
 import ir.minerfinder.ui.sessions.SessionsScreen
 import ir.minerfinder.ui.settings.SettingsScreen
+import ir.minerfinder.ui.signatures.SignaturesScreen
 import ir.minerfinder.ui.theme.Palette
 
 enum class MorePage(val title: Int, val help: Int) {
     SESSIONS(R.string.sessions_title, R.string.sessions_help),
+    SIGNATURES(R.string.signatures_title, R.string.signatures_help),
     SETTINGS(R.string.tab_settings, R.string.settings_help),
 }
 
@@ -47,6 +49,11 @@ fun MoreScreen(onShowMap: () -> Unit) {
             }
         }
         MorePage.SETTINGS -> SettingsScreen()
+        MorePage.SIGNATURES -> Column(Modifier.fillMaxSize()) {
+            Header(stringResource(R.string.signatures_title))
+            TextButton(onClick = { page = null }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.back)) }
+            SignaturesScreen()
+        }
         MorePage.SESSIONS -> Column(Modifier.fillMaxSize()) {
             Header(stringResource(R.string.sessions_title))
             TextButton(onClick = { page = null }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.back)) }

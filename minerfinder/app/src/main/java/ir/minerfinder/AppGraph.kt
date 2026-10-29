@@ -8,6 +8,7 @@ import ir.minerfinder.location.HeadingSensor
 import ir.minerfinder.location.LocationTracker
 import ir.minerfinder.scan.ScanController
 import ir.minerfinder.session.SessionRecorder
+import ir.minerfinder.signature.SignatureLibrary
 import ir.minerfinder.settings.AppSettings
 import ir.minerfinder.sources.SourceCatalog
 import kotlinx.coroutines.CoroutineScope
@@ -27,6 +28,7 @@ class AppGraph(context: Context) {
     val catalog = SourceCatalog(this)
     val scan = ScanController(this)
     val recorder = SessionRecorder(this)
+    val signatures = SignatureLibrary(this)
 
     /** Session the map shows; null means the one being recorded, else the latest. */
     val mapSession = kotlinx.coroutines.flow.MutableStateFlow<Long?>(null)

@@ -185,4 +185,28 @@
     <string name="settings_map_cache">حجم کاشی‌های ذخیره‌شده</string>
     <string name="settings_map_cache_help">هر ناحیه‌ای که یک بار با اینترنت روی نقشه دیده شود ذخیره می‌ماند و بعداً بدون اینترنت هم نمایش داده می‌شود. پیش از رفتن به منطقه بی‌اینترنت، همان محدوده را در چند بزرگنمایی نگاه کنید.</string>
     <string name="settings_map_cache_clear">پاک کردن کاشی‌ها</string>
+
+    <!-- Stage 4: signature library -->
+    <string name="signatures_title">کتابخانه امضا</string>
+    <string name="signatures_help">ضبط صدای ماینرهای شناخته‌شده، تطبیق هنگام جستجو، تبادل با بازرس‌های دیگر</string>
+    <string name="signatures_record">ضبط امضای تازه</string>
+    <string name="signatures_record_help">با جستجوی روشن، کنار ماینری که مدلش را می‌دانید بایستید و دکمه را بزنید. ۳۰ ثانیه طیف ضبط و فرکانس پایه، هارمونیک‌ها و شکل طیف آن ذخیره می‌شود. بهتر است اول نویز محیط را کالیبره کنید.</string>
+    <string name="signatures_record_button">ضبط امضا (۳۰ ثانیه)</string>
+    <string name="signatures_recording">در حال ضبط… %1$s ثانیه مانده (%2$s قاب)</string>
+    <string name="signatures_save_title">ذخیره امضا</string>
+    <string name="signatures_label">برچسب</string>
+    <string name="signatures_model">مدل ماینر</string>
+    <string name="signatures_note">توضیح</string>
+    <string name="signatures_date">تاریخ ضبط</string>
+    <string name="signatures_unnamed">بی‌نام</string>
+    <string name="signatures_library">امضاهای ذخیره‌شده (%1$s)</string>
+    <string name="signatures_empty">هنوز امضایی نیست. ضبط کنید یا فایل امضای بازرس دیگری را وارد کنید.</string>
+    <string name="signatures_import">وارد کردن فایل</string>
+    <string name="signatures_export_all">ارسال همه</string>
+    <string name="signatures_share">ارسال</string>
+    <string name="signatures_match">تطبیق با کتابخانه امضا</string>
+    <string name="signatures_imported">%1$s امضا وارد شد.</string>
+    <string name="signatures_import_failed">این فایل، فایل امضای ماینریاب نیست یا خوانده نشد.</string>
+    <string name="signatures_delete_title">این امضا حذف شود؟</string>
+    <string name="save">ذخیره</string>
 </resources>
