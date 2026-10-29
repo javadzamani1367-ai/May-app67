@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ماینریاب</string>
+
+    <!-- Tabs -->
+    <string name="tab_search">جستجو</string>
+    <string name="tab_spectrum">طیف صدا</string>
+    <string name="tab_settings">تنظیمات</string>
+
+    <!-- Search -->
+    <string name="search_subtitle">یابنده دستگاه‌های استخراج رمزارز</string>
+    <string name="probability_title">احتمال ماینر</string>
+    <string name="confidence">اطمینان</string>
+    <string name="scan_start">شروع جستجو</string>
+    <string name="scan_stop">توقف جستجو</string>
+    <string name="heat_idle">جستجو متوقف است</string>
+    <string name="heat_cold">سرد</string>
+    <string name="heat_lukewarm">ولرم</string>
+    <string name="heat_warm">گرم — نزدیک می‌شوید</string>
+    <string name="heat_hot">داغ — احتمالاً همین‌جاست</string>
+    <string name="source_score">امتیاز</string>
+    <string name="source_share">سهم در نتیجه</string>
+    <string name="source_idle">آماده</string>
+    <string name="source_unavailable">این حسگر روی این گوشی یا الان در دسترس نیست</string>
+    <string name="source_error">خطا: %1$s</string>
+    <string name="source_audio">صدا (فن ماینر)</string>
+
+    <!-- Raw values -->
+    <string name="raw_f0">فرکانس پایه</string>
+    <string name="raw_partials">تعداد هارمونیک‌ها</string>
+    <string name="raw_stability">ثبات</string>
+    <string name="raw_level">سطح صدا</string>
+    <string name="raw_delta">تغییر میدان</string>
+    <string name="raw_magnitude">شدت میدان</string>
+    <string name="raw_rate">نرخ نمونه‌برداری</string>
+    <string name="raw_ac50">میدان ۵۰ هرتز</string>
+    <string name="raw_coil_level">سطح ۵۰ هرتز</string>
+    <string name="raw_variation">نوسان مصرف</string>
+    <string name="raw_harmonic_ratio">نسبت هارمونیک‌های ۱۵۰ و ۲۵۰</string>
+
+    <!-- Units -->
+    <string name="unit_hz">هرتز</string>
+    <string name="unit_percent">٪</string>
+    <string name="unit_db">دسی‌بل</string>
+    <string name="unit_dbfs">dBFS</string>
+    <string name="unit_ut">میکروتسلا</string>
+    <string name="unit_seconds">ثانیه</string>
+
+    <!-- Spectrum -->
+    <string name="spectrum_subtitle">طیف زنده، طیف‌نگار و کالیبراسیون</string>
+    <string name="spectrum_live">طیف زنده (۱۰۰ تا ۵۰۰۰ هرتز)</string>
+    <string name="spectrum_legend">خاکستری: طیف لحظه‌ای — سبزآبی: طیف میانگین پس از کسر نویز محیط — زرد: کف نویز — قرمز: هارمونیک‌های پیداشده با شماره‌شان</string>
+    <string name="spectrogram">طیف‌نگار (جدیدترین بالا)</string>
+    <string name="spectrum_waiting">برای دیدن طیف، جستجو را شروع کنید.</string>
+    <string name="analysis">تحلیل</string>
+    <string name="not_found">پیدا نشد</string>
+    <string name="coverage">پیوستگی سری</string>
+    <string name="peaks_found">قله‌های تُنال</string>
+    <string name="window_filled">پرشدن پنجره ثبات</string>
+    <string name="score_tonal">امتیاز تُنال</string>
+    <string name="score_harmonic">امتیاز هارمونیک</string>
+    <string name="score_stability">امتیاز ثبات</string>
+
+    <!-- Calibration -->
+    <string name="calibration">کالیبراسیون نویز محیط</string>
+    <string name="calibration_help">دور از هر ماینری بایستید و دکمه را بزنید. صدای پایه محیط (یخچال، کولر، ترافیک) چند ثانیه ضبط و از نتایج کم می‌شود.</string>
+    <string name="calibration_state">وضعیت</string>
+    <string name="calibration_done">کالیبره شده</string>
+    <string name="calibration_none">کالیبره نشده</string>
+    <string name="calibration_start">ثبت نویز محیط</string>
+    <string name="calibration_clear">حذف کالیبراسیون</string>
+    <string name="calibration_running">در حال ثبت نویز محیط… %1$s ثانیه</string>
+    <string name="calibration_failed">صدایی دریافت نشد؛ دوباره امتحان کنید.</string>
+    <string name="calibration_needs_scan">برای کالیبراسیون اول جستجو را شروع کنید.</string>
+
+    <!-- Audio inputs -->
+    <string name="audio_input">ورودی صدا</string>
+    <string name="input_default">پیش‌فرض گوشی</string>
+    <string name="input_builtin">میکروفون داخلی</string>
+    <string name="input_usb">میکروفون یا کارت صدای USB</string>
+    <string name="input_wired">هدست سیمی</string>
+    <string name="input_bluetooth">هدست بلوتوث</string>
+    <string name="input_other">ورودی دیگر</string>
+    <string name="input_missing">ورودی انتخاب‌شده وصل نیست؛ تا وصل شدنش از ورودی پیش‌فرض استفاده می‌شود.</string>
+
+    <!-- Settings -->
+    <string name="settings_alerts">هشدار</string>
+    <string name="settings_alert_threshold">آستانه اعلان</string>
+    <string name="settings_sources">حسگرها و وزن هر کدام</string>
+    <string name="settings_weights_help">وزن بیشتر یعنی سهم بیشتر آن حسگر در «احتمال ماینر». وزن صفر یعنی دیده شود ولی در نتیجه حساب نشود.</string>
+    <string name="settings_weight">وزن</string>
+    <string name="settings_audio">تشخیص صوتی</string>
+    <string name="settings_stability_window">پنجره سنجش ثبات</string>
+    <string name="settings_peak_threshold">ارتفاع لازم قله از کف نویز</string>
+    <string name="about">درباره</string>
+    <string name="version">نسخه</string>
+    <string name="about_text">ماینریاب کاملاً آفلاین کار می‌کند و به هیچ سرویس گوگل وابسته نیست. هیچ داده‌ای از گوشی بیرون نمی‌رود مگر خودتان آن را به اشتراک بگذارید.</string>
+
+    <!-- Permissions -->
+    <string name="permission_title">دسترسی‌های لازم</string>
+    <string name="permission_microphone">میکروفون: صدای فن ماینرها با میکروفون شنیده و تحلیل می‌شود. صدا ضبط یا ذخیره نمی‌شود، فقط طیف آن لحظه‌به‌لحظه بررسی می‌شود.</string>
+    <string name="permission_location">موقعیت مکانی: برای ثبت مسیر جستجو، نقشه حرارتی و خطوط جهت روی نقشه. موقعیت فقط روی همین گوشی ذخیره می‌شود.</string>
+    <string name="permission_notifications">اعلان: تا وقتی صفحه خاموش است، نزدیک شدن به ماینر را خبر دهد و جستجوی در پس‌زمینه دیده شود.</string>
+    <string name="permission_continue">ادامه</string>
+    <string name="action_not_now">فعلاً نه</string>
+</resources>
