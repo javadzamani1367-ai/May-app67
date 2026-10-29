@@ -10,8 +10,10 @@ import ir.minerfinder.core.sensor.SensorSource
  */
 class SourceCatalog(graph: AppGraph) {
     val audio = AcousticSource(graph)
+    val magnetometer = MagnetometerSource(graph)
+    val coil = CoilSource(graph)
 
-    val all: List<SensorSource> = listOf(audio)
+    val all: List<SensorSource> = listOf(audio, magnetometer, coil)
 
     fun byId(id: String): SensorSource? = all.firstOrNull { it.id == id }
 }

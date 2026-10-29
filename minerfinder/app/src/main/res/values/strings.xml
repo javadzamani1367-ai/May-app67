@@ -103,4 +103,34 @@
     <string name="permission_notifications">اعلان: تا وقتی صفحه خاموش است، نزدیک شدن به ماینر را خبر دهد و جستجوی در پس‌زمینه دیده شود.</string>
     <string name="permission_continue">ادامه</string>
     <string name="action_not_now">فعلاً نه</string>
+
+    <!-- Stage 2: magnetic, coil, feedback, service -->
+    <string name="tab_magnetic">مغناطیس</string>
+    <string name="magnetic_subtitle">مگنتومتر گوشی و سیم‌پیچ خارجی</string>
+    <string name="source_magnetometer">مگنتومتر گوشی</string>
+    <string name="source_coil">سیم‌پیچ خارجی</string>
+    <string name="magnetometer_missing">این گوشی مگنتومتر (قطب‌نما) ندارد.</string>
+    <string name="magnetometer_too_slow">نرخ مگنتومتر این گوشی برای دیدن میدان ۵۰ هرتز کافی نیست (دست‌کم %1$s هرتز لازم است)؛ فقط تغییر میدان سنجیده می‌شود.</string>
+    <string name="magnetic_delta_chart">تغییر میدان نسبت به میدان زمین (میکروتسلا)</string>
+    <string name="magnetic_calibration">کالیبراسیون میدان زمین</string>
+    <string name="magnetic_calibration_help">گوشی را دور از سیم و آهن، در همان جهتی که جستجو می‌کنید ثابت نگه دارید. بدون کالیبراسیون، میانگین چندثانیه‌ای میدان کم می‌شود.</string>
+    <string name="coil_help">سیم‌پیچ را به ورودی میکروفون یا کارت صدای USB وصل کنید و نزدیک کابل یا کنتور بگیرید. شدت ۵۰، ۱۵۰ و ۲۵۰ هرتز سنجیده می‌شود؛ مصرف سنگین و ثابت در طول زمان نشانه اصلی ماینر است.</string>
+    <string name="coil_enable">استفاده از سیم‌پیچ</string>
+    <string name="coil_input">ورودی سیم‌پیچ</string>
+    <string name="coil_150">دامنه ۱۵۰ هرتز (×۱۰۰۰)</string>
+    <string name="coil_250">دامنه ۲۵۰ هرتز (×۱۰۰۰)</string>
+    <string name="coil_heavy">سنگینی مصرف</string>
+    <string name="coil_steady">ثبات مصرف</string>
+    <string name="coil_chart">سطح ۵۰ هرتز در طول زمان</string>
+    <string name="coil_calibration">کالیبراسیون سیم‌پیچ</string>
+    <string name="coil_calibration_help">سیم‌پیچ را دور از هر کابل پرمصرف نگه دارید تا سطح پایه ثبت شود؛ از آن به بعد سطح نسبت به همین پایه گزارش می‌شود.</string>
+    <string name="unit_db_above_base">دسی‌بل بالای پایه</string>
+    <string name="settings_beep">بوق گایگری (تندتر با نزدیک شدن)</string>
+    <string name="settings_vibrate">لرزش بالای آستانه</string>
+    <string name="channel_scan">جستجوی در حال اجرا</string>
+    <string name="channel_alert">هشدار نزدیکی ماینر</string>
+    <string name="alert_title">احتمال ماینر بالاست</string>
+    <string name="alert_text">احتمال ماینر به %1$s٪ رسید.</string>
+    <string name="scan_notification_title">ماینریاب در حال جستجو</string>
+    <string name="scan_notification_text">احتمال ماینر: %1$s٪</string>
 </resources>

@@ -18,7 +18,8 @@ data class Settings(
     val peakThresholdDb: Float = 12f,
     val logIntervalS: Int = 3,
     val weights: Map<String, Float> = emptyMap(),
-    val disabled: Set<String> = emptySet(),
+    /** The coil starts switched off: it needs hardware most users do not have. */
+    val disabled: Set<String> = setOf("coil"),
 ) {
     fun weight(id: String, default: Float): Float = weights[id] ?: default
     fun isEnabled(id: String): Boolean = id !in disabled
@@ -48,7 +49,7 @@ class AppSettings(context: Context) {
             peakThresholdDb = prefs.getFloat("peak_threshold", 12f),
             logIntervalS = prefs.getInt("log_interval", 3),
             weights = weights,
-            disabled = prefs.getStringSet("disabled", emptySet())!!.toSet(),
+            disabled = prefs.getStringSet("disabled", setOf("coil"))!!.toSet(),
         )
     }
 

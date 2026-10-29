@@ -2,7 +2,6 @@ package ir.minerfinder.ui.spectrum
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -12,11 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -25,19 +20,18 @@ import ir.minerfinder.R
 import ir.minerfinder.core.acoustic.AcousticFrame
 import ir.minerfinder.graph
 import ir.minerfinder.ui.common.BigButton
+import ir.minerfinder.ui.common.CalibrationControls
+import ir.minerfinder.ui.common.CalibrationTarget
 import ir.minerfinder.ui.common.Fa
 import ir.minerfinder.ui.common.Field
 import ir.minerfinder.ui.common.Header
 import ir.minerfinder.ui.common.ScoreBar
-import ir.minerfinder.ui.common.SecondaryButton
 import ir.minerfinder.ui.common.Section
 import ir.minerfinder.ui.common.rememberPermissionAsker
 import ir.minerfinder.ui.search.CenteredNote
 import ir.minerfinder.ui.search.scanPermissions
 import ir.minerfinder.ui.settings.InputPicker
 import ir.minerfinder.ui.theme.Palette
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 private const val CALIBRATION_SECONDS = 6
 
@@ -71,7 +65,10 @@ fun SpectrumScreen() {
                 Spectrogram(buffer)
             }
             frame?.let { AnalysisSection(it) } ?: CenteredNote(stringResource(R.string.spectrum_waiting))
-            CalibrationSection(running)
+            CalibrationControls(
+                stringResource(R.string.calibration), stringResource(R.string.calibration_help), CALIBRATION_SECONDS, running,
+                CalibrationTarget({ source.hasCalibration }, { source.startCalibration() }, { source.finishCalibration() }, { source.clearCalibration() }),
+            )
             Section(stringResource(R.string.audio_input)) {
                 InputPicker(
                     selected = graph.settings.state.collectAsState().value.audioInputId,
@@ -106,49 +103,5 @@ private fun AnalysisSection(f: AcousticFrame) {
         ScoreBar(stringResource(R.string.score_harmonic), (f.harmonicScore * 100).toFloat())
         ScoreBar(stringResource(R.string.score_stability), (f.stability.score * 100).toFloat())
         ScoreBar(stringResource(R.string.source_score), f.score.toFloat(), Palette.Hot)
-    }
-}
-
-@Composable
-private fun CalibrationSection(running: Boolean) {
-    val graph = LocalContext.current.graph
-    val source = graph.catalog.audio
-    val scope = rememberCoroutineScope()
-    var remaining by remember { mutableIntStateOf(0) }
-    var calibrated by remember { mutableStateOf(source.hasCalibration) }
-    var failed by remember { mutableStateOf(false) }
-
-    Section(stringResource(R.string.calibration)) {
-        Text(stringResource(R.string.calibration_help), color = Palette.Muted)
-        Field(
-            stringResource(R.string.calibration_state),
-            stringResource(if (calibrated) R.string.calibration_done else R.string.calibration_none),
-        )
-        if (failed) Text(stringResource(R.string.calibration_failed), color = Palette.Hot)
-        if (remaining > 0) {
-            Text(stringResource(R.string.calibration_running, Fa.int(remaining)), color = Palette.Warm)
-        } else {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SecondaryButton(stringResource(R.string.calibration_start), enabled = running, onClick = {
-                    failed = false
-                    source.startCalibration()
-                    scope.launch {
-                        for (s in CALIBRATION_SECONDS downTo 1) {
-                            remaining = s
-                            delay(1_000)
-                        }
-                        remaining = 0
-                        val ok = source.finishCalibration()
-                        failed = !ok
-                        calibrated = source.hasCalibration
-                    }
-                })
-                SecondaryButton(stringResource(R.string.calibration_clear), enabled = calibrated, onClick = {
-                    source.clearCalibration()
-                    calibrated = false
-                })
-            }
-            if (!running) Text(stringResource(R.string.calibration_needs_scan), color = Palette.Muted)
-        }
     }
 }

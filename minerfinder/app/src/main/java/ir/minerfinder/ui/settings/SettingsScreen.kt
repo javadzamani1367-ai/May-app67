@@ -49,6 +49,8 @@ fun SettingsScreen() {
                     stringResource(R.string.settings_alert_threshold), s.alertThreshold, 20f..95f, 14,
                     Fa.num(s.alertThreshold) + stringResource(R.string.unit_percent),
                 ) { v -> change { it.copy(alertThreshold = v) } }
+                SwitchRow(stringResource(R.string.settings_beep), s.beep) { on -> change { it.copy(beep = on) } }
+                SwitchRow(stringResource(R.string.settings_vibrate), s.vibrate) { on -> change { it.copy(vibrate = on) } }
             }
 
             Section(stringResource(R.string.settings_sources)) {
@@ -88,6 +90,14 @@ fun SettingsScreen() {
                 Text(stringResource(R.string.about_text), color = Palette.Muted)
             }
         }
+    }
+}
+
+@Composable
+fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, modifier = Modifier.weight(1f))
+        Switch(checked = checked, onCheckedChange = onChange)
     }
 }
 

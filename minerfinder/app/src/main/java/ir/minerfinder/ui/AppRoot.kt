@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import ir.minerfinder.R
 import ir.minerfinder.ui.common.AppIcons
+import ir.minerfinder.ui.magnetic.MagneticScreen
 import ir.minerfinder.ui.search.SearchScreen
 import ir.minerfinder.ui.settings.SettingsScreen
 import ir.minerfinder.ui.spectrum.SpectrumScreen
@@ -28,6 +29,7 @@ import ir.minerfinder.ui.spectrum.SpectrumScreen
 enum class Tab(val label: Int, val icon: ImageVector) {
     SEARCH(R.string.tab_search, Icons.Filled.Search),
     SPECTRUM(R.string.tab_spectrum, AppIcons.Wave),
+    MAGNETIC(R.string.tab_magnetic, AppIcons.Magnet),
     SETTINGS(R.string.tab_settings, Icons.Filled.Settings),
 }
 
@@ -52,6 +54,7 @@ fun AppRoot() {
             when (tab) {
                 Tab.SEARCH -> SearchScreen()
                 Tab.SPECTRUM -> SpectrumScreen()
+                Tab.MAGNETIC -> MagneticScreen()
                 Tab.SETTINGS -> SettingsScreen()
             }
         }
