@@ -58,6 +58,17 @@ object Triangulation {
         return Intersection(toLatLon(x, y, lat0, lon0, k), rms, lines.size)
     }
 
+    /** The point [meters] away from [origin] along [bearingDeg] (great circle). */
+    fun destination(origin: LatLon, bearingDeg: Double, meters: Double): LatLon {
+        val d = meters / EARTH_RADIUS_M
+        val t = bearingDeg * PI / 180.0
+        val lat1 = origin.lat * PI / 180.0
+        val lon1 = origin.lon * PI / 180.0
+        val lat2 = kotlin.math.asin(sin(lat1) * cos(d) + cos(lat1) * sin(d) * cos(t))
+        val lon2 = lon1 + kotlin.math.atan2(sin(t) * sin(d) * cos(lat1), cos(d) - sin(lat1) * sin(lat2))
+        return LatLon(lat2 * 180.0 / PI, lon2 * 180.0 / PI)
+    }
+
     fun distanceMeters(a: LatLon, b: LatLon): Double {
         val k = cos((a.lat + b.lat) / 2 * PI / 180.0)
         val (x, y) = toLocal(b, a.lat, a.lon, k)

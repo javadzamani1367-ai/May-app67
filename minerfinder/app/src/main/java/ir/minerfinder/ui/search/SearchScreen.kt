@@ -39,6 +39,8 @@ import ir.minerfinder.ui.theme.Palette
 /** Permissions a scan asks for; missing ones only switch off what needs them. */
 fun scanPermissions(): List<String> = buildList {
     add(Manifest.permission.RECORD_AUDIO)
+    add(Manifest.permission.ACCESS_FINE_LOCATION)
+    add(Manifest.permission.ACCESS_COARSE_LOCATION)
     if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.POST_NOTIFICATIONS)
 }
 

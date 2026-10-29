@@ -14,6 +14,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -25,7 +28,9 @@ import ir.minerfinder.sources.SourceIds
 import ir.minerfinder.ui.common.Fa
 import ir.minerfinder.ui.common.Field
 import ir.minerfinder.ui.common.Header
+import ir.minerfinder.ui.common.SecondaryButton
 import ir.minerfinder.ui.common.Section
+import ir.minerfinder.ui.map.MapSetup
 import ir.minerfinder.ui.theme.Palette
 
 @Composable
@@ -83,6 +88,21 @@ fun SettingsScreen() {
                 ) { v -> change(restart = true) { it.copy(peakThresholdDb = v) } }
                 Text(stringResource(R.string.audio_input), color = Palette.Navy)
                 InputPicker(s.audioInputId) { id -> change(restart = true) { it.copy(audioInputId = id) } }
+            }
+
+            Section(stringResource(R.string.settings_map)) {
+                LabeledSlider(
+                    stringResource(R.string.settings_log_interval), s.logIntervalS.toFloat(), 1f..15f, 13,
+                    Fa.int(s.logIntervalS) + " " + stringResource(R.string.unit_seconds),
+                ) { v -> change { it.copy(logIntervalS = v.toInt()) } }
+                val context = LocalContext.current
+                var cache by remember { mutableLongStateOf(MapSetup.cacheBytes(context)) }
+                Field(stringResource(R.string.settings_map_cache), Fa.num(cache / 1_048_576.0, 1) + " " + stringResource(R.string.unit_mb))
+                Text(stringResource(R.string.settings_map_cache_help), color = Palette.Muted)
+                SecondaryButton(stringResource(R.string.settings_map_cache_clear), onClick = {
+                    MapSetup.clearCache(context)
+                    cache = MapSetup.cacheBytes(context)
+                })
             }
 
             Section(stringResource(R.string.about)) {

@@ -39,7 +39,10 @@ class ScanController(private val graph: AppGraph) {
                 alerts.onProbability(d.probability, graph.settings.current.alertThreshold, d.timestampMs)
             }
         }
-        if (!_running.value) ScanService.start(graph.appContext)
+        if (!_running.value) {
+            ScanService.start(graph.appContext)
+            graph.recorder.start()
+        }
         _running.value = true
     }
 
@@ -49,6 +52,7 @@ class ScanController(private val graph: AppGraph) {
         alertJob = null
         feedback.stop()
         hub.detach()
+        graph.recorder.stop()
         _running.value = false
         ScanService.stop(graph.appContext)
     }
